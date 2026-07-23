@@ -1,0 +1,198 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+  --color-destructive-tint: var(--destructive-tint);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Design System Mitrol — "Mitrol Design System — Tokens" (re-skin de tokens).
+ * Identidad: primario #084AF3, superficies blancas frías (familia slate), header
+ * oscuro premium #0A1128. Sin violeta, sin warm gray, sin negro puro.
+ * Todos los hex viven SOLO dentro de estos dos bloques de tokens.
+ * Referencia primitivos de marca:
+ *   --mitrol-primary #084AF3 · --mitrol-primary-hover #0636B8 · --mitrol-dark #0A1128
+ *   --mitrol-tint #E6EEFE · --mitrol-tint-2 #F2F6FF
+ *   slate: fg #101218/#1E293B/#475569/#94A3B8 · border #E2E8F0 · muted #F1F5F9 · soft #F8FAFC
+ */
+:root {
+  /* --radius: 8px (0.5rem), a deliberate deviation from the Manual de Marca's
+     4px canonical radius, scoped to this mock only. See DESIGN.md Overview
+     for rationale; open decision to reconcile with the DS owner per
+     atlas-docs/13-design-system-primitivos.md §9 before this ships as the
+     real frontend. */
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #1e293b; /* slate-800 — nunca negro puro */
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #084af3; /* Mitrol brand blue */
+  --primary-foreground: #ffffff;
+  /* secondary: el violeta #807CDB se elimina. El token es fill sólido con texto
+     blanco (segunda acción / badge secondary), así que va un slate de marca
+     (slate-600) — neutro, coherente y con buen contraste sobre blanco. */
+  --secondary: #475569;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f5f9; /* slate-100 */
+  --muted-foreground: #475569; /* slate-600 */
+  --accent: #e6eefe; /* mitrol-tint */
+  --accent-foreground: #0a1128; /* mitrol-dark */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0;
+  --ring: #084af3;
+
+  /* estados semánticos (§3) */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  /* tints de estado (§3) */
+  --success-tint: #f0fdf4;
+  --warning-tint: #fff7ed;
+  --info-tint: #eff6ff;
+  --destructive-tint: #fef2f2;
+
+  /* charts — realineados a la nueva paleta: primario, info, success, warning, slate */
+  --chart-1: #084af3;
+  --chart-2: #3b82f6;
+  --chart-3: #22c55e;
+  --chart-4: #f59e0b;
+  --chart-5: #64748b; /* slate-500 */
+
+  /* sidebar / Atlas Shell — blanco frío, activo en brand blue, hover en tint */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1e293b;
+  --sidebar-primary: #084af3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6eefe; /* mitrol-tint */
+  --sidebar-accent-foreground: #0a1128;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #084af3;
+
+  /* App Bar superior — oscuro premium mitrol-dark (reemplaza el azul institucional) */
+  --header: #0a1128;
+  --header-foreground: #ffffff;
+}
+
+.dark {
+  /* Fondos slate oscuros fríos (no warm), primario #084AF3, foreground claro. */
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f1f5f9; /* slate-100 */
+  --card: #1e293b; /* slate-800 */
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #084af3;
+  --primary-foreground: #ffffff;
+  --secondary: #334155; /* slate-700 */
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8; /* slate-400 */
+  --accent: #172554; /* blue-950 — tint de marca en oscuro */
+  --accent-foreground: #dbeafe; /* blue-100 */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #334155; /* slate-700 */
+  --input: #334155;
+  --ring: #084af3;
+
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --success-tint: #0b241a;
+  --warning-tint: #2a1e0a;
+  --info-tint: #0c1e33;
+  --destructive-tint: #2a1215;
+
+  /* charts — hues levemente aclarados para legibilidad sobre slate oscuro */
+  --chart-1: #4c82fb;
+  --chart-2: #60a5fa;
+  --chart-3: #4ade80;
+  --chart-4: #fbbf24;
+  --chart-5: #94a3b8;
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #084af3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #dbeafe;
+  --sidebar-border: #334155;
+  --sidebar-ring: #084af3;
+
+  /* App Bar — mismo oscuro premium, ancla de identidad en ambos modos */
+  --header: #0a1128;
+  --header-foreground: #ffffff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* El documento nunca scrollea (ni overscroll/bounce sobre el header):
+     el único contenedor con scroll es el <main> del contenido. */
+  html {
+    @apply h-full overflow-hidden font-sans;
+    overscroll-behavior: none;
+  }
+  body {
+    @apply h-full overflow-hidden bg-background text-foreground;
+    overscroll-behavior: none;
+  }
+}
