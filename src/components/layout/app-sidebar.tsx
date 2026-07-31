@@ -42,7 +42,12 @@ export function AppSidebar() {
                     pathname.startsWith("/proyectos"));
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={label}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={label}
+                      data-tour={`nav-${item.href.slice(1)}`}
+                    >
                       <Link href={item.href}>
                         <item.icon />
                         <span>{label}</span>

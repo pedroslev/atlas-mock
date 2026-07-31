@@ -6,6 +6,7 @@ import { Grid3x3, Search, Phone, SlidersHorizontal } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { CommandMenu } from "@/components/layout/command-menu";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ProductTour } from "@/lib/tour/product-tour";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ export function AppHeader() {
         <SidebarTrigger className="text-header-foreground hover:bg-white/10 hover:text-header-foreground md:hidden" />
       </ActionTooltip>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2" data-tour="brand">
         <Image
           src="/brand/logo-mitrol-aguila-roja.png"
           alt="Mitrol"
@@ -70,7 +71,7 @@ export function AppHeader() {
       <CommandMenu>
         {(open) => (
           <>
-            <div className="hidden flex-1 sm:block">
+            <div className="hidden flex-1 sm:block" data-tour="search">
               <button
                 type="button"
                 onClick={open}
@@ -100,6 +101,8 @@ export function AppHeader() {
       </CommandMenu>
 
       <div className="flex items-center gap-1 max-sm:ml-1 sm:ml-auto">
+        <ProductTour />
+
         <ThemeToggle />
 
         <LanguageMenu />
@@ -109,6 +112,7 @@ export function AppHeader() {
             <PopoverTrigger asChild>
               <button
                 type="button"
+                data-tour="apps"
                 className="flex size-8 items-center justify-center rounded-lg hover:bg-white/10"
                 aria-label={t("common.header.aplicaciones")}
               >
@@ -172,6 +176,7 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
+                data-tour="user-menu"
                 className="ml-1 flex size-8 items-center justify-center rounded-full"
                 aria-label={t("common.header.cuenta")}
               >

@@ -88,64 +88,68 @@ export default function CampaniasPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t("campanias.titulo")}
-        description={t("campanias.descripcion")}
-        actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href="/proyectos/nuevo">
-                <Plus />
-                {t("campanias.nuevoProyecto")}
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/campanias/nueva">
-                <Plus />
-                {t("campanias.nuevaCampania")}
-              </Link>
-            </Button>
-          </>
-        }
-      />
+      <div data-tour="campanias-intro">
+        <PageHeader
+          title={t("campanias.titulo")}
+          description={t("campanias.descripcion")}
+          actions={
+            <>
+              <Button variant="outline" asChild>
+                <Link href="/proyectos/nuevo">
+                  <Plus />
+                  {t("campanias.nuevoProyecto")}
+                </Link>
+              </Button>
+              <Button asChild data-tour="campanias-nueva">
+                <Link href="/campanias/nueva">
+                  <Plus />
+                  {t("campanias.nuevaCampania")}
+                </Link>
+              </Button>
+            </>
+          }
+        />
+      </div>
 
-      <MitrolTable
-        columns={columns}
-        data={campanias}
-        options={{
-          enableGrouping: true,
-          groupedColumnMode: "reorder",
-          positionToolbarAlertBanner: "none",
-          enableRowActions: true,
-          initialState: {
-            grouping: ["proyecto"],
-            expanded: true,
-            density: "compact",
-            showGlobalFilter: true,
-            pagination: { pageIndex: 0, pageSize: 25 },
-          },
-          renderRowActions: ({ row }) => (
-            <RowActions
-              actions={[
-                {
-                  label: t("common.acciones.editar"),
-                  href: `/campanias/${row.original.id}`,
-                },
-                {
-                  label: t("campanias.accion.asignarUsuarios"),
-                  href: `/campanias/${row.original.id}?tab=usuarios`,
-                },
-                { label: t("campanias.accion.duplicar") },
-                {
-                  label: t("common.acciones.eliminar"),
-                  destructive: true,
-                  separatorBefore: true,
-                },
-              ]}
-            />
-          ),
-        }}
-      />
+      <div data-tour="campanias-tabla">
+        <MitrolTable
+          columns={columns}
+          data={campanias}
+          options={{
+            enableGrouping: true,
+            groupedColumnMode: "reorder",
+            positionToolbarAlertBanner: "none",
+            enableRowActions: true,
+            initialState: {
+              grouping: ["proyecto"],
+              expanded: true,
+              density: "compact",
+              showGlobalFilter: true,
+              pagination: { pageIndex: 0, pageSize: 25 },
+            },
+            renderRowActions: ({ row }) => (
+              <RowActions
+                actions={[
+                  {
+                    label: t("common.acciones.editar"),
+                    href: `/campanias/${row.original.id}`,
+                  },
+                  {
+                    label: t("campanias.accion.asignarUsuarios"),
+                    href: `/campanias/${row.original.id}?tab=usuarios`,
+                  },
+                  { label: t("campanias.accion.duplicar") },
+                  {
+                    label: t("common.acciones.eliminar"),
+                    destructive: true,
+                    separatorBefore: true,
+                  },
+                ]}
+              />
+            ),
+          }}
+        />
+      </div>
     </div>
   );
 }
