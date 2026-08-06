@@ -71,10 +71,11 @@ export function AppHeader() {
       <CommandMenu>
         {(open) => (
           <>
-            <div className="hidden flex-1 sm:block" data-tour="search">
+            <div className="hidden flex-1 sm:block">
               <button
                 type="button"
                 onClick={open}
+                data-tour="search"
                 className="mx-auto flex w-full max-w-md items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-left transition-colors hover:bg-white/15 focus-visible:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-header"
               >
                 <Search className="size-4 shrink-0 text-header-foreground/70" />

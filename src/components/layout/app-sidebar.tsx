@@ -12,19 +12,30 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { navItems } from "@/lib/nav";
 import { useT } from "@/lib/i18n";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const t = useT();
+  const { state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" className="shadow-[2px_0_10px_-4px_rgb(0,0,0,0.12)]">
       <SidebarHeader>
         <div className="flex items-center justify-end px-1 py-1 group-data-[collapsible=icon]:justify-center">
-          <SidebarTrigger />
+          <ActionTooltip
+            label={
+              state === "expanded"
+                ? t("common.header.sidebarContraer")
+                : t("common.header.sidebarExpandir")
+            }
+          >
+            <SidebarTrigger data-tour="sidebar-toggle" />
+          </ActionTooltip>
         </div>
       </SidebarHeader>
       <SidebarContent>

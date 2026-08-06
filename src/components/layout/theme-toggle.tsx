@@ -35,6 +35,7 @@ export function ThemeToggle() {
       <button
         type="button"
         onClick={toggle}
+        data-tour="theme-toggle"
         className="flex size-8 items-center justify-center rounded-lg hover:bg-white/10"
         aria-label={label}
       >

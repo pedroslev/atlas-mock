@@ -17,6 +17,7 @@ import { admin } from "@/lib/i18n/dict/admin";
 import { perfil } from "@/lib/i18n/dict/perfil";
 import { login } from "@/lib/i18n/dict/login";
 import { inicio } from "@/lib/i18n/dict/inicio";
+import { tour } from "@/lib/i18n/dict/tour";
 
 // Registro de diccionarios. La clave del objeto es el PREFIJO de la clave de
 // traducción: `t("campanias.titulo")` busca "titulo" dentro de `campanias`.
@@ -37,6 +38,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   perfil,
   login,
   inicio,
+  tour,
 };
 
 /**
