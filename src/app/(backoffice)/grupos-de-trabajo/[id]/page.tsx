@@ -88,7 +88,10 @@ export default async function EditarGrupoTrabajoPage({
         </Card>
       </div>
 
-      <GrupoPermisos initialPermisos={grupo.permisos} />
+      <GrupoPermisos
+        initialPermisos={grupo.permisos}
+        initialAccesoHermes={grupo.accesoHermes}
+      />
 
       <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
     </div>

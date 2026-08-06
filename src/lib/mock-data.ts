@@ -167,7 +167,8 @@ export type GrupoTrabajo = {
   descripcion?: string;
   usuarioIds: string[]; // working_groups.users
   estadosAuxiliares: string[]; // working_groups.aux_statuses
-  permisos: Permiso[]; // working_groups.permissions
+  permisos: Permiso[]; // working_groups.permissions — Olimpo
+  accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
 };
 
 // user_keycloak_map — overrides individuales de un usuario sobre su grupo,
@@ -526,6 +527,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       { modulo: "Cuentas", acciones: ["lectura"] },
       { modulo: "Clasificaciones", acciones: ["lectura", "escritura"] },
     ],
+    accesoHermes: true,
   },
   {
     id: "wg-atencion",
@@ -534,6 +536,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     usuarioIds: ["ag-3", "ag-5"],
     estadosAuxiliares: ["aux-almuerzo"],
     permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
+    accesoHermes: true,
   },
   {
     id: "wg-ventas",
@@ -541,6 +544,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     usuarioIds: ["ag-2"],
     estadosAuxiliares: ["aux-almuerzo", "aux-reunion"],
     permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
+    accesoHermes: false,
   },
 ];
 

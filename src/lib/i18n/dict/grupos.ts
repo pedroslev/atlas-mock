@@ -35,6 +35,12 @@ export const grupos: NamespaceDict = {
     "permiso.lectura": "Lectura",
     "permiso.escritura": "Escritura",
     "permiso.eliminacion": "Eliminación",
+    "permisos.seccionOlimpo": "Olimpo",
+    "permisos.seccionHermes": "Hermes",
+    "permisos.hermesDescripcion":
+      "Habilita el acceso de este grupo al PAD del agente.",
+    "permisos.hermesAcceso": "Acceso",
+    "permisos.hermesAria": "Acceso al PAD (Hermes)",
 
     "miembros.titulo": "Usuarios del grupo",
     "miembros.conteo": "{n} usuario(s).",
@@ -76,6 +82,12 @@ export const grupos: NamespaceDict = {
     "permiso.lectura": "Read",
     "permiso.escritura": "Write",
     "permiso.eliminacion": "Delete",
+    "permisos.seccionOlimpo": "Olimpo",
+    "permisos.seccionHermes": "Hermes",
+    "permisos.hermesDescripcion":
+      "Grants this group access to the agent's PAD.",
+    "permisos.hermesAcceso": "Access",
+    "permisos.hermesAria": "Access to the PAD (Hermes)",
 
     "miembros.titulo": "Group users",
     "miembros.conteo": "{n} user(s).",
@@ -117,6 +129,12 @@ export const grupos: NamespaceDict = {
     "permiso.lectura": "Leitura",
     "permiso.escritura": "Escrita",
     "permiso.eliminacion": "Exclusão",
+    "permisos.seccionOlimpo": "Olimpo",
+    "permisos.seccionHermes": "Hermes",
+    "permisos.hermesDescripcion":
+      "Habilita o acesso deste grupo ao PAD do agente.",
+    "permisos.hermesAcceso": "Acesso",
+    "permisos.hermesAria": "Acesso ao PAD (Hermes)",
 
     "miembros.titulo": "Usuários do grupo",
     "miembros.conteo": "{n} usuário(s).",
@@ -158,6 +176,12 @@ export const grupos: NamespaceDict = {
     "permiso.lectura": "Lectura",
     "permiso.escritura": "Escriptura",
     "permiso.eliminacion": "Eliminació",
+    "permisos.seccionOlimpo": "Olimpo",
+    "permisos.seccionHermes": "Hermes",
+    "permisos.hermesDescripcion":
+      "Habilita l'accés d'aquest grup al PAD de l'agent.",
+    "permisos.hermesAcceso": "Accés",
+    "permisos.hermesAria": "Accés al PAD (Hermes)",
 
     "miembros.titulo": "Usuaris del grup",
     "miembros.conteo": "{n} usuari(s).",
