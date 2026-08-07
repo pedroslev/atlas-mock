@@ -1,0 +1,67 @@
+/* Re-skin del popover de driver.js con los tokens de Mitrol (globals.css) en
+   vez del look default de la librería. Los estilos del overlay/stage se
+   dejan como vienen: solo tocamos lo que es marca (popover, botones, foco). */
+.atlas-tour-popover {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.25);
+  font-family: var(--font-sans);
+}
+
+.atlas-tour-popover .driver-popover-title {
+  color: var(--popover-foreground);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.atlas-tour-popover .driver-popover-description {
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+.atlas-tour-popover .driver-popover-progress-text {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.atlas-tour-popover .driver-popover-footer button {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: var(--radius-md);
+  text-shadow: none;
+  font-family: var(--font-sans);
+  padding: 0.3rem 0.7rem;
+}
+
+.atlas-tour-popover .driver-popover-footer button:hover {
+  background: color-mix(in oklch, var(--primary), var(--foreground) 10%);
+}
+
+.atlas-tour-popover .driver-popover-prev-btn {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.atlas-tour-popover .driver-popover-prev-btn:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.atlas-tour-popover .driver-popover-close-btn {
+  color: var(--muted-foreground);
+}
+
+.atlas-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--popover);
+}
+.atlas-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--popover);
+}
+.atlas-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--popover);
+}
+.atlas-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--popover);
+}

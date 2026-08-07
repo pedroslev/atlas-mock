@@ -25,6 +25,7 @@ export function LanguageMenu() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
+            data-tour="language"
             className="flex size-8 items-center justify-center rounded-lg text-sm font-medium hover:bg-white/10"
             aria-label={t("common.header.idioma")}
           >

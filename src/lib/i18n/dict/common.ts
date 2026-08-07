@@ -22,6 +22,8 @@ export const common: NamespaceDict = {
     "header.miPerfil": "Mi perfil",
     "header.cerrarSesion": "Cerrar sesión",
     "header.menu": "Mostrar/ocultar menú",
+    "header.sidebarContraer": "Contraer menú",
+    "header.sidebarExpandir": "Expandir menú",
     "header.temaClaro": "Cambiar a modo claro",
     "header.temaOscuro": "Cambiar a modo oscuro",
 
@@ -85,6 +87,8 @@ export const common: NamespaceDict = {
     "header.miPerfil": "My profile",
     "header.cerrarSesion": "Sign out",
     "header.menu": "Show/hide menu",
+    "header.sidebarContraer": "Collapse menu",
+    "header.sidebarExpandir": "Expand menu",
     "header.temaClaro": "Switch to light mode",
     "header.temaOscuro": "Switch to dark mode",
 
@@ -148,6 +152,8 @@ export const common: NamespaceDict = {
     "header.miPerfil": "Meu perfil",
     "header.cerrarSesion": "Sair",
     "header.menu": "Mostrar/ocultar menu",
+    "header.sidebarContraer": "Recolher menu",
+    "header.sidebarExpandir": "Expandir menu",
     "header.temaClaro": "Mudar para modo claro",
     "header.temaOscuro": "Mudar para modo escuro",
 
@@ -211,6 +217,8 @@ export const common: NamespaceDict = {
     "header.miPerfil": "El meu perfil",
     "header.cerrarSesion": "Tanca la sessió",
     "header.menu": "Mostra/amaga el menú",
+    "header.sidebarContraer": "Contreu el menú",
+    "header.sidebarExpandir": "Expandeix el menú",
     "header.temaClaro": "Canvia al mode clar",
     "header.temaOscuro": "Canvia al mode fosc",
 
