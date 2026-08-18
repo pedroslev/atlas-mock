@@ -38,7 +38,7 @@ export function AdminHeader() {
           alt="Mitrol"
           width={1200}
           height={675}
-          className="h-8 w-auto shrink-0 sm:h-10"
+          className="h-8 w-auto shrink-0 brightness-0 invert sm:h-10"
           priority
         />
       </div>
