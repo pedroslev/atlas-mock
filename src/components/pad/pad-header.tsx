@@ -58,7 +58,7 @@ export function PadHeader() {
           alt="Mitrol"
           width={1200}
           height={675}
-          className="h-10 w-auto shrink-0"
+          className="h-10 w-auto shrink-0 brightness-0 invert"
           priority
         />
       </div>
