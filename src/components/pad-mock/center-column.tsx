@@ -8,6 +8,7 @@ import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
 import { paginasExternas, type Tipificacion } from "@/lib/pad-mock/data";
+import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import { cn } from "@/lib/utils";
@@ -93,14 +94,18 @@ export function CenterColumn({
   return (
     <div className="flex h-full min-h-0 w-0 flex-1 flex-col bg-background">
       <Tabs value={tab} onValueChange={setTab} className="min-h-0 w-full flex-1 gap-0">
-        {/* h-10: mismo alto que la cabecera "Contexto" de ContextColumn, para
+        {/* ALTO_CABECERA_COLUMNA: mismo alto que la cabecera "Contexto" de
+            ContextColumn (fuente única compartida — ver layout.ts), para
             que las dos columnas arranquen alineadas. La solapa fija
             (Llamada/Conversación) queda sticky a la izquierda con su propio
             fondo — a pedido, no se va con el resto cuando el overflow-x-auto
             hace scroll por la cantidad de páginas externas. */}
         <TabsList
           variant="line"
-          className="h-10 w-full shrink-0 justify-start overflow-x-auto overflow-y-hidden border-b border-border px-2"
+          className={cn(
+            ALTO_CABECERA_COLUMNA,
+            "w-full shrink-0 justify-start overflow-x-auto overflow-y-hidden border-b border-border px-2"
+          )}
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
               tabs tipo segmented control que reparten el ancho disponible) —

@@ -206,7 +206,7 @@ export function LeftNav({
           espera (ámbar) en vez del tiempo de cola original. */}
       <div className="flex min-h-0 flex-1 flex-col gap-1">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[0.65rem] font-medium text-muted-foreground">Cola</span>
+          <span className="text-[0.65rem] font-medium text-muted-foreground">Interacciones en curso</span>
           <button
             type="button"
             aria-label="Iniciar nueva interacción"

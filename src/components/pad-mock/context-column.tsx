@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CANAL_ICON, type HistorialEntrada } from "@/lib/pad-mock/data";
+import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
 import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
@@ -201,9 +202,15 @@ export function ContextColumn({
   return (
     <div className="relative flex shrink-0 flex-col border-l border-border bg-card" style={{ width: ancho }}>
       <ResizeHandle side="left" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w + d)))} />
-      {/* h-10: mismo alto que la barra de solapas de CenterColumn (a
-          pedido, para que las dos columnas arranquen alineadas). */}
-      <div className="flex h-10 shrink-0 items-center justify-between border-b border-border px-3">
+      {/* ALTO_CABECERA_COLUMNA: mismo alto que la barra de solapas de
+          CenterColumn (fuente única compartida — ver layout.ts), para que
+          las dos columnas arranquen alineadas. */}
+      <div
+        className={cn(
+          ALTO_CABECERA_COLUMNA,
+          "flex shrink-0 items-center justify-between border-b border-border px-3"
+        )}
+      >
         <span className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
           Contexto
         </span>
