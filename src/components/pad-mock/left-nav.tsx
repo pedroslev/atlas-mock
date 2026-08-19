@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, MessageCircle, Plus } from "lucide-react";
+import { CalendarClock, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, MessageCircle, Plus } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,7 @@ export function LeftNav({
           ))}
         </div>
 
-        <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
+        <div className="flex max-h-[6.5rem] flex-col gap-1 overflow-y-auto border-t border-sidebar-border pt-2">
           {accesosRapidosMock.map((a) => (
             <button
               key={a.id}
@@ -132,7 +132,7 @@ export function LeftNav({
               onClick={() => onAbrirAcceso(a.id)}
               aria-current={accesoActivoId === a.id ? "true" : undefined}
               className={cn(
-                "flex size-8 items-center justify-center rounded-lg",
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
                 accesoActivoId === a.id ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
               )}
             >
@@ -145,12 +145,12 @@ export function LeftNav({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Estadísticas"
-            title="Estadísticas"
+            aria-label="Mi turno"
+            title="Mi turno"
             onClick={() => onModo("estadisticas")}
             className={cn(modo === "estadisticas" && "bg-sidebar-accent text-sidebar-accent-foreground")}
           >
-            <BarChart3 className="size-4" />
+            <CalendarClock className="size-4" />
           </Button>
           <Button
             variant="ghost"
@@ -286,10 +286,12 @@ export function LeftNav({
           interacción puntual. Ícono propio por acceso (a pedido — se
           configura afuera del pad, acá solo se refleja). Al elegir uno,
           pad-mock-shell.tsx tapa TODO el área de contenido (menos este menú
-          y el navbar) con QuickAccessOverlay — no es un modal. */}
+          y el navbar) con QuickAccessOverlay — no es un modal. A pedido, la
+          lista muestra como máximo 3 accesos y el resto queda atrás de
+          scroll (max-h calculado para 3 filas de 28px + 2 gaps de 2px). */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Accesos rápidos</span>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex max-h-[5.5rem] flex-col gap-0.5 overflow-y-auto">
           {accesosRapidosMock.map((a) => (
             <button
               key={a.id}
@@ -315,7 +317,7 @@ export function LeftNav({
         </div>
       </div>
 
-      {/* Estadísticas / Historial del agente — siempre pegados al fondo del
+      {/* Mi turno / Historial del agente — siempre pegados al fondo del
           menú (mt-auto), sin importar cuánto ocupe la cola o los chats. */}
       <div className="mt-auto flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
@@ -329,8 +331,8 @@ export function LeftNav({
               : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           )}
         >
-          <BarChart3 className="size-4 shrink-0" />
-          Estadísticas
+          <CalendarClock className="size-4 shrink-0" />
+          Mi turno
         </button>
         <button
           type="button"

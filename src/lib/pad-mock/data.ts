@@ -23,6 +23,14 @@ import {
   Utensils,
   GraduationCap,
   Coffee,
+  ShieldCheck,
+  Gauge,
+  Scale,
+  Percent,
+  Library,
+  Contact,
+  Gift,
+  LifeBuoy,
 } from "lucide-react";
 
 export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
@@ -76,6 +84,20 @@ export const campaniasSalientesMock: CampaniaSaliente[] = [
       { id: "acc-4", nombre: "SMS Recordatorios", canal: "sms", identificador: "BANCOSUR" },
     ],
   },
+];
+
+// --- Campañas del agente (nav "Mi turno") ----------------------------------
+// A qué campañas está asociado el agente logueado en este turno — a
+// propósito, dataset separado de campaniasSalientesMock: esas son TODAS las
+// campañas con marcado saliente disponibles en el tenant, estas son solo las
+// que le tocan a esta agente hoy (ids repetidos donde coinciden, mismo
+// tenant, misma convención de nombres que Olimpo).
+export type CampaniaAgente = { id: string; nombre: string; canales: CanalMock[]; horario: string };
+
+export const campaniasAgenteMock: CampaniaAgente[] = [
+  { id: "camp-1", nombre: "Cobranzas Activa PCP", canales: ["llamada", "whatsapp"], horario: "09:00 – 18:00" },
+  { id: "camp-4", nombre: "Soporte técnico Nivel 1", canales: ["whatsapp", "chat"], horario: "09:00 – 18:00" },
+  { id: "camp-6", nombre: "Lanzamiento Tarjeta Plus", canales: ["llamada", "sms"], horario: "13:00 – 18:00" },
 ];
 
 // Solo dos escenarios en la cola (a pedido: "pongas solo dos escenarios, una
@@ -366,12 +388,17 @@ export const tipificacionesB: Tipificacion[] = [
 
 // --- Páginas externas ---------------------------------------------------
 // "icon" es fijo por integración — a pedido, se configura afuera del pad
-// (Olimpo/backoffice), acá solo se refleja.
+// (Olimpo/backoffice), acá solo se refleja. "url" apunta a /sistema-externo
+// (mock de un sistema de terceros — ver sistema-externo-data.ts): en modo
+// "embebido" ("frame", entra en un <iframe>) y en modo "pestana" ("blank",
+// se abre con target=_blank) — a pedido, ambos casos necesitan un destino
+// real para poder mockear cómo funcionaría, no solo un cartel de "acá iría
+// contenido".
 export type PaginaExterna = {
   id: string;
   nombre: string;
   modo: "embebido" | "pestana";
-  contenido?: string;
+  url: string;
   icon: LucideIcon;
 };
 
@@ -380,25 +407,54 @@ export const paginasExternas: PaginaExterna[] = [
     id: "ext-tickets",
     nombre: "Sistema de tickets",
     modo: "embebido",
-    contenido: "Ticket #48213 — Envío demorado — Prioridad media — Asignado a Logística Nivel 1",
+    url: "/sistema-externo?id=ext-tickets",
     icon: Ticket,
   },
   {
     id: "ext-crm",
     nombre: "CRM comercial",
     modo: "embebido",
-    contenido: "Ficha comercial del cliente — plan contratado, historial de compras, oportunidades abiertas",
+    url: "/sistema-externo?id=ext-crm",
     icon: Building2,
   },
   {
     id: "ext-facturacion",
     nombre: "Portal de facturación",
     modo: "pestana",
+    url: "/sistema-externo?id=ext-facturacion",
     icon: Receipt,
+  },
+  {
+    id: "ext-buro",
+    nombre: "Buró de crédito",
+    modo: "pestana",
+    url: "/sistema-externo?id=ext-buro",
+    icon: ShieldCheck,
+  },
+  {
+    id: "ext-scoring",
+    nombre: "Scoring de riesgo",
+    modo: "embebido",
+    url: "/sistema-externo?id=ext-scoring",
+    icon: Gauge,
+  },
+  {
+    id: "ext-legales",
+    nombre: "Portal de Legales",
+    modo: "pestana",
+    url: "/sistema-externo?id=ext-legales",
+    icon: Scale,
+  },
+  {
+    id: "ext-refinanciacion",
+    nombre: "Simulador de refinanciación",
+    modo: "embebido",
+    url: "/sistema-externo?id=ext-refinanciacion",
+    icon: Percent,
   },
 ];
 
-// --- Accesos rápidos (menú izquierdo, arriba de Estadísticas) --------------
+// --- Accesos rápidos (menú izquierdo, arriba de Mi turno) ------------------
 // "Shortcut buttons": no pertenecen a ninguna interacción puntual — el
 // agente los usa igual esté en cola vacía o en medio de una llamada. Mismo
 // tipo y mismo componente de contenido que las páginas externas (embebido o
@@ -409,21 +465,50 @@ export const accesosRapidosMock: PaginaExterna[] = [
     id: "ar-manual",
     nombre: "Manual del agente",
     modo: "embebido",
-    contenido: "Guía rápida de procesos, políticas internas y guiones sugeridos por tipo de gestión.",
+    url: "/sistema-externo?id=ar-manual",
     icon: BookOpen,
   },
   {
     id: "ar-calculadora",
     nombre: "Calculadora de cuotas",
     modo: "embebido",
-    contenido: "Simulador de planes de pago y refinanciación para ofrecer al cliente en el momento.",
+    url: "/sistema-externo?id=ar-calculadora",
     icon: Calculator,
   },
   {
     id: "ar-rrhh",
     nombre: "Portal de RRHH",
     modo: "pestana",
+    url: "/sistema-externo?id=ar-rrhh",
     icon: Users,
+  },
+  {
+    id: "ar-conocimiento",
+    nombre: "Base de conocimientos",
+    modo: "embebido",
+    url: "/sistema-externo?id=ar-conocimiento",
+    icon: Library,
+  },
+  {
+    id: "ar-directorio",
+    nombre: "Directorio interno",
+    modo: "pestana",
+    url: "/sistema-externo?id=ar-directorio",
+    icon: Contact,
+  },
+  {
+    id: "ar-beneficios",
+    nombre: "Portal de beneficios",
+    modo: "pestana",
+    url: "/sistema-externo?id=ar-beneficios",
+    icon: Gift,
+  },
+  {
+    id: "ar-mesaayuda",
+    nombre: "Mesa de ayuda IT",
+    modo: "embebido",
+    url: "/sistema-externo?id=ar-mesaayuda",
+    icon: LifeBuoy,
   },
 ];
 

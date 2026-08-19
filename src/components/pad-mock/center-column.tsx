@@ -79,10 +79,18 @@ export function CenterColumn({
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
   return (
-    <div className="flex h-full min-h-0 w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 w-0 flex-1 flex-col bg-background">
       <Tabs value={tab} onValueChange={setTab} className="min-h-0 w-full flex-1 gap-0">
+        {/* h-10: mismo alto que la cabecera "Contexto" de ContextColumn, para
+            que las dos columnas arranquen alineadas. La solapa fija
+            (Llamada/Conversación) queda sticky a la izquierda con su propio
+            fondo — a pedido, no se va con el resto cuando el overflow-x-auto
+            hace scroll por la cantidad de páginas externas. */}
         <TabsList variant="line" className="h-10 w-full shrink-0 overflow-x-auto border-b border-border px-2">
-          <TabsTrigger value="conversacion" className="shrink-0 gap-1.5">
+          <TabsTrigger
+            value="conversacion"
+            className="sticky left-0 z-10 shrink-0 gap-1.5 bg-background"
+          >
             <PrimerTabIcon className="size-4" />
             {primerTabLabel}
             <span
