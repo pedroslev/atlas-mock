@@ -36,8 +36,11 @@ export function NewInteractionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [campaniaId, setCampaniaId] = useState<string | undefined>(undefined);
-  const [cuentaId, setCuentaId] = useState<string | undefined>(undefined);
+  // A pedido: campaña y cuenta vienen preseleccionadas con la primera del
+  // listado — no arrancan vacías.
+  const primeraCampania = campaniasSalientesMock[0];
+  const [campaniaId, setCampaniaId] = useState<string | undefined>(primeraCampania?.id);
+  const [cuentaId, setCuentaId] = useState<string | undefined>(primeraCampania?.cuentas[0]?.id);
   const [numero, setNumero] = useState("");
 
   const campania = campaniasSalientesMock.find((c) => c.id === campaniaId);
@@ -45,8 +48,8 @@ export function NewInteractionDialog({
   const CanalIcon = cuenta ? CANAL_ICON[cuenta.canal] : PhoneCall;
 
   function resetear() {
-    setCampaniaId(undefined);
-    setCuentaId(undefined);
+    setCampaniaId(primeraCampania?.id);
+    setCuentaId(primeraCampania?.cuentas[0]?.id);
     setNumero("");
   }
 
@@ -75,7 +78,8 @@ export function NewInteractionDialog({
               value={campaniaId}
               onValueChange={(v) => {
                 setCampaniaId(v);
-                setCuentaId(undefined);
+                const nueva = campaniasSalientesMock.find((c) => c.id === v);
+                setCuentaId(nueva?.cuentas[0]?.id);
                 setNumero("");
               }}
             >

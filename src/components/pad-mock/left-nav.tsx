@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AgentStatusSelectorMock } from "@/components/pad-mock/agent-status-selector-mock";
 import { NewInteractionDialog } from "@/components/pad-mock/new-interaction-dialog";
+import { NewInternalChatDialog } from "@/components/pad-mock/new-internal-chat-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
@@ -56,12 +57,20 @@ export function LeftNav({
   const [colapsado, setColapsado] = useState(false);
   const [ancho, setAncho] = useState(ANCHO_INICIAL);
   const [nuevaInteraccionAbierta, setNuevaInteraccionAbierta] = useState(false);
+  const [nuevoChatAbierto, setNuevoChatAbierto] = useState(false);
   // Solo tickea mientras hay alguien en Hold — el resto del tiempo no hace
   // falta un reloj corriendo acá.
   const now = useNow(enEspera);
 
-  const nuevaInteraccionDialog = (
-    <NewInteractionDialog open={nuevaInteraccionAbierta} onOpenChange={setNuevaInteraccionAbierta} />
+  const dialogos = (
+    <>
+      <NewInteractionDialog open={nuevaInteraccionAbierta} onOpenChange={setNuevaInteraccionAbierta} />
+      <NewInternalChatDialog
+        open={nuevoChatAbierto}
+        onOpenChange={setNuevoChatAbierto}
+        onElegirAgente={onAbrirChatInterno}
+      />
+    </>
   );
 
   if (colapsado) {
@@ -155,7 +164,7 @@ export function LeftNav({
           </Button>
         </div>
 
-        {nuevaInteraccionDialog}
+        {dialogos}
       </aside>
     );
   }
@@ -247,6 +256,7 @@ export function LeftNav({
             type="button"
             aria-label="Nuevo chat interno"
             title="Nuevo chat interno"
+            onClick={() => setNuevoChatAbierto(true)}
             className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <Plus className="size-3.5" />
@@ -338,7 +348,7 @@ export function LeftNav({
         </button>
       </div>
 
-      {nuevaInteraccionDialog}
+      {dialogos}
     </aside>
   );
 }

@@ -507,6 +507,23 @@ export const estadosAgenteDisponibles: EstadoAgenteMock[] = [
   { id: "descanso", nombre: "Descanso", grupo: "auxiliar", icon: Coffee, dotClass: "bg-secondary" },
 ];
 
+// --- Agentes disponibles para chat interno (modal "Nuevo chat interno") ---
+// Reusa los ids de chatsInternosMock cuando coinciden con alguien que ya
+// tiene un chat abierto (ci-1, ci-2) — así elegirlo acá reabre esa misma
+// ventana en vez de crear una duplicada. estadoId referencia
+// estadosAgenteDisponibles. No incluye a la agente logueada (Marina Acosta):
+// no tiene sentido chatear con una misma.
+export type AgenteInterno = { id: string; nombre: string; estadoId: string };
+
+export const agentesInternosMock: AgenteInterno[] = [
+  { id: "ci-1", nombre: "Rocío Benítez — Supervisora", estadoId: "disponible" },
+  { id: "ci-2", nombre: "Julián Ferreyra", estadoId: "almuerzo" },
+  { id: "ag-camila", nombre: "Camila Torres", estadoId: "disponible" },
+  { id: "ag-bruno", nombre: "Bruno Ledesma", estadoId: "no-disponible" },
+  { id: "ag-agustina", nombre: "Agustina Molina", estadoId: "capacitacion" },
+  { id: "ag-ezequiel", nombre: "Ezequiel Suárez", estadoId: "ausente" },
+];
+
 export const estadoAgenteMock = {
   nombre: "Marina Acosta",
   cronometro: "04:12",
