@@ -168,6 +168,10 @@ export type HistorialEntrada = {
   resumen: string;
   agente: string;
   tipificacion: string;
+  // Descripción propia de este historial — a propósito no busca la
+  // tipificación en el catálogo vigente (tipificacionesA/B): un contacto
+  // viejo puede referenciar un código que ya no existe o cambió de texto.
+  tipificacionDescripcion: string;
   bookmarks: string[];
   resumenIA: string;
   hilo: { autor: "cliente" | "agente"; texto: string }[];
@@ -183,6 +187,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       resumen: "Consulta por vencimiento de factura.",
       agente: "Rocío Benítez",
       tipificacion: "Consulta resuelta",
+      tipificacionDescripcion: "La consulta del cliente se respondió por completo en esta gestión.",
       bookmarks: ["Cliente VIP"],
       resumenIA:
         "La clienta consultó la fecha de vencimiento de su factura de julio. Se le informó el vencimiento (28/07) y las formas de pago disponibles. Quedó conforme.",
@@ -200,6 +205,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       resumen: "Reclamo por cargo duplicado — sin respuesta del cliente.",
       agente: "Julián Ferreyra",
       tipificacion: "Sin resolución",
+      tipificacionDescripcion: "Se agotaron las opciones disponibles en esta gestión y no se llegó a una resolución.",
       bookmarks: ["Reclamo activo", "Requiere seguimiento"],
       resumenIA:
         "La clienta reportó por mail un cobro duplicado del servicio adicional. Se le pidió el número de comprobante para investigar y no volvió a responder. Reclamo quedó abierto.",
@@ -216,6 +222,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       resumen: "Solicitud de baja de servicio adicional.",
       agente: "Marina Acosta",
       tipificacion: "Deriva a Facturación",
+      tipificacionDescripcion: "El caso requiere una autorización que solo puede procesar el equipo de Facturación.",
       bookmarks: [],
       resumenIA:
         "La clienta pidió dar de baja el 'Servicio adicional Premium'. No se pudo procesar en primera línea por requerir autorización de Facturación; se derivó el caso a nivel 2.",
@@ -234,6 +241,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       resumen: "Consulta por cambio de dirección de envío.",
       agente: "Rocío Benítez",
       tipificacion: "Consulta resuelta",
+      tipificacionDescripcion: "La consulta del cliente se respondió por completo en esta gestión.",
       bookmarks: ["Cliente frecuente"],
       resumenIA:
         "El cliente solicitó cambiar la dirección de envío de un pedido en curso. Se actualizó el dato antes del despacho y se confirmó por WhatsApp.",
@@ -250,6 +258,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       resumen: "Consulta por medios de pago disponibles.",
       agente: "Julián Ferreyra",
       tipificacion: "Consulta resuelta",
+      tipificacionDescripcion: "La consulta del cliente se respondió por completo en esta gestión.",
       bookmarks: [],
       resumenIA:
         "El cliente consultó qué medios de pago se aceptan para compras online. Se le informaron las opciones disponibles (tarjeta, transferencia, efectivo en puntos de pago).",

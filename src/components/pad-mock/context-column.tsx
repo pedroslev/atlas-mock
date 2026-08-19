@@ -200,7 +200,7 @@ export function ContextColumn({
 
   return (
     <div className="relative flex shrink-0 flex-col border-l border-border bg-card" style={{ width: ancho }}>
-      <ResizeHandle side="left" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w - d)))} />
+      <ResizeHandle side="left" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w + d)))} />
       <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
         <span className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
           Contexto

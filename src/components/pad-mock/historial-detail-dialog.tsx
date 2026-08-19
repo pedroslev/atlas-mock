@@ -13,8 +13,10 @@ import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/d
 import { cn } from "@/lib/utils";
 
 // "Ver más" de una interacción pasada del historial de contacto — a pedido:
-// hilo (transcripción o conversación, según canal), tipificación, bookmarks,
-// agente que la atendió, y un resumen generado por IA.
+// dos columnas. La izquierda (resumen, tipificación con su descripción,
+// bookmarks) es corta y no necesita scroll propio; la derecha (hilo completo)
+// suele ser más larga —sobre todo una transcripción— así que se lleva la
+// mayor parte del ancho y del alto disponible, para no forzar tanto scroll.
 export function HistorialDetailDialog({
   entrada,
   open,
@@ -29,7 +31,7 @@ export function HistorialDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon className="size-4 text-muted-foreground" />
@@ -41,27 +43,45 @@ export function HistorialDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg bg-accent/50 p-3">
-            <p className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-              <Sparkles className="size-3 text-primary" />
-              Resumen (generado por IA)
-            </p>
-            <p className="text-sm text-foreground/90">{entrada.resumenIA}</p>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[200px_1fr]">
+          <div className="flex flex-col gap-3">
+            <div className="rounded-lg bg-accent/50 p-3">
+              <p className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                <Sparkles className="size-3 text-primary" />
+                Resumen (IA)
+              </p>
+              <p className="text-sm text-foreground/90">{entrada.resumenIA}</p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="neutral">{entrada.tipificacion}</Badge>
-            {entrada.bookmarks.map((b) => (
-              <Badge key={b} variant="info" className="gap-1">
-                <Bookmark className="size-2.5" />
-                {b}
+            <div>
+              <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                Tipificación
+              </p>
+              <Badge variant="neutral" className="mb-1">
+                {entrada.tipificacion}
               </Badge>
-            ))}
+              <p className="text-xs text-muted-foreground">{entrada.tipificacionDescripcion}</p>
+            </div>
+
+            {entrada.bookmarks.length > 0 && (
+              <div>
+                <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Bookmarks
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {entrada.bookmarks.map((b) => (
+                    <Badge key={b} variant="info" className="gap-1">
+                      <Bookmark className="size-2.5" />
+                      {b}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="max-h-56 overflow-y-auto rounded-lg ring-1 ring-foreground/10">
-            <p className="border-b border-border bg-muted/40 px-3 py-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+          <div className="flex max-h-[60vh] flex-col overflow-y-auto rounded-lg ring-1 ring-foreground/10">
+            <p className="sticky top-0 border-b border-border bg-muted/60 px-3 py-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
               {entrada.canal === "llamada" ? "Transcripción" : "Conversación"}
             </p>
             <div className="flex flex-col gap-2 p-3">

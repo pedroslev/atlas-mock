@@ -61,6 +61,7 @@ export function FloatingChatWindow({
         <span className="flex-1 truncate text-sm font-medium">{ventana.chat.nombre}</span>
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           aria-label="Cerrar chat"
           className="flex size-5 shrink-0 items-center justify-center rounded-md hover:bg-white/15"

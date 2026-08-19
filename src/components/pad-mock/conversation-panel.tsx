@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowDown, Check, ChevronsUpDown, FileText, Paperclip, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Popover,
   PopoverContent,
@@ -218,6 +219,10 @@ function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: 
           <Paperclip className="size-4" />
         </Button>
         <PlantillaSelector onElegir={onTextoChange} />
+        <Button size="sm" onClick={enviar} className="shrink-0 gap-1.5">
+          Enviar
+          <Kbd className="bg-primary-foreground/15 text-primary-foreground">Enter</Kbd>
+        </Button>
       </div>
       <Textarea
         value={texto}
@@ -232,11 +237,6 @@ function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: 
         rows={3}
         className="resize-none"
       />
-      <div className="flex justify-end">
-        <Button size="sm" onClick={enviar}>
-          Enviar
-        </Button>
-      </div>
     </div>
   );
 }

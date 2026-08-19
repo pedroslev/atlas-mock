@@ -37,7 +37,6 @@ import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
 import { marcasEjemplo, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
-import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
 
@@ -167,31 +166,25 @@ function TipificacionSelector({
 
 // Barra de controles de la interacción activa — vive en CenterColumn, FUERA
 // del Tabs, para quedar visible sin importar qué solapa esté mirando el
-// agente. Una sola fila, compacta: cronómetro + chips a la izquierda,
-// tipificación + botones a la derecha.
+// agente. Una sola fila, compacta: chips a la izquierda, tipificación +
+// botones a la derecha. El cronómetro se sacó de acá (a pedido) — ahora vive
+// en CenterColumn, al lado del título de la solapa fija.
 //
-// El estado de Hold (enEspera/holdStartedAt) NO es local: lo maneja
-// pad-mock-shell.tsx para poder reflejar el mismo tiempo en espera en la
-// fila de la cola del menú izquierdo (LeftNav) mientras dura la llamada.
+// El estado de Hold (enEspera) NO es local: lo maneja pad-mock-shell.tsx
+// para poder reflejar el mismo tiempo en espera en la fila de la cola del
+// menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
 export function InteractionControls({
   variant,
   tipificaciones,
   enEspera,
-  holdStartedAt,
   onToggleEspera,
 }: {
   variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
   enEspera: boolean;
-  holdStartedAt: number | null;
   onToggleEspera: () => void;
 }) {
   const isMac = useIsMac();
-  const [startedAt] = useState(() => Date.now());
-  const now = useNow(true);
-  const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
-  const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
-
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<string[]>([]);
   const [marcarAbierto, setMarcarAbierto] = useState(false);
@@ -246,14 +239,6 @@ export function InteractionControls({
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-2.5 border-t border-border px-3 py-1.5">
-      <span
-        className={cn(
-          "shrink-0 font-mono text-xs font-semibold tabular-nums",
-          enEspera ? "text-warning" : "text-foreground"
-        )}
-      >
-        {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
-      </span>
       {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
           <Pause className="size-2.5" />

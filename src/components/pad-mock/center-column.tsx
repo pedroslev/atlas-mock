@@ -9,13 +9,20 @@ import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
 import { paginasExternas, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
+import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
+import { cn } from "@/lib/utils";
 
 // Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
 // "Llamada" con ícono de teléfono para una interacción telefónica, o
 // "Conversación" para el resto. Las demás son páginas externas configurables,
 // embebidas o "pestaña aparte" (§4.2). w-full en TabsList para que la línea de
 // abajo llegue hasta el borde con la columna de contexto, no solo hasta donde
-// terminan las solapas.
+// terminan las solapas. min-w-0 en el contenedor y en Tabs: sin esto, la
+// columna no se achica cuando el contexto crece y el layout se rompe.
+//
+// El cronómetro de la interacción vive ACÁ (antes en InteractionControls) y
+// se muestra al lado del título de la solapa fija — a pedido, sacado de la
+// barra de controles de abajo.
 //
 // InteractionControls vive FUERA del Tabs (a pedido: la barra de controles
 // de la interacción queda visible siempre, no solo en Conversación/Llamada).
@@ -38,6 +45,10 @@ export function CenterColumn({
 }) {
   const isMac = useIsMac();
   const [tab, setTab] = useState("conversacion");
+  const [startedAt] = useState(() => Date.now());
+  const now = useNow(true);
+  const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
 
   useEffect(() => {
     const tabs = ["conversacion", ...paginasExternas.map((p) => p.id)];
@@ -68,16 +79,24 @@ export function CenterColumn({
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-1 gap-0">
-        <TabsList variant="line" className="h-10 w-full shrink-0 border-b border-border px-2">
-          <TabsTrigger value="conversacion" className="gap-1.5">
+    <div className="flex h-full min-h-0 w-0 flex-1 flex-col">
+      <Tabs value={tab} onValueChange={setTab} className="min-h-0 w-full flex-1 gap-0">
+        <TabsList variant="line" className="h-10 w-full shrink-0 overflow-x-auto border-b border-border px-2">
+          <TabsTrigger value="conversacion" className="shrink-0 gap-1.5">
             <PrimerTabIcon className="size-4" />
             {primerTabLabel}
+            <span
+              className={cn(
+                "font-mono text-xs tabular-nums",
+                enEspera ? "text-warning" : "text-muted-foreground"
+              )}
+            >
+              {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+            </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
           {paginasExternas.map((p, i) => (
-            <TabsTrigger key={p.id} value={p.id} className="gap-1.5">
+            <TabsTrigger key={p.id} value={p.id} className="shrink-0 gap-1.5">
               <p.icon className="size-4" />
               {p.nombre}
               <Kbd className="ml-1">
@@ -101,7 +120,6 @@ export function CenterColumn({
         variant={variant}
         tipificaciones={tipificaciones}
         enEspera={enEspera}
-        holdStartedAt={holdStartedAt}
         onToggleEspera={onToggleEspera}
       />
     </div>
