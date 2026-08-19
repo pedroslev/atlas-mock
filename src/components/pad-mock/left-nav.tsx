@@ -19,6 +19,7 @@ import {
   formatEspera,
   type ChatInterno,
   type DatasetId,
+  type PaginaExterna,
 } from "@/lib/pad-mock/data";
 
 export type Modo = "interaccion" | "estadisticas" | "historial";
@@ -61,6 +62,17 @@ export function LeftNav({
   // Solo tickea mientras hay alguien en Hold — el resto del tiempo no hace
   // falta un reloj corriendo acá.
   const now = useNow(enEspera);
+
+  // Solo externo ("pestana"/"blank"): abre el link directo en pestaña nueva
+  // y no queda marcado como seleccionado — a pedido, no debe "posicionarse"
+  // ahí como si fuera un acceso embebido.
+  function manejarAcceso(a: PaginaExterna) {
+    if (a.modo === "pestana") {
+      window.open(a.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    onAbrirAcceso(a.id);
+  }
 
   const dialogos = (
     <>
@@ -129,7 +141,7 @@ export function LeftNav({
               key={a.id}
               type="button"
               title={a.nombre}
-              onClick={() => onAbrirAcceso(a.id)}
+              onClick={() => manejarAcceso(a)}
               aria-current={accesoActivoId === a.id ? "true" : undefined}
               className={cn(
                 "flex size-8 shrink-0 items-center justify-center rounded-lg",
@@ -296,7 +308,7 @@ export function LeftNav({
             <button
               key={a.id}
               type="button"
-              onClick={() => onAbrirAcceso(a.id)}
+              onClick={() => manejarAcceso(a)}
               aria-current={accesoActivoId === a.id ? "true" : undefined}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",

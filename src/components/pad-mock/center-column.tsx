@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageSquareText, Phone } from "lucide-react";
+import { ExternalLink, MessageSquareText, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
@@ -51,7 +51,6 @@ export function CenterColumn({
   const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
 
   useEffect(() => {
-    const tabs = ["conversacion", ...paginasExternas.map((p) => p.id)];
     function onKey(e: KeyboardEvent) {
       const mod = e.ctrlKey || e.metaKey;
       if (!mod || !e.altKey || e.shiftKey || e.repeat) return;
@@ -66,9 +65,22 @@ export function CenterColumn({
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx >= tabs.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx > paginasExternas.length) return;
       e.preventDefault();
-      setTab(tabs[idx]);
+      // Posición 1 = Llamada/Conversación (siempre una solapa). Del resto,
+      // las "pestana" (solo externas) no se seleccionan — abren su link
+      // aparte, igual que al clickearlas.
+      if (idx === 0) {
+        setTab("conversacion");
+        return;
+      }
+      const p = paginasExternas[idx - 1];
+      if (!p) return;
+      if (p.modo === "pestana") {
+        window.open(p.url, "_blank", "noopener,noreferrer");
+      } else {
+        setTab(p.id);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -113,25 +125,47 @@ export function CenterColumn({
             </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
-          {paginasExternas.map((p, i) => (
-            <TabsTrigger key={p.id} value={p.id} className="flex-none gap-1.5">
-              <p.icon className="size-4" />
-              {p.nombre}
-              <Kbd className="ml-1">
-                {shortcutMod} {i + 2}
-              </Kbd>
-            </TabsTrigger>
-          ))}
+          {paginasExternas.map((p, i) =>
+            p.modo === "pestana" ? (
+              // Solo externa ("blank"): no es una solapa seleccionable — un
+              // click abre pagina.url directo en pestaña nueva y no queda
+              // marcada como activa (a pedido: "no deje seleccionado el
+              // botón como si se posicionara allí").
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
+                className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              >
+                <p.icon className="size-4" />
+                {p.nombre}
+                <ExternalLink className="size-3 text-muted-foreground" />
+                <Kbd className="ml-1">
+                  {shortcutMod} {i + 2}
+                </Kbd>
+              </button>
+            ) : (
+              <TabsTrigger key={p.id} value={p.id} className="flex-none gap-1.5">
+                <p.icon className="size-4" />
+                {p.nombre}
+                <Kbd className="ml-1">
+                  {shortcutMod} {i + 2}
+                </Kbd>
+              </TabsTrigger>
+            )
+          )}
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
           <ConversationPanel variant={variant} />
         </TabsContent>
-        {paginasExternas.map((p) => (
-          <TabsContent key={p.id} value={p.id} className="min-h-0 flex-1 overflow-hidden">
-            <ExternalPagePanel pagina={p} />
-          </TabsContent>
-        ))}
+        {paginasExternas
+          .filter((p) => p.modo === "embebido")
+          .map((p) => (
+            <TabsContent key={p.id} value={p.id} className="min-h-0 flex-1 overflow-hidden">
+              <ExternalPagePanel pagina={p} />
+            </TabsContent>
+          ))}
       </Tabs>
 
       <InteractionControls
