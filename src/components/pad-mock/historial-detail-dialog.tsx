@@ -1,12 +1,11 @@
 "use client";
 
-import { Bookmark, Sparkles, User } from "lucide-react";
+import { Bookmark, Clock, Sparkles, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
@@ -33,14 +32,20 @@ export function HistorialDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Icon className="size-4 text-muted-foreground" />
-            {CANAL_LABEL[entrada.canal]} · {entrada.fecha}
+          <DialogTitle className="flex flex-wrap items-center gap-x-2 gap-y-1 text-base">
+            <span className="flex items-center gap-1.5">
+              <Icon className="size-4 text-muted-foreground" />
+              {CANAL_LABEL[entrada.canal]} · {entrada.fecha}
+            </span>
+            <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">
+              <Clock className="size-3.5" />
+              {entrada.duracion}
+            </span>
+            <span className="flex items-center gap-1 text-sm font-normal text-muted-foreground">
+              <User className="size-3.5" />
+              {entrada.agente}
+            </span>
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-1.5">
-            <User className="size-3.5" />
-            Atendida por {entrada.agente}
-          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[200px_1fr]">

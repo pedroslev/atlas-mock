@@ -239,6 +239,17 @@ export function InteractionControls({
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-2.5 border-t border-border px-3 py-1.5">
+      <TipificacionSelector
+        tipificaciones={tipificaciones}
+        value={tipSeleccionada}
+        onChange={setTipSeleccionada}
+      />
+      <ActionTooltip label="Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.">
+        <span className="flex size-6 shrink-0 items-center justify-center text-muted-foreground">
+          <HelpCircle className="size-3.5" />
+        </span>
+      </ActionTooltip>
+
       {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
           <Pause className="size-2.5" />
@@ -259,19 +270,6 @@ export function InteractionControls({
       )}
 
       <div className="ml-auto flex min-w-0 items-center gap-1.5">
-        <TipificacionSelector
-          tipificaciones={tipificaciones}
-          value={tipSeleccionada}
-          onChange={setTipSeleccionada}
-        />
-        <ActionTooltip label="Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.">
-          <span className="flex size-6 shrink-0 items-center justify-center text-muted-foreground">
-            <HelpCircle className="size-3.5" />
-          </span>
-        </ActionTooltip>
-
-        <span className="mx-0.5 h-5 w-px shrink-0 bg-border" aria-hidden />
-
         <ControlButton
           icon={enEspera ? Play : Pause}
           label={enEspera ? "Retomar" : "Espera"}

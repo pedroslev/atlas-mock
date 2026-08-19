@@ -38,6 +38,7 @@ function Hilo({ variant }: { variant: "llamada" | "chat" }) {
         <div className="flex flex-col gap-3">
           {transcripcionLlamada.map((t, i) => (
             <p key={i} className="text-sm leading-relaxed">
+              <span className="mr-1.5 font-mono text-[0.65rem] text-muted-foreground">{t.hora}</span>
               <span
                 className={cn(
                   "font-semibold",

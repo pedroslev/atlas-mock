@@ -87,8 +87,8 @@ export function CenterColumn({
             {primerTabLabel}
             <span
               className={cn(
-                "font-mono text-xs tabular-nums",
-                enEspera ? "text-warning" : "text-muted-foreground"
+                "font-mono text-sm font-bold tabular-nums",
+                enEspera ? "text-warning" : "text-foreground"
               )}
             >
               {formatDuration(enEspera ? elapsedHold : elapsedTotal)}

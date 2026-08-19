@@ -68,15 +68,17 @@ export const clienteA = {
   antiguedad: "2 años y 3 meses",
 };
 
-export type TurnoLlamada = { turno: "cliente" | "agente"; texto: string };
+// "hora" en formato hora:minuto:segundo — mismo formato que el chat, a
+// pedido (antes la transcripción no mostraba horario).
+export type TurnoLlamada = { turno: "cliente" | "agente"; texto: string; hora: string };
 
 export const transcripcionLlamada: TurnoLlamada[] = [
-  { turno: "agente", texto: "Buenas tardes, habla con Atención al Cliente, mi nombre es Marina. ¿En qué puedo ayudarla?" },
-  { turno: "cliente", texto: "Hola, buenas. Te llamo porque en la factura de este mes me cobraron un cargo que no reconozco, de casi ocho mil pesos." },
-  { turno: "agente", texto: "Entiendo, disculpe las molestias. ¿Me confirma el número de cliente para revisar la cuenta?" },
-  { turno: "cliente", texto: "Sí, es el 3345789." },
-  { turno: "agente", texto: "Perfecto, deme un segundo que lo reviso..." },
-  { turno: "cliente", texto: "Es la segunda vez que me pasa esto. La verdad que ya me cansé de tener que llamar." },
+  { turno: "agente", texto: "Buenas tardes, habla con Atención al Cliente, mi nombre es Marina. ¿En qué puedo ayudarla?", hora: "14:15:02" },
+  { turno: "cliente", texto: "Hola, buenas. Te llamo porque en la factura de este mes me cobraron un cargo que no reconozco, de casi ocho mil pesos.", hora: "14:15:09" },
+  { turno: "agente", texto: "Entiendo, disculpe las molestias. ¿Me confirma el número de cliente para revisar la cuenta?", hora: "14:15:24" },
+  { turno: "cliente", texto: "Sí, es el 3345789.", hora: "14:15:31" },
+  { turno: "agente", texto: "Perfecto, deme un segundo que lo reviso...", hora: "14:15:36" },
+  { turno: "cliente", texto: "Es la segunda vez que me pasa esto. La verdad que ya me cansé de tener que llamar.", hora: "14:15:53" },
 ];
 
 export const copilotoLlamada = {
@@ -108,13 +110,14 @@ export const clienteB = {
   antiguedad: "4 años y 8 meses",
 };
 
+// "hora" en formato hora:minuto:segundo — mismo formato que la transcripción.
 export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
 
 export const mensajesChat: MensajeChat[] = [
-  { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02" },
-  { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02" },
-  { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03" },
-  { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03" },
+  { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
+  { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
+  { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
+  { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
 ];
 
 export const copilotoChat = {
@@ -174,6 +177,7 @@ export type HistorialEntrada = {
   tipificacionDescripcion: string;
   bookmarks: string[];
   resumenIA: string;
+  duracion: string;
   hilo: { autor: "cliente" | "agente"; texto: string }[];
 };
 
@@ -191,6 +195,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       bookmarks: ["Cliente VIP"],
       resumenIA:
         "La clienta consultó la fecha de vencimiento de su factura de julio. Se le informó el vencimiento (28/07) y las formas de pago disponibles. Quedó conforme.",
+      duracion: "2:14",
       hilo: [
         { autor: "cliente", texto: "Hola, quería saber cuándo vence mi factura de este mes." },
         { autor: "agente", texto: "Hola, vence el 28/07. La podés pagar por home banking o en cualquier sucursal." },
@@ -209,6 +214,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       bookmarks: ["Reclamo activo", "Requiere seguimiento"],
       resumenIA:
         "La clienta reportó por mail un cobro duplicado del servicio adicional. Se le pidió el número de comprobante para investigar y no volvió a responder. Reclamo quedó abierto.",
+      duracion: "—",
       hilo: [
         { autor: "cliente", texto: "Me cobraron dos veces el mismo servicio este mes, adjunto el resumen." },
         { autor: "agente", texto: "Gracias por avisar. ¿Me podés pasar el número de comprobante de cada cobro para investigar?" },
@@ -226,6 +232,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       bookmarks: [],
       resumenIA:
         "La clienta pidió dar de baja el 'Servicio adicional Premium'. No se pudo procesar en primera línea por requerir autorización de Facturación; se derivó el caso a nivel 2.",
+      duracion: "1:47",
       hilo: [
         { autor: "cliente", texto: "Quiero dar de baja el servicio adicional que tengo contratado." },
         { autor: "agente", texto: "Entiendo. Esa baja la tiene que procesar Facturación — te derivo el caso ahora." },
@@ -245,6 +252,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       bookmarks: ["Cliente frecuente"],
       resumenIA:
         "El cliente solicitó cambiar la dirección de envío de un pedido en curso. Se actualizó el dato antes del despacho y se confirmó por WhatsApp.",
+      duracion: "3:02",
       hilo: [
         { autor: "cliente", texto: "Necesito cambiar la dirección de entrega de mi último pedido." },
         { autor: "agente", texto: "Listo, ya actualicé la dirección. Te va a llegar a la nueva sin problema." },
@@ -262,6 +270,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       bookmarks: [],
       resumenIA:
         "El cliente consultó qué medios de pago se aceptan para compras online. Se le informaron las opciones disponibles (tarjeta, transferencia, efectivo en puntos de pago).",
+      duracion: "1:05",
       hilo: [
         { autor: "cliente", texto: "¿Qué medios de pago aceptan para compras por la web?" },
         { autor: "agente", texto: "Tarjeta de crédito/débito, transferencia y efectivo en puntos de pago adheridos." },
