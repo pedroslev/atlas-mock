@@ -66,9 +66,9 @@ export function PadMockShell() {
       {modo === "historial" && <AgentHistoryPanel />}
       {modo === "interaccion" && (
         <>
-          <CenterColumn key={interaccionActivaId} variant={cfg.variant} />
+          <CenterColumn key={`centro-${interaccionActivaId}`} variant={cfg.variant} />
           <ContextColumn
-            key={interaccionActivaId}
+            key={`contexto-${interaccionActivaId}`}
             colapsada={contextoColapsada}
             onToggle={() => setContextoColapsada((v) => !v)}
             cliente={cfg.cliente}
