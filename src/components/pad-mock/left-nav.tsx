@@ -1,10 +1,13 @@
 "use client";
 
-import { BarChart3, History, MessageCircle, Plus } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, ExternalLink, History, LayoutGrid, MessageCircle, Plus, Zap } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { QuickAccessDialog } from "@/components/pad-mock/quick-access-dialog";
 import {
+  accesosRapidosMock,
   CANAL_ICON,
   chatsInternosMock,
   colaMock,
@@ -32,6 +35,9 @@ export function LeftNav({
   interaccionActivaId: string;
   onSeleccionarInteraccion: (id: string, datasetId: DatasetId) => void;
 }) {
+  const [accesoAbierto, setAccesoAbierto] = useState<string | null>(null);
+  const pagina = accesosRapidosMock.find((a) => a.id === accesoAbierto);
+
   return (
     <aside className="flex h-full w-12 shrink-0 flex-col gap-2 overflow-y-auto border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground sm:w-44 sm:p-2">
       {/* Mi estado — mismo look que AgentStatusSelector real, sin la
@@ -53,12 +59,13 @@ export function LeftNav({
 
       {/* Cola — brief §3: número de cliente + ícono de canal + cronómetro de
           espera, nada más. Cada fila abre esa interacción. Alt+N salta a la
-          fila N (ver el listener global en pad-mock-shell.tsx). */}
-      <div className="flex flex-col gap-1">
+          fila N (ver el listener global en pad-mock-shell.tsx). flex-1: es lo
+          que se prioriza en el menú, el resto se acomoda alrededor. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
           Cola
         </span>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-0.5 overflow-y-auto">
           {colaMock.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = modo === "interaccion" && f.id === interaccionActivaId;
@@ -90,9 +97,9 @@ export function LeftNav({
         </div>
       </div>
 
-      {/* Chats internos — solo el listado; el alta ("+") todavía no está
-          mockeada. */}
-      <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
+      {/* Chats internos — de la mitad del menú para abajo, la cola tiene
+          prioridad. Solo el listado; el alta ("+") todavía no está mockeada. */}
+      <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
             Chats internos
@@ -124,9 +131,46 @@ export function LeftNav({
         </div>
       </div>
 
-      {/* Estadísticas / Historial del agente — puntos de navegación fijos,
-          debajo de todo. */}
-      <div className="flex flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
+      {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
+          interacción puntual, funcionan igual estando en cola vacía o en
+          medio de una llamada. Mismo modo embebido/pestaña que las páginas
+          externas de una interacción, pero se abren en un diálogo porque no
+          tienen una interacción a la cual pertenecerle una solapa. */}
+      <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
+          Accesos rápidos
+        </span>
+        <div className="flex flex-col gap-0.5">
+          {accesosRapidosMock.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => setAccesoAbierto(a.id)}
+              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 max-sm:justify-center max-sm:px-0"
+            >
+              <Zap className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate max-sm:hidden">{a.nombre}</span>
+              {a.modo === "pestana" ? (
+                <ExternalLink className="hidden size-3 shrink-0 text-muted-foreground sm:inline" />
+              ) : (
+                <LayoutGrid className="hidden size-3 shrink-0 text-muted-foreground sm:inline" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {pagina && (
+        <QuickAccessDialog
+          pagina={pagina}
+          open={accesoAbierto !== null}
+          onOpenChange={(open) => setAccesoAbierto(open ? accesoAbierto : null)}
+        />
+      )}
+
+      {/* Estadísticas / Historial del agente — siempre pegados al fondo del
+          menú (mt-auto), sin importar cuánto ocupe la cola o los chats. */}
+      <div className="mt-auto flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
           type="button"
           onClick={() => onModo("estadisticas")}

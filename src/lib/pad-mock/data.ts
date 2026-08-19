@@ -111,7 +111,27 @@ export const copilotoArticulo = {
   fuente: "Base de conocimiento — Logística",
 };
 
-export const canalesSalida = ["WhatsApp", "Email", "SMS"] as const;
+// Plantillas de mensajes — reemplaza al selector de canal de salida en el
+// redactor (retirado a pedido).
+export type PlantillaMensaje = { id: string; nombre: string; texto: string };
+
+export const plantillasMensaje: PlantillaMensaje[] = [
+  {
+    id: "pl-1",
+    nombre: "Saludo inicial",
+    texto: "¡Hola! Gracias por escribirnos. ¿En qué te puedo ayudar hoy?",
+  },
+  {
+    id: "pl-2",
+    nombre: "Pedir más datos",
+    texto: "Para poder ayudarte mejor, ¿me confirmás tu número de pedido?",
+  },
+  {
+    id: "pl-3",
+    nombre: "Cierre de conversación",
+    texto: "Perfecto, quedó todo resuelto. ¡Gracias por tu paciencia! Cualquier cosa, escribinos.",
+  },
+];
 
 // --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el
 // acordeón de contexto — brief §5.2). Distinto del historial del agente
@@ -176,6 +196,32 @@ export const paginasExternas: PaginaExterna[] = [
   {
     id: "ext-facturacion",
     nombre: "Portal de facturación",
+    modo: "pestana",
+  },
+];
+
+// --- Accesos rápidos (menú izquierdo, arriba de Estadísticas) --------------
+// "Shortcut buttons": no pertenecen a ninguna interacción puntual — el
+// agente los usa igual esté en cola vacía o en medio de una llamada. Mismo
+// tipo y mismo componente de contenido que las páginas externas (embebido o
+// pestaña aparte), solo que se abren en un diálogo en vez de una solapa del
+// centro, porque no son parte de ninguna interacción.
+export const accesosRapidosMock: PaginaExterna[] = [
+  {
+    id: "ar-manual",
+    nombre: "Manual del agente",
+    modo: "embebido",
+    contenido: "Guía rápida de procesos, políticas internas y guiones sugeridos por tipo de gestión.",
+  },
+  {
+    id: "ar-calculadora",
+    nombre: "Calculadora de cuotas",
+    modo: "embebido",
+    contenido: "Simulador de planes de pago y refinanciación para ofrecer al cliente en el momento.",
+  },
+  {
+    id: "ar-rrhh",
+    nombre: "Portal de RRHH",
     modo: "pestana",
   },
 ];

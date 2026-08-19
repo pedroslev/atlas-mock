@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, Check, Sparkles } from "lucide-react";
+import { ArrowDown, Check, Paperclip, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,12 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { InteractionControls } from "@/components/pad-mock/call-controls";
 import {
-  canalesSalida,
   copilotoChat,
   copilotoLlamada,
   mensajesChat,
+  plantillasMensaje,
   transcripcionLlamada,
 } from "@/lib/pad-mock/data";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
@@ -147,38 +146,56 @@ function FranjaCopiloto({
   );
 }
 
-// Brief §4.1 — redactor: solo para canales de texto. Selector de canal de
-// salida a la izquierda, arriba del área de texto (puede diferir del canal
-// de entrada).
+// Brief §4.1 — redactor: solo para canales de texto. Enter envía (Shift+Enter
+// hace salto de línea); adjuntar y plantillas de mensajes al pie. El
+// selector de canal de salida se retiró a pedido.
 function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: string) => void }) {
+  function enviar() {
+    if (!texto.trim()) return;
+    onTextoChange("");
+  }
+
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
       <div className="flex items-center gap-2">
-        <Select defaultValue={canalesSalida[0]}>
-          <SelectTrigger size="sm" className="w-32">
-            <SelectValue />
+        <Select
+          onValueChange={(id) => {
+            const plantilla = plantillasMensaje.find((p) => p.id === id);
+            if (plantilla) onTextoChange(plantilla.texto);
+          }}
+        >
+          <SelectTrigger size="sm" className="w-44">
+            <SelectValue placeholder="Plantillas de mensajes…" />
           </SelectTrigger>
           <SelectContent>
-            {canalesSalida.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
+            {plantillasMensaje.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.nombre}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <OpenQuestion className="flex-1">
-          si el canal de salida distinto al de entrada cambia cómo se guarda la interacción.
-        </OpenQuestion>
       </div>
       <Textarea
         value={texto}
         onChange={(e) => onTextoChange(e.target.value)}
-        placeholder="Escribí tu respuesta…"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            enviar();
+          }
+        }}
+        placeholder="Escribí tu respuesta… (Enter para enviar, Shift+Enter para salto de línea)"
         rows={3}
         className="resize-none"
       />
-      <div className="flex justify-end">
-        <Button size="sm">Enviar</Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="icon-sm" aria-label="Adjuntar archivo" title="Adjuntar archivo">
+          <Paperclip className="size-4" />
+        </Button>
+        <Button size="sm" onClick={enviar}>
+          Enviar
+        </Button>
       </div>
     </div>
   );
@@ -192,7 +209,6 @@ export function ConversationPanel({ variant }: { variant: "llamada" | "chat" }) 
       <Hilo variant={variant} />
       <FranjaCopiloto variant={variant} onAceptarChat={setTexto} />
       {variant === "chat" && <Redactor texto={texto} onTextoChange={setTexto} />}
-      <InteractionControls variant={variant} />
     </div>
   );
 }

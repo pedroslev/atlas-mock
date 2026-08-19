@@ -2,22 +2,43 @@
 
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Mic, MicOff, Pause, Play, PhoneOff, Bookmark, PhoneForwarded, Check, CircleX } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Pause,
+  Play,
+  PhoneOff,
+  Bookmark,
+  PhoneForwarded,
+  Check,
+  CircleX,
+  ChevronsUpDown,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
-import { marcasEjemplo, destinosTransferencia } from "@/lib/pad-mock/data";
+import { marcasEjemplo, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
+import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
+import { OpenQuestion } from "@/components/pad-mock/open-question";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
 
-// Mismos tokens que CallActionButton real (active-call-panel.tsx): verde
-// atender, rojo colgar, gris neutro, ámbar cuando está "presionado".
 const TONE_CLASS: Record<ActionTone, string> = {
   success: "bg-success text-white hover:bg-success/90",
   destructive: "bg-destructive text-white hover:bg-destructive/90",
@@ -25,22 +46,20 @@ const TONE_CLASS: Record<ActionTone, string> = {
   active: "bg-warning text-white hover:bg-warning/90",
 };
 
-// Atajos de esta interacción — mismo criterio que PAD_SHORTCUTS real
-// (mock-pad.ts): modificador Ctrl/Cmd + letra mnemónica, para no chocar con
-// atajos de una letra sola del navegador/SO. "Marcar" y "Transferir" son
-// nuevos acá, elegidos para no repetir letra con Espera/Silenciar/Colgar.
 const SHORTCUTS = {
   espera: "H",
   silenciar: "M",
   marcar: "B",
   transferir: "T",
-  finalizar: "E",
+  cerrar: "E",
 } as const;
 
 function shortcutLabel(key: string, isMac: boolean): string {
   return isMac ? `⌘${key}` : `Ctrl ${key}`;
 }
 
+// Botones más chicos que la primera versión (a pedido) — size-9 en vez de
+// size-12, sin perder el mismo lenguaje visual (tono por color, atajo debajo).
 function ControlButton({
   icon: Icon,
   label,
@@ -57,7 +76,7 @@ function ControlButton({
   pressed?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1">
       <button
         type="button"
         onClick={onClick}
@@ -65,37 +84,127 @@ function ControlButton({
         aria-keyshortcuts={shortcut}
         aria-pressed={pressed}
         className={cn(
-          "flex size-12 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           TONE_CLASS[tone]
         )}
       >
-        <Icon className="size-5" />
+        <Icon className="size-4" />
       </button>
-      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Kbd>{shortcut}</Kbd>
+      <span className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
+        <Kbd className="h-4 min-w-4 px-0.5 text-[0.6rem]">{shortcut}</Kbd>
         {label}
       </span>
     </div>
   );
 }
 
-// Acciones de la interacción activa — comunes a llamada y chat (Espera,
-// Marcar, Transferir, terminar) salvo Silenciar, que es específico de audio.
-// "Finalizar" (chat) es la versión genérica de "Colgar" (llamada): ambas
-// cierran la interacción, la etiqueta cambia porque "colgar" no tiene sentido
-// fuera de una llamada.
-export function InteractionControls({ variant }: { variant: "llamada" | "chat" }) {
+// Combobox con buscador para tipificación — mismo patrón que EntityCombobox
+// de Olimpo. Vive acá ahora (antes en el acordeón de contexto, a pedido).
+function TipificacionSelector({
+  tipificaciones,
+  value,
+  onChange,
+}: {
+  tipificaciones: Tipificacion[];
+  value: string | undefined;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const seleccionada = tipificaciones.find((t) => t.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          size="sm"
+          className="w-full min-w-0 justify-between font-normal"
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
+            <span className="truncate">{seleccionada?.nombre ?? "Elegir tipificación…"}</span>
+            {seleccionada?.sugerida && (
+              <Badge variant="info" className="shrink-0 gap-1">
+                <Sparkles className="size-2.5" />
+                Sugerida
+              </Badge>
+            )}
+          </span>
+          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar tipificación…" />
+          <CommandList>
+            <CommandEmpty>Sin resultados.</CommandEmpty>
+            <CommandGroup>
+              {tipificaciones.map((t) => (
+                <CommandItem
+                  key={t.id}
+                  value={t.nombre}
+                  onSelect={() => {
+                    onChange(t.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn(value === t.id ? "opacity-100" : "opacity-0")} />
+                  <span className="flex-1">{t.nombre}</span>
+                  {t.sugerida && (
+                    <Badge variant="info" className="shrink-0 gap-1">
+                      <Sparkles className="size-2.5" />
+                      Sugerida
+                    </Badge>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Barra de controles de la interacción activa — vive en CenterColumn, FUERA
+// del Tabs, para quedar visible sin importar qué solapa esté mirando el
+// agente (conversación o una integración). Cronómetro: cuenta el tiempo
+// total de la interacción salvo que esté en Espera, en cuyo caso cambia a
+// ámbar y pasa a contar cuánto lleva EN espera (se reinicia si se retoma y
+// se vuelve a poner en espera). "Cerrar interacción" reemplaza a
+// Colgar/Finalizar — mismo botón para los dos canales, pensado para
+// clickearse después de elegir la tipificación de arriba.
+export function InteractionControls({
+  variant,
+  tipificaciones,
+}: {
+  variant: "llamada" | "chat";
+  tipificaciones: Tipificacion[];
+}) {
   const isMac = useIsMac();
-  const [enEspera, setEnEspera] = useState(false);
+  const [startedAt] = useState(() => Date.now());
+  const [enEspera, setEnEsperaRaw] = useState(false);
+  const [holdStartedAt, setHoldStartedAt] = useState<number | null>(null);
+  const now = useNow(true);
+  const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
+
+  function setEnEspera(next: boolean) {
+    setEnEsperaRaw(next);
+    setHoldStartedAt(next ? Date.now() : null);
+  }
+
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<string[]>([]);
   const [marcarAbierto, setMarcarAbierto] = useState(false);
   const [transferido, setTransferido] = useState<string | null>(null);
   const [transferirAbierto, setTransferirAbierto] = useState(false);
+  const [tipSeleccionada, setTipSeleccionada] = useState(
+    tipificaciones.find((t) => t.sugerida)?.id ?? tipificaciones[0]?.id
+  );
 
-  // Mismo guard que el listener real: exige Ctrl/Cmd, ignora inputs
-  // editables, y hace preventDefault para no disparar el default del
-  // navegador (p.ej. Ctrl+B suele ser "negrita" en algunos campos).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const mod = e.ctrlKey || e.metaKey;
@@ -114,7 +223,7 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
           e.preventDefault();
-          setEnEspera((v) => !v);
+          setEnEspera(!enEspera);
           break;
         case SHORTCUTS.silenciar.toLowerCase():
           if (variant === "llamada") {
@@ -130,42 +239,66 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
           e.preventDefault();
           setTransferirAbierto(true);
           break;
-        case SHORTCUTS.finalizar.toLowerCase():
+        case SHORTCUTS.cerrar.toLowerCase():
           e.preventDefault();
           break;
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [variant]);
+  }, [variant, enEspera]);
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
-      {(marcas.length > 0 || transferido) && (
-        <div className="flex flex-wrap items-center gap-1.5 px-1">
-          {marcas.map((m, i) => (
-            <Badge key={`${m}-${i}`} variant="neutral" className="gap-1">
-              <Bookmark className="size-2.5" />
-              {m}
-            </Badge>
-          ))}
-          {transferido && (
-            <Badge variant="info" className="gap-1">
-              <PhoneForwarded className="size-2.5" />
-              Transferida a {transferido}
-            </Badge>
+    <div className="flex shrink-0 flex-col gap-2 border-t border-border p-2.5">
+      <div className="flex items-center gap-2">
+        <span
+          className={cn(
+            "font-mono text-sm font-semibold tabular-nums",
+            enEspera ? "text-warning" : "text-foreground"
           )}
-        </div>
-      )}
+        >
+          {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+        </span>
+        {enEspera && (
+          <Badge variant="warning" className="gap-1">
+            <Pause className="size-2.5" />
+            En espera
+          </Badge>
+        )}
+        {marcas.map((m, i) => (
+          <Badge key={`${m}-${i}`} variant="neutral" className="gap-1">
+            <Bookmark className="size-2.5" />
+            {m}
+          </Badge>
+        ))}
+        {transferido && (
+          <Badge variant="info" className="gap-1">
+            <PhoneForwarded className="size-2.5" />
+            Transferida a {transferido}
+          </Badge>
+        )}
+      </div>
 
-      <div className="flex items-center justify-center gap-5">
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 text-xs text-muted-foreground">Tipificación</span>
+        <TipificacionSelector
+          tipificaciones={tipificaciones}
+          value={tipSeleccionada}
+          onChange={setTipSeleccionada}
+        />
+        <OpenQuestion className="hidden flex-1 sm:flex">
+          cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano.
+        </OpenQuestion>
+      </div>
+
+      <div className="flex items-center justify-center gap-4">
         <ControlButton
           icon={enEspera ? Play : Pause}
           label={enEspera ? "Retomar" : "Espera"}
           shortcut={shortcutLabel(SHORTCUTS.espera, isMac)}
           tone={enEspera ? "active" : "neutral"}
           pressed={enEspera}
-          onClick={() => setEnEspera((v) => !v)}
+          onClick={() => setEnEspera(!enEspera)}
         />
         {variant === "llamada" && (
           <ControlButton
@@ -244,23 +377,13 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
           </PopoverContent>
         </Popover>
 
-        {variant === "llamada" ? (
-          <ControlButton
-            icon={PhoneOff}
-            label="Colgar"
-            shortcut={shortcutLabel(SHORTCUTS.finalizar, isMac)}
-            tone="destructive"
-            onClick={() => {}}
-          />
-        ) : (
-          <ControlButton
-            icon={CircleX}
-            label="Finalizar"
-            shortcut={shortcutLabel(SHORTCUTS.finalizar, isMac)}
-            tone="destructive"
-            onClick={() => {}}
-          />
-        )}
+        <ControlButton
+          icon={variant === "llamada" ? PhoneOff : CircleX}
+          label="Cerrar interacción"
+          shortcut={shortcutLabel(SHORTCUTS.cerrar, isMac)}
+          tone="destructive"
+          onClick={() => {}}
+        />
       </div>
     </div>
   );

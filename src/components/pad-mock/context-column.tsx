@@ -2,35 +2,19 @@
 
 import { useState } from "react";
 import {
-  Check,
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
-  ChevronsUpDown,
   User,
   History,
   Sparkles,
-  Tag,
   NotebookPen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada, type Tipificacion } from "@/lib/pad-mock/data";
+import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
 
 type ClienteMock = {
@@ -44,16 +28,15 @@ type ClienteMock = {
 
 type ArticuloCopiloto = { titulo: string; resumen: string; fuente: string };
 
-// Orden de renderizado: Tipificación va ÚLTIMA (a pedido) — el resto sigue el
-// orden del brief §5.
-type SeccionId = "cliente" | "historial" | "copiloto" | "notas" | "tipificacion";
+// Tipificación se mudó a la barra de controles de la interacción (siempre
+// visible, junto a "Cerrar interacción") — ya no vive en este acordeón.
+type SeccionId = "cliente" | "historial" | "copiloto" | "notas";
 
 const SECCIONES: { id: SeccionId; label: string; icon: typeof User }[] = [
   { id: "cliente", label: "Cliente", icon: User },
   { id: "historial", label: "Historial", icon: History },
   { id: "copiloto", label: "Copiloto", icon: Sparkles },
   { id: "notas", label: "Notas", icon: NotebookPen },
-  { id: "tipificacion", label: "Tipificación", icon: Tag },
 ];
 
 // Acordeón 100% React (sin <details>/onToggle nativo — ese combo controlado
@@ -128,78 +111,6 @@ function HistorialItem({ entrada }: { entrada: HistorialEntrada }) {
   );
 }
 
-// Combobox con buscador (mismo patrón que EntityCombobox de Olimpo) — el
-// catálogo de tipificaciones suele ser largo, una lista de botones no
-// escala. La sugerida por el copiloto se marca con badge, tanto en el
-// trigger como en la lista.
-function TipificacionSelector({
-  tipificaciones,
-  value,
-  onChange,
-}: {
-  tipificaciones: Tipificacion[];
-  value: string | undefined;
-  onChange: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const seleccionada = tipificaciones.find((t) => t.id === value);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          size="sm"
-          className="w-full min-w-0 justify-between font-normal"
-        >
-          <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
-            <span className="truncate">{seleccionada?.nombre ?? "Elegir tipificación…"}</span>
-            {seleccionada?.sugerida && (
-              <Badge variant="info" className="shrink-0 gap-1">
-                <Sparkles className="size-2.5" />
-                Sugerida
-              </Badge>
-            )}
-          </span>
-          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Buscar tipificación…" />
-          <CommandList>
-            <CommandEmpty>Sin resultados.</CommandEmpty>
-            <CommandGroup>
-              {tipificaciones.map((t) => (
-                <CommandItem
-                  key={t.id}
-                  value={t.nombre}
-                  onSelect={() => {
-                    onChange(t.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check className={cn(value === t.id ? "opacity-100" : "opacity-0")} />
-                  <span className="flex-1">{t.nombre}</span>
-                  {t.sugerida && (
-                    <Badge variant="info" className="shrink-0 gap-1">
-                      <Sparkles className="size-2.5" />
-                      Sugerida
-                    </Badge>
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // Brief §5 — acordeón, cada sección se abre/cierra por separado. Colapsa a una
 // tira de íconos verticales; un click sobre un ícono reabre la columna con esa
 // sección puntual abierta.
@@ -208,7 +119,6 @@ export function ContextColumn({
   onToggle,
   cliente,
   historial,
-  tipificaciones,
   articulo,
   seccionesAbiertasInit,
 }: {
@@ -216,14 +126,10 @@ export function ContextColumn({
   onToggle: () => void;
   cliente: ClienteMock;
   historial: HistorialEntrada[];
-  tipificaciones: Tipificacion[];
   articulo?: ArticuloCopiloto;
   seccionesAbiertasInit: SeccionId[];
 }) {
   const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(seccionesAbiertasInit));
-  const [tipSeleccionada, setTipSeleccionada] = useState(
-    tipificaciones.find((t) => t.sugerida)?.id ?? tipificaciones[0]?.id
-  );
 
   function toggle(id: SeccionId) {
     setAbiertas((cur) => {
@@ -329,22 +235,6 @@ export function ContextColumn({
 
         <Seccion label="Notas" icon={NotebookPen} abierta={abiertas.has("notas")} onToggle={() => toggle("notas")}>
           <Textarea placeholder="Notas libres sobre esta interacción…" rows={3} className="resize-none text-xs" />
-        </Seccion>
-
-        <Seccion
-          label="Tipificación"
-          icon={Tag}
-          abierta={abiertas.has("tipificacion")}
-          onToggle={() => toggle("tipificacion")}
-        >
-          <div className="flex flex-col gap-2">
-            <TipificacionSelector
-              tipificaciones={tipificaciones}
-              value={tipSeleccionada}
-              onChange={setTipSeleccionada}
-            />
-            <OpenQuestion>cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano.</OpenQuestion>
-          </div>
         </Seccion>
       </div>
     </div>
