@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, Check, Sparkles } from "lucide-react";
+import { ArrowDown, Check, PhoneCall, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -109,11 +110,13 @@ function FranjaCopiloto({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-start gap-2 border-y border-border bg-accent/50 px-4",
-        variant === "llamada" ? "py-3" : "py-2"
+        "flex shrink-0 items-start gap-2.5 border-y border-border bg-accent/60 px-4",
+        variant === "llamada" ? "py-3.5" : "py-2.5"
       )}
     >
-      <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
+      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Sparkles className="size-3.5" />
+      </span>
       <div className="min-w-0 flex-1">
         <p className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
           Copiloto
@@ -186,6 +189,15 @@ export function ConversationPanel({ variant }: { variant: "llamada" | "chat" }) 
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {variant === "llamada" && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+          <PhoneCall className="size-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Llamada</span>
+          <Badge variant="success" className="ml-auto">
+            En vivo
+          </Badge>
+        </div>
+      )}
       <Hilo variant={variant} />
       <FranjaCopiloto variant={variant} onAceptarChat={setTexto} />
       {variant === "chat" && <Redactor texto={texto} onTextoChange={setTexto} />}

@@ -1,5 +1,6 @@
 import { ExternalLink, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
 import type { PaginaExterna } from "@/lib/pad-mock/data";
 
@@ -26,11 +27,11 @@ export function ExternalPagePanel({ pagina }: { pagina: PaginaExterna }) {
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-        <LayoutGrid className="size-3.5 shrink-0" />
-        Contenido embebido de &quot;{pagina.nombre}&quot; (mock)
-      </div>
-      <div className="flex flex-1 items-center justify-center rounded-xl border border-border bg-card p-6 text-center">
+      <Badge variant="neutral" className="w-fit gap-1.5">
+        <LayoutGrid className="size-3" />
+        Embebido · {pagina.nombre}
+      </Badge>
+      <div className="flex flex-1 items-center justify-center rounded-xl bg-muted/40 p-6 text-center ring-1 ring-foreground/10">
         <p className="max-w-sm text-sm text-muted-foreground">{pagina.contenido}</p>
       </div>
       <OpenQuestion>si este sistema se deja embeber de verdad — con sistemas viejos puede que no.</OpenQuestion>

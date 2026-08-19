@@ -23,29 +23,28 @@ export const CANAL_LABEL: Record<CanalMock, string> = {
   mail: "Mail",
 };
 
-// --- Cola de interacciones -------------------------------------------------
+// Cada fila de la cola apunta a uno de los dos "datasets" con contenido
+// completo (A = llamada, B = chat) — el resto de los canales reutiliza el
+// dataset B (son todos canales de texto, mismo patrón de hilo + redactor).
+// Es una simplificación del mock: alcanza para ver el layout, no significa
+// que WhatsApp/mail se traten igual que un chat en el producto real.
+export type DatasetId = "A" | "B";
+
 export type FilaCola = {
   id: string;
   numeroCliente: string;
   canal: CanalMock;
   esperaSeg: number;
-  activa?: boolean;
+  datasetId: DatasetId;
 };
 
 export const colaMock: FilaCola[] = [
-  { id: "q-1", numeroCliente: "3345789", canal: "llamada", esperaSeg: 14, activa: true },
-  { id: "q-2", numeroCliente: "8871023", canal: "whatsapp", esperaSeg: 42 },
-  { id: "q-3", numeroCliente: "5512980", canal: "chat", esperaSeg: 71 },
-  { id: "q-4", numeroCliente: "6603317", canal: "mail", esperaSeg: 205 },
-  { id: "q-5", numeroCliente: "4498812", canal: "llamada", esperaSeg: 8 },
-  { id: "q-6", numeroCliente: "7729015", canal: "whatsapp", esperaSeg: 133 },
+  { id: "q-1", numeroCliente: "3345789", canal: "llamada", esperaSeg: 14, datasetId: "A" },
+  { id: "q-2", numeroCliente: "8871023", canal: "whatsapp", esperaSeg: 42, datasetId: "B" },
+  { id: "q-3", numeroCliente: "5512980", canal: "chat", esperaSeg: 71, datasetId: "B" },
+  { id: "q-4", numeroCliente: "6603317", canal: "mail", esperaSeg: 205, datasetId: "B" },
+  { id: "q-5", numeroCliente: "4498812", canal: "llamada", esperaSeg: 8, datasetId: "A" },
 ];
-
-// La misma cola con el segundo ítem (chat) como activo, para el estado B.
-export const colaMockChatActivo: FilaCola[] = colaMock.map((f) => ({
-  ...f,
-  activa: f.id === "q-3",
-}));
 
 // --- Escenario A: llamada activa (reclamo por facturación) ----------------
 export const clienteA = {
@@ -105,7 +104,9 @@ export const copilotoArticulo = {
 
 export const canalesSalida = ["WhatsApp", "Email", "SMS"] as const;
 
-// --- Historial (compartido, se filtra por cliente activo) -------------------
+// --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el
+// acordeón de contexto — brief §5.2). Distinto del historial del agente
+// (abajo): acá es "qué pasó con este cliente", no "qué gestionó el agente".
 export type HistorialEntrada = {
   id: string;
   fecha: string;
@@ -170,9 +171,53 @@ export const paginasExternas: PaginaExterna[] = [
   },
 ];
 
-// --- Estado del agente (barra superior) ------------------------------------
+// --- Historial DEL AGENTE (nav item propio, §"por debajo suma Historial") --
+// La totalidad de lo que gestionó el agente, cualquier canal — distinto del
+// historial de contacto de arriba, que es por cliente y vive dentro de cada
+// interacción.
+export type HistorialAgenteEntrada = {
+  id: string;
+  fecha: string;
+  hora: string;
+  canal: CanalMock;
+  numeroCliente: string;
+  nombreCliente?: string;
+  duracion: string;
+  tipificacion: string;
+};
+
+export const historialAgenteMock: HistorialAgenteEntrada[] = [
+  { id: "ha-1", fecha: "18/08/2026", hora: "13:52", canal: "llamada", numeroCliente: "4498812", nombreCliente: "Elena Rivas", duracion: "3:34", tipificacion: "Reclamo resuelto" },
+  { id: "ha-2", fecha: "18/08/2026", hora: "13:35", canal: "whatsapp", numeroCliente: "8871023", nombreCliente: "Nicolás Aguirre", duracion: "6:12", tipificacion: "Consulta resuelta" },
+  { id: "ha-3", fecha: "18/08/2026", hora: "13:18", canal: "chat", numeroCliente: "5512980", duracion: "4:02", tipificacion: "Deriva a Logística" },
+  { id: "ha-4", fecha: "18/08/2026", hora: "12:59", canal: "mail", numeroCliente: "6603317", nombreCliente: "Diego Peralta", duracion: "—", tipificacion: "Sin resolución" },
+  { id: "ha-5", fecha: "18/08/2026", hora: "12:41", canal: "llamada", numeroCliente: "3345789", nombreCliente: "Valentina Ibarra", duracion: "5:56", tipificacion: "Cargo a revisar por Facturación" },
+  { id: "ha-6", fecha: "18/08/2026", hora: "12:20", canal: "llamada", numeroCliente: "7729015", duracion: "1:01", tipificacion: "Cliente solicita rellamado" },
+];
+
+// --- Estadísticas del agente (nav item propio) ------------------------------
+export const estadisticasAgenteMock = {
+  interaccionesHoy: 14,
+  tiempoPromedio: "4:38",
+  tiempoEnPausa: "0:52",
+  cumplimientoObjetivo: "92%",
+  porCanal: [
+    { canal: "llamada" as CanalMock, cantidad: 8 },
+    { canal: "chat" as CanalMock, cantidad: 3 },
+    { canal: "whatsapp" as CanalMock, cantidad: 2 },
+    { canal: "mail" as CanalMock, cantidad: 1 },
+  ],
+};
+
+// --- Estado del agente (bloque "Mi estado" del menú izquierdo) -------------
 export const estadoAgenteMock = {
   nombre: "Marina Acosta",
   estado: "Disponible",
   cronometro: "04:12",
 };
+
+export function formatEspera(seg: number) {
+  const m = Math.floor(seg / 60);
+  const s = seg % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}

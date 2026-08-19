@@ -9,15 +9,9 @@ import { paginasExternas } from "@/lib/pad-mock/data";
 // Brief §4 — el centro nunca se colapsa. Solapa "Conversación" fija (no se
 // cierra); las demás son páginas externas configurables, embebidas o "pestaña
 // aparte" (§4.2).
-export function CenterColumn({
-  variant,
-  tabInicial,
-}: {
-  variant: "llamada" | "chat";
-  tabInicial?: string;
-}) {
+export function CenterColumn({ variant }: { variant: "llamada" | "chat" }) {
   return (
-    <Tabs defaultValue={tabInicial ?? "conversacion"} className="h-full min-h-0 flex-1 gap-0">
+    <Tabs defaultValue="conversacion" className="h-full min-h-0 flex-1 gap-0">
       <TabsList variant="line" className="h-10 shrink-0 border-b border-border px-2">
         <TabsTrigger value="conversacion" className="gap-1.5">
           <MessageSquareText className="size-4" />
