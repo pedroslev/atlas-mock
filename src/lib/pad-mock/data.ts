@@ -23,11 +23,9 @@ export const CANAL_LABEL: Record<CanalMock, string> = {
   mail: "Mail",
 };
 
-// Cada fila de la cola apunta a uno de los dos "datasets" con contenido
-// completo (A = llamada, B = chat) — el resto de los canales reutiliza el
-// dataset B (son todos canales de texto, mismo patrón de hilo + redactor).
-// Es una simplificación del mock: alcanza para ver el layout, no significa
-// que WhatsApp/mail se traten igual que un chat en el producto real.
+// Solo dos escenarios en la cola (a pedido: "pongas solo dos escenarios, una
+// de telefonía y otra de chat") — cada fila mapea 1 a 1 con su dataset, sin
+// filas de relleno que repitan el mismo contenido.
 export type DatasetId = "A" | "B";
 
 export type FilaCola = {
@@ -40,10 +38,7 @@ export type FilaCola = {
 
 export const colaMock: FilaCola[] = [
   { id: "q-1", numeroCliente: "3345789", canal: "llamada", esperaSeg: 14, datasetId: "A" },
-  { id: "q-2", numeroCliente: "8871023", canal: "whatsapp", esperaSeg: 42, datasetId: "B" },
-  { id: "q-3", numeroCliente: "5512980", canal: "chat", esperaSeg: 71, datasetId: "B" },
-  { id: "q-4", numeroCliente: "6603317", canal: "mail", esperaSeg: 205, datasetId: "B" },
-  { id: "q-5", numeroCliente: "4498812", canal: "llamada", esperaSeg: 8, datasetId: "A" },
+  { id: "q-2", numeroCliente: "5512980", canal: "chat", esperaSeg: 71, datasetId: "B" },
 ];
 
 // --- Escenario A: llamada activa (reclamo por facturación) ----------------
@@ -71,6 +66,20 @@ export const copilotoLlamada = {
   texto: "El cargo \"Servicio adicional Premium\" del 12/08 no figura en el plan contratado por la clienta.",
   accion: "Marcar como revisado",
 };
+
+// Controles de llamada — Marcar (bookmarks de calidad) y Transferir.
+export const marcasEjemplo: string[] = [
+  "Cliente VIP",
+  "Reclamo activo",
+  "Promesa de pago",
+  "Requiere seguimiento",
+];
+
+export const destinosTransferencia: string[] = [
+  "Nivel 2 — Facturación",
+  "Supervisor de turno",
+  "Equipo de Logística",
+];
 
 // --- Escenario B: chat (consulta por envío) --------------------------------
 export const clienteB = {

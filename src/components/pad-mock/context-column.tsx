@@ -39,30 +39,30 @@ const SECCIONES: { id: SeccionId; label: string; icon: typeof User }[] = [
   { id: "notas", label: "Notas", icon: NotebookPen },
 ];
 
+// Acordeón 100% React (sin <details>/onToggle nativo — ese combo controlado
+// se desincronizaba al cambiar de interacción). Un botón + render condicional,
+// nada de estado del navegador que React tenga que perseguir.
 function Seccion({
-  id,
   label,
   icon: Icon,
   abierta,
   onToggle,
   children,
 }: {
-  id: SeccionId;
   label: string;
   icon: typeof User;
   abierta: boolean;
-  onToggle: (id: SeccionId) => void;
+  onToggle: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <details
-      open={abierta}
-      onToggle={(e) => {
-        if (e.currentTarget.open !== abierta) onToggle(id);
-      }}
-      className="border-b border-border"
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium select-none marker:content-none [&::-webkit-details-marker]:hidden">
+    <div className="border-b border-border">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={abierta}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium"
+      >
         <Icon className="size-4 shrink-0 text-muted-foreground" />
         <span className="flex-1">{label}</span>
         <ChevronDown
@@ -71,9 +71,43 @@ function Seccion({
             abierta && "rotate-180"
           )}
         />
-      </summary>
-      <div className="px-3 pb-3">{children}</div>
-    </details>
+      </button>
+      {abierta && <div className="px-3 pb-3">{children}</div>}
+    </div>
+  );
+}
+
+function HistorialItem({ entrada }: { entrada: HistorialEntrada }) {
+  const [abierta, setAbierta] = useState(false);
+  const Icon = CANAL_ICON[entrada.canal];
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        type="button"
+        onClick={() => setAbierta((v) => !v)}
+        aria-expanded={abierta}
+        className="flex w-full items-center gap-1.5 px-2 py-1.5 text-left text-xs"
+      >
+        <Icon className="size-3 shrink-0 text-muted-foreground" />
+        <span className="flex-1 font-medium">{entrada.fecha}</span>
+        <Badge
+          variant={
+            entrada.estado === "Resuelto"
+              ? "success"
+              : entrada.estado === "Derivado a nivel 2"
+                ? "info"
+                : "warning"
+          }
+        >
+          {entrada.estado}
+        </Badge>
+      </button>
+      {abierta && (
+        <p className="border-t border-border px-2 py-1.5 text-xs text-muted-foreground">
+          {CANAL_LABEL[entrada.canal]} — {entrada.resumen}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -152,7 +186,7 @@ export function ContextColumn({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <Seccion id="cliente" label="Cliente" icon={User} abierta={abiertas.has("cliente")} onToggle={toggle}>
+        <Seccion label="Cliente" icon={User} abierta={abiertas.has("cliente")} onToggle={() => toggle("cliente")}>
           <dl className="flex flex-col gap-1.5 text-xs">
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">N° cliente</dt>
@@ -181,37 +215,15 @@ export function ContextColumn({
           </dl>
         </Seccion>
 
-        <Seccion id="historial" label="Historial" icon={History} abierta={abiertas.has("historial")} onToggle={toggle}>
+        <Seccion label="Historial" icon={History} abierta={abiertas.has("historial")} onToggle={() => toggle("historial")}>
           <div className="flex flex-col gap-1.5">
-            {historial.map((h) => {
-              const Icon = CANAL_ICON[h.canal];
-              return (
-                <details key={h.id} className="rounded-md border border-border">
-                  <summary className="flex cursor-pointer list-none items-center gap-1.5 px-2 py-1.5 text-xs select-none [&::-webkit-details-marker]:hidden">
-                    <Icon className="size-3 shrink-0 text-muted-foreground" />
-                    <span className="flex-1 font-medium">{h.fecha}</span>
-                    <Badge
-                      variant={
-                        h.estado === "Resuelto"
-                          ? "success"
-                          : h.estado === "Derivado a nivel 2"
-                            ? "info"
-                            : "warning"
-                      }
-                    >
-                      {h.estado}
-                    </Badge>
-                  </summary>
-                  <p className="border-t border-border px-2 py-1.5 text-xs text-muted-foreground">
-                    {CANAL_LABEL[h.canal]} — {h.resumen}
-                  </p>
-                </details>
-              );
-            })}
+            {historial.map((h) => (
+              <HistorialItem key={h.id} entrada={h} />
+            ))}
           </div>
         </Seccion>
 
-        <Seccion id="copiloto" label="Copiloto" icon={Sparkles} abierta={abiertas.has("copiloto")} onToggle={toggle}>
+        <Seccion label="Copiloto" icon={Sparkles} abierta={abiertas.has("copiloto")} onToggle={() => toggle("copiloto")}>
           {articulo ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold">{articulo.titulo}</p>
@@ -227,11 +239,10 @@ export function ContextColumn({
         </Seccion>
 
         <Seccion
-          id="tipificacion"
           label="Tipificación"
           icon={Tag}
           abierta={abiertas.has("tipificacion")}
-          onToggle={toggle}
+          onToggle={() => toggle("tipificacion")}
         >
           <div className="flex flex-col gap-1">
             {tipificaciones.map((t) => (
@@ -259,7 +270,7 @@ export function ContextColumn({
           </div>
         </Seccion>
 
-        <Seccion id="notas" label="Notas" icon={NotebookPen} abierta={abiertas.has("notas")} onToggle={toggle}>
+        <Seccion label="Notas" icon={NotebookPen} abierta={abiertas.has("notas")} onToggle={() => toggle("notas")}>
           <Textarea placeholder="Notas libres sobre esta interacción…" rows={3} className="resize-none text-xs" />
         </Seccion>
       </div>

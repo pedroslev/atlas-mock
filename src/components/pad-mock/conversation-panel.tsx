@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { CallControls } from "@/components/pad-mock/call-controls";
 import {
   canalesSalida,
   copilotoChat,
@@ -201,6 +202,7 @@ export function ConversationPanel({ variant }: { variant: "llamada" | "chat" }) 
       <Hilo variant={variant} />
       <FranjaCopiloto variant={variant} onAceptarChat={setTexto} />
       {variant === "chat" && <Redactor texto={texto} onTextoChange={setTexto} />}
+      {variant === "llamada" && <CallControls />}
     </div>
   );
 }
