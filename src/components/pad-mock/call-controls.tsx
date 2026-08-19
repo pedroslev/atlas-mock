@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Mic, MicOff, Pause, Play, PhoneOff, Bookmark, PhoneForwarded, Check } from "lucide-react";
+import { Mic, MicOff, Pause, Play, PhoneOff, Bookmark, PhoneForwarded, Check, CircleX } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -55,10 +55,12 @@ function ControlButton({
   );
 }
 
-// Marcar: clava un bookmark de calidad durante la llamada (versión simple del
-// CallPins real — sin timestamp de llamada, este mock no corre un cronómetro
-// real). Transferir: deriva la llamada a otro destino.
-export function CallControls() {
+// Acciones de la interacción activa — comunes a llamada y chat (Espera,
+// Marcar, Transferir, terminar) salvo Silenciar, que es específico de audio.
+// "Finalizar" (chat) es la versión genérica de "Colgar" (llamada): ambas
+// cierran la interacción, la etiqueta cambia porque "colgar" no tiene sentido
+// fuera de una llamada.
+export function InteractionControls({ variant }: { variant: "llamada" | "chat" }) {
   const [enEspera, setEnEspera] = useState(false);
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<string[]>([]);
@@ -93,13 +95,15 @@ export function CallControls() {
           pressed={enEspera}
           onClick={() => setEnEspera((v) => !v)}
         />
-        <ControlButton
-          icon={silenciado ? MicOff : Mic}
-          label={silenciado ? "Reactivar" : "Silenciar"}
-          tone={silenciado ? "active" : "neutral"}
-          pressed={silenciado}
-          onClick={() => setSilenciado((v) => !v)}
-        />
+        {variant === "llamada" && (
+          <ControlButton
+            icon={silenciado ? MicOff : Mic}
+            label={silenciado ? "Reactivar" : "Silenciar"}
+            tone={silenciado ? "active" : "neutral"}
+            pressed={silenciado}
+            onClick={() => setSilenciado((v) => !v)}
+          />
+        )}
 
         <Popover open={marcarAbierto} onOpenChange={setMarcarAbierto}>
           <PopoverTrigger asChild>
@@ -109,7 +113,7 @@ export function CallControls() {
           </PopoverTrigger>
           <PopoverContent align="center" className="w-56 p-1.5">
             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
-              Marcar esta llamada
+              Marcar esta interacción
             </p>
             {marcasEjemplo.map((m) => (
               <button
@@ -155,7 +159,11 @@ export function CallControls() {
           </PopoverContent>
         </Popover>
 
-        <ControlButton icon={PhoneOff} label="Colgar" tone="destructive" onClick={() => {}} />
+        {variant === "llamada" ? (
+          <ControlButton icon={PhoneOff} label="Colgar" tone="destructive" onClick={() => {}} />
+        ) : (
+          <ControlButton icon={CircleX} label="Finalizar" tone="destructive" onClick={() => {}} />
+        )}
       </div>
     </div>
   );

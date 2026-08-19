@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, Check, PhoneCall, Sparkles } from "lucide-react";
+import { ArrowDown, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -13,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { CallControls } from "@/components/pad-mock/call-controls";
+import { InteractionControls } from "@/components/pad-mock/call-controls";
 import {
   canalesSalida,
   copilotoChat,
@@ -190,19 +189,10 @@ export function ConversationPanel({ variant }: { variant: "llamada" | "chat" }) 
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {variant === "llamada" && (
-        <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
-          <PhoneCall className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Llamada</span>
-          <Badge variant="success" className="ml-auto">
-            En vivo
-          </Badge>
-        </div>
-      )}
       <Hilo variant={variant} />
       <FranjaCopiloto variant={variant} onAceptarChat={setTexto} />
       {variant === "chat" && <Redactor texto={texto} onTextoChange={setTexto} />}
-      {variant === "llamada" && <CallControls />}
+      <InteractionControls variant={variant} />
     </div>
   );
 }
