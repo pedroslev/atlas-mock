@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Phone,
   MessageCircle,
+  MessageSquareText,
   Smartphone,
   Mail,
   Ticket,
@@ -24,13 +25,14 @@ import {
   Coffee,
 } from "lucide-react";
 
-export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail";
+export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
   llamada: Phone,
   chat: MessageCircle,
   whatsapp: Smartphone,
   mail: Mail,
+  sms: MessageSquareText,
 };
 
 export const CANAL_LABEL: Record<CanalMock, string> = {
@@ -38,7 +40,43 @@ export const CANAL_LABEL: Record<CanalMock, string> = {
   chat: "Chat",
   whatsapp: "WhatsApp",
   mail: "Mail",
+  sms: "SMS",
 };
+
+// --- Campañas salientes (modal "Nueva interacción" de la cola) ------------
+// Nombres a propósito parecidos a los de mock-data.ts de Olimpo, para que se
+// sienta el mismo tenant — pero es un mock propio, no un import real
+// (mismo criterio que el resto de pad-mock: separado del pad real). Cada
+// campaña trae sus propias cuentas salientes; el modal las filtra según la
+// campaña elegida, no muestra todas las cuentas del tenant.
+export type CuentaSaliente = { id: string; nombre: string; canal: CanalMock; identificador: string };
+export type CampaniaSaliente = { id: string; nombre: string; cuentas: CuentaSaliente[] };
+
+export const campaniasSalientesMock: CampaniaSaliente[] = [
+  {
+    id: "camp-1",
+    nombre: "Cobranzas Activa PCP",
+    cuentas: [
+      { id: "acc-1", nombre: "Línea Cobranzas AR", canal: "llamada", identificador: "+54 11 4000-1000" },
+      { id: "acc-1-wsp", nombre: "WhatsApp Cobranzas", canal: "whatsapp", identificador: "+54 9 11 4000-1000" },
+    ],
+  },
+  {
+    id: "camp-4",
+    nombre: "Soporte técnico Nivel 1",
+    cuentas: [
+      { id: "acc-2", nombre: "WhatsApp Soporte", canal: "whatsapp", identificador: "+54 9 11 5555-2020" },
+    ],
+  },
+  {
+    id: "camp-6",
+    nombre: "Lanzamiento Tarjeta Plus",
+    cuentas: [
+      { id: "acc-3", nombre: "Línea Ventas", canal: "llamada", identificador: "+54 11 4900-3000" },
+      { id: "acc-4", nombre: "SMS Recordatorios", canal: "sms", identificador: "BANCOSUR" },
+    ],
+  },
+];
 
 // Solo dos escenarios en la cola (a pedido: "pongas solo dos escenarios, una
 // de telefonía y otra de chat") — cada fila mapea 1 a 1 con su dataset, sin
