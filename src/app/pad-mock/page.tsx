@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { PadMockShell, type Escenario } from "@/components/pad-mock/pad-mock-shell";
 
@@ -10,13 +11,28 @@ const ESCENARIOS: { id: Escenario; label: string; detalle: string }[] = [
   { id: "C", label: "C · Monitor chico", detalle: "Cola y contexto colapsados, 1366px" },
 ];
 
+function isEscenario(v: string | null): v is Escenario {
+  return v === "A" || v === "B" || v === "C";
+}
+
 // Ruta fuera de cualquier layout de app (sin sidebar, sin header con marca —
 // brief §7: "sin marca, sin logo, sin nombres de productos reales"). Wireframe
 // conceptual para la sesión del lunes — ver
 // relevamiento/pad-competencia/brief-mock-pad.md. La barra de arriba con los
 // tres botones NO es parte del pad: es el selector de escenario para la demo.
-export default function PadMockPage() {
-  const [escenario, setEscenario] = useState<Escenario>("A");
+//
+// El escenario vive en el query param `escenario` (no solo en state) para
+// poder pasar un link directo a cada uno — útil para la sesión del lunes.
+function PadMockPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromUrl = searchParams.get("escenario");
+  const [escenario, setEscenario] = useState<Escenario>(isEscenario(fromUrl) ? fromUrl : "A");
+
+  function seleccionar(id: Escenario) {
+    setEscenario(id);
+    router.replace(`/pad-mock?escenario=${id}`, { scroll: false });
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
@@ -29,7 +45,7 @@ export default function PadMockPage() {
             <button
               key={e.id}
               type="button"
-              onClick={() => setEscenario(e.id)}
+              onClick={() => seleccionar(e.id)}
               className={cn(
                 "rounded-lg border px-2.5 py-1 text-left text-xs transition-colors",
                 escenario === e.id
@@ -59,5 +75,13 @@ export default function PadMockPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PadMockPage() {
+  return (
+    <Suspense>
+      <PadMockPageInner />
+    </Suspense>
   );
 }
