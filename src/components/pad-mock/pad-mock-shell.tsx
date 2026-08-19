@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LeftNav, type Modo } from "@/components/pad-mock/left-nav";
 import { CenterColumn } from "@/components/pad-mock/center-column";
 import { ContextColumn } from "@/components/pad-mock/context-column";
@@ -50,6 +50,33 @@ export function PadMockShell() {
     setDatasetId(ds);
     setModo("interaccion");
   }
+
+  // Alt+1, Alt+2… salta directo a esa fila de la cola — Alt y no Ctrl/Cmd
+  // porque Ctrl/Cmd+número ya lo usan Chrome/Firefox para cambiar de pestaña
+  // del navegador. Funciona en cualquier modo (también sirve para volver a
+  // una interacción desde Estadísticas/Historial).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      if (
+        el &&
+        (el.isContentEditable ||
+          el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT")
+      ) {
+        return;
+      }
+      const idx = Number(e.key) - 1;
+      if (Number.isNaN(idx) || idx < 0 || idx >= colaMock.length) return;
+      e.preventDefault();
+      const fila = colaMock[idx];
+      seleccionarInteraccion(fila.id, fila.datasetId);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const cfg = DATASETS[datasetId];
 

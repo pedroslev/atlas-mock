@@ -218,6 +218,17 @@ export const estadisticasAgenteMock = {
   ],
 };
 
+// --- Chats internos (menú izquierdo, entre la cola y Estadísticas) --------
+// Solo el listado por ahora — el alta de un chat nuevo (botón "+") todavía
+// no está mockeada, a propósito.
+export type ChatInterno = { id: string; nombre: string; noLeidos: number };
+
+export const chatsInternosMock: ChatInterno[] = [
+  { id: "ci-1", nombre: "Rocío Benítez — Supervisora", noLeidos: 2 },
+  { id: "ci-2", nombre: "Julián Ferreyra", noLeidos: 0 },
+  { id: "ci-3", nombre: "Turno tarde — Cobranzas", noLeidos: 5 },
+];
+
 // --- Estado del agente (bloque "Mi estado" del menú izquierdo) -------------
 export const estadoAgenteMock = {
   nombre: "Marina Acosta",

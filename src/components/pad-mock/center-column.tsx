@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MessageSquareText, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { paginasExternas } from "@/lib/pad-mock/data";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 // Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
 // "Llamada" con ícono de teléfono para una interacción telefónica, o
@@ -12,20 +15,56 @@ import { paginasExternas } from "@/lib/pad-mock/data";
 // embebidas o "pestaña aparte" (§4.2). w-full en TabsList para que la línea de
 // abajo llegue hasta el borde con la columna de contexto, no solo hasta donde
 // terminan las solapas.
+//
+// Ctrl/Cmd+Alt+N salta a la solapa N (1 = Conversación/Llamada, 2… = cada
+// integración) — mismo "número = posición" que Alt+N en la cola, con un
+// modificador extra para no chocar con ese atajo ni con nada del navegador.
 export function CenterColumn({ variant }: { variant: "llamada" | "chat" }) {
+  const isMac = useIsMac();
+  const [tab, setTab] = useState("conversacion");
+
+  useEffect(() => {
+    const tabs = ["conversacion", ...paginasExternas.map((p) => p.id)];
+    function onKey(e: KeyboardEvent) {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod || !e.altKey || e.shiftKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      if (
+        el &&
+        (el.isContentEditable ||
+          el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT")
+      ) {
+        return;
+      }
+      const idx = Number(e.key) - 1;
+      if (Number.isNaN(idx) || idx < 0 || idx >= tabs.length) return;
+      e.preventDefault();
+      setTab(tabs[idx]);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const PrimerTabIcon = variant === "llamada" ? Phone : MessageSquareText;
   const primerTabLabel = variant === "llamada" ? "Llamada" : "Conversación";
+  const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
   return (
-    <Tabs defaultValue="conversacion" className="h-full min-h-0 flex-1 gap-0">
+    <Tabs value={tab} onValueChange={setTab} className="h-full min-h-0 flex-1 gap-0">
       <TabsList variant="line" className="h-10 w-full shrink-0 border-b border-border px-2">
         <TabsTrigger value="conversacion" className="gap-1.5">
           <PrimerTabIcon className="size-4" />
           {primerTabLabel}
+          <Kbd className="ml-1">{shortcutMod} 1</Kbd>
         </TabsTrigger>
-        {paginasExternas.map((p) => (
-          <TabsTrigger key={p.id} value={p.id}>
+        {paginasExternas.map((p, i) => (
+          <TabsTrigger key={p.id} value={p.id} className="gap-1.5">
             {p.nombre}
+            <Kbd className="ml-1">
+              {shortcutMod} {i + 2}
+            </Kbd>
           </TabsTrigger>
         ))}
       </TabsList>

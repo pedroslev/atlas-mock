@@ -1,8 +1,17 @@
 "use client";
 
-import { BarChart3, History } from "lucide-react";
+import { BarChart3, History, MessageCircle, Plus } from "lucide-react";
+import { Kbd } from "@/components/ui/kbd";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CANAL_ICON, colaMock, estadoAgenteMock, formatEspera, type DatasetId } from "@/lib/pad-mock/data";
+import {
+  CANAL_ICON,
+  chatsInternosMock,
+  colaMock,
+  estadoAgenteMock,
+  formatEspera,
+  type DatasetId,
+} from "@/lib/pad-mock/data";
 
 export type Modo = "interaccion" | "estadisticas" | "historial";
 
@@ -24,7 +33,7 @@ export function LeftNav({
   onSeleccionarInteraccion: (id: string, datasetId: DatasetId) => void;
 }) {
   return (
-    <aside className="flex h-full w-12 shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground sm:w-44 sm:p-2">
+    <aside className="flex h-full w-12 shrink-0 flex-col gap-2 overflow-y-auto border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground sm:w-44 sm:p-2">
       {/* Mi estado — mismo look que AgentStatusSelector real, sin la
           interactividad (acá no hay máquina de estados detrás). */}
       <div className="flex flex-col gap-1 border-b border-sidebar-border pb-2">
@@ -43,13 +52,14 @@ export function LeftNav({
       </div>
 
       {/* Cola — brief §3: número de cliente + ícono de canal + cronómetro de
-          espera, nada más. Cada fila abre esa interacción. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1">
+          espera, nada más. Cada fila abre esa interacción. Alt+N salta a la
+          fila N (ver el listener global en pad-mock-shell.tsx). */}
+      <div className="flex flex-col gap-1">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
           Cola
         </span>
-        <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-          {colaMock.map((f) => {
+        <div className="flex flex-col gap-0.5">
+          {colaMock.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = modo === "interaccion" && f.id === interaccionActivaId;
             return (
@@ -58,6 +68,7 @@ export function LeftNav({
                 type="button"
                 onClick={() => onSeleccionarInteraccion(f.id, f.datasetId)}
                 aria-current={activa ? "true" : undefined}
+                aria-keyshortcuts={`Alt+${i + 1}`}
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors max-sm:justify-center max-sm:px-0",
                   activa
@@ -69,17 +80,52 @@ export function LeftNav({
                 <span className="flex min-w-0 flex-1 flex-col max-sm:hidden">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
                 </span>
-                <span className="shrink-0 font-mono text-[0.65rem] tabular-nums text-muted-foreground max-sm:hidden">
+                <span className="hidden shrink-0 font-mono text-[0.65rem] tabular-nums text-muted-foreground sm:inline">
                   {formatEspera(f.esperaSeg)}
                 </span>
+                <Kbd className="hidden shrink-0 sm:inline-flex">Alt {i + 1}</Kbd>
               </button>
             );
           })}
         </div>
       </div>
 
+      {/* Chats internos — solo el listado; el alta ("+") todavía no está
+          mockeada. */}
+      <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
+            Chats internos
+          </span>
+          <button
+            type="button"
+            aria-label="Nuevo chat interno"
+            title="Nuevo chat interno"
+            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground max-sm:hidden"
+          >
+            <Plus className="size-3.5" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          {chatsInternosMock.map((c) => (
+            <div
+              key={c.id}
+              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-xs text-sidebar-foreground/80 max-sm:justify-center max-sm:px-0"
+            >
+              <MessageCircle className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate max-sm:hidden">{c.nombre}</span>
+              {c.noLeidos > 0 && (
+                <Badge variant="default" className="hidden size-4 shrink-0 justify-center rounded-full p-0 sm:flex">
+                  {c.noLeidos}
+                </Badge>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Estadísticas / Historial del agente — puntos de navegación fijos,
-          debajo de la cola. */}
+          debajo de todo. */}
       <div className="flex flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
           type="button"

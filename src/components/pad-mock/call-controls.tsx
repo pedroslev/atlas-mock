@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Mic, MicOff, Pause, Play, PhoneOff, Bookmark, PhoneForwarded, Check, CircleX } from "lucide-react";
 import {
@@ -9,8 +9,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 import { marcasEjemplo, destinosTransferencia } from "@/lib/pad-mock/data";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
 
@@ -23,15 +25,33 @@ const TONE_CLASS: Record<ActionTone, string> = {
   active: "bg-warning text-white hover:bg-warning/90",
 };
 
+// Atajos de esta interacción — mismo criterio que PAD_SHORTCUTS real
+// (mock-pad.ts): modificador Ctrl/Cmd + letra mnemónica, para no chocar con
+// atajos de una letra sola del navegador/SO. "Marcar" y "Transferir" son
+// nuevos acá, elegidos para no repetir letra con Espera/Silenciar/Colgar.
+const SHORTCUTS = {
+  espera: "H",
+  silenciar: "M",
+  marcar: "B",
+  transferir: "T",
+  finalizar: "E",
+} as const;
+
+function shortcutLabel(key: string, isMac: boolean): string {
+  return isMac ? `⌘${key}` : `Ctrl ${key}`;
+}
+
 function ControlButton({
   icon: Icon,
   label,
+  shortcut,
   tone,
   onClick,
   pressed,
 }: {
   icon: LucideIcon;
   label: string;
+  shortcut: string;
   tone: ActionTone;
   onClick?: () => void;
   pressed?: boolean;
@@ -42,6 +62,7 @@ function ControlButton({
         type="button"
         onClick={onClick}
         aria-label={label}
+        aria-keyshortcuts={shortcut}
         aria-pressed={pressed}
         className={cn(
           "flex size-12 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -50,7 +71,10 @@ function ControlButton({
       >
         <Icon className="size-5" />
       </button>
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Kbd>{shortcut}</Kbd>
+        {label}
+      </span>
     </div>
   );
 }
@@ -61,12 +85,59 @@ function ControlButton({
 // cierran la interacción, la etiqueta cambia porque "colgar" no tiene sentido
 // fuera de una llamada.
 export function InteractionControls({ variant }: { variant: "llamada" | "chat" }) {
+  const isMac = useIsMac();
   const [enEspera, setEnEspera] = useState(false);
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<string[]>([]);
   const [marcarAbierto, setMarcarAbierto] = useState(false);
   const [transferido, setTransferido] = useState<string | null>(null);
   const [transferirAbierto, setTransferirAbierto] = useState(false);
+
+  // Mismo guard que el listener real: exige Ctrl/Cmd, ignora inputs
+  // editables, y hace preventDefault para no disparar el default del
+  // navegador (p.ej. Ctrl+B suele ser "negrita" en algunos campos).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod || e.altKey || e.shiftKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      if (
+        el &&
+        (el.isContentEditable ||
+          el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT")
+      ) {
+        return;
+      }
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case SHORTCUTS.espera.toLowerCase():
+          e.preventDefault();
+          setEnEspera((v) => !v);
+          break;
+        case SHORTCUTS.silenciar.toLowerCase():
+          if (variant === "llamada") {
+            e.preventDefault();
+            setSilenciado((v) => !v);
+          }
+          break;
+        case SHORTCUTS.marcar.toLowerCase():
+          e.preventDefault();
+          setMarcarAbierto(true);
+          break;
+        case SHORTCUTS.transferir.toLowerCase():
+          e.preventDefault();
+          setTransferirAbierto(true);
+          break;
+        case SHORTCUTS.finalizar.toLowerCase():
+          e.preventDefault();
+          break;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [variant]);
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
@@ -91,6 +162,7 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
         <ControlButton
           icon={enEspera ? Play : Pause}
           label={enEspera ? "Retomar" : "Espera"}
+          shortcut={shortcutLabel(SHORTCUTS.espera, isMac)}
           tone={enEspera ? "active" : "neutral"}
           pressed={enEspera}
           onClick={() => setEnEspera((v) => !v)}
@@ -99,6 +171,7 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
           <ControlButton
             icon={silenciado ? MicOff : Mic}
             label={silenciado ? "Reactivar" : "Silenciar"}
+            shortcut={shortcutLabel(SHORTCUTS.silenciar, isMac)}
             tone={silenciado ? "active" : "neutral"}
             pressed={silenciado}
             onClick={() => setSilenciado((v) => !v)}
@@ -108,7 +181,13 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
         <Popover open={marcarAbierto} onOpenChange={setMarcarAbierto}>
           <PopoverTrigger asChild>
             <div>
-              <ControlButton icon={Bookmark} label="Marcar" tone="neutral" onClick={() => setMarcarAbierto(true)} />
+              <ControlButton
+                icon={Bookmark}
+                label="Marcar"
+                shortcut={shortcutLabel(SHORTCUTS.marcar, isMac)}
+                tone="neutral"
+                onClick={() => setMarcarAbierto(true)}
+              />
             </div>
           </PopoverTrigger>
           <PopoverContent align="center" className="w-56 p-1.5">
@@ -135,7 +214,13 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
         <Popover open={transferirAbierto} onOpenChange={setTransferirAbierto}>
           <PopoverTrigger asChild>
             <div>
-              <ControlButton icon={PhoneForwarded} label="Transferir" tone="neutral" onClick={() => setTransferirAbierto(true)} />
+              <ControlButton
+                icon={PhoneForwarded}
+                label="Transferir"
+                shortcut={shortcutLabel(SHORTCUTS.transferir, isMac)}
+                tone="neutral"
+                onClick={() => setTransferirAbierto(true)}
+              />
             </div>
           </PopoverTrigger>
           <PopoverContent align="center" className="w-64 p-1.5">
@@ -160,9 +245,21 @@ export function InteractionControls({ variant }: { variant: "llamada" | "chat" }
         </Popover>
 
         {variant === "llamada" ? (
-          <ControlButton icon={PhoneOff} label="Colgar" tone="destructive" onClick={() => {}} />
+          <ControlButton
+            icon={PhoneOff}
+            label="Colgar"
+            shortcut={shortcutLabel(SHORTCUTS.finalizar, isMac)}
+            tone="destructive"
+            onClick={() => {}}
+          />
         ) : (
-          <ControlButton icon={CircleX} label="Finalizar" tone="destructive" onClick={() => {}} />
+          <ControlButton
+            icon={CircleX}
+            label="Finalizar"
+            shortcut={shortcutLabel(SHORTCUTS.finalizar, isMac)}
+            tone="destructive"
+            onClick={() => {}}
+          />
         )}
       </div>
     </div>
