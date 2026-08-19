@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
 import { marcasEjemplo, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -153,6 +154,7 @@ function TipificacionSelector({
                       Sugerida
                     </Badge>
                   )}
+                  <InfoHint>{t.descripcion}</InfoHint>
                 </CommandItem>
               ))}
             </CommandGroup>

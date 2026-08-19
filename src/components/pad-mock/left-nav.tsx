@@ -1,27 +1,36 @@
 "use client";
 
-import { BarChart3, ExternalLink, History, LayoutGrid, MessageCircle, Plus, Zap } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, MessageCircle, Plus } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AgentStatusSelectorMock } from "@/components/pad-mock/agent-status-selector-mock";
+import { NewInteractionDialog } from "@/components/pad-mock/new-interaction-dialog";
+import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
   CANAL_ICON,
   chatsInternosMock,
   colaMock,
-  estadoAgenteMock,
   formatEspera,
+  type ChatInterno,
   type DatasetId,
 } from "@/lib/pad-mock/data";
 
 export type Modo = "interaccion" | "estadisticas" | "historial";
 
-// Mismo patrón visual que el sidenav REAL de Hermes (pad-console.tsx): bloque
-// de estado arriba, ítems de navegación abajo, colapsa a solo íconos por
-// debajo de sm (idéntico a como ya se comporta el pad). La cola (brief §3)
-// ahora vive ACÁ, entre el estado y el resto de la navegación — no es una
-// columna aparte — y cada fila es directamente la forma de abrir esa
+const ANCHO_MIN = 168;
+const ANCHO_MAX = 320;
+const ANCHO_INICIAL = 200;
+
+// Mismo patrón visual que el sidenav REAL de Hermes: bloque de estado
+// arriba, ítems de navegación abajo. A diferencia del real, este colapsa a
+// pedido explícito del agente (botón), no solo por viewport angosto, y su
+// ancho expandido es ajustable a mano (ResizeHandle). La cola (brief §3)
+// vive acá, entre el estado y el resto de la navegación — cada fila abre esa
 // interacción, reemplazando la vieja solapa única "Llamada".
 export function LeftNav({
   modo,
@@ -32,6 +41,7 @@ export function LeftNav({
   onAbrirAcceso,
   enEspera,
   holdStartedAt,
+  onAbrirChatInterno,
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
@@ -41,28 +51,130 @@ export function LeftNav({
   onAbrirAcceso: (id: string) => void;
   enEspera: boolean;
   holdStartedAt: number | null;
+  onAbrirChatInterno: (chat: ChatInterno) => void;
 }) {
+  const [colapsado, setColapsado] = useState(false);
+  const [ancho, setAncho] = useState(ANCHO_INICIAL);
+  const [nuevaInteraccionAbierta, setNuevaInteraccionAbierta] = useState(false);
   // Solo tickea mientras hay alguien en Hold — el resto del tiempo no hace
   // falta un reloj corriendo acá.
   const now = useNow(enEspera);
 
-  return (
-    <aside className="flex h-full w-12 shrink-0 flex-col gap-2 overflow-y-auto border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground sm:w-44 sm:p-2">
-      {/* Mi estado — mismo look que AgentStatusSelector real, sin la
-          interactividad (acá no hay máquina de estados detrás). */}
-      <div className="flex flex-col gap-1 border-b border-sidebar-border pb-2">
-        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
-          Mi estado
-        </span>
-        <div className="flex w-full items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar px-2 py-1.5 max-sm:justify-center max-sm:px-0">
-          <span className="size-2 shrink-0 rounded-full bg-success" />
-          <span className="min-w-0 flex-1 truncate text-xs font-medium max-sm:hidden">
-            {estadoAgenteMock.estado}
-          </span>
-          <span className="font-mono text-[0.65rem] text-muted-foreground tabular-nums max-sm:hidden">
-            {estadoAgenteMock.cronometro}
-          </span>
+  const nuevaInteraccionDialog = (
+    <NewInteractionDialog open={nuevaInteraccionAbierta} onOpenChange={setNuevaInteraccionAbierta} />
+  );
+
+  if (colapsado) {
+    return (
+      <aside className="flex h-full w-12 shrink-0 flex-col items-center gap-2 border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground">
+        <Button variant="ghost" size="icon-sm" aria-label="Expandir menú" onClick={() => setColapsado(false)}>
+          <ChevronsRight className="size-4" />
+        </Button>
+
+        <AgentStatusSelectorMock colapsado />
+
+        <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+          {colaMock.map((f, i) => {
+            const Icon = CANAL_ICON[f.canal];
+            const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                title={`${f.numeroCliente} · Alt+${i + 1}`}
+                onClick={() => onSeleccionarInteraccion(f.id, f.datasetId)}
+                aria-current={activa ? "true" : undefined}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-lg transition-colors",
+                  activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+                )}
+              >
+                <Icon className="size-4" />
+              </button>
+            );
+          })}
         </div>
+
+        <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
+          {chatsInternosMock.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              title={c.nombre}
+              onClick={() => onAbrirChatInterno(c)}
+              className="relative flex size-8 items-center justify-center rounded-lg hover:bg-sidebar-accent/60"
+            >
+              <MessageCircle className="size-4" />
+              {c.noLeidos > 0 && (
+                <span className="absolute top-0.5 right-0.5 flex size-3 items-center justify-center rounded-full bg-primary text-[0.55rem] text-primary-foreground">
+                  {c.noLeidos}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
+          {accesosRapidosMock.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              title={a.nombre}
+              onClick={() => onAbrirAcceso(a.id)}
+              aria-current={accesoActivoId === a.id ? "true" : undefined}
+              className={cn(
+                "flex size-8 items-center justify-center rounded-lg",
+                accesoActivoId === a.id ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+              )}
+            >
+              <a.icon className="size-4" />
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-auto flex flex-col gap-1 border-t border-sidebar-border pt-1.5">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Estadísticas"
+            title="Estadísticas"
+            onClick={() => onModo("estadisticas")}
+            className={cn(modo === "estadisticas" && "bg-sidebar-accent text-sidebar-accent-foreground")}
+          >
+            <BarChart3 className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Historial"
+            title="Historial"
+            onClick={() => onModo("historial")}
+            className={cn(modo === "historial" && "bg-sidebar-accent text-sidebar-accent-foreground")}
+          >
+            <History className="size-4" />
+          </Button>
+        </div>
+
+        {nuevaInteraccionDialog}
+      </aside>
+    );
+  }
+
+  return (
+    <aside
+      className="relative flex h-full shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-2 text-sidebar-foreground"
+      style={{ width: ancho }}
+    >
+      <ResizeHandle side="right" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w + d)))} />
+
+      <div className="flex items-center justify-between">
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Mi estado</span>
+        <Button variant="ghost" size="icon-sm" aria-label="Contraer menú" onClick={() => setColapsado(true)}>
+          <ChevronsLeft className="size-3.5" />
+        </Button>
+      </div>
+      <div className="-mt-1 border-b border-sidebar-border pb-2">
+        <AgentStatusSelectorMock colapsado={false} />
       </div>
 
       {/* Cola — brief §3: número de cliente + ícono de canal + cronómetro de
@@ -72,9 +184,18 @@ export function LeftNav({
           interacción activa está en Hold, su fila muestra el tiempo en
           espera (ámbar) en vez del tiempo de cola original. */}
       <div className="flex min-h-0 flex-1 flex-col gap-1">
-        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
-          Cola
-        </span>
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[0.65rem] font-medium text-muted-foreground">Cola</span>
+          <button
+            type="button"
+            aria-label="Iniciar nueva interacción"
+            title="Iniciar nueva interacción"
+            onClick={() => setNuevaInteraccionAbierta(true)}
+            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Plus className="size-3.5" />
+          </button>
+        </div>
         <div className="flex flex-col gap-0.5 overflow-y-auto">
           {colaMock.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
@@ -91,25 +212,25 @@ export function LeftNav({
                 aria-current={activa ? "true" : undefined}
                 aria-keyshortcuts={`Alt+${i + 1}`}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors max-sm:justify-center max-sm:px-0",
+                  "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
                   activa
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
                 )}
               >
                 <Icon className="size-3.5 shrink-0" />
-                <span className="flex min-w-0 flex-1 flex-col max-sm:hidden">
+                <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
                 </span>
                 <span
                   className={cn(
-                    "hidden shrink-0 font-mono text-[0.65rem] tabular-nums sm:inline",
+                    "shrink-0 font-mono text-[0.65rem] tabular-nums",
                     enHold ? "font-semibold text-warning" : "text-muted-foreground"
                   )}
                 >
                   {tiempo}
                 </span>
-                <Kbd className="hidden shrink-0 sm:inline-flex">Alt {i + 1}</Kbd>
+                <Kbd className="shrink-0">Alt {i + 1}</Kbd>
               </button>
             );
           })}
@@ -117,48 +238,47 @@ export function LeftNav({
       </div>
 
       {/* Chats internos — de la mitad del menú para abajo, la cola tiene
-          prioridad. Solo el listado; el alta ("+") todavía no está mockeada. */}
+          prioridad. Se abren como ventana flotante (FloatingChatWindow),
+          no acá adentro. */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
-            Chats internos
-          </span>
+          <span className="text-[0.65rem] font-medium text-muted-foreground">Chats internos</span>
           <button
             type="button"
             aria-label="Nuevo chat interno"
             title="Nuevo chat interno"
-            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground max-sm:hidden"
+            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <Plus className="size-3.5" />
           </button>
         </div>
         <div className="flex flex-col gap-0.5">
           {chatsInternosMock.map((c) => (
-            <div
+            <button
               key={c.id}
-              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-xs text-sidebar-foreground/80 max-sm:justify-center max-sm:px-0"
+              type="button"
+              onClick={() => onAbrirChatInterno(c)}
+              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60"
             >
               <MessageCircle className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate max-sm:hidden">{c.nombre}</span>
+              <span className="min-w-0 flex-1 truncate">{c.nombre}</span>
               {c.noLeidos > 0 && (
-                <Badge variant="default" className="hidden size-4 shrink-0 justify-center rounded-full p-0 sm:flex">
+                <Badge variant="default" className="size-4 shrink-0 justify-center rounded-full p-0">
                   {c.noLeidos}
                 </Badge>
               )}
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
       {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
-          interacción puntual, funcionan igual estando en cola vacía o en
-          medio de una llamada. Al elegir uno, pad-mock-shell.tsx tapa TODO
-          el área de contenido (menos este menú y el navbar) con
-          QuickAccessOverlay — no es un modal. */}
+          interacción puntual. Ícono propio por acceso (a pedido — se
+          configura afuera del pad, acá solo se refleja). Al elegir uno,
+          pad-mock-shell.tsx tapa TODO el área de contenido (menos este menú
+          y el navbar) con QuickAccessOverlay — no es un modal. */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
-        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
-          Accesos rápidos
-        </span>
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Accesos rápidos</span>
         <div className="flex flex-col gap-0.5">
           {accesosRapidosMock.map((a) => (
             <button
@@ -167,18 +287,18 @@ export function LeftNav({
               onClick={() => onAbrirAcceso(a.id)}
               aria-current={accesoActivoId === a.id ? "true" : undefined}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors max-sm:justify-center max-sm:px-0",
+                "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
                 accesoActivoId === a.id
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
               )}
             >
-              <Zap className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate max-sm:hidden">{a.nombre}</span>
+              <a.icon className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">{a.nombre}</span>
               {a.modo === "pestana" ? (
-                <ExternalLink className="hidden size-3 shrink-0 text-muted-foreground sm:inline" />
+                <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
               ) : (
-                <LayoutGrid className="hidden size-3 shrink-0 text-muted-foreground sm:inline" />
+                <LayoutGrid className="size-3 shrink-0 text-muted-foreground" />
               )}
             </button>
           ))}
@@ -193,30 +313,32 @@ export function LeftNav({
           onClick={() => onModo("estadisticas")}
           aria-current={modo === "estadisticas" ? "true" : undefined}
           className={cn(
-            "flex h-8 w-full items-center gap-2 rounded-lg px-0 text-xs transition-colors sm:px-2 max-sm:justify-center",
+            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-xs transition-colors",
             modo === "estadisticas"
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
               : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           )}
         >
           <BarChart3 className="size-4 shrink-0" />
-          <span className="max-sm:hidden">Estadísticas</span>
+          Estadísticas
         </button>
         <button
           type="button"
           onClick={() => onModo("historial")}
           aria-current={modo === "historial" ? "true" : undefined}
           className={cn(
-            "flex h-8 w-full items-center gap-2 rounded-lg px-0 text-xs transition-colors sm:px-2 max-sm:justify-center",
+            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-xs transition-colors",
             modo === "historial"
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
               : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           )}
         >
           <History className="size-4 shrink-0" />
-          <span className="max-sm:hidden">Historial</span>
+          Historial
         </button>
       </div>
+
+      {nuevaInteraccionDialog}
     </aside>
   );
 }

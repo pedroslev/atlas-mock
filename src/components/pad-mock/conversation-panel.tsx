@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, Check, Paperclip, Sparkles } from "lucide-react";
+import { ArrowDown, Check, ChevronsUpDown, FileText, Paperclip, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import {
   copilotoChat,
@@ -20,6 +26,7 @@ import {
   transcripcionLlamada,
 } from "@/lib/pad-mock/data";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
+import { InfoHint } from "@/components/pad-mock/info-hint";
 
 // Brief §4.1 — el hilo cambia de contenido según el tipo de interacción, pero
 // nunca de lugar: siempre arriba, siempre con autoscroll + "volver al vivo".
@@ -146,9 +153,58 @@ function FranjaCopiloto({
   );
 }
 
+// Selector de plantillas — combobox con buscador (mismo patrón que
+// Tipificación), cada opción con su "i" de descripción al hover.
+function PlantillaSelector({ onElegir }: { onElegir: (texto: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          size="sm"
+          className="min-w-0 flex-1 justify-between font-normal"
+        >
+          <span className="flex min-w-0 items-center gap-1.5 truncate">
+            <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate">Plantillas de mensajes…</span>
+          </span>
+          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar plantilla…" />
+          <CommandList>
+            <CommandEmpty>Sin resultados.</CommandEmpty>
+            <CommandGroup>
+              {plantillasMensaje.map((p) => (
+                <CommandItem
+                  key={p.id}
+                  value={p.nombre}
+                  onSelect={() => {
+                    onElegir(p.texto);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="flex-1">{p.nombre}</span>
+                  <InfoHint>{p.descripcion}</InfoHint>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // Brief §4.1 — redactor: solo para canales de texto. Enter envía (Shift+Enter
-// hace salto de línea); adjuntar y plantillas de mensajes al pie. El
-// selector de canal de salida se retiró a pedido.
+// hace salto de línea); adjuntar y plantillas en línea, arriba del área de
+// texto. El selector de canal de salida se retiró a pedido.
 function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: string) => void }) {
   function enviar() {
     if (!texto.trim()) return;
@@ -157,24 +213,11 @@ function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: 
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
-      <div className="flex items-center gap-2">
-        <Select
-          onValueChange={(id) => {
-            const plantilla = plantillasMensaje.find((p) => p.id === id);
-            if (plantilla) onTextoChange(plantilla.texto);
-          }}
-        >
-          <SelectTrigger size="sm" className="w-44">
-            <SelectValue placeholder="Plantillas de mensajes…" />
-          </SelectTrigger>
-          <SelectContent>
-            {plantillasMensaje.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex items-center gap-1.5">
+        <Button variant="outline" size="icon-sm" aria-label="Adjuntar archivo" title="Adjuntar archivo">
+          <Paperclip className="size-4" />
+        </Button>
+        <PlantillaSelector onElegir={onTextoChange} />
       </div>
       <Textarea
         value={texto}
@@ -189,10 +232,7 @@ function Redactor({ texto, onTextoChange }: { texto: string; onTextoChange: (v: 
         rows={3}
         className="resize-none"
       />
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon-sm" aria-label="Adjuntar archivo" title="Adjuntar archivo">
-          <Paperclip className="size-4" />
-        </Button>
+      <div className="flex justify-end">
         <Button size="sm" onClick={enviar}>
           Enviar
         </Button>

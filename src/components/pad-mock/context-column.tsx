@@ -9,13 +9,16 @@ import {
   History,
   Sparkles,
   NotebookPen,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
+import { CANAL_ICON, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { OpenQuestion } from "@/components/pad-mock/open-question";
+import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
+import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 
 type ClienteMock = {
   numeroCliente: string;
@@ -39,6 +42,14 @@ const SECCIONES: { id: SeccionId; label: string; icon: typeof User }[] = [
   { id: "notas", label: "Notas", icon: NotebookPen },
 ];
 
+// A pedido: siempre arranca igual, sin importar el escenario — Cliente e
+// Historial abiertas, Copiloto y Notas cerradas.
+const SECCIONES_ABIERTAS_INIT: SeccionId[] = ["cliente", "historial"];
+const HISTORIAL_VISIBLE_INICIAL = 3;
+const ANCHO_MIN = 220;
+const ANCHO_MAX = 420;
+const ANCHO_INICIAL = 240;
+
 // Acordeón 100% React (sin <details>/onToggle nativo — ese combo controlado
 // se desincronizaba al cambiar de interacción). Un botón + render condicional,
 // nada de estado del navegador que React tenga que perseguir.
@@ -47,12 +58,14 @@ function Seccion({
   icon: Icon,
   abierta,
   onToggle,
+  badge,
   children,
 }: {
   label: string;
   icon: typeof User;
   abierta: boolean;
   onToggle: () => void;
+  badge?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -65,6 +78,7 @@ function Seccion({
       >
         <Icon className="size-4 shrink-0 text-muted-foreground" />
         <span className="flex-1">{label}</span>
+        {badge}
         <ChevronDown
           className={cn(
             "size-3.5 shrink-0 text-muted-foreground transition-transform",
@@ -77,19 +91,19 @@ function Seccion({
   );
 }
 
-function HistorialItem({ entrada }: { entrada: HistorialEntrada }) {
-  const [abierta, setAbierta] = useState(false);
+function HistorialItem({
+  entrada,
+  onVerMas,
+}: {
+  entrada: HistorialEntrada;
+  onVerMas: () => void;
+}) {
   const Icon = CANAL_ICON[entrada.canal];
   return (
     <div className="rounded-md border border-border">
-      <button
-        type="button"
-        onClick={() => setAbierta((v) => !v)}
-        aria-expanded={abierta}
-        className="flex w-full items-center gap-1.5 px-2 py-1.5 text-left text-xs"
-      >
+      <div className="flex items-center gap-1.5 px-2 py-1.5 text-xs">
         <Icon className="size-3 shrink-0 text-muted-foreground" />
-        <span className="flex-1 font-medium">{entrada.fecha}</span>
+        <span className="flex-1 truncate font-medium">{entrada.fecha}</span>
         <Badge
           variant={
             entrada.estado === "Resuelto"
@@ -101,35 +115,43 @@ function HistorialItem({ entrada }: { entrada: HistorialEntrada }) {
         >
           {entrada.estado}
         </Badge>
-      </button>
-      {abierta && (
-        <p className="border-t border-border px-2 py-1.5 text-xs text-muted-foreground">
-          {CANAL_LABEL[entrada.canal]} — {entrada.resumen}
-        </p>
-      )}
+      </div>
+      <div className="flex items-center gap-2 border-t border-border px-2 py-1.5">
+        <p className="flex-1 text-xs text-muted-foreground">{entrada.resumen}</p>
+        <button
+          type="button"
+          onClick={onVerMas}
+          className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <Eye className="size-3" />
+          Ver más
+        </button>
+      </div>
     </div>
   );
 }
 
 // Brief §5 — acordeón, cada sección se abre/cierra por separado. Colapsa a una
 // tira de íconos verticales; un click sobre un ícono reabre la columna con esa
-// sección puntual abierta.
+// sección puntual abierta. Ancho ajustable (ResizeHandle en el borde
+// izquierdo) — a pedido, tanto esta columna como el menú se pueden acomodar.
 export function ContextColumn({
   colapsada,
   onToggle,
   cliente,
   historial,
   articulo,
-  seccionesAbiertasInit,
 }: {
   colapsada: boolean;
   onToggle: () => void;
   cliente: ClienteMock;
   historial: HistorialEntrada[];
   articulo?: ArticuloCopiloto;
-  seccionesAbiertasInit: SeccionId[];
 }) {
-  const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(seccionesAbiertasInit));
+  const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(SECCIONES_ABIERTAS_INIT));
+  const [historialCompleto, setHistorialCompleto] = useState(false);
+  const [detalleId, setDetalleId] = useState<string | null>(null);
+  const [ancho, setAncho] = useState(ANCHO_INICIAL);
 
   function toggle(id: SeccionId) {
     setAbiertas((cur) => {
@@ -144,6 +166,9 @@ export function ContextColumn({
     setAbiertas(new Set([id]));
     onToggle();
   }
+
+  const historialVisible = historialCompleto ? historial : historial.slice(0, HISTORIAL_VISIBLE_INICIAL);
+  const detalle = historial.find((h) => h.id === detalleId);
 
   if (colapsada) {
     return (
@@ -160,8 +185,12 @@ export function ContextColumn({
               aria-label={label}
               title={label}
               onClick={() => abrirDesdeColapsada(id)}
+              className="relative"
             >
               <Icon className="size-4" />
+              {id === "copiloto" && articulo && (
+                <span className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-info" />
+              )}
             </Button>
           ))}
         </div>
@@ -170,7 +199,8 @@ export function ContextColumn({
   }
 
   return (
-    <div className="flex w-60 shrink-0 flex-col border-l border-border bg-card">
+    <div className="relative flex shrink-0 flex-col border-l border-border bg-card" style={{ width: ancho }}>
+      <ResizeHandle side="left" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w - d)))} />
       <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
         <span className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
           Contexto
@@ -212,13 +242,34 @@ export function ContextColumn({
 
         <Seccion label="Historial" icon={History} abierta={abiertas.has("historial")} onToggle={() => toggle("historial")}>
           <div className="flex flex-col gap-1.5">
-            {historial.map((h) => (
-              <HistorialItem key={h.id} entrada={h} />
+            {historialVisible.map((h) => (
+              <HistorialItem key={h.id} entrada={h} onVerMas={() => setDetalleId(h.id)} />
             ))}
+            {!historialCompleto && historial.length > HISTORIAL_VISIBLE_INICIAL && (
+              <button
+                type="button"
+                onClick={() => setHistorialCompleto(true)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Ver {historial.length - HISTORIAL_VISIBLE_INICIAL} más
+              </button>
+            )}
           </div>
         </Seccion>
 
-        <Seccion label="Copiloto" icon={Sparkles} abierta={abiertas.has("copiloto")} onToggle={() => toggle("copiloto")}>
+        <Seccion
+          label="Copiloto"
+          icon={Sparkles}
+          abierta={abiertas.has("copiloto")}
+          onToggle={() => toggle("copiloto")}
+          badge={
+            articulo ? (
+              <Badge variant="info" className="size-4 shrink-0 justify-center rounded-full p-0">
+                1
+              </Badge>
+            ) : undefined
+          }
+        >
           {articulo ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-xs font-semibold">{articulo.titulo}</p>
@@ -237,6 +288,8 @@ export function ContextColumn({
           <Textarea placeholder="Notas libres sobre esta interacción…" rows={3} className="resize-none text-xs" />
         </Seccion>
       </div>
+
+      <HistorialDetailDialog entrada={detalle} open={detalleId !== null} onOpenChange={(o) => !o && setDetalleId(null)} />
     </div>
   );
 }

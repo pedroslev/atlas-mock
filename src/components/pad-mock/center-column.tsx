@@ -78,6 +78,7 @@ export function CenterColumn({
           </TabsTrigger>
           {paginasExternas.map((p, i) => (
             <TabsTrigger key={p.id} value={p.id} className="gap-1.5">
+              <p.icon className="size-4" />
               {p.nombre}
               <Kbd className="ml-1">
                 {shortcutMod} {i + 2}

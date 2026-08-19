@@ -5,7 +5,24 @@
 // el lunes, no un reemplazo. No compartir tipos entre los dos.
 
 import type { LucideIcon } from "lucide-react";
-import { Phone, MessageCircle, Smartphone, Mail } from "lucide-react";
+import {
+  Phone,
+  MessageCircle,
+  Smartphone,
+  Mail,
+  Ticket,
+  Building2,
+  Receipt,
+  BookOpen,
+  Calculator,
+  Users,
+  CircleCheck,
+  CircleSlash,
+  PowerOff,
+  Utensils,
+  GraduationCap,
+  Coffee,
+} from "lucide-react";
 
 export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail";
 
@@ -112,72 +129,194 @@ export const copilotoArticulo = {
 };
 
 // Plantillas de mensajes — reemplaza al selector de canal de salida en el
-// redactor (retirado a pedido).
-export type PlantillaMensaje = { id: string; nombre: string; texto: string };
+// redactor (retirado a pedido). "descripcion" alimenta el ícono "i" de ayuda
+// del selector (hover).
+export type PlantillaMensaje = { id: string; nombre: string; texto: string; descripcion: string };
 
 export const plantillasMensaje: PlantillaMensaje[] = [
   {
     id: "pl-1",
     nombre: "Saludo inicial",
     texto: "¡Hola! Gracias por escribirnos. ¿En qué te puedo ayudar hoy?",
+    descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
   },
   {
     id: "pl-2",
     nombre: "Pedir más datos",
     texto: "Para poder ayudarte mejor, ¿me confirmás tu número de pedido?",
+    descripcion: "Cuando falta un dato puntual (pedido, DNI, número de cliente) para seguir la gestión.",
   },
   {
     id: "pl-3",
     nombre: "Cierre de conversación",
     texto: "Perfecto, quedó todo resuelto. ¡Gracias por tu paciencia! Cualquier cosa, escribinos.",
+    descripcion: "Para cerrar de forma prolija una vez resuelta la consulta, antes de tipificar.",
   },
 ];
 
 // --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el
 // acordeón de contexto — brief §5.2). Distinto del historial del agente
 // (abajo): acá es "qué pasó con este cliente", no "qué gestionó el agente".
+// Cada entrada tiene el detalle completo para el modal "Ver más": el hilo
+// (transcripción o conversación, según el canal), tipificación, bookmarks,
+// el agente que la atendió y un resumen generado por IA.
 export type HistorialEntrada = {
   id: string;
   fecha: string;
   canal: CanalMock;
   estado: "Resuelto" | "Derivado a nivel 2" | "Sin resolución";
   resumen: string;
+  agente: string;
+  tipificacion: string;
+  bookmarks: string[];
+  resumenIA: string;
+  hilo: { autor: "cliente" | "agente"; texto: string }[];
 };
 
 export const historialPorCliente: Record<string, HistorialEntrada[]> = {
   "3345789": [
-    { id: "h-a1", fecha: "22/07/2026", canal: "llamada", estado: "Resuelto", resumen: "Consulta por vencimiento de factura." },
-    { id: "h-a2", fecha: "03/06/2026", canal: "mail", estado: "Sin resolución", resumen: "Reclamo por cargo duplicado — sin respuesta del cliente." },
-    { id: "h-a3", fecha: "19/04/2026", canal: "llamada", estado: "Derivado a nivel 2", resumen: "Solicitud de baja de servicio adicional." },
+    {
+      id: "h-a1",
+      fecha: "22/07/2026",
+      canal: "llamada",
+      estado: "Resuelto",
+      resumen: "Consulta por vencimiento de factura.",
+      agente: "Rocío Benítez",
+      tipificacion: "Consulta resuelta",
+      bookmarks: ["Cliente VIP"],
+      resumenIA:
+        "La clienta consultó la fecha de vencimiento de su factura de julio. Se le informó el vencimiento (28/07) y las formas de pago disponibles. Quedó conforme.",
+      hilo: [
+        { autor: "cliente", texto: "Hola, quería saber cuándo vence mi factura de este mes." },
+        { autor: "agente", texto: "Hola, vence el 28/07. La podés pagar por home banking o en cualquier sucursal." },
+        { autor: "cliente", texto: "Perfecto, gracias." },
+      ],
+    },
+    {
+      id: "h-a2",
+      fecha: "03/06/2026",
+      canal: "mail",
+      estado: "Sin resolución",
+      resumen: "Reclamo por cargo duplicado — sin respuesta del cliente.",
+      agente: "Julián Ferreyra",
+      tipificacion: "Sin resolución",
+      bookmarks: ["Reclamo activo", "Requiere seguimiento"],
+      resumenIA:
+        "La clienta reportó por mail un cobro duplicado del servicio adicional. Se le pidió el número de comprobante para investigar y no volvió a responder. Reclamo quedó abierto.",
+      hilo: [
+        { autor: "cliente", texto: "Me cobraron dos veces el mismo servicio este mes, adjunto el resumen." },
+        { autor: "agente", texto: "Gracias por avisar. ¿Me podés pasar el número de comprobante de cada cobro para investigar?" },
+      ],
+    },
+    {
+      id: "h-a3",
+      fecha: "19/04/2026",
+      canal: "llamada",
+      estado: "Derivado a nivel 2",
+      resumen: "Solicitud de baja de servicio adicional.",
+      agente: "Marina Acosta",
+      tipificacion: "Deriva a Facturación",
+      bookmarks: [],
+      resumenIA:
+        "La clienta pidió dar de baja el 'Servicio adicional Premium'. No se pudo procesar en primera línea por requerir autorización de Facturación; se derivó el caso a nivel 2.",
+      hilo: [
+        { autor: "cliente", texto: "Quiero dar de baja el servicio adicional que tengo contratado." },
+        { autor: "agente", texto: "Entiendo. Esa baja la tiene que procesar Facturación — te derivo el caso ahora." },
+      ],
+    },
   ],
   "5512980": [
-    { id: "h-b1", fecha: "30/07/2026", canal: "whatsapp", estado: "Resuelto", resumen: "Consulta por cambio de dirección de envío." },
-    { id: "h-b2", fecha: "11/05/2026", canal: "chat", estado: "Resuelto", resumen: "Consulta por medios de pago disponibles." },
+    {
+      id: "h-b1",
+      fecha: "30/07/2026",
+      canal: "whatsapp",
+      estado: "Resuelto",
+      resumen: "Consulta por cambio de dirección de envío.",
+      agente: "Rocío Benítez",
+      tipificacion: "Consulta resuelta",
+      bookmarks: ["Cliente frecuente"],
+      resumenIA:
+        "El cliente solicitó cambiar la dirección de envío de un pedido en curso. Se actualizó el dato antes del despacho y se confirmó por WhatsApp.",
+      hilo: [
+        { autor: "cliente", texto: "Necesito cambiar la dirección de entrega de mi último pedido." },
+        { autor: "agente", texto: "Listo, ya actualicé la dirección. Te va a llegar a la nueva sin problema." },
+      ],
+    },
+    {
+      id: "h-b2",
+      fecha: "11/05/2026",
+      canal: "chat",
+      estado: "Resuelto",
+      resumen: "Consulta por medios de pago disponibles.",
+      agente: "Julián Ferreyra",
+      tipificacion: "Consulta resuelta",
+      bookmarks: [],
+      resumenIA:
+        "El cliente consultó qué medios de pago se aceptan para compras online. Se le informaron las opciones disponibles (tarjeta, transferencia, efectivo en puntos de pago).",
+      hilo: [
+        { autor: "cliente", texto: "¿Qué medios de pago aceptan para compras por la web?" },
+        { autor: "agente", texto: "Tarjeta de crédito/débito, transferencia y efectivo en puntos de pago adheridos." },
+      ],
+    },
   ],
 };
 
 // --- Tipificación -----------------------------------------------------------
-export type Tipificacion = { id: string; nombre: string; sugerida?: boolean };
+// "descripcion" alimenta el ícono "i" de ayuda de cada opción (hover).
+export type Tipificacion = { id: string; nombre: string; descripcion: string; sugerida?: boolean };
 
 export const tipificacionesA: Tipificacion[] = [
-  { id: "t-1", nombre: "Reclamo resuelto" },
-  { id: "t-2", nombre: "Cargo a revisar por Facturación", sugerida: true },
-  { id: "t-3", nombre: "Cliente solicita rellamado" },
-  { id: "t-4", nombre: "Sin resolución" },
+  {
+    id: "t-1",
+    nombre: "Reclamo resuelto",
+    descripcion: "El reclamo se resolvió en esta misma gestión, sin necesidad de derivar ni hacer seguimiento.",
+  },
+  {
+    id: "t-2",
+    nombre: "Cargo a revisar por Facturación",
+    descripcion: "El cliente reclama un cargo que no reconoce y que hay que validar contra el plan contratado.",
+    sugerida: true,
+  },
+  {
+    id: "t-3",
+    nombre: "Cliente solicita rellamado",
+    descripcion: "El cliente pidió que lo vuelvan a contactar en otro momento — no se resolvió ni se derivó.",
+  },
+  {
+    id: "t-4",
+    nombre: "Sin resolución",
+    descripcion: "Se agotaron las opciones disponibles en esta gestión y no se llegó a una resolución.",
+  },
 ];
 
 export const tipificacionesB: Tipificacion[] = [
-  { id: "t-5", nombre: "Consulta resuelta", sugerida: true },
-  { id: "t-6", nombre: "Deriva a Logística" },
-  { id: "t-7", nombre: "Cliente solicita reenvío" },
+  {
+    id: "t-5",
+    nombre: "Consulta resuelta",
+    descripcion: "La consulta del cliente se respondió por completo en esta conversación.",
+    sugerida: true,
+  },
+  {
+    id: "t-6",
+    nombre: "Deriva a Logística",
+    descripcion: "El caso requiere intervención del equipo de Logística (envíos, demoras, extravíos).",
+  },
+  {
+    id: "t-7",
+    nombre: "Cliente solicita reenvío",
+    descripcion: "El cliente pidió que se le reenvíe el pedido, por demora o por un problema con el original.",
+  },
 ];
 
 // --- Páginas externas ---------------------------------------------------
+// "icon" es fijo por integración — a pedido, se configura afuera del pad
+// (Olimpo/backoffice), acá solo se refleja.
 export type PaginaExterna = {
   id: string;
   nombre: string;
   modo: "embebido" | "pestana";
   contenido?: string;
+  icon: LucideIcon;
 };
 
 export const paginasExternas: PaginaExterna[] = [
@@ -186,17 +325,20 @@ export const paginasExternas: PaginaExterna[] = [
     nombre: "Sistema de tickets",
     modo: "embebido",
     contenido: "Ticket #48213 — Envío demorado — Prioridad media — Asignado a Logística Nivel 1",
+    icon: Ticket,
   },
   {
     id: "ext-crm",
     nombre: "CRM comercial",
     modo: "embebido",
     contenido: "Ficha comercial del cliente — plan contratado, historial de compras, oportunidades abiertas",
+    icon: Building2,
   },
   {
     id: "ext-facturacion",
     nombre: "Portal de facturación",
     modo: "pestana",
+    icon: Receipt,
   },
 ];
 
@@ -204,25 +346,28 @@ export const paginasExternas: PaginaExterna[] = [
 // "Shortcut buttons": no pertenecen a ninguna interacción puntual — el
 // agente los usa igual esté en cola vacía o en medio de una llamada. Mismo
 // tipo y mismo componente de contenido que las páginas externas (embebido o
-// pestaña aparte), solo que se abren en un diálogo en vez de una solapa del
-// centro, porque no son parte de ninguna interacción.
+// pestaña aparte); a diferencia de esas, se abren sobre toda la pantalla del
+// pad (menos el menú y el navbar), no en una solapa.
 export const accesosRapidosMock: PaginaExterna[] = [
   {
     id: "ar-manual",
     nombre: "Manual del agente",
     modo: "embebido",
     contenido: "Guía rápida de procesos, políticas internas y guiones sugeridos por tipo de gestión.",
+    icon: BookOpen,
   },
   {
     id: "ar-calculadora",
     nombre: "Calculadora de cuotas",
     modo: "embebido",
     contenido: "Simulador de planes de pago y refinanciación para ofrecer al cliente en el momento.",
+    icon: Calculator,
   },
   {
     id: "ar-rrhh",
     nombre: "Portal de RRHH",
     modo: "pestana",
+    icon: Users,
   },
 ];
 
@@ -265,8 +410,8 @@ export const estadisticasAgenteMock = {
 };
 
 // --- Chats internos (menú izquierdo, entre la cola y Estadísticas) --------
-// Solo el listado por ahora — el alta de un chat nuevo (botón "+") todavía
-// no está mockeada, a propósito.
+// Solo el listado + apertura de ventana flotante por ahora — el alta de un
+// chat nuevo (botón "+") todavía no está mockeada.
 export type ChatInterno = { id: string; nombre: string; noLeidos: number };
 
 export const chatsInternosMock: ChatInterno[] = [
@@ -275,10 +420,39 @@ export const chatsInternosMock: ChatInterno[] = [
   { id: "ci-3", nombre: "Turno tarde — Cobranzas", noLeidos: 5 },
 ];
 
-// --- Estado del agente (bloque "Mi estado" del menú izquierdo) -------------
+// Mensajes de ejemplo para las ventanas flotantes de chat interno.
+export const mensajesChatInterno: Record<string, MensajeChat[]> = {
+  "ci-1": [
+    { autor: "cliente", texto: "¿Cómo venís con la cola? Tengo dos casos VIP para pasarte.", hora: "14:05" },
+    { autor: "agente", texto: "Dale, en 5 min termino esta y los tomo.", hora: "14:06" },
+  ],
+  "ci-2": [{ autor: "cliente", texto: "¿Viste el mail de la nueva política de reembolsos?", hora: "13:40" }],
+  "ci-3": [
+    { autor: "cliente", texto: "Che, ¿alguien libre para tomar una llamada saliente urgente?", hora: "14:10" },
+    { autor: "cliente", texto: "Es del caso de Ibarra, cliente VIP.", hora: "14:10" },
+  ],
+};
+
+// --- Estado del agente (selector del menú izquierdo) ------------------------
+export type EstadoAgenteMock = {
+  id: string;
+  nombre: string;
+  grupo: "principal" | "auxiliar";
+  icon: LucideIcon;
+  dotClass: string;
+};
+
+export const estadosAgenteDisponibles: EstadoAgenteMock[] = [
+  { id: "disponible", nombre: "Disponible", grupo: "principal", icon: CircleCheck, dotClass: "bg-success" },
+  { id: "no-disponible", nombre: "No disponible", grupo: "principal", icon: CircleSlash, dotClass: "bg-destructive" },
+  { id: "ausente", nombre: "Ausente", grupo: "principal", icon: PowerOff, dotClass: "bg-muted-foreground" },
+  { id: "almuerzo", nombre: "Almuerzo", grupo: "auxiliar", icon: Utensils, dotClass: "bg-warning" },
+  { id: "capacitacion", nombre: "Capacitación", grupo: "auxiliar", icon: GraduationCap, dotClass: "bg-info" },
+  { id: "descanso", nombre: "Descanso", grupo: "auxiliar", icon: Coffee, dotClass: "bg-secondary" },
+];
+
 export const estadoAgenteMock = {
   nombre: "Marina Acosta",
-  estado: "Disponible",
   cronometro: "04:12",
 };
 
