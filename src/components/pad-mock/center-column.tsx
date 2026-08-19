@@ -26,9 +26,15 @@ import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 export function CenterColumn({
   variant,
   tipificaciones,
+  enEspera,
+  holdStartedAt,
+  onToggleEspera,
 }: {
   variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
+  enEspera: boolean;
+  holdStartedAt: number | null;
+  onToggleEspera: () => void;
 }) {
   const isMac = useIsMac();
   const [tab, setTab] = useState("conversacion");
@@ -90,7 +96,13 @@ export function CenterColumn({
         ))}
       </Tabs>
 
-      <InteractionControls variant={variant} tipificaciones={tipificaciones} />
+      <InteractionControls
+        variant={variant}
+        tipificaciones={tipificaciones}
+        enEspera={enEspera}
+        holdStartedAt={holdStartedAt}
+        onToggleEspera={onToggleEspera}
+      />
     </div>
   );
 }

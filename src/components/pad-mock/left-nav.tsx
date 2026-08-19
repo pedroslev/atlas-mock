@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { BarChart3, ExternalLink, History, LayoutGrid, MessageCircle, Plus, Zap } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { QuickAccessDialog } from "@/components/pad-mock/quick-access-dialog";
+import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
   CANAL_ICON,
@@ -29,14 +28,23 @@ export function LeftNav({
   onModo,
   interaccionActivaId,
   onSeleccionarInteraccion,
+  accesoActivoId,
+  onAbrirAcceso,
+  enEspera,
+  holdStartedAt,
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
   interaccionActivaId: string;
   onSeleccionarInteraccion: (id: string, datasetId: DatasetId) => void;
+  accesoActivoId: string | null;
+  onAbrirAcceso: (id: string) => void;
+  enEspera: boolean;
+  holdStartedAt: number | null;
 }) {
-  const [accesoAbierto, setAccesoAbierto] = useState<string | null>(null);
-  const pagina = accesosRapidosMock.find((a) => a.id === accesoAbierto);
+  // Solo tickea mientras hay alguien en Hold — el resto del tiempo no hace
+  // falta un reloj corriendo acá.
+  const now = useNow(enEspera);
 
   return (
     <aside className="flex h-full w-12 shrink-0 flex-col gap-2 overflow-y-auto border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground sm:w-44 sm:p-2">
@@ -60,7 +68,9 @@ export function LeftNav({
       {/* Cola — brief §3: número de cliente + ícono de canal + cronómetro de
           espera, nada más. Cada fila abre esa interacción. Alt+N salta a la
           fila N (ver el listener global en pad-mock-shell.tsx). flex-1: es lo
-          que se prioriza en el menú, el resto se acomoda alrededor. */}
+          que se prioriza en el menú, el resto se acomoda alrededor. Si la
+          interacción activa está en Hold, su fila muestra el tiempo en
+          espera (ámbar) en vez del tiempo de cola original. */}
       <div className="flex min-h-0 flex-1 flex-col gap-1">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
           Cola
@@ -69,6 +79,10 @@ export function LeftNav({
           {colaMock.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            const enHold = activa && enEspera && holdStartedAt !== null;
+            const tiempo = enHold
+              ? formatDuration(Math.max(0, Math.floor((now - holdStartedAt) / 1000)))
+              : formatEspera(f.esperaSeg);
             return (
               <button
                 key={f.id}
@@ -87,8 +101,13 @@ export function LeftNav({
                 <span className="flex min-w-0 flex-1 flex-col max-sm:hidden">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
                 </span>
-                <span className="hidden shrink-0 font-mono text-[0.65rem] tabular-nums text-muted-foreground sm:inline">
-                  {formatEspera(f.esperaSeg)}
+                <span
+                  className={cn(
+                    "hidden shrink-0 font-mono text-[0.65rem] tabular-nums sm:inline",
+                    enHold ? "font-semibold text-warning" : "text-muted-foreground"
+                  )}
+                >
+                  {tiempo}
                 </span>
                 <Kbd className="hidden shrink-0 sm:inline-flex">Alt {i + 1}</Kbd>
               </button>
@@ -133,9 +152,9 @@ export function LeftNav({
 
       {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
           interacción puntual, funcionan igual estando en cola vacía o en
-          medio de una llamada. Mismo modo embebido/pestaña que las páginas
-          externas de una interacción, pero se abren en un diálogo porque no
-          tienen una interacción a la cual pertenecerle una solapa. */}
+          medio de una llamada. Al elegir uno, pad-mock-shell.tsx tapa TODO
+          el área de contenido (menos este menú y el navbar) con
+          QuickAccessOverlay — no es un modal. */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground max-sm:hidden">
           Accesos rápidos
@@ -145,8 +164,14 @@ export function LeftNav({
             <button
               key={a.id}
               type="button"
-              onClick={() => setAccesoAbierto(a.id)}
-              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 max-sm:justify-center max-sm:px-0"
+              onClick={() => onAbrirAcceso(a.id)}
+              aria-current={accesoActivoId === a.id ? "true" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors max-sm:justify-center max-sm:px-0",
+                accesoActivoId === a.id
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+              )}
             >
               <Zap className="size-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate max-sm:hidden">{a.nombre}</span>
@@ -159,14 +184,6 @@ export function LeftNav({
           ))}
         </div>
       </div>
-
-      {pagina && (
-        <QuickAccessDialog
-          pagina={pagina}
-          open={accesoAbierto !== null}
-          onOpenChange={(open) => setAccesoAbierto(open ? accesoAbierto : null)}
-        />
-      )}
 
       {/* Estadísticas / Historial del agente — siempre pegados al fondo del
           menú (mt-auto), sin importar cuánto ocupe la cola o los chats. */}

@@ -14,6 +14,8 @@ import {
   CircleX,
   ChevronsUpDown,
   Sparkles,
+  HelpCircle,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,12 +32,11 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { Kbd } from "@/components/ui/kbd";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { cn } from "@/lib/utils";
 import { marcasEjemplo, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
-import { OpenQuestion } from "@/components/pad-mock/open-question";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
 
@@ -54,52 +55,48 @@ const SHORTCUTS = {
   cerrar: "E",
 } as const;
 
-function shortcutLabel(key: string, isMac: boolean): string {
-  return isMac ? `⌘${key}` : `Ctrl ${key}`;
-}
-
-// Botones más chicos que la primera versión (a pedido) — size-9 en vez de
-// size-12, sin perder el mismo lenguaje visual (tono por color, atajo debajo).
+// Ícono solo + tooltip con el nombre y el atajo (en vez de label+Kbd fijo
+// debajo de cada botón) — mismo patrón que los íconos del header real
+// (ActionTooltip), pensado para una barra que ahora está siempre visible y
+// tiene que ser compacta.
 function ControlButton({
   icon: Icon,
   label,
-  shortcut,
+  shortcutKey,
+  isMac,
   tone,
   onClick,
   pressed,
 }: {
   icon: LucideIcon;
   label: string;
-  shortcut: string;
+  shortcutKey: string;
+  isMac: boolean;
   tone: ActionTone;
   onClick?: () => void;
   pressed?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <ActionTooltip label={label} shortcut={[isMac ? "⌘" : "Ctrl", shortcutKey]}>
       <button
         type="button"
         onClick={onClick}
         aria-label={label}
-        aria-keyshortcuts={shortcut}
+        aria-keyshortcuts={`${isMac ? "Meta" : "Control"}+${shortcutKey}`}
         aria-pressed={pressed}
         className={cn(
-          "flex size-9 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           TONE_CLASS[tone]
         )}
       >
         <Icon className="size-4" />
       </button>
-      <span className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
-        <Kbd className="h-4 min-w-4 px-0.5 text-[0.6rem]">{shortcut}</Kbd>
-        {label}
-      </span>
-    </div>
+    </ActionTooltip>
   );
 }
 
 // Combobox con buscador para tipificación — mismo patrón que EntityCombobox
-// de Olimpo. Vive acá ahora (antes en el acordeón de contexto, a pedido).
+// de Olimpo. Ancho acotado (w-44): no hace falta que ocupe media barra.
 function TipificacionSelector({
   tipificaciones,
   value,
@@ -121,21 +118,19 @@ function TipificacionSelector({
           role="combobox"
           aria-expanded={open}
           size="sm"
-          className="w-full min-w-0 justify-between font-normal"
+          className="w-44 min-w-0 shrink-0 justify-between font-normal"
         >
           <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
-            <span className="truncate">{seleccionada?.nombre ?? "Elegir tipificación…"}</span>
+            <Tag className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate">{seleccionada?.nombre ?? "Tipificación…"}</span>
             {seleccionada?.sugerida && (
-              <Badge variant="info" className="shrink-0 gap-1">
-                <Sparkles className="size-2.5" />
-                Sugerida
-              </Badge>
+              <Sparkles className="size-3 shrink-0 text-info" />
             )}
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+      <PopoverContent className="w-64 p-0" align="start">
         <Command>
           <CommandInput placeholder="Buscar tipificación…" />
           <CommandList>
@@ -170,31 +165,30 @@ function TipificacionSelector({
 
 // Barra de controles de la interacción activa — vive en CenterColumn, FUERA
 // del Tabs, para quedar visible sin importar qué solapa esté mirando el
-// agente (conversación o una integración). Cronómetro: cuenta el tiempo
-// total de la interacción salvo que esté en Espera, en cuyo caso cambia a
-// ámbar y pasa a contar cuánto lleva EN espera (se reinicia si se retoma y
-// se vuelve a poner en espera). "Cerrar interacción" reemplaza a
-// Colgar/Finalizar — mismo botón para los dos canales, pensado para
-// clickearse después de elegir la tipificación de arriba.
+// agente. Una sola fila, compacta: cronómetro + chips a la izquierda,
+// tipificación + botones a la derecha.
+//
+// El estado de Hold (enEspera/holdStartedAt) NO es local: lo maneja
+// pad-mock-shell.tsx para poder reflejar el mismo tiempo en espera en la
+// fila de la cola del menú izquierdo (LeftNav) mientras dura la llamada.
 export function InteractionControls({
   variant,
   tipificaciones,
+  enEspera,
+  holdStartedAt,
+  onToggleEspera,
 }: {
   variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
+  enEspera: boolean;
+  holdStartedAt: number | null;
+  onToggleEspera: () => void;
 }) {
   const isMac = useIsMac();
   const [startedAt] = useState(() => Date.now());
-  const [enEspera, setEnEsperaRaw] = useState(false);
-  const [holdStartedAt, setHoldStartedAt] = useState<number | null>(null);
   const now = useNow(true);
   const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
   const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
-
-  function setEnEspera(next: boolean) {
-    setEnEsperaRaw(next);
-    setHoldStartedAt(next ? Date.now() : null);
-  }
 
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<string[]>([]);
@@ -223,7 +217,7 @@ export function InteractionControls({
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
           e.preventDefault();
-          setEnEspera(!enEspera);
+          onToggleEspera();
           break;
         case SHORTCUTS.silenciar.toLowerCase():
           if (variant === "llamada") {
@@ -246,65 +240,66 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [variant, enEspera]);
+  }, [variant, onToggleEspera]);
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-t border-border p-2.5">
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "font-mono text-sm font-semibold tabular-nums",
-            enEspera ? "text-warning" : "text-foreground"
-          )}
-        >
-          {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
-        </span>
-        {enEspera && (
-          <Badge variant="warning" className="gap-1">
-            <Pause className="size-2.5" />
-            En espera
-          </Badge>
+    <div className="flex shrink-0 flex-wrap items-center gap-2.5 border-t border-border px-3 py-1.5">
+      <span
+        className={cn(
+          "shrink-0 font-mono text-xs font-semibold tabular-nums",
+          enEspera ? "text-warning" : "text-foreground"
         )}
-        {marcas.map((m, i) => (
-          <Badge key={`${m}-${i}`} variant="neutral" className="gap-1">
-            <Bookmark className="size-2.5" />
-            {m}
-          </Badge>
-        ))}
-        {transferido && (
-          <Badge variant="info" className="gap-1">
-            <PhoneForwarded className="size-2.5" />
-            Transferida a {transferido}
-          </Badge>
-        )}
-      </div>
+      >
+        {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+      </span>
+      {enEspera && (
+        <Badge variant="warning" className="shrink-0 gap-1">
+          <Pause className="size-2.5" />
+          Espera
+        </Badge>
+      )}
+      {marcas.map((m, i) => (
+        <Badge key={`${m}-${i}`} variant="neutral" className="shrink-0 gap-1">
+          <Bookmark className="size-2.5" />
+          {m}
+        </Badge>
+      ))}
+      {transferido && (
+        <Badge variant="info" className="shrink-0 gap-1">
+          <PhoneForwarded className="size-2.5" />
+          {transferido}
+        </Badge>
+      )}
 
-      <div className="flex items-center gap-2">
-        <span className="shrink-0 text-xs text-muted-foreground">Tipificación</span>
+      <div className="ml-auto flex min-w-0 items-center gap-1.5">
         <TipificacionSelector
           tipificaciones={tipificaciones}
           value={tipSeleccionada}
           onChange={setTipSeleccionada}
         />
-        <OpenQuestion className="hidden flex-1 sm:flex">
-          cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano.
-        </OpenQuestion>
-      </div>
+        <ActionTooltip label="Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.">
+          <span className="flex size-6 shrink-0 items-center justify-center text-muted-foreground">
+            <HelpCircle className="size-3.5" />
+          </span>
+        </ActionTooltip>
 
-      <div className="flex items-center justify-center gap-4">
+        <span className="mx-0.5 h-5 w-px shrink-0 bg-border" aria-hidden />
+
         <ControlButton
           icon={enEspera ? Play : Pause}
           label={enEspera ? "Retomar" : "Espera"}
-          shortcut={shortcutLabel(SHORTCUTS.espera, isMac)}
+          shortcutKey={SHORTCUTS.espera}
+          isMac={isMac}
           tone={enEspera ? "active" : "neutral"}
           pressed={enEspera}
-          onClick={() => setEnEspera(!enEspera)}
+          onClick={onToggleEspera}
         />
         {variant === "llamada" && (
           <ControlButton
             icon={silenciado ? MicOff : Mic}
             label={silenciado ? "Reactivar" : "Silenciar"}
-            shortcut={shortcutLabel(SHORTCUTS.silenciar, isMac)}
+            shortcutKey={SHORTCUTS.silenciar}
+            isMac={isMac}
             tone={silenciado ? "active" : "neutral"}
             pressed={silenciado}
             onClick={() => setSilenciado((v) => !v)}
@@ -317,13 +312,14 @@ export function InteractionControls({
               <ControlButton
                 icon={Bookmark}
                 label="Marcar"
-                shortcut={shortcutLabel(SHORTCUTS.marcar, isMac)}
+                shortcutKey={SHORTCUTS.marcar}
+                isMac={isMac}
                 tone="neutral"
                 onClick={() => setMarcarAbierto(true)}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent align="center" className="w-56 p-1.5">
+          <PopoverContent align="end" className="w-56 p-1.5">
             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
               Marcar esta interacción
             </p>
@@ -350,13 +346,14 @@ export function InteractionControls({
               <ControlButton
                 icon={PhoneForwarded}
                 label="Transferir"
-                shortcut={shortcutLabel(SHORTCUTS.transferir, isMac)}
+                shortcutKey={SHORTCUTS.transferir}
+                isMac={isMac}
                 tone="neutral"
                 onClick={() => setTransferirAbierto(true)}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent align="center" className="w-64 p-1.5">
+          <PopoverContent align="end" className="w-64 p-1.5">
             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
               Transferir a…
             </p>
@@ -380,7 +377,8 @@ export function InteractionControls({
         <ControlButton
           icon={variant === "llamada" ? PhoneOff : CircleX}
           label="Cerrar interacción"
-          shortcut={shortcutLabel(SHORTCUTS.cerrar, isMac)}
+          shortcutKey={SHORTCUTS.cerrar}
+          isMac={isMac}
           tone="destructive"
           onClick={() => {}}
         />
