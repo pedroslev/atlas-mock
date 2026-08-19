@@ -86,10 +86,17 @@ export function CenterColumn({
             (Llamada/Conversación) queda sticky a la izquierda con su propio
             fondo — a pedido, no se va con el resto cuando el overflow-x-auto
             hace scroll por la cantidad de páginas externas. */}
-        <TabsList variant="line" className="h-10 w-full shrink-0 overflow-x-auto border-b border-border px-2">
+        <TabsList
+          variant="line"
+          className="h-10 w-full shrink-0 justify-start overflow-x-auto border-b border-border px-2"
+        >
+          {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
+              tabs tipo segmented control que reparten el ancho disponible) —
+              acá cada solapa mide lo que mide su contenido, si no se
+              estiraba y el contenido quedaba centrado a mitad del sobrante. */}
           <TabsTrigger
             value="conversacion"
-            className="sticky left-0 z-10 shrink-0 gap-1.5 bg-background"
+            className="sticky left-0 z-10 flex-none gap-1.5 bg-background"
           >
             <PrimerTabIcon className="size-4" />
             {primerTabLabel}
@@ -104,7 +111,7 @@ export function CenterColumn({
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
           {paginasExternas.map((p, i) => (
-            <TabsTrigger key={p.id} value={p.id} className="shrink-0 gap-1.5">
+            <TabsTrigger key={p.id} value={p.id} className="flex-none gap-1.5">
               <p.icon className="size-4" />
               {p.nombre}
               <Kbd className="ml-1">
