@@ -88,15 +88,18 @@ export function CenterColumn({
             hace scroll por la cantidad de páginas externas. */}
         <TabsList
           variant="line"
-          className="h-10 w-full shrink-0 justify-start overflow-x-auto border-b border-border px-2"
+          className="h-10 w-full shrink-0 justify-start overflow-x-auto overflow-y-hidden border-b border-border px-2"
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
               tabs tipo segmented control que reparten el ancho disponible) —
               acá cada solapa mide lo que mide su contenido, si no se
-              estiraba y el contenido quedaba centrado a mitad del sobrante. */}
+              estiraba y el contenido quedaba centrado a mitad del sobrante.
+              bg-background! (con !important): sin forzarlo, pierde contra
+              las variantes data-active/dark de TabsTrigger y se veían las
+              solapas de atrás pasando por detrás del texto al hacer scroll. */}
           <TabsTrigger
             value="conversacion"
-            className="sticky left-0 z-10 flex-none gap-1.5 bg-background"
+            className="sticky left-0 z-10 flex-none gap-1.5 bg-background!"
           >
             <PrimerTabIcon className="size-4" />
             {primerTabLabel}
