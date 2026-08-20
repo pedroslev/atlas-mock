@@ -136,7 +136,7 @@ export function CenterColumn({
               TabsList de arriba. */}
           <TabsTrigger
             value="conversacion"
-            className="sticky left-0 z-10 flex-none gap-2 bg-background! py-2 pr-4 pl-7 text-base"
+            className="sticky left-0 z-10 flex-none gap-2 bg-background! py-3 pr-4 pl-7 text-base"
           >
             <Phone className="size-5" />
             {t("padMock.centerColumn.llamada")}
@@ -160,7 +160,7 @@ export function CenterColumn({
                 key={p.id}
                 type="button"
                 onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
-                className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-2 rounded-md border border-transparent px-4 py-2 text-base font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-2 rounded-md border border-transparent px-4 py-3 text-base font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
               >
                 <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
@@ -170,7 +170,7 @@ export function CenterColumn({
                 </Kbd>
               </button>
             ) : (
-              <TabsTrigger key={p.id} value={p.id} className="flex-none gap-2 px-4 py-2 text-base">
+              <TabsTrigger key={p.id} value={p.id} className="flex-none gap-2 px-4 py-3 text-base">
                 <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
                 <Kbd className="ml-1">
