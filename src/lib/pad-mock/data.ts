@@ -147,11 +147,31 @@ export const copilotoLlamada = {
 };
 
 // Controles de llamada — Marcar (bookmarks de calidad) y Transferir.
-export const marcasEjemplo: string[] = [
-  "Cliente VIP",
-  "Reclamo activo",
-  "Promesa de pago",
-  "Requiere seguimiento",
+// "descripcion" alimenta el ícono "i" del selector (hover) — mismo patrón
+// que Tipificacion, a pedido: buscador + descripción también en Marcar.
+export type MarcaDisponible = { id: string; nombre: string; descripcion: string };
+
+export const marcasDisponibles: MarcaDisponible[] = [
+  {
+    id: "mk-1",
+    nombre: "Cliente VIP",
+    descripcion: "Cliente de segmento preferencial o con acuerdos comerciales especiales — priorizar en derivaciones.",
+  },
+  {
+    id: "mk-2",
+    nombre: "Reclamo activo",
+    descripcion: "Hay un reclamo abierto sin resolver relacionado con esta interacción.",
+  },
+  {
+    id: "mk-3",
+    nombre: "Promesa de pago",
+    descripcion: "El cliente se comprometió a pagar en una fecha determinada — anotar el seguimiento.",
+  },
+  {
+    id: "mk-4",
+    nombre: "Requiere seguimiento",
+    descripcion: "Esta interacción necesita que alguien la retome más adelante, no quedó resuelta del todo.",
+  },
 ];
 
 export const destinosTransferencia: string[] = [

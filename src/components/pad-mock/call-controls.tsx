@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
-import { marcasEjemplo, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
+import { marcasDisponibles, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
@@ -215,10 +215,11 @@ export function InteractionControls({
   }
 
   function agregarMarca() {
-    if (!marcaSeleccionada) return;
+    const marca = marcasDisponibles.find((m) => m.id === marcaSeleccionada);
+    if (!marca) return;
     setMarcas((cur) => [
       ...cur,
-      { marca: marcaSeleccionada, comentario: comentarioMarca.trim() || undefined },
+      { marca: marca.nombre, comentario: comentarioMarca.trim() || undefined },
     ]);
     cerrarMarcar(false);
   }
@@ -400,45 +401,45 @@ export function InteractionControls({
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-64 p-1.5">
-            <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
-              Marcar esta interacción
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {marcasEjemplo.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMarcaSeleccionada(m)}
-                  aria-pressed={marcaSeleccionada === m}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                    marcaSeleccionada === m
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Bookmark className="size-3.5 text-muted-foreground" />
-                  <span className="flex-1">{m}</span>
-                  {marcaSeleccionada === m && <Check className="size-3.5 text-primary" />}
-                </button>
-              ))}
+          <PopoverContent align="end" className="w-64 p-0">
+            {/* Mismo patrón que TipificacionSelector: buscador + ítem con
+                ícono "i" de descripción — a pedido, también acá. */}
+            <Command>
+              <CommandInput placeholder="Buscar marca…" />
+              <CommandList>
+                <CommandEmpty>Sin resultados.</CommandEmpty>
+                <CommandGroup>
+                  {marcasDisponibles.map((m) => (
+                    <CommandItem
+                      key={m.id}
+                      value={m.nombre}
+                      onSelect={() => setMarcaSeleccionada(m.id)}
+                    >
+                      <Check className={cn(marcaSeleccionada === m.id ? "opacity-100" : "opacity-0")} />
+                      <span className="flex-1">{m.nombre}</span>
+                      <InfoHint>{m.descripcion}</InfoHint>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+            <div className="border-t border-border p-1.5">
+              <Textarea
+                value={comentarioMarca}
+                onChange={(e) => setComentarioMarca(e.target.value)}
+                placeholder="Agregar un comentario (opcional)…"
+                rows={2}
+                className="resize-none text-xs"
+              />
+              <Button
+                size="sm"
+                className="mt-1.5 w-full"
+                disabled={!marcaSeleccionada}
+                onClick={agregarMarca}
+              >
+                Agregar marca
+              </Button>
             </div>
-            <Textarea
-              value={comentarioMarca}
-              onChange={(e) => setComentarioMarca(e.target.value)}
-              placeholder="Agregar un comentario (opcional)…"
-              rows={2}
-              className="mt-1.5 resize-none text-xs"
-            />
-            <Button
-              size="sm"
-              className="mt-1.5 w-full"
-              disabled={!marcaSeleccionada}
-              onClick={agregarMarca}
-            >
-              Agregar marca
-            </Button>
           </PopoverContent>
         </Popover>
 
