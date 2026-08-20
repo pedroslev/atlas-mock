@@ -1,81 +1,99 @@
 "use client";
 
+import { useMemo } from "react";
 import { History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  MitrolTable,
+  type MRT_ColumnDef,
+} from "@/components/data-table/mitrol-table";
 import { useT } from "@/lib/i18n";
-import { CANAL_ICON, CANAL_LABEL, historialAgenteMock } from "@/lib/pad-mock/data";
+import {
+  CANAL_ICON,
+  CANAL_LABEL,
+  historialAgenteMock,
+  type HistorialAgenteEntrada,
+} from "@/lib/pad-mock/data";
 
 // Historial DEL AGENTE: la totalidad de lo que gestionó, cualquier canal.
 // A propósito distinto del historial que se ve DENTRO de una interacción
 // (context-column.tsx), que es el histórico de contacto de ESE cliente
 // puntual — para no confundir los dos en la demo del lunes.
+//
+// A pedido: misma tabla que el resto de Olimpo (MitrolTable), ocupando
+// todo el panel — antes era la tabla shadcn simple, sin buscador/filtros
+// ni ocupar el alto disponible.
 export function AgentHistoryPanel() {
   const t = useT();
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
-      <div>
-        <h1 className="flex items-center gap-2 font-heading text-xl font-semibold">
-          <History className="size-5 text-muted-foreground" />
-          {t("padMock.agentHistory.titulo")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("padMock.agentHistory.descripcion")}</p>
-      </div>
 
-      <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("padMock.agentHistory.colCanal")}</TableHead>
-              <TableHead>{t("padMock.agentHistory.colFecha")}</TableHead>
-              <TableHead>{t("padMock.agentHistory.colCliente")}</TableHead>
-              <TableHead>{t("padMock.agentHistory.colDuracion")}</TableHead>
-              <TableHead>{t("padMock.agentHistory.colTipificacion")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {historialAgenteMock.map((h) => {
-              const Icon = CANAL_ICON[h.canal];
-              return (
-                <TableRow key={h.id}>
-                  <TableCell>
-                    <span className="flex items-center gap-2 text-muted-foreground">
-                      <Icon className="size-4" aria-hidden />
-                      {CANAL_LABEL[h.canal]}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="flex flex-col font-mono text-xs tabular-nums">
-                      <span>{h.fecha}</span>
-                      <span className="text-muted-foreground">{h.hora}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      {h.nombreCliente && (
-                        <span className="text-sm font-medium">{h.nombreCliente}</span>
-                      )}
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                        {h.numeroCliente}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs tabular-nums">{h.duracion}</TableCell>
-                  <TableCell>
-                    <Badge variant="neutral">{h.tipificacion}</Badge>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+  const columns = useMemo<MRT_ColumnDef<HistorialAgenteEntrada>[]>(
+    () => [
+      {
+        id: "canal",
+        header: t("padMock.agentHistory.colCanal"),
+        accessorFn: (h) => CANAL_LABEL[h.canal],
+        filterVariant: "select",
+        Cell: ({ row }) => {
+          const Icon = CANAL_ICON[row.original.canal];
+          return (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Icon className="size-4" aria-hidden />
+              {CANAL_LABEL[row.original.canal]}
+            </span>
+          );
+        },
+      },
+      {
+        id: "fecha",
+        header: t("padMock.agentHistory.colFecha"),
+        accessorFn: (h) => `${h.fecha} ${h.hora}`,
+        Cell: ({ row }) => (
+          <span className="flex flex-col font-mono text-xs tabular-nums">
+            <span>{row.original.fecha}</span>
+            <span className="text-muted-foreground">{row.original.hora}</span>
+          </span>
+        ),
+      },
+      {
+        id: "cliente",
+        header: t("padMock.agentHistory.colCliente"),
+        accessorFn: (h) => h.nombreCliente ?? h.numeroCliente,
+        Cell: ({ row }) => (
+          <div className="flex flex-col">
+            {row.original.nombreCliente && (
+              <span className="text-sm font-medium">{row.original.nombreCliente}</span>
+            )}
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+              {row.original.numeroCliente}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "duracion",
+        header: t("padMock.agentHistory.colDuracion"),
+        Cell: ({ cell }) => (
+          <span className="font-mono text-xs tabular-nums">{cell.getValue<string>()}</span>
+        ),
+      },
+      {
+        accessorKey: "tipificacion",
+        header: t("padMock.agentHistory.colTipificacion"),
+        Cell: ({ cell }) => <Badge variant="neutral">{cell.getValue<string>()}</Badge>,
+      },
+    ],
+    [t]
+  );
+
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 p-4 sm:p-6">
+      <h1 className="flex shrink-0 items-center gap-2 font-heading text-xl font-semibold">
+        <History className="size-5 text-muted-foreground" />
+        {t("padMock.agentHistory.titulo")}
+      </h1>
+
+      <div className="min-h-0 flex-1">
+        <MitrolTable columns={columns} data={historialAgenteMock} fillHeight />
       </div>
     </div>
   );

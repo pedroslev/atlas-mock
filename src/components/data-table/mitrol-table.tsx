@@ -13,6 +13,7 @@ import { MRT_Localization_EN } from "material-react-table/locales/en";
 import { MRT_Localization_PT_BR } from "material-react-table/locales/pt-BR";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { useLocale, useT, type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 // Tabla estándar del backoffice: material-react-table (feedback de producto
 // 2026-07-16 — filtros por columna, búsqueda global y paginación superiores a
@@ -63,11 +64,20 @@ export function MitrolTable<T extends MRT_RowData>({
   columns,
   data,
   options,
+  fillHeight = false,
 }: {
   columns: MRT_ColumnDef<T>[];
   data: T[];
   /** Overrides de MRT por pantalla (agrupado, row actions, etc.). */
   options?: Partial<MRT_TableOptions<T>>;
+  /**
+   * En vez de acotar el alto de la tabla a la altura de la ventana (el
+   * `calc(100vh - 15rem)` de siempre, pensado para una página de backoffice
+   * que scrollea), la estira al 100% de su contenedor — para paneles que ya
+   * manejan su propio alto flex (p. ej. el historial del pad, que no tiene
+   * el "página que scrollea" del backoffice alrededor).
+   */
+  fillHeight?: boolean;
 }) {
   // El tema (dark/light) que usa MUI sólo se conoce en el cliente. Si el server
   // renderiza la tabla con un tema y el cliente hidrata con otro, React aborta
@@ -201,7 +211,9 @@ export function MitrolTable<T extends MRT_RowData>({
           baseBackgroundColor: "#FFFFFF",
         },
     muiTableContainerProps: {
-      sx: { maxHeight: "calc(100vh - 15rem)" },
+      sx: fillHeight
+        ? { flex: 1, minHeight: 0 }
+        : { maxHeight: "calc(100vh - 15rem)" },
     },
     // Header de columnas visualmente distinto del cuerpo: en dark el cuerpo
     // y el header compartían casi el mismo gris y no se leía la estructura.
@@ -266,6 +278,10 @@ export function MitrolTable<T extends MRT_RowData>({
           : "0 0 0 1px rgba(30, 41, 59, 0.10)",
         overflow: "hidden",
         backgroundImage: "none",
+        // fillHeight: Paper pasa a columna flex para que el TableContainer
+        // (flex:1 arriba) reparta el alto real del panel entre el toolbar y
+        // la grilla, en vez de crecer con el contenido.
+        ...(fillHeight && { height: "100%", display: "flex", flexDirection: "column" }),
       },
     },
     muiTopToolbarProps: { sx: { minHeight: "52px" } },
@@ -277,7 +293,12 @@ export function MitrolTable<T extends MRT_RowData>({
   // light y dark hasta que la tabla real monta con el tema correcto.
   if (mode === "server") {
     return (
-      <div className="h-64 w-full animate-pulse rounded-xl bg-muted/40 ring-1 ring-foreground/10" />
+      <div
+        className={cn(
+          "w-full animate-pulse rounded-xl bg-muted/40 ring-1 ring-foreground/10",
+          fillHeight ? "h-full" : "h-64"
+        )}
+      />
     );
   }
 

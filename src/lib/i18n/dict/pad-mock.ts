@@ -105,8 +105,6 @@ export const padMock: NamespaceDict = {
 
     // AgentHistoryPanel
     "agentHistory.titulo": "Historial",
-    "agentHistory.descripcion":
-      "Tus gestiones, en cualquier canal. Distinto del historial de contacto de un cliente puntual, que se ve dentro de cada interacción.",
     "agentHistory.colCanal": "Canal",
     "agentHistory.colFecha": "Fecha y hora",
     "agentHistory.colCliente": "Cliente",
