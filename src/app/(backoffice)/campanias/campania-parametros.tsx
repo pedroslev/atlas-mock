@@ -342,9 +342,9 @@ export function UrlsExternasTab({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="manual">{t("campanias.parametros.modeManual")}</SelectItem>
                     <SelectItem value="start">{t("campanias.parametros.modeStart")}</SelectItem>
                     <SelectItem value="end">{t("campanias.parametros.modeEnd")}</SelectItem>
-                    <SelectItem value="manual">{t("campanias.parametros.modeManual")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
