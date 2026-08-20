@@ -22,9 +22,6 @@ type ClienteMock = {
   numeroCliente: string;
   nombre: string;
   telefono: string;
-  mail: string;
-  segmento: string;
-  antiguedad: string;
 };
 
 // Tipificación se mudó a la barra de controles de la interacción (siempre
@@ -227,18 +224,6 @@ export function ContextColumn({
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
               <dd className="text-right tabular-nums">{cliente.telefono}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.mail")}</dt>
-              <dd className="truncate text-right">{cliente.mail}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.segmento")}</dt>
-              <dd className="text-right">{cliente.segmento}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.antiguedad")}</dt>
-              <dd className="text-right">{cliente.antiguedad}</dd>
             </div>
           </dl>
         </Seccion>

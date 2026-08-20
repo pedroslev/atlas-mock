@@ -106,16 +106,15 @@ export type FilaCola = {
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
+// A pedido, se sacaron mail/segmento/antigüedad — la sección Cliente del
+// contexto queda solo con N° cliente, nombre y teléfono.
 export const clienteMock = {
   numeroCliente: "3345789",
   nombre: "Valentina Ibarra",
   telefono: "+54 11 4589-2231",
-  mail: "valentina.ibarra@correo.com",
-  segmento: "Estándar",
-  antiguedad: "2 años y 3 meses",
 };
 
-// Controles de llamada — Marcar (bookmarks de calidad) y Transferir.
+// Controles de llamada — Marcar (bookmarks de calidad).
 // "descripcion" alimenta el ícono "i" del selector (hover) — mismo patrón
 // que Tipificacion, a pedido: buscador + descripción también en Marcar.
 export type MarcaDisponible = { id: string; nombre: string; descripcion: string };
@@ -141,12 +140,6 @@ export const marcasDisponibles: MarcaDisponible[] = [
     nombre: "Requiere seguimiento",
     descripcion: "Esta interacción necesita que alguien la retome más adelante, no quedó resuelta del todo.",
   },
-];
-
-export const destinosTransferencia: string[] = [
-  "Nivel 2 — Facturación",
-  "Supervisor de turno",
-  "Equipo de Logística",
 ];
 
 // --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el

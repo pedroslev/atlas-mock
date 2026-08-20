@@ -9,7 +9,6 @@ import {
   Play,
   PhoneOff,
   Bookmark,
-  PhoneForwarded,
   Check,
   ChevronsUpDown,
   Tag,
@@ -37,7 +36,7 @@ import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { marcasDisponibles, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
+import { marcasDisponibles, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
@@ -53,7 +52,6 @@ const SHORTCUTS = {
   espera: "H",
   silenciar: "M",
   marcar: "B",
-  transferir: "T",
   cerrar: "E",
   dialpad: "D",
 } as const;
@@ -192,8 +190,6 @@ export function InteractionControls({
   const [marcarAbierto, setMarcarAbierto] = useState(false);
   const [marcaSeleccionada, setMarcaSeleccionada] = useState<string | null>(null);
   const [comentarioMarca, setComentarioMarca] = useState("");
-  const [transferido, setTransferido] = useState<string | null>(null);
-  const [transferirAbierto, setTransferirAbierto] = useState(false);
   const [dialpadAbierto, setDialpadAbierto] = useState(false);
   const [digitosMarcados, setDigitosMarcados] = useState("");
   // Flujo a pedido: Corto → tipifico → recién ahí se habilita Cerrar
@@ -255,12 +251,6 @@ export function InteractionControls({
             setMarcarAbierto(true);
           }
           break;
-        case SHORTCUTS.transferir.toLowerCase():
-          if (!cortada) {
-            e.preventDefault();
-            setTransferirAbierto(true);
-          }
-          break;
         case SHORTCUTS.dialpad.toLowerCase():
           if (!cortada) {
             e.preventDefault();
@@ -312,13 +302,6 @@ export function InteractionControls({
           <span key={`${m.marca}-${i}`}>{badge}</span>
         );
       })}
-      {transferido && (
-        <Badge variant="info" className="shrink-0 gap-1">
-          <PhoneForwarded className="size-2.5" />
-          {transferido}
-        </Badge>
-      )}
-
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <ControlButton
           icon={enEspera ? Play : Pause}
@@ -438,41 +421,6 @@ export function InteractionControls({
                 {t("padMock.callControls.agregarMarca")}
               </Button>
             </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover open={transferirAbierto} onOpenChange={setTransferirAbierto}>
-          <PopoverTrigger asChild>
-            <div>
-              <ControlButton
-                icon={PhoneForwarded}
-                label={t("padMock.callControls.transferir")}
-                shortcutKey={SHORTCUTS.transferir}
-                isMac={isMac}
-                tone="neutral"
-                disabled={cortada}
-                onClick={() => setTransferirAbierto(true)}
-              />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-64 p-1.5">
-            <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
-              {t("padMock.callControls.transferirA")}
-            </p>
-            {destinosTransferencia.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => {
-                  setTransferido(d);
-                  setTransferirAbierto(false);
-                }}
-                className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-              >
-                {d}
-                {transferido === d && <Check className="size-3.5 text-primary" />}
-              </button>
-            ))}
           </PopoverContent>
         </Popover>
 

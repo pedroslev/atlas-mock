@@ -42,7 +42,6 @@ export const padMock: NamespaceDict = {
     "callControls.silenciar": "Silenciar",
     "callControls.tecladoNumerico": "Teclado numérico",
     "callControls.marcar": "Marcar",
-    "callControls.transferir": "Transferir",
     "callControls.cerrarInteraccion": "Cerrar interacción",
     "callControls.cortar": "Cortar",
     "callControls.enviarTonos": "Enviar tonos (DTMF)",
@@ -52,7 +51,6 @@ export const padMock: NamespaceDict = {
     "callControls.buscarMarca": "Buscar marca…",
     "callControls.comentarioPlaceholder": "Agregar un comentario (opcional)…",
     "callControls.agregarMarca": "Agregar marca",
-    "callControls.transferirA": "Transferir a…",
 
     // ContextColumn
     "contextColumn.cliente": "Cliente",
@@ -63,9 +61,6 @@ export const padMock: NamespaceDict = {
     "contextColumn.numeroCliente": "N° cliente",
     "contextColumn.nombre": "Nombre",
     "contextColumn.telefono": "Teléfono",
-    "contextColumn.mail": "Mail",
-    "contextColumn.segmento": "Segmento",
-    "contextColumn.antiguedad": "Antigüedad",
     "contextColumn.verMas": "Ver {n} más",
     "contextColumn.verMasDetalle": "Ver más",
 
