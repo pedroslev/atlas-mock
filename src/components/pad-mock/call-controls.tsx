@@ -91,11 +91,11 @@ function ControlButton({
         aria-keyshortcuts={`${isMac ? "Meta" : "Control"}+${shortcutKey}`}
         aria-pressed={pressed}
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           TONE_CLASS[tone]
         )}
       >
-        <Icon className="size-4" />
+        <Icon className="size-[1.15rem]" />
       </button>
     </ActionTooltip>
   );
@@ -123,11 +123,10 @@ function TipificacionSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          size="sm"
-          className="w-44 min-w-0 shrink-0 justify-between font-normal"
+          className="w-48 min-w-0 shrink-0 justify-between font-normal"
         >
           <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
-            <Tag className="size-3.5 shrink-0 text-muted-foreground" />
+            <Tag className="size-4 shrink-0 text-muted-foreground" />
             <span className="truncate">{seleccionada?.nombre ?? "Tipificación…"}</span>
             {seleccionada?.sugerida && (
               <Sparkles className="size-3 shrink-0 text-info" />
@@ -278,15 +277,15 @@ export function InteractionControls({
   }, [variant, onToggleEspera]);
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-2.5 border-t border-border px-3 py-1.5">
+    <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
       <TipificacionSelector
         tipificaciones={tipificaciones}
         value={tipSeleccionada}
         onChange={setTipSeleccionada}
       />
       <ActionTooltip label="Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.">
-        <span className="flex size-6 shrink-0 items-center justify-center text-muted-foreground">
-          <HelpCircle className="size-3.5" />
+        <span className="flex size-7 shrink-0 items-center justify-center text-muted-foreground">
+          <HelpCircle className="size-4" />
         </span>
       </ActionTooltip>
 
@@ -318,7 +317,7 @@ export function InteractionControls({
         </Badge>
       )}
 
-      <div className="ml-auto flex min-w-0 items-center gap-1.5">
+      <div className="ml-auto flex min-w-0 items-center gap-2">
         {/* El chat no tiene Hold — a pedido, control exclusivo de llamada. */}
         {variant === "llamada" && (
           <ControlButton
