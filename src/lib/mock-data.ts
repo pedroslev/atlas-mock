@@ -43,6 +43,83 @@ export type Proyecto = {
   campaniasCount: number;
 };
 
+// campaigns.parameters (JSONB) — ADR-BD-002 lo deja "a definir por PAD, no
+// MVP"; esto mockea la propuesta de relevamiento-legacy/parametros-campaigns
+// (parametrizacion-propuesta.md). Cada grupo del documento con "Dónde va:
+// Parámetro de campaña" tiene acá su propia solapa en el editor de campaña
+// (entre General y Usuarios). Quedan AFUERA de este mock, porque el propio
+// documento dice que no van por campaña:
+// - `agent_operation_settings.history_lookback_days` → grupo de trabajo.
+// - `routing_and_wait` (modo de derivación) → Workflow, no campaña (ADR-BD-002
+//   ya dice que las campaigns no tienen workflow propio, vive en `accounts`).
+// - Shortcut Buttons → grupo de trabajo, no campaña (lo dice el documento).
+export type AgentControlsParams = {
+  allowHold: boolean;
+  allowHangup: boolean;
+  allowAddBookmark: boolean;
+  allowMute: boolean;
+  allowClassification: boolean;
+  forceClassification: boolean;
+};
+
+export type DisplaySettingsParams = {
+  allowRinging: boolean;
+};
+
+export type RecordingSettingsParams = {
+  recordAgentAudioDuringHold: boolean;
+};
+
+export type AgentOperationSettingsParams = {
+  forcedAnswer: boolean;
+};
+
+export type InteractionUrlOpenAs = "frame" | "blank";
+export type InteractionUrlMode = "start" | "end" | "none";
+export type InteractionUrlSettingsParams = {
+  url: string;
+  openAs: InteractionUrlOpenAs;
+  mode: InteractionUrlMode;
+};
+
+export type CampaniaParametros = {
+  agentControls: AgentControlsParams;
+  displaySettings: DisplaySettingsParams;
+  recordingSettings: RecordingSettingsParams;
+  agentOperationSettings: AgentOperationSettingsParams;
+  interactionUrlSettings: InteractionUrlSettingsParams;
+};
+
+// Valores por defecto — columna "Valor default" del documento. Función (no
+// constante) para que cada campaña se lleve su propio objeto y editar una no
+// mute la de otra.
+export function defaultParametros(): CampaniaParametros {
+  return {
+    agentControls: {
+      allowHold: true,
+      allowHangup: true,
+      allowAddBookmark: true,
+      allowMute: true,
+      allowClassification: true,
+      forceClassification: false,
+    },
+    displaySettings: {
+      allowRinging: true,
+    },
+    recordingSettings: {
+      recordAgentAudioDuringHold: true,
+    },
+    agentOperationSettings: {
+      forcedAnswer: true,
+    },
+    interactionUrlSettings: {
+      url: "",
+      openAs: "frame",
+      mode: "none",
+    },
+  };
+}
+
 export type Campania = {
   id: string;
   nombre: string;
@@ -59,6 +136,7 @@ export type Campania = {
   listaExclusionId?: string;
   outboundAccountIds: string[];
   usuariosAsignados: string[];
+  parametros: CampaniaParametros;
   // Nota: las campañas NO tienen workflow propio (ver ADR-BD-002 — el
   // workflow vive en `accounts`, no en `campaigns`).
 };
@@ -249,6 +327,19 @@ export const campanias: Campania[] = [
     feriadosId: "fer-ar",
     listaExclusionId: "dnc-1",
     outboundAccountIds: ["acc-1"],
+    // Personalizada a modo de ejemplo (el resto de las campañas usa los
+    // valores default): discado predictivo de cobranzas obliga a tipificar
+    // antes de salir del ACW, y abre la ficha del cliente embebida apenas
+    // cae la interacción.
+    parametros: {
+      ...defaultParametros(),
+      agentControls: { ...defaultParametros().agentControls, forceClassification: true },
+      interactionUrlSettings: {
+        url: "https://olimpo.bancosur.com/ficha-cliente?dni={{userid}}&interaccion={{iditeraccion}}",
+        openAs: "frame",
+        mode: "start",
+      },
+    },
   },
   {
     id: "camp-2",
@@ -260,6 +351,7 @@ export const campanias: Campania[] = [
     grupoClasificacionId: "cg-cobranzas",
     feriadosId: "fer-ar",
     outboundAccountIds: ["acc-1"],
+    parametros: defaultParametros(),
   },
   {
     id: "camp-3",
@@ -268,6 +360,7 @@ export const campanias: Campania[] = [
     usuariosAsignados: ["ag-1"],
     grupoClasificacionId: "cg-cobranzas",
     outboundAccountIds: [],
+    parametros: defaultParametros(),
   },
   {
     id: "camp-4",
@@ -276,6 +369,17 @@ export const campanias: Campania[] = [
     usuariosAsignados: ["ag-3", "ag-5"],
     grupoClasificacionId: "cg-atencion",
     outboundAccountIds: ["acc-2"],
+    // Personalizada: mesa inbound sin ring (agentes con headset todo el
+    // turno) y con el ticket relacionado abriéndose aparte, no embebido.
+    parametros: {
+      ...defaultParametros(),
+      displaySettings: { allowRinging: false },
+      interactionUrlSettings: {
+        url: "https://olimpo.bancosur.com/tickets?cliente={{userid}}",
+        openAs: "blank",
+        mode: "start",
+      },
+    },
   },
   {
     id: "camp-5",
@@ -283,6 +387,7 @@ export const campanias: Campania[] = [
     proyectoId: "proj-2",
     usuariosAsignados: ["ag-4"],
     outboundAccountIds: ["acc-4"],
+    parametros: defaultParametros(),
   },
   {
     id: "camp-6",
@@ -290,6 +395,7 @@ export const campanias: Campania[] = [
     proyectoId: "proj-3",
     usuariosAsignados: ["ag-1", "ag-2"],
     outboundAccountIds: ["acc-3"],
+    parametros: defaultParametros(),
   },
 ];
 

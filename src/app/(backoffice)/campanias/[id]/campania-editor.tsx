@@ -49,10 +49,18 @@ import {
   getGruposDeUsuario,
   getProyecto,
   type Campania,
+  type CampaniaParametros,
 } from "@/lib/mock-data";
 import { CampaniaHerencia } from "../campania-herencia";
 import { CampaniaHorarios } from "../campania-horarios";
 import { CuentasSalientesPicker } from "../cuentas-salientes-picker";
+import {
+  ControlesAgenteTab,
+  VisualizacionTab,
+  GrabacionTab,
+  ConfigOperativaTab,
+  UrlInteraccionTab,
+} from "../campania-parametros";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -72,10 +80,26 @@ export function CampaniaEditor({
   nombreProyecto?: string;
 }) {
   const t = useT();
+  // campaigns.parameters, levantado acá (no en cada solapa) porque
+  // Grabación necesita saber si Controles del agente tiene el hold
+  // habilitado — ver ADR-BD-002 / parametrizacion-propuesta.md.
+  const [parametros, setParametros] = useState<CampaniaParametros>(campania.parametros);
+
   return (
     <Tabs defaultValue="general">
       <TabsList>
         <TabsTrigger value="general">{t("campanias.tab.general")}</TabsTrigger>
+        <TabsTrigger value="controles-agente">
+          {t("campanias.tab.controlesAgente")}
+        </TabsTrigger>
+        <TabsTrigger value="visualizacion">{t("campanias.tab.visualizacion")}</TabsTrigger>
+        <TabsTrigger value="grabacion">{t("campanias.tab.grabacion")}</TabsTrigger>
+        <TabsTrigger value="config-operativa">
+          {t("campanias.tab.configOperativa")}
+        </TabsTrigger>
+        <TabsTrigger value="url-interaccion">
+          {t("campanias.tab.urlInteraccion")}
+        </TabsTrigger>
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
       </TabsList>
 
@@ -163,6 +187,42 @@ export function CampaniaEditor({
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="controles-agente">
+        <ControlesAgenteTab
+          value={parametros.agentControls}
+          onChange={(v) => setParametros((p) => ({ ...p, agentControls: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent value="visualizacion">
+        <VisualizacionTab
+          value={parametros.displaySettings}
+          onChange={(v) => setParametros((p) => ({ ...p, displaySettings: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent value="grabacion">
+        <GrabacionTab
+          value={parametros.recordingSettings}
+          holdHabilitado={parametros.agentControls.allowHold}
+          onChange={(v) => setParametros((p) => ({ ...p, recordingSettings: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent value="config-operativa">
+        <ConfigOperativaTab
+          value={parametros.agentOperationSettings}
+          onChange={(v) => setParametros((p) => ({ ...p, agentOperationSettings: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent value="url-interaccion">
+        <UrlInteraccionTab
+          value={parametros.interactionUrlSettings}
+          onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
+        />
       </TabsContent>
 
       <TabsContent value="usuarios">

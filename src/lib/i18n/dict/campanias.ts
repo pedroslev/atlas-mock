@@ -115,6 +115,81 @@ export const campanias: NamespaceDict = {
     comboVacio: "No se encontró ningún resultado.",
     comboSeleccionadas: "{n} seleccionada(s)",
     comboQuitar: "Quitar {nombre}",
+
+    // Parámetros de campaña (campaigns.parameters, ver
+    // relevamiento-legacy/parametros-campaigns/propuesta/parametrizacion-propuesta.md)
+    // — solo ES por ahora, el resto de los idiomas cae al fallback en
+    // español (mock en construcción, se termina de traducir cuando se
+    // cierre el contenido con el Chief Innovation Architect).
+    "tab.controlesAgente": "Controles del agente",
+    "tab.visualizacion": "Visualización",
+    "tab.grabacion": "Grabación",
+    "tab.configOperativa": "Config. operativa",
+    "tab.urlInteraccion": "URL por interacción",
+
+    "parametros.controlesAgenteTitulo": "Controles del agente",
+    "parametros.controlesAgenteDesc":
+      "Qué acciones puede usar el agente durante la interacción, según canal.",
+    "parametros.allowHold": "Permitir espera (hold)",
+    "parametros.allowHoldDesc": "Permite poner la interacción en espera (hold).",
+    "parametros.allowHoldAlcance": "Telefonía, Videollamada/Audio",
+    "parametros.allowHangup": "Permitir cortar llamada",
+    "parametros.allowHangupDesc": "Permite cortar la llamada en curso.",
+    "parametros.allowHangupAlcance": "Telefonía, Videollamada/Audio",
+    "parametros.allowAddBookmark": "Permitir agregar bookmark",
+    "parametros.allowAddBookmarkDesc":
+      "Permite agregar un bookmark durante la llamada.",
+    "parametros.allowAddBookmarkAlcance": "Transversal",
+    "parametros.allowMute": "Permitir silenciar (mute)",
+    "parametros.allowMuteDesc":
+      "Permite usar el botón de silenciar (mute) durante la llamada.",
+    "parametros.allowMuteAlcance": "Telefonía",
+    "parametros.allowClassification": "Permitir tipificar",
+    "parametros.allowClassificationDesc":
+      "Permite que el agente cargue un resultado de gestión en la interacción.",
+    "parametros.allowClassificationAlcance": "Transversal",
+    "parametros.forceClassification": "Obligar tipificación",
+    "parametros.forceClassificationDesc":
+      "Obliga a cargar un resultado de gestión antes de salir del ACW.",
+    "parametros.forceClassificationAlcance": "Inbound, Outbound, Discador Predictivo",
+
+    "parametros.visualizacionTitulo": "Visualización",
+    "parametros.visualizacionDesc": "Qué ve el agente en el pad durante la interacción.",
+    "parametros.allowRinging": "Sonido de timbre (ring)",
+    "parametros.allowRingingDesc": "Determina si suena el ring en la campaña.",
+    "parametros.allowRingingAlcance": "Omnicanal",
+
+    "parametros.grabacionTitulo": "Grabación",
+    "parametros.grabacionDesc": "Qué se graba durante la interacción.",
+    "parametros.recordHold": "Grabar audio en hold",
+    "parametros.recordHoldDesc":
+      "Graba el audio del agente durante el hold de la llamada.",
+    "parametros.recordHoldAlcance": "Transversal",
+    "parametros.recordHoldDependeHold":
+      "Deshabilitado porque esta campaña no permite poner interacciones en espera (Controles del agente → Permitir espera).",
+
+    "parametros.configOperativaTitulo": "Configuración operativa",
+    "parametros.configOperativaDesc": "Cómo se asignan las interacciones al agente.",
+    "parametros.forcedAnswer": "Atención forzada",
+    "parametros.forcedAnswerDesc":
+      "Permite que la llamada sea atendida automáticamente sin intervención del agente.",
+    "parametros.forcedAnswerAlcance": "Inbound, Discador Predictivo",
+    "parametros.historyLookbackNota":
+      "El historial de interacciones del cliente (días hacia atrás que busca) se configura por grupo de trabajo, no por campaña — no aparece acá.",
+
+    "parametros.urlInteraccionTitulo": "Apertura de URL por interacción",
+    "parametros.urlInteraccionDesc":
+      "Si al caer una interacción en esta campaña se abre automáticamente una URL, y cuándo. El botón para abrirla a mano siempre está disponible, salvo que el modo sea “Nunca”.",
+    "parametros.url": "URL",
+    "parametros.urlPlaceholder": "https://…",
+    "parametros.urlAyuda": "Admite variables como {{userid}} o {{iditeraccion}} (a definir).",
+    "parametros.openAs": "Modo de apertura",
+    "parametros.openAsFrame": "Iframe dentro de Hermes",
+    "parametros.openAsBlank": "Pestaña nueva",
+    "parametros.momento": "Momento de apertura",
+    "parametros.modeStart": "Al inicio de la interacción",
+    "parametros.modeEnd": "Al finalizar la interacción",
+    "parametros.modeNone": "Nunca (solo manual)",
   },
   en: {
     // Listado
