@@ -67,14 +67,14 @@ export default async function EditarGrupoTrabajoPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="grid gap-6 lg:grid-cols-2">
-          <Card className="min-w-0">
+        <TabsContent value="general" className="flex flex-col gap-6">
+          <Card>
             <CardHeader>
               <CardTitle>
                 <T k="grupos.infoGeneral" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="flex max-w-xl flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="nombre">
                   <T k="common.comunes.nombre" />
@@ -90,9 +90,7 @@ export default async function EditarGrupoTrabajoPage({
             </CardContent>
           </Card>
 
-          <div className="min-w-0">
-            <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
-          </div>
+          <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
         </TabsContent>
 
         <TabsContent value="permisos">
