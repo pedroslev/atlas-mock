@@ -4,4 +4,4 @@
 // los dos archivos (y confiar en que a nadie se le ocurra tocar uno sin el
 // otro), ambos importan esta misma clase — una unidad Tailwind (rem), no un
 // px fijo, así se mantiene proporcional si cambia el tamaño de fuente base.
-export const ALTO_CABECERA_COLUMNA = "h-10";
+export const ALTO_CABECERA_COLUMNA = "h-11";
