@@ -104,12 +104,18 @@ export function CenterColumn({
             que las dos columnas arranquen alineadas. La solapa fija
             (Llamada/Conversación) queda sticky a la izquierda con su propio
             fondo — a pedido, no se va con el resto cuando el overflow-x-auto
-            hace scroll por la cantidad de páginas externas. */}
+            hace scroll por la cantidad de páginas externas.
+            pr-3 y NO pl-3 acá: un padding-left en el propio TabsList deja un
+            hueco entre el borde y la solapa sticky que "left-0" no cubre
+            (sticky se pega al borde interno del padding, no al del
+            contenedor) — por ese hueco se veía pasar el texto de las demás
+            solapas al scrollear. El padding izquierdo se movió DENTRO de la
+            solapa sticky (pl-7 más abajo), que sí tiene fondo opaco. */}
         <TabsList
           variant="line"
           className={cn(
             ALTO_CABECERA_COLUMNA,
-            "no-scrollbar w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-3"
+            "no-scrollbar w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border pr-3"
           )}
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
@@ -121,10 +127,12 @@ export function CenterColumn({
               solapas de atrás pasando por detrás del texto al hacer scroll.
               A pedido, esta barra (y las páginas externas de abajo) se
               agrandaron: texto/íconos más grandes y más padding, además del
-              alto ya crecido en ALTO_CABECERA_COLUMNA. */}
+              alto ya crecido en ALTO_CABECERA_COLUMNA. pl-7 (no px-4 parejo):
+              absorbe también el padding izquierdo que le sacamos al
+              TabsList de arriba. */}
           <TabsTrigger
             value="conversacion"
-            className="sticky left-0 z-10 flex-none gap-2 bg-background! px-4 py-2 text-base"
+            className="sticky left-0 z-10 flex-none gap-2 bg-background! py-2 pr-4 pl-7 text-base"
           >
             <Phone className="size-5" />
             {t("padMock.centerColumn.llamada")}
