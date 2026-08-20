@@ -3,7 +3,6 @@
 import { PhoneIncoming } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
-import { OpenQuestion } from "@/components/pad-mock/open-question";
 import type { CampaniaSaliente, CuentaSaliente } from "@/lib/pad-mock/data";
 
 // Lo que ve el agente al ingresar al pad sin ninguna interacción activa (a
@@ -33,11 +32,6 @@ export function SinInteraccionPanel({
           </div>
 
           <NuevaInteraccionForm idPrefix="si" onContactar={onContactar} />
-
-          <OpenQuestion>
-            este formulario arma una llamada saliente real; la derivación automática de
-            interacciones entrantes al pasar a Disponible todavía no está simulada acá.
-          </OpenQuestion>
         </CardContent>
       </Card>
     </div>

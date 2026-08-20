@@ -52,7 +52,13 @@ export function NuevaInteraccionForm({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        contactar();
+      }}
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${idPrefix}-campania`}>Campaña</Label>
         <Select
@@ -122,12 +128,12 @@ export function NuevaInteraccionForm({
 
       {cuenta && (
         <div className="flex justify-end">
-          <Button disabled={!numero.trim()} onClick={contactar} className="gap-1.5">
+          <Button type="submit" disabled={!numero.trim()} className="gap-1.5">
             <CanalIcon className="size-4" />
             Contactar
           </Button>
         </div>
       )}
-    </div>
+    </form>
   );
 }
