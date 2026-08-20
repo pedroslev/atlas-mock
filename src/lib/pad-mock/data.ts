@@ -227,8 +227,10 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
 };
 
 // --- Tipificación -----------------------------------------------------------
-// "descripcion" alimenta el ícono "i" de ayuda de cada opción (hover).
-export type Tipificacion = { id: string; nombre: string; descripcion: string; sugerida?: boolean };
+// "descripcion" alimenta el ícono "i" de ayuda de cada opción (hover). Ya no
+// tiene "sugerida" — a pedido, se sacó la tipificación sugerida por el
+// copiloto del selector.
+export type Tipificacion = { id: string; nombre: string; descripcion: string };
 
 // Renombrada de tipificacionesA (ya no hace falta el sufijo — al sacar el
 // escenario B de chat, solo queda este único catálogo).
@@ -242,7 +244,6 @@ export const tipificaciones: Tipificacion[] = [
     id: "t-2",
     nombre: "Cargo a revisar por Facturación",
     descripcion: "El cliente reclama un cargo que no reconoce y que hay que validar contra el plan contratado.",
-    sugerida: true,
   },
   {
     id: "t-3",

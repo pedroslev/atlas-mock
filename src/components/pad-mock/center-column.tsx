@@ -167,7 +167,10 @@ export function CenterColumn({
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
-          <ConversationPanel />
+          <ConversationPanel
+            tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+            enEspera={enEspera}
+          />
         </TabsContent>
         {paginasExternas
           .filter((p) => p.modo === "embebido")

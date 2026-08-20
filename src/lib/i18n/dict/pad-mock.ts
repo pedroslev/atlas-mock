@@ -37,9 +37,6 @@ export const padMock: NamespaceDict = {
     "callControls.buscarTipificacion": "Buscar tipificación…",
     "callControls.sinResultados": "Sin resultados.",
     "callControls.tipificacionPlaceholder": "Tipificación…",
-    "callControls.sugerida": "Sugerida",
-    "callControls.ayudaSugerida":
-      "Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.",
     "callControls.espera": "Espera",
     "callControls.retomar": "Retomar",
     "callControls.reactivar": "Reactivar",
@@ -117,13 +114,8 @@ export const padMock: NamespaceDict = {
     "agentHistory.colTipificacion": "Tipificación",
 
     // HistorialDetailDialog
-    "historialDetalle.resumenIA": "Resumen (IA)",
     "historialDetalle.tipificacion": "Tipificación",
     "historialDetalle.bookmarks": "Bookmarks",
-    "historialDetalle.transcripcion": "Transcripción",
-    "historialDetalle.conversacion": "Conversación",
-    "historialDetalle.agentePrefijo": "Agente: ",
-    "historialDetalle.clientePrefijo": "Cliente: ",
   },
   // Vacíos a propósito: translate() cae al fallback en español (ver
   // dictionary.ts) para cualquier clave que falte acá. Se completan cuando

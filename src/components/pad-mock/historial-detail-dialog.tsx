@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Clock, Sparkles, User } from "lucide-react";
+import { Bookmark, Clock, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
 import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
-import { cn } from "@/lib/utils";
 
-// "Ver más" de una interacción pasada del historial de contacto — a pedido:
-// dos columnas. La izquierda (resumen, tipificación con su descripción,
-// bookmarks) es corta y no necesita scroll propio; la derecha (hilo completo)
-// suele ser más larga —sobre todo una transcripción— así que se lleva la
-// mayor parte del ancho y del alto disponible, para no forzar tanto scroll.
+// "Ver más" de una interacción pasada del historial de contacto — a pedido,
+// se sacaron el resumen (IA) y la transcripción/conversación completa;
+// queda solo tipificación (con su descripción) y bookmarks, así que ya no
+// hace falta el layout de dos columnas de antes.
 export function HistorialDetailDialog({
   entrada,
   open,
@@ -32,7 +30,7 @@ export function HistorialDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex flex-wrap items-center gap-x-2 gap-y-1 text-base">
             <span className="flex items-center gap-1.5">
@@ -50,67 +48,32 @@ export function HistorialDetailDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[200px_1fr]">
-          <div className="flex flex-col gap-3">
-            <div className="rounded-lg bg-accent/50 p-3">
-              <p className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                <Sparkles className="size-3 text-primary" />
-                {t("padMock.historialDetalle.resumenIA")}
-              </p>
-              <p className="text-sm text-foreground/90">{entrada.resumenIA}</p>
-            </div>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+              {t("padMock.historialDetalle.tipificacion")}
+            </p>
+            <Badge variant="neutral" className="mb-1">
+              {entrada.tipificacion}
+            </Badge>
+            <p className="text-xs text-muted-foreground">{entrada.tipificacionDescripcion}</p>
+          </div>
 
+          {entrada.bookmarks.length > 0 && (
             <div>
               <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                {t("padMock.historialDetalle.tipificacion")}
+                {t("padMock.historialDetalle.bookmarks")}
               </p>
-              <Badge variant="neutral" className="mb-1">
-                {entrada.tipificacion}
-              </Badge>
-              <p className="text-xs text-muted-foreground">{entrada.tipificacionDescripcion}</p>
-            </div>
-
-            {entrada.bookmarks.length > 0 && (
-              <div>
-                <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                  {t("padMock.historialDetalle.bookmarks")}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {entrada.bookmarks.map((b) => (
-                    <Badge key={b} variant="info" className="gap-1">
-                      <Bookmark className="size-2.5" />
-                      {b}
-                    </Badge>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-1">
+                {entrada.bookmarks.map((b) => (
+                  <Badge key={b} variant="info" className="gap-1">
+                    <Bookmark className="size-2.5" />
+                    {b}
+                  </Badge>
+                ))}
               </div>
-            )}
-          </div>
-
-          <div className="flex max-h-[60vh] flex-col overflow-y-auto rounded-lg ring-1 ring-foreground/10">
-            <p className="sticky top-0 border-b border-border bg-muted/60 px-3 py-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
-              {entrada.canal === "llamada"
-                ? t("padMock.historialDetalle.transcripcion")
-                : t("padMock.historialDetalle.conversacion")}
-            </p>
-            <div className="flex flex-col gap-2 p-3">
-              {entrada.hilo.map((turno, i) => (
-                <p key={i} className="text-sm leading-relaxed">
-                  <span
-                    className={cn(
-                      "font-semibold",
-                      turno.autor === "agente" ? "text-primary" : "text-foreground"
-                    )}
-                  >
-                    {turno.autor === "agente"
-                      ? t("padMock.historialDetalle.agentePrefijo")
-                      : t("padMock.historialDetalle.clientePrefijo")}
-                  </span>
-                  {turno.texto}
-                </p>
-              ))}
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

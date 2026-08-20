@@ -12,8 +12,6 @@ import {
   PhoneForwarded,
   Check,
   ChevronsUpDown,
-  Sparkles,
-  HelpCircle,
   Tag,
   Grid3x3,
   Delete,
@@ -133,9 +131,6 @@ function TipificacionSelector({
           <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
             <Tag className="size-4 shrink-0 text-muted-foreground" />
             <span className="truncate">{seleccionada?.nombre ?? t("padMock.callControls.tipificacionPlaceholder")}</span>
-            {seleccionada?.sugerida && (
-              <Sparkles className="size-3 shrink-0 text-info" />
-            )}
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
         </Button>
@@ -157,12 +152,6 @@ function TipificacionSelector({
                 >
                   <Check className={cn(value === tip.id ? "opacity-100" : "opacity-0")} />
                   <span className="flex-1">{tip.nombre}</span>
-                  {tip.sugerida && (
-                    <Badge variant="info" className="shrink-0 gap-1">
-                      <Sparkles className="size-2.5" />
-                      {t("padMock.callControls.sugerida")}
-                    </Badge>
-                  )}
                   <InfoHint>{tip.descripcion}</InfoHint>
                 </CommandItem>
               ))}
@@ -211,9 +200,7 @@ export function InteractionControls({
   // interacción. El botón de la derecha es el mismo, cambia
   // de rol según "cortada".
   const [cortada, setCortada] = useState(false);
-  const [tipSeleccionada, setTipSeleccionada] = useState(
-    tipificaciones.find((tip) => tip.sugerida)?.id ?? tipificaciones[0]?.id
-  );
+  const [tipSeleccionada, setTipSeleccionada] = useState(tipificaciones[0]?.id);
 
   function cerrarMarcar(next: boolean) {
     setMarcarAbierto(next);
@@ -303,11 +290,6 @@ export function InteractionControls({
         value={tipSeleccionada}
         onChange={setTipSeleccionada}
       />
-      <ActionTooltip label={t("padMock.callControls.ayudaSugerida")}>
-        <span className="flex size-7 shrink-0 items-center justify-center text-muted-foreground">
-          <HelpCircle className="size-4" />
-        </span>
-      </ActionTooltip>
 
       {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
