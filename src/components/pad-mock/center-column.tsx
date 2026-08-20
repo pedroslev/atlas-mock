@@ -105,17 +105,21 @@ export function CenterColumn({
             (Llamada/Conversación) queda sticky a la izquierda con su propio
             fondo — a pedido, no se va con el resto cuando el overflow-x-auto
             hace scroll por la cantidad de páginas externas.
-            pr-3 y NO pl-3 acá: un padding-left en el propio TabsList deja un
-            hueco entre el borde y la solapa sticky que "left-0" no cubre
-            (sticky se pega al borde interno del padding, no al del
+            pr-3 y pl-0 acá (NO px-3): un padding-left en el propio TabsList
+            deja un hueco entre el borde y la solapa sticky que "left-0" no
+            cubre (sticky se pega al borde interno del padding, no al del
             contenedor) — por ese hueco se veía pasar el texto de las demás
-            solapas al scrollear. El padding izquierdo se movió DENTRO de la
-            solapa sticky (pl-7 más abajo), que sí tiene fondo opaco. */}
+            solapas al scrollear. pl-0 explícito porque la base de TabsList
+            ya trae "p-[3px]" (padding en los 4 lados) — sin pisarlo
+            puntualmente quedaban esos 3px como el mismo hueco, más chico
+            pero con el mismo problema. El padding izquierdo se movió
+            DENTRO de la solapa sticky (pl-7 más abajo), que sí tiene fondo
+            opaco. */}
         <TabsList
           variant="line"
           className={cn(
             ALTO_CABECERA_COLUMNA,
-            "no-scrollbar w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border pr-3"
+            "no-scrollbar w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border pr-3 pl-0"
           )}
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
