@@ -179,9 +179,7 @@ export const campanias: NamespaceDict = {
 
     "parametros.urlInteraccionTitulo": "URLs externas",
     "parametros.urlInteraccionDesc":
-      "Configurá una o más URLs externas para esta campaña. Cada una tiene su propia URL, si se abre embebida dentro de Hermes o en una pestaña nueva del navegador, y en qué momento: al inicio de la interacción, al finalizar, o de forma manual (nunca sola — el agente la abre cuando quiere desde un botón).",
-    "parametros.urlInteraccionNota":
-      "Abierto: si hay más de una URL en modo “Al inicio” o “Al finalizar” para la misma interacción, todavía no está definido si se abren todas juntas o hay algún orden entre ellas.",
+      "Configurá una o más URLs externas para esta campaña. Cada una tiene su propia URL, si se abre embebida dentro de Hermes o en una pestaña nueva del navegador, y en qué momento: al inicio de la interacción, al finalizar, o de forma manual (nunca sola — el agente la abre cuando quiere desde un botón). Si hay más de una URL en modo “Al inicio” o “Al finalizar”, se abren todas.",
     "parametros.agregarUrl": "Agregar URL",
     "parametros.eliminarUrl": "Eliminar URL",
     "parametros.sinUrls": "Todavía no hay URLs externas configuradas para esta campaña.",

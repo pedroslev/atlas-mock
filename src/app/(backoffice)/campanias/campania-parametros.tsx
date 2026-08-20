@@ -361,10 +361,6 @@ export function UrlsExternasTab({
           <Plus />
           {t("campanias.parametros.agregarUrl")}
         </Button>
-
-        <p className="text-xs text-muted-foreground italic">
-          {t("campanias.parametros.urlInteraccionNota")}
-        </p>
       </CardContent>
     </Card>
   );
