@@ -109,7 +109,7 @@ export function CenterColumn({
           variant="line"
           className={cn(
             ALTO_CABECERA_COLUMNA,
-            "w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-3"
+            "no-scrollbar w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-3"
           )}
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
