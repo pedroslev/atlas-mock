@@ -139,8 +139,10 @@ export function ControlesAgenteTab({
           id="force-classification"
           label={t("campanias.parametros.forceClassification")}
           description={t("campanias.parametros.forceClassificationDesc")}
+          disabledReason={t("campanias.parametros.forceClassificationDependeClassification")}
           alcance={t("campanias.parametros.forceClassificationAlcance")}
-          checked={value.forceClassification}
+          checked={value.allowClassification && value.forceClassification}
+          disabled={!value.allowClassification}
           onCheckedChange={(v) => set("forceClassification", v)}
         />
       </CardContent>

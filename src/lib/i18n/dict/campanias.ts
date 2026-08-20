@@ -143,7 +143,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowMute": "Permitir silenciar (mute)",
     "parametros.allowMuteDesc":
       "Permite usar el botón de silenciar (mute) durante la llamada.",
-    "parametros.allowMuteAlcance": "Telefonía",
+    "parametros.allowMuteAlcance": "Telefonía, Videollamada/Audio",
     "parametros.allowClassification": "Permitir tipificar",
     "parametros.allowClassificationDesc":
       "Permite que el agente cargue un resultado de gestión en la interacción.",
@@ -151,7 +151,9 @@ export const campanias: NamespaceDict = {
     "parametros.forceClassification": "Obligar tipificación",
     "parametros.forceClassificationDesc":
       "Obliga a cargar un resultado de gestión antes de salir del ACW.",
-    "parametros.forceClassificationAlcance": "Inbound, Outbound, Discador Predictivo",
+    "parametros.forceClassificationAlcance": "Omnicanal",
+    "parametros.forceClassificationDependeClassification":
+      "Deshabilitado porque esta campaña no permite tipificar (Controles del agente → Permitir tipificar).",
 
     "parametros.visualizacionTitulo": "Visualización",
     "parametros.visualizacionDesc": "Qué ve el agente en el pad durante la interacción.",
