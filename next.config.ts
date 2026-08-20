@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // El indicador de Next (solo dev, nunca en producción) por defecto va
+  // abajo a la izquierda — justo donde el pad tiene "Mi turno"/"Historial"
+  // en el menú lateral, y los tapaba.
+  devIndicators: {
+    position: "bottom-right",
+  },
 };
 
 export default nextConfig;

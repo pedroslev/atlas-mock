@@ -20,10 +20,14 @@ export function NewInteractionDialog({
   open,
   onOpenChange,
   onContactar,
+  campaniaIdInicial,
+  cuentaIdInicial,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
+  campaniaIdInicial?: string;
+  cuentaIdInicial?: string;
 }) {
   const t = useT();
   return (
@@ -39,6 +43,8 @@ export function NewInteractionDialog({
 
         <NuevaInteraccionForm
           idPrefix="ni"
+          campaniaIdInicial={campaniaIdInicial}
+          cuentaIdInicial={cuentaIdInicial}
           onContactar={(campania, cuenta, numero) => {
             onContactar(campania, cuenta, numero);
             onOpenChange(false);

@@ -71,9 +71,11 @@ export const padMock: NamespaceDict = {
     "contextColumn.verMasDetalle": "Ver más",
 
     // SinInteraccionPanel
-    "sinInteraccion.titulo": "Sin interacciones activas",
-    "sinInteraccion.descripcion":
-      "Pasate a Disponible en el menú para que el sistema te empiece a derivar interacciones entrantes, o iniciá una llamada saliente acá abajo.",
+    "sinInteraccion.esperando": "Esperando que el sistema te derive una interacción.",
+    "sinInteraccion.noRecibiendo": "No estás recibiendo interacciones.",
+    "sinInteraccion.pasarADisponible": "Pasar a Disponible",
+    "sinInteraccion.nuevaInteraccion": "Nueva interacción saliente",
+    "sinInteraccion.ultimasInteracciones": "Últimas interacciones",
 
     // NuevaInteraccionForm
     "nuevaInteraccion.campania": "Campaña",

@@ -10,6 +10,7 @@ import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { SinInteraccionPanel } from "@/components/pad-mock/sin-interaccion-panel";
 import {
   accesosRapidosMock,
+  campaniasSalientesMock,
   clienteMock,
   historialPorCliente,
   tipificaciones,
@@ -40,6 +41,28 @@ export function PadMockShell() {
   const [accesoAbiertoId, setAccesoAbiertoId] = useState<string | null>(null);
   const nuevaFilaRef = useRef(1);
 
+  // Estado del agente (Disponible/No disponible/Ausente/Aux) — vive ACÁ
+  // porque tanto el selector del menú (LeftNav) como la franja de estado de
+  // la pantalla de inicio (SinInteraccionPanel) tienen que leerlo y poder
+  // cambiarlo, no solo mostrarlo. estadoAgenteDesde ancla el cronómetro que
+  // se ve en los dos lugares — se resetea cada vez que cambia el estado.
+  const [estadoAgenteId, setEstadoAgenteId] = useState("disponible");
+  const [estadoAgenteDesde, setEstadoAgenteDesde] = useState<number>(() => Date.now());
+  const cambiarEstadoAgente = useCallback((id: string) => {
+    setEstadoAgenteId(id);
+    setEstadoAgenteDesde(Date.now());
+  }, []);
+
+  // Última campaña/cuenta contactada — a pedido, la pantalla de inicio (y el
+  // modal del "+") precargan con el último valor usado, no siempre con el
+  // primero del listado.
+  const [ultimaCampaniaId, setUltimaCampaniaId] = useState<string | undefined>(
+    campaniasSalientesMock[0]?.id
+  );
+  const [ultimaCuentaId, setUltimaCuentaId] = useState<string | undefined>(
+    campaniasSalientesMock[0]?.cuentas[0]?.id
+  );
+
   const seleccionarInteraccion = useCallback((id: string) => {
     setInteraccionActivaId(id);
     setModo("interaccion");
@@ -63,6 +86,8 @@ export function PadMockShell() {
         esperaSeg: 0,
       };
       setCola((cur) => [...cur, fila]);
+      setUltimaCampaniaId(campania.id);
+      setUltimaCuentaId(cuenta.id);
       seleccionarInteraccion(id);
     },
     [seleccionarInteraccion]
@@ -143,6 +168,11 @@ export function PadMockShell() {
         onAbrirAcceso={setAccesoAbiertoId}
         enEspera={enEspera}
         holdStartedAt={holdStartedAt}
+        estadoAgenteId={estadoAgenteId}
+        estadoAgenteDesde={estadoAgenteDesde}
+        onEstadoAgenteChange={cambiarEstadoAgente}
+        ultimaCampaniaId={ultimaCampaniaId}
+        ultimaCuentaId={ultimaCuentaId}
       />
 
       {accesoActivo ? (
@@ -152,7 +182,14 @@ export function PadMockShell() {
           {modo === "estadisticas" && <StatsPanel />}
           {modo === "historial" && <AgentHistoryPanel />}
           {modo === "interaccion" && !hayInteraccionActiva && (
-            <SinInteraccionPanel onContactar={iniciarInteraccion} />
+            <SinInteraccionPanel
+              estadoAgenteId={estadoAgenteId}
+              estadoAgenteDesde={estadoAgenteDesde}
+              onEstadoAgenteChange={cambiarEstadoAgente}
+              campaniaIdInicial={ultimaCampaniaId}
+              cuentaIdInicial={ultimaCuentaId}
+              onContactar={iniciarInteraccion}
+            />
           )}
           {modo === "interaccion" && hayInteraccionActiva && (
             <>

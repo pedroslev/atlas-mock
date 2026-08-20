@@ -16,18 +16,29 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { estadosAgenteDisponibles, estadoAgenteMock } from "@/lib/pad-mock/data";
+import { estadosAgenteDisponibles } from "@/lib/pad-mock/data";
 
 // Selector de estado del agente — a pedido, tiene que dejar elegir entre
 // Principales (Disponible/No disponible/Ausente) y Auxiliares (Almuerzo,
 // Capacitación, Descanso). Antes era un bloque de solo lectura; ahora abre
-// un Command/Popover, mismo patrón que el selector real (agent-status-selector.tsx)
-// pero con estado propio — este mock no tiene una llamada real que fuerce el
-// estado.
-export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
+// un Command/Popover, mismo patrón que el selector real (agent-status-selector.tsx).
+//
+// Controlado desde pad-mock-shell.tsx (estadoId/onEstadoIdChange/cronometro)
+// — a pedido, la pantalla de "sin interacciones" necesita leer y cambiar el
+// mismo estado que este selector, así que ya no puede vivir solo acá adentro.
+export function AgentStatusSelectorMock({
+  colapsado,
+  estadoId,
+  onEstadoIdChange,
+  cronometro,
+}: {
+  colapsado: boolean;
+  estadoId: string;
+  onEstadoIdChange: (id: string) => void;
+  cronometro: string;
+}) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [estadoId, setEstadoId] = useState("disponible");
   const estado = estadosAgenteDisponibles.find((e) => e.id === estadoId) ?? estadosAgenteDisponibles[0];
   const Icon = estado.icon;
   const principales = estadosAgenteDisponibles.filter((e) => e.grupo === "principal");
@@ -42,7 +53,7 @@ export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
               key={e.id}
               value={e.nombre}
               onSelect={() => {
-                setEstadoId(e.id);
+                onEstadoIdChange(e.id);
                 setOpen(false);
               }}
             >
@@ -60,7 +71,7 @@ export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
               key={e.id}
               value={e.nombre}
               onSelect={() => {
-                setEstadoId(e.id);
+                onEstadoIdChange(e.id);
                 setOpen(false);
               }}
             >
@@ -105,7 +116,7 @@ export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
           <Icon className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">{estado.nombre}</span>
           <span className="shrink-0 font-mono text-[0.65rem] text-muted-foreground tabular-nums">
-            {estadoAgenteMock.cronometro}
+            {cronometro}
           </span>
           <ChevronsUpDown className="size-3 shrink-0 text-muted-foreground" />
         </button>
