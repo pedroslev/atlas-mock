@@ -84,8 +84,12 @@ export function LeftNav({
   // Inicio se ve tanto si el agente lo eligió explícitamente desde el menú
   // como si es simplemente lo que se muestra por defecto (sin interacción
   // activa) — el botón del menú tiene que marcarse como activo en los dos
-  // casos.
-  const mostrarInicio = modo === "inicio" || interaccionActivaId === null;
+  // casos. Pero NO si hay un acceso rápido abierto (pad-mock-shell.tsx tapa
+  // todo el contenido con QuickAccessOverlay en ese caso): antes el botón
+  // se quedaba marcado como seleccionado aunque lo que se viera fuera otra
+  // sección del menú.
+  const mostrarInicio =
+    accesoActivoId === null && (modo === "inicio" || interaccionActivaId === null);
 
   // Solo externo ("pestana"/"blank"): abre el link directo en pestaña nueva
   // y no queda marcado como seleccionado — a pedido, no debe "posicionarse"
@@ -130,7 +134,7 @@ export function LeftNav({
         <div className="flex max-h-[50vh] min-h-0 flex-col gap-1 overflow-y-auto">
           {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
-            const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            const activa = accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
             return (
               <button
                 key={f.id}
@@ -236,7 +240,7 @@ export function LeftNav({
           )}
           {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
-            const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            const activa = accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
             const enHold = activa && enEspera && holdStartedAt !== null;
             const tiempo = enHold
               ? formatDuration(Math.max(0, Math.floor((now - holdStartedAt) / 1000)))
