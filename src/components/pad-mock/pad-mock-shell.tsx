@@ -7,18 +7,21 @@ import { ContextColumn } from "@/components/pad-mock/context-column";
 import { StatsPanel } from "@/components/pad-mock/stats-panel";
 import { AgentHistoryPanel } from "@/components/pad-mock/agent-history-panel";
 import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
+import { SinInteraccionPanel } from "@/components/pad-mock/sin-interaccion-panel";
 import { FloatingChatWindow, type VentanaChat } from "@/components/pad-mock/floating-chat-window";
 import {
   accesosRapidosMock,
   clienteA,
   clienteB,
-  colaMock,
   copilotoArticulo,
   historialPorCliente,
   tipificacionesA,
   tipificacionesB,
+  type CampaniaSaliente,
   type ChatInterno,
+  type CuentaSaliente,
   type DatasetId,
+  type FilaCola,
 } from "@/lib/pad-mock/data";
 
 const DATASETS = {
@@ -47,16 +50,21 @@ const DATASETS = {
 // viven acá: son flotantes (position: fixed), independientes del layout de
 // columnas, así pueden taparlo o taparlo el navbar si el agente las arrastra.
 export function PadMockShell() {
-  const primera = colaMock[0];
+  // A pedido: al ingresar no hay ninguna interacción activa — la cola
+  // arranca vacía, no con los dos escenarios de ejemplo precargados. Recién
+  // aparecen cuando el agente las crea (ver iniciarInteraccion) desde el "+"
+  // de la cola o desde SinInteraccionPanel.
+  const [cola, setCola] = useState<FilaCola[]>([]);
   const [modo, setModo] = useState<Modo>("interaccion");
-  const [interaccionActivaId, setInteraccionActivaId] = useState(primera.id);
-  const [datasetId, setDatasetId] = useState<DatasetId>(primera.datasetId);
+  const [interaccionActivaId, setInteraccionActivaId] = useState<string | null>(null);
+  const [datasetId, setDatasetId] = useState<DatasetId | null>(null);
   const [contextoColapsada, setContextoColapsada] = useState(false);
   const [enEspera, setEnEspera] = useState(false);
   const [holdStartedAt, setHoldStartedAt] = useState<number | null>(null);
   const [accesoAbiertoId, setAccesoAbiertoId] = useState<string | null>(null);
   const [ventanasChat, setVentanasChat] = useState<VentanaChat[]>([]);
   const zRef = useRef(1);
+  const nuevaFilaRef = useRef(1);
 
   const seleccionarInteraccion = useCallback((id: string, ds: DatasetId) => {
     setInteraccionActivaId(id);
@@ -66,6 +74,29 @@ export function PadMockShell() {
     setHoldStartedAt(null);
     setAccesoAbiertoId(null);
   }, []);
+
+  // "Contactar" (desde el modal del "+" o desde SinInteraccionPanel) — a
+  // pedido: ahora sí crea una fila real en la cola y la deja activa. El
+  // contenido de la interacción (transcripción, cliente, tipificaciones)
+  // sigue viniendo de uno de los dos datasets fijos (A=llamada, B=resto)
+  // según el canal elegido — este mock no genera un cliente nuevo de
+  // verdad, reutiliza el guion que ya existe para ese tipo de canal.
+  const iniciarInteraccion = useCallback(
+    (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => {
+      const ds: DatasetId = cuenta.canal === "llamada" ? "A" : "B";
+      const id = `q-nueva-${nuevaFilaRef.current++}`;
+      const fila: FilaCola = {
+        id,
+        numeroCliente: numero,
+        canal: cuenta.canal,
+        esperaSeg: 0,
+        datasetId: ds,
+      };
+      setCola((cur) => [...cur, fila]);
+      seleccionarInteraccion(id, ds);
+    },
+    [seleccionarInteraccion]
+  );
 
   const toggleEspera = useCallback(() => {
     setEnEspera((prev) => {
@@ -126,16 +157,16 @@ export function PadMockShell() {
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx >= colaMock.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx >= cola.length) return;
       e.preventDefault();
-      const fila = colaMock[idx];
+      const fila = cola[idx];
       seleccionarInteraccion(fila.id, fila.datasetId);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [seleccionarInteraccion]);
+  }, [cola, seleccionarInteraccion]);
 
-  const cfg = DATASETS[datasetId];
+  const cfg = datasetId ? DATASETS[datasetId] : null;
   const accesoActivo = accesosRapidosMock.find((a) => a.id === accesoAbiertoId);
 
   return (
@@ -143,8 +174,10 @@ export function PadMockShell() {
       <LeftNav
         modo={modo}
         onModo={cambiarModo}
+        cola={cola}
         interaccionActivaId={interaccionActivaId}
         onSeleccionarInteraccion={seleccionarInteraccion}
+        onIniciarInteraccion={iniciarInteraccion}
         accesoActivoId={accesoAbiertoId}
         onAbrirAcceso={setAccesoAbiertoId}
         enEspera={enEspera}
@@ -158,7 +191,8 @@ export function PadMockShell() {
         <>
           {modo === "estadisticas" && <StatsPanel />}
           {modo === "historial" && <AgentHistoryPanel />}
-          {modo === "interaccion" && (
+          {modo === "interaccion" && !cfg && <SinInteraccionPanel onContactar={iniciarInteraccion} />}
+          {modo === "interaccion" && cfg && (
             <>
               <CenterColumn
                 key={`centro-${interaccionActivaId}`}

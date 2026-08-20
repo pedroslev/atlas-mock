@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { PhoneCall } from "lucide-react";
 import {
   Dialog,
@@ -9,57 +8,24 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CANAL_ICON, CANAL_LABEL, campaniasSalientesMock } from "@/lib/pad-mock/data";
+import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
+import type { CampaniaSaliente, CuentaSaliente } from "@/lib/pad-mock/data";
 
-// "+" de la cola — a pedido: elegir campaña primero, y en función de esa
-// campaña, la cuenta saliente (cada canal que tenga habilitado: llamada,
-// WhatsApp, SMS…). Recién con cuenta elegida aparece el número y "Contactar"
-// — mismo botón para llamada que para un canal de texto, cambia el ícono.
-//
-// Lo que todavía NO hace (a propósito, falta definir): "Contactar" no crea
-// today una fila real en la cola — eso implica decidir cómo se generan
-// interacciones salientes nuevas en todo el mock, no solo acá.
+// "+" de la cola — el formulario en sí (campaña → cuenta → número) vive en
+// NuevaInteraccionForm, compartido con el panel que se ve al ingresar sin
+// interacciones activas (sin-interaccion-panel.tsx). Acá solo se pone el
+// envoltorio de modal.
 export function NewInteractionDialog({
   open,
   onOpenChange,
+  onContactar,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
 }) {
-  // A pedido: campaña y cuenta vienen preseleccionadas con la primera del
-  // listado — no arrancan vacías.
-  const primeraCampania = campaniasSalientesMock[0];
-  const [campaniaId, setCampaniaId] = useState<string | undefined>(primeraCampania?.id);
-  const [cuentaId, setCuentaId] = useState<string | undefined>(primeraCampania?.cuentas[0]?.id);
-  const [numero, setNumero] = useState("");
-
-  const campania = campaniasSalientesMock.find((c) => c.id === campaniaId);
-  const cuenta = campania?.cuentas.find((c) => c.id === cuentaId);
-  const CanalIcon = cuenta ? CANAL_ICON[cuenta.canal] : PhoneCall;
-
-  function resetear() {
-    setCampaniaId(primeraCampania?.id);
-    setCuentaId(primeraCampania?.cuentas[0]?.id);
-    setNumero("");
-  }
-
-  function handleOpenChange(next: boolean) {
-    if (!next) resetear();
-    onOpenChange(next);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -71,89 +37,13 @@ export function NewInteractionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ni-campania">Campaña</Label>
-            <Select
-              value={campaniaId}
-              onValueChange={(v) => {
-                setCampaniaId(v);
-                const nueva = campaniasSalientesMock.find((c) => c.id === v);
-                setCuentaId(nueva?.cuentas[0]?.id);
-                setNumero("");
-              }}
-            >
-              <SelectTrigger id="ni-campania" className="w-full">
-                <SelectValue placeholder="Elegir campaña…" />
-              </SelectTrigger>
-              <SelectContent>
-                {campaniasSalientesMock.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {campania && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ni-cuenta">Cuenta</Label>
-              <Select
-                value={cuentaId}
-                onValueChange={(v) => {
-                  setCuentaId(v);
-                  setNumero("");
-                }}
-              >
-                <SelectTrigger id="ni-cuenta" className="w-full">
-                  <SelectValue placeholder="Elegir cuenta…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {campania.cuentas.map((c) => {
-                    const Icon = CANAL_ICON[c.canal];
-                    return (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-1.5">
-                          <Icon className="size-3.5 text-muted-foreground" />
-                          {c.nombre}
-                          <span className="text-muted-foreground">· {CANAL_LABEL[c.canal]}</span>
-                        </span>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {cuenta && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ni-numero">Número</Label>
-              <Input
-                id="ni-numero"
-                value={numero}
-                onChange={(e) => setNumero(e.target.value)}
-                placeholder={
-                  cuenta.canal === "sms" ? "Número o contacto…" : "+54 11 xxxx-xxxx"
-                }
-              />
-            </div>
-          )}
-        </div>
-
-        {cuenta && (
-          <div className="flex justify-end">
-            <Button
-              disabled={!numero.trim()}
-              onClick={() => handleOpenChange(false)}
-              className="gap-1.5"
-            >
-              <CanalIcon className="size-4" />
-              Contactar
-            </Button>
-          </div>
-        )}
+        <NuevaInteraccionForm
+          idPrefix="ni"
+          onContactar={(campania, cuenta, numero) => {
+            onContactar(campania, cuenta, numero);
+            onOpenChange(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

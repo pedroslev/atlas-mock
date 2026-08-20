@@ -15,10 +15,12 @@ import {
   accesosRapidosMock,
   CANAL_ICON,
   chatsInternosMock,
-  colaMock,
   formatEspera,
+  type CampaniaSaliente,
   type ChatInterno,
+  type CuentaSaliente,
   type DatasetId,
+  type FilaCola,
   type PaginaExterna,
 } from "@/lib/pad-mock/data";
 
@@ -37,8 +39,10 @@ const ANCHO_INICIAL = 200;
 export function LeftNav({
   modo,
   onModo,
+  cola,
   interaccionActivaId,
   onSeleccionarInteraccion,
+  onIniciarInteraccion,
   accesoActivoId,
   onAbrirAcceso,
   enEspera,
@@ -47,8 +51,10 @@ export function LeftNav({
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
-  interaccionActivaId: string;
+  cola: FilaCola[];
+  interaccionActivaId: string | null;
   onSeleccionarInteraccion: (id: string, datasetId: DatasetId) => void;
+  onIniciarInteraccion: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   accesoActivoId: string | null;
   onAbrirAcceso: (id: string) => void;
   enEspera: boolean;
@@ -76,7 +82,11 @@ export function LeftNav({
 
   const dialogos = (
     <>
-      <NewInteractionDialog open={nuevaInteraccionAbierta} onOpenChange={setNuevaInteraccionAbierta} />
+      <NewInteractionDialog
+        open={nuevaInteraccionAbierta}
+        onOpenChange={setNuevaInteraccionAbierta}
+        onContactar={onIniciarInteraccion}
+      />
       <NewInternalChatDialog
         open={nuevoChatAbierto}
         onOpenChange={setNuevoChatAbierto}
@@ -95,7 +105,7 @@ export function LeftNav({
         <AgentStatusSelectorMock colapsado />
 
         <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-          {colaMock.map((f, i) => {
+          {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = modo === "interaccion" && f.id === interaccionActivaId;
             return (
@@ -218,7 +228,10 @@ export function LeftNav({
           </button>
         </div>
         <div className="flex flex-col gap-0.5 overflow-y-auto">
-          {colaMock.map((f, i) => {
+          {cola.length === 0 && (
+            <p className="px-1.5 py-1 text-xs text-muted-foreground italic">Sin interacciones en curso.</p>
+          )}
+          {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = modo === "interaccion" && f.id === interaccionActivaId;
             const enHold = activa && enEspera && holdStartedAt !== null;

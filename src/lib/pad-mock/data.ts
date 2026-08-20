@@ -100,9 +100,11 @@ export const campaniasAgenteMock: CampaniaAgente[] = [
   { id: "camp-6", nombre: "Lanzamiento Tarjeta Plus", canales: ["llamada", "sms"], horario: "13:00 – 18:00" },
 ];
 
-// Solo dos escenarios en la cola (a pedido: "pongas solo dos escenarios, una
-// de telefonía y otra de chat") — cada fila mapea 1 a 1 con su dataset, sin
-// filas de relleno que repitan el mismo contenido.
+// Solo dos escenarios de contenido (a pedido: "pongas solo dos escenarios,
+// una de telefonía y otra de chat") — cada fila de la cola mapea a uno de
+// los dos según el canal. A pedido, la cola YA NO arranca precargada: nace
+// vacía en pad-mock-shell.tsx y se llena con lo que el agente contacta
+// desde el "+" o desde SinInteraccionPanel (ver iniciarInteraccion ahí).
 export type DatasetId = "A" | "B";
 
 export type FilaCola = {
@@ -112,11 +114,6 @@ export type FilaCola = {
   esperaSeg: number;
   datasetId: DatasetId;
 };
-
-export const colaMock: FilaCola[] = [
-  { id: "q-1", numeroCliente: "3345789", canal: "llamada", esperaSeg: 14, datasetId: "A" },
-  { id: "q-2", numeroCliente: "5512980", canal: "chat", esperaSeg: 71, datasetId: "B" },
-];
 
 // --- Escenario A: llamada activa (reclamo por facturación) ----------------
 export const clienteA = {
