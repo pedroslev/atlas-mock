@@ -173,15 +173,20 @@ export function InicioPanel({
           </div>
         </div>
 
-        {/* 3. Campañas — a todo el ancho. Grid auto-fill (no columnas fijas):
+        {/* 3. Campañas — a todo el ancho. Grid auto-fit (no columnas fijas):
             suma tantas columnas como el ancho disponible permita a partir
             de ~260px por card, así con más campañas asignadas no se
-            amontona todo en filas de a 2-3 — usa el ancho que tiene. */}
+            amontona todo en filas de a 2-3 — usa el ancho que tiene.
+            auto-fit y no auto-fill: con auto-fill, si la última fila no se
+            completa, las columnas vacías igual reservan su ancho (1fr) y
+            las cards que sí tienen contenido quedan angostas con un hueco
+            invisible al final — auto-fit colapsa esas columnas vacías y
+            estira las cards reales para ocupar el ancho real. */}
         <div className="flex w-full flex-col gap-2">
           <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {t("padMock.inicio.campanias")}
           </span>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3">
             {campaniasAgenteMock.map((c) => (
               <div
                 key={c.id}
