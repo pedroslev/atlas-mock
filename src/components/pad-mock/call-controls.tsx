@@ -16,6 +16,8 @@ import {
   Sparkles,
   HelpCircle,
   Tag,
+  Grid3x3,
+  Delete,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +34,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
@@ -53,7 +56,10 @@ const SHORTCUTS = {
   marcar: "B",
   transferir: "T",
   cerrar: "E",
+  dialpad: "D",
 } as const;
+
+const TECLAS_DIALPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
 // Ícono solo + tooltip con el nombre y el atajo (en vez de label+Kbd fijo
 // debajo de cada botón) — mismo patrón que los íconos del header real
@@ -164,6 +170,8 @@ function TipificacionSelector({
   );
 }
 
+type MarcaAgregada = { marca: string; comentario?: string };
+
 // Barra de controles de la interacción activa — vive en CenterColumn, FUERA
 // del Tabs, para quedar visible sin importar qué solapa esté mirando el
 // agente. Una sola fila, compacta: chips a la izquierda, tipificación +
@@ -186,13 +194,34 @@ export function InteractionControls({
 }) {
   const isMac = useIsMac();
   const [silenciado, setSilenciado] = useState(false);
-  const [marcas, setMarcas] = useState<string[]>([]);
+  const [marcas, setMarcas] = useState<MarcaAgregada[]>([]);
   const [marcarAbierto, setMarcarAbierto] = useState(false);
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState<string | null>(null);
+  const [comentarioMarca, setComentarioMarca] = useState("");
   const [transferido, setTransferido] = useState<string | null>(null);
   const [transferirAbierto, setTransferirAbierto] = useState(false);
+  const [dialpadAbierto, setDialpadAbierto] = useState(false);
+  const [digitosMarcados, setDigitosMarcados] = useState("");
   const [tipSeleccionada, setTipSeleccionada] = useState(
     tipificaciones.find((t) => t.sugerida)?.id ?? tipificaciones[0]?.id
   );
+
+  function cerrarMarcar(next: boolean) {
+    setMarcarAbierto(next);
+    if (!next) {
+      setMarcaSeleccionada(null);
+      setComentarioMarca("");
+    }
+  }
+
+  function agregarMarca() {
+    if (!marcaSeleccionada) return;
+    setMarcas((cur) => [
+      ...cur,
+      { marca: marcaSeleccionada, comentario: comentarioMarca.trim() || undefined },
+    ]);
+    cerrarMarcar(false);
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -211,8 +240,12 @@ export function InteractionControls({
       const key = e.key.toLowerCase();
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
-          e.preventDefault();
-          onToggleEspera();
+          // El chat no tiene Hold — a pedido, ese control (y su atajo) es
+          // exclusivo de llamada.
+          if (variant === "llamada") {
+            e.preventDefault();
+            onToggleEspera();
+          }
           break;
         case SHORTCUTS.silenciar.toLowerCase():
           if (variant === "llamada") {
@@ -227,6 +260,12 @@ export function InteractionControls({
         case SHORTCUTS.transferir.toLowerCase():
           e.preventDefault();
           setTransferirAbierto(true);
+          break;
+        case SHORTCUTS.dialpad.toLowerCase():
+          if (variant === "llamada") {
+            e.preventDefault();
+            setDialpadAbierto(true);
+          }
           break;
         case SHORTCUTS.cerrar.toLowerCase():
           e.preventDefault();
@@ -250,18 +289,27 @@ export function InteractionControls({
         </span>
       </ActionTooltip>
 
-      {enEspera && (
+      {variant === "llamada" && enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
           <Pause className="size-2.5" />
           Espera
         </Badge>
       )}
-      {marcas.map((m, i) => (
-        <Badge key={`${m}-${i}`} variant="neutral" className="shrink-0 gap-1">
-          <Bookmark className="size-2.5" />
-          {m}
-        </Badge>
-      ))}
+      {marcas.map((m, i) => {
+        const badge = (
+          <Badge variant="neutral" className="shrink-0 gap-1">
+            <Bookmark className="size-2.5" />
+            {m.marca}
+          </Badge>
+        );
+        return m.comentario ? (
+          <ActionTooltip key={`${m.marca}-${i}`} label={m.comentario}>
+            <span>{badge}</span>
+          </ActionTooltip>
+        ) : (
+          <span key={`${m.marca}-${i}`}>{badge}</span>
+        );
+      })}
       {transferido && (
         <Badge variant="info" className="shrink-0 gap-1">
           <PhoneForwarded className="size-2.5" />
@@ -270,15 +318,18 @@ export function InteractionControls({
       )}
 
       <div className="ml-auto flex min-w-0 items-center gap-1.5">
-        <ControlButton
-          icon={enEspera ? Play : Pause}
-          label={enEspera ? "Retomar" : "Espera"}
-          shortcutKey={SHORTCUTS.espera}
-          isMac={isMac}
-          tone={enEspera ? "active" : "neutral"}
-          pressed={enEspera}
-          onClick={onToggleEspera}
-        />
+        {/* El chat no tiene Hold — a pedido, control exclusivo de llamada. */}
+        {variant === "llamada" && (
+          <ControlButton
+            icon={enEspera ? Play : Pause}
+            label={enEspera ? "Retomar" : "Espera"}
+            shortcutKey={SHORTCUTS.espera}
+            isMac={isMac}
+            tone={enEspera ? "active" : "neutral"}
+            pressed={enEspera}
+            onClick={onToggleEspera}
+          />
+        )}
         {variant === "llamada" && (
           <ControlButton
             icon={silenciado ? MicOff : Mic}
@@ -290,8 +341,53 @@ export function InteractionControls({
             onClick={() => setSilenciado((v) => !v)}
           />
         )}
+        {variant === "llamada" && (
+          <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>
+            <PopoverTrigger asChild>
+              <div>
+                <ControlButton
+                  icon={Grid3x3}
+                  label="Teclado numérico"
+                  shortcutKey={SHORTCUTS.dialpad}
+                  isMac={isMac}
+                  tone="neutral"
+                  onClick={() => setDialpadAbierto(true)}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-52 p-2">
+              <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
+                Enviar tonos (DTMF)
+              </p>
+              <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
+                {digitosMarcados || <span className="text-muted-foreground">Sin dígitos</span>}
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {TECLAS_DIALPAD.map((tecla) => (
+                  <button
+                    key={tecla}
+                    type="button"
+                    onClick={() => setDigitosMarcados((cur) => cur + tecla)}
+                    className="flex h-9 items-center justify-center rounded-md border border-border text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {tecla}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled={!digitosMarcados}
+                onClick={() => setDigitosMarcados((cur) => cur.slice(0, -1))}
+                className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+              >
+                <Delete className="size-3.5" />
+                Borrar
+              </button>
+            </PopoverContent>
+          </Popover>
+        )}
 
-        <Popover open={marcarAbierto} onOpenChange={setMarcarAbierto}>
+        <Popover open={marcarAbierto} onOpenChange={cerrarMarcar}>
           <PopoverTrigger asChild>
             <div>
               <ControlButton
@@ -304,24 +400,45 @@ export function InteractionControls({
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-56 p-1.5">
+          <PopoverContent align="end" className="w-64 p-1.5">
             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
               Marcar esta interacción
             </p>
-            {marcasEjemplo.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => {
-                  setMarcas((cur) => [...cur, m]);
-                  setMarcarAbierto(false);
-                }}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-              >
-                <Bookmark className="size-3.5 text-muted-foreground" />
-                {m}
-              </button>
-            ))}
+            <div className="flex flex-col gap-0.5">
+              {marcasEjemplo.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMarcaSeleccionada(m)}
+                  aria-pressed={marcaSeleccionada === m}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                    marcaSeleccionada === m
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Bookmark className="size-3.5 text-muted-foreground" />
+                  <span className="flex-1">{m}</span>
+                  {marcaSeleccionada === m && <Check className="size-3.5 text-primary" />}
+                </button>
+              ))}
+            </div>
+            <Textarea
+              value={comentarioMarca}
+              onChange={(e) => setComentarioMarca(e.target.value)}
+              placeholder="Agregar un comentario (opcional)…"
+              rows={2}
+              className="mt-1.5 resize-none text-xs"
+            />
+            <Button
+              size="sm"
+              className="mt-1.5 w-full"
+              disabled={!marcaSeleccionada}
+              onClick={agregarMarca}
+            >
+              Agregar marca
+            </Button>
           </PopoverContent>
         </Popover>
 
