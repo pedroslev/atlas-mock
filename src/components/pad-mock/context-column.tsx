@@ -204,7 +204,12 @@ export function ContextColumn({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* scrollbar-gutter:stable — a pedido: al contraer un acordeón, el
+          contenido a veces deja de necesitar scroll y la scrollbar del
+          navegador desaparece, corriendo todo (chevrons incluidos) unos
+          px hacia el borde. Reservando el espacio siempre, aparezca o no
+          la scrollbar, esas posiciones quedan fijas. */}
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
         <Seccion
           label={t("padMock.contextColumn.cliente")}
           icon={User}
