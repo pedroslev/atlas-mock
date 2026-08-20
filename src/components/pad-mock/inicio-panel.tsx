@@ -23,19 +23,20 @@ import {
   type HistorialAgenteEntrada,
 } from "@/lib/pad-mock/data";
 
-const ANCHO_MAX_CONTENIDO = "max-w-[900px]";
-
 // Pantalla de inicio del pad — se ve al entrar (sin interacción activa) y,
 // desde el menú, es el destino fijo que unifica lo que antes eran "Mi
 // turno" e "Historial" como solapas separadas (a pedido). NO es un estado
 // vacío tipo error/404 — es la casa del agente, así que va con contenido a
-// lo ancho, alineado a la izquierda, en 4 secciones apiladas:
-// 1-2. Datos del agente + Nueva interacción saliente, a ~900px (mismo
-//      ancho que un formulario, no hace falta más).
-// 3-4. Campañas + Historial, a todo el ancho de la pantalla — el
-//      historial no tiene scroll propio: es la última sección, así que
-//      "seguir bajando" es simplemente seguir bajando la página (como una
-//      landing page), no un scroll anidado.
+// lo ancho, alineado a la izquierda, en 4 secciones apiladas, TODAS al
+// mismo ancho (a pedido — antes 1-2 tenían un ancho distinto de 3-4 y no
+// alineaban):
+// 1. Datos del agente.
+// 2. Nueva interacción saliente.
+// 3. Campañas — grid responsive (auto-fill): usa el ancho disponible para
+//    sumar columnas en vez de amontonar filas de a 2 fijas.
+// 4. Historial — sin scroll propio: es la última sección, así que "seguir
+//    bajando" es simplemente seguir bajando la página (como una landing
+//    page), no un scroll anidado.
 export function InicioPanel({
   estadoAgenteId,
   estadoAgenteDesde,
@@ -120,7 +121,7 @@ export function InicioPanel({
   return (
     <div className="h-full min-h-0 w-full flex-1 overflow-y-auto bg-muted/30">
       <div className="flex w-full flex-col gap-8 p-6 sm:p-8">
-        <div className={cn("flex w-full flex-col gap-6", ANCHO_MAX_CONTENIDO)}>
+        <div className="flex w-full flex-col gap-6">
           {/* 1. Datos del agente — nombre, estado y cronómetro. Sin saludo
               ("Hola"): a pedido, empalaga en una herramienta de uso diario. */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -172,15 +173,15 @@ export function InicioPanel({
           </div>
         </div>
 
-        {/* 3. Campañas — a todo el ancho, en dos filas mientras el ancho lo
-            permita (grid responsive, no hace falta más lógica: con el
-            ancho de card elegido, dos por fila ya arma dos filas para las
-            3 campañas de ejemplo). */}
+        {/* 3. Campañas — a todo el ancho. Grid auto-fill (no columnas fijas):
+            suma tantas columnas como el ancho disponible permita a partir
+            de ~260px por card, así con más campañas asignadas no se
+            amontona todo en filas de a 2-3 — usa el ancho que tiene. */}
         <div className="flex w-full flex-col gap-2">
           <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {t("padMock.inicio.campanias")}
           </span>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {campaniasAgenteMock.map((c) => (
               <div
                 key={c.id}

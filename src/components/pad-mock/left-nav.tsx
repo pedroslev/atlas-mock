@@ -124,53 +124,53 @@ export function LeftNav({
           cronometro={cronometroEstado}
         />
 
-        {/* Cola + Accesos rápidos comparten una sola región flexible (a
-            pedido: con la cola vacía, antes cada una era flex-1 aparte y
-            quedaba un hueco enorme entre "Sin interacciones" y Accesos
-            rápidos — la cola crecía igual aunque no tuviera nada adentro). */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          <div className="flex shrink-0 flex-col gap-1">
-            {cola.map((f, i) => {
-              const Icon = CANAL_ICON[f.canal];
-              const activa = modo === "interaccion" && f.id === interaccionActivaId;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  title={`${f.numeroCliente} · Alt+${i + 1}`}
-                  onClick={() => onSeleccionarInteraccion(f.id)}
-                  aria-current={activa ? "true" : undefined}
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded-lg transition-colors",
-                    activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
-                  )}
-                >
-                  <Icon className="size-4" />
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-2 flex max-h-[6.5rem] shrink-0 flex-col gap-1 overflow-y-auto border-t border-sidebar-border pt-2">
-            {accesosRapidosMock.map((a) => (
+        {/* Cola: alto natural, con un tope (max-h) + scroll propio para
+            cuando hay muchas filas — a diferencia de flex-1, no fuerza el
+            bloque a estirarse cuando está vacía o corta. */}
+        <div className="flex max-h-[50vh] min-h-0 flex-col gap-1 overflow-y-auto">
+          {cola.map((f, i) => {
+            const Icon = CANAL_ICON[f.canal];
+            const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            return (
               <button
-                key={a.id}
+                key={f.id}
                 type="button"
-                title={a.nombre}
-                onClick={() => manejarAcceso(a)}
-                aria-current={accesoActivoId === a.id ? "true" : undefined}
+                title={`${f.numeroCliente} · Alt+${i + 1}`}
+                onClick={() => onSeleccionarInteraccion(f.id)}
+                aria-current={activa ? "true" : undefined}
                 className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                  accesoActivoId === a.id ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+                  "flex size-8 items-center justify-center rounded-lg transition-colors",
+                  activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
                 )}
               >
-                <ICONO_ACCESO_RAPIDO className="size-4" />
+                <Icon className="size-4" />
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        <div className="mt-auto flex flex-col gap-1 border-t border-sidebar-border pt-1.5">
+        {/* Accesos rápidos — a pedido, siempre justificado abajo (mt-auto),
+            no pegado a donde termine la cola: su posición no debe saltar
+            según cuántas interacciones haya en curso. */}
+        <div className="mt-auto flex max-h-[6.5rem] shrink-0 flex-col gap-1 overflow-y-auto border-t border-sidebar-border pt-2">
+          {accesosRapidosMock.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              title={a.nombre}
+              onClick={() => manejarAcceso(a)}
+              aria-current={accesoActivoId === a.id ? "true" : undefined}
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                accesoActivoId === a.id ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+              )}
+            >
+              <ICONO_ACCESO_RAPIDO className="size-4" />
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-1 border-t border-sidebar-border pt-1.5">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -210,113 +210,113 @@ export function LeftNav({
         />
       </div>
 
-      {/* Cola + Accesos rápidos comparten una sola región flexible (a
-          pedido: con la cola vacía, antes cada una era flex-1 aparte y
-          quedaba un hueco enorme entre "Sin interacciones en curso" y
-          Accesos rápidos — la cola crecía igual aunque no tuviera nada
-          adentro). Alt+N salta a la fila N de la cola (ver el listener
-          global en pad-mock-shell.tsx). Si la interacción activa está en
-          Hold, su fila muestra el tiempo en espera (ámbar) en vez del
-          tiempo de cola original. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <div className="flex shrink-0 flex-col gap-1">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.interaccionesEnCurso")}</span>
-            <button
-              type="button"
-              aria-label={t("padMock.leftNav.iniciarInteraccion")}
-              title={t("padMock.leftNav.iniciarInteraccion")}
-              onClick={() => setNuevaInteraccionAbierta(true)}
-              className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            >
-              <Plus className="size-3.5" />
-            </button>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            {cola.length === 0 && (
-              <p className="px-1.5 py-1 text-xs text-muted-foreground italic">{t("padMock.leftNav.sinInteracciones")}</p>
-            )}
-            {cola.map((f, i) => {
-              const Icon = CANAL_ICON[f.canal];
-              const activa = modo === "interaccion" && f.id === interaccionActivaId;
-              const enHold = activa && enEspera && holdStartedAt !== null;
-              const tiempo = enHold
-                ? formatDuration(Math.max(0, Math.floor((now - holdStartedAt) / 1000)))
-                : formatEspera(f.esperaSeg);
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => onSeleccionarInteraccion(f.id)}
-                  aria-current={activa ? "true" : undefined}
-                  aria-keyshortcuts={`Alt+${i + 1}`}
+      {/* Cola — alto natural, con un tope (max-h) + scroll propio para
+          cuando hay muchas filas, en vez de flex-1 (que forzaba el bloque
+          a estirarse aunque estuviera vacío o corto — a pedido, ver
+          Accesos rápidos más abajo). Alt+N salta a la fila N (ver el
+          listener global en pad-mock-shell.tsx). Si la interacción activa
+          está en Hold, su fila muestra el tiempo en espera (ámbar) en vez
+          del tiempo de cola original. */}
+      <div className="flex max-h-[50vh] min-h-0 flex-col gap-1 overflow-y-auto">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.interaccionesEnCurso")}</span>
+          <button
+            type="button"
+            aria-label={t("padMock.leftNav.iniciarInteraccion")}
+            title={t("padMock.leftNav.iniciarInteraccion")}
+            onClick={() => setNuevaInteraccionAbierta(true)}
+            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Plus className="size-3.5" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          {cola.length === 0 && (
+            <p className="px-1.5 py-1 text-xs text-muted-foreground italic">{t("padMock.leftNav.sinInteracciones")}</p>
+          )}
+          {cola.map((f, i) => {
+            const Icon = CANAL_ICON[f.canal];
+            const activa = modo === "interaccion" && f.id === interaccionActivaId;
+            const enHold = activa && enEspera && holdStartedAt !== null;
+            const tiempo = enHold
+              ? formatDuration(Math.max(0, Math.floor((now - holdStartedAt) / 1000)))
+              : formatEspera(f.esperaSeg);
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => onSeleccionarInteraccion(f.id)}
+                aria-current={activa ? "true" : undefined}
+                aria-keyshortcuts={`Alt+${i + 1}`}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
+                  activa
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                )}
+              >
+                <Icon className="size-3.5 shrink-0" />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
+                </span>
+                <span
                   className={cn(
-                    "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
-                    activa
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                    "shrink-0 font-mono text-[0.65rem] tabular-nums",
+                    enHold ? "font-semibold text-warning" : "text-muted-foreground"
                   )}
                 >
-                  <Icon className="size-3.5 shrink-0" />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
-                  </span>
-                  <span
-                    className={cn(
-                      "shrink-0 font-mono text-[0.65rem] tabular-nums",
-                      enHold ? "font-semibold text-warning" : "text-muted-foreground"
-                    )}
-                  >
-                    {tiempo}
-                  </span>
-                  <Kbd className="shrink-0">Alt {i + 1}</Kbd>
-                </button>
-              );
-            })}
-          </div>
+                  {tiempo}
+                </span>
+                <Kbd className="shrink-0">Alt {i + 1}</Kbd>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
-            interacción puntual. Ícono genérico compartido (a pedido, por
-            ahora no es configurable por ítem — ver ICONO_ACCESO_RAPIDO). Al
-            elegir uno, pad-mock-shell.tsx tapa TODO el área de contenido
-            (menos este menú y el navbar) con QuickAccessOverlay — no es un
-            modal. A pedido, la lista muestra como máximo 3 accesos y el
-            resto queda atrás de scroll propio (max-h calculado para 3 filas
-            de 28px + 2 gaps de 2px), independiente del scroll de la cola. */}
-        <div className="mt-2 flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
-          <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.accesosRapidos")}</span>
-          <div className="flex max-h-[5.5rem] flex-col gap-0.5 overflow-y-auto">
-          {accesosRapidosMock.map((a) => (
-            <button
-              key={a.id}
-              type="button"
-              onClick={() => manejarAcceso(a)}
-              aria-current={accesoActivoId === a.id ? "true" : undefined}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
-                accesoActivoId === a.id
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
-              )}
-            >
-              <ICONO_ACCESO_RAPIDO className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{a.nombre}</span>
-              {a.modo === "pestana" ? (
-                <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
-              ) : (
-                <LayoutGrid className="size-3 shrink-0 text-muted-foreground" />
-              )}
-            </button>
-          ))}
-          </div>
+      {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
+          interacción puntual. Ícono genérico compartido (a pedido, por
+          ahora no es configurable por ítem — ver ICONO_ACCESO_RAPIDO). Al
+          elegir uno, pad-mock-shell.tsx tapa TODO el área de contenido
+          (menos este menú y el navbar) con QuickAccessOverlay — no es un
+          modal. A pedido, la lista muestra como máximo 3 accesos y el
+          resto queda atrás de scroll propio (max-h calculado para 3 filas
+          de 28px + 2 gaps de 2px). mt-auto: a pedido, siempre justificado
+          abajo — no pegado a donde termine la cola, para que su posición
+          no salte según cuántas interacciones haya en curso. */}
+      <div className="mt-auto flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.accesosRapidos")}</span>
+        <div className="flex max-h-[5.5rem] flex-col gap-0.5 overflow-y-auto">
+        {accesosRapidosMock.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            onClick={() => manejarAcceso(a)}
+            aria-current={accesoActivoId === a.id ? "true" : undefined}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
+              accesoActivoId === a.id
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+            )}
+          >
+            <ICONO_ACCESO_RAPIDO className="size-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{a.nombre}</span>
+            {a.modo === "pestana" ? (
+              <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+            ) : (
+              <LayoutGrid className="size-3 shrink-0 text-muted-foreground" />
+            )}
+          </button>
+        ))}
         </div>
       </div>
 
       {/* Inicio — unifica lo que antes eran "Mi turno" e "Historial" como
-          solapas separadas (a pedido). Siempre pegado al fondo del menú
-          (mt-auto), sin importar cuánto ocupe la cola. */}
-      <div className="mt-auto flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
+          solapas separadas (a pedido). Va justo debajo de Accesos rápidos,
+          sin mt-auto propio: Accesos rápidos ya reclamó el espacio libre,
+          si los dos tuvieran mt-auto competirían y se separarían. */}
+      <div className="flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
           type="button"
           onClick={() => onModo("inicio")}
