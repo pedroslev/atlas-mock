@@ -24,8 +24,7 @@ export const padMock: NamespaceDict = {
     "leftNav.iniciarInteraccion": "Iniciar nueva interacción",
     "leftNav.sinInteracciones": "Sin interacciones en curso.",
     "leftNav.accesosRapidos": "Accesos rápidos",
-    "leftNav.miTurno": "Mi turno",
-    "leftNav.historial": "Historial",
+    "leftNav.inicio": "Inicio",
 
     // CenterColumn
     "centerColumn.llamada": "Llamada",
@@ -70,12 +69,20 @@ export const padMock: NamespaceDict = {
     "contextColumn.verMas": "Ver {n} más",
     "contextColumn.verMasDetalle": "Ver más",
 
-    // SinInteraccionPanel
-    "sinInteraccion.esperando": "Esperando que el sistema te derive una interacción.",
-    "sinInteraccion.noRecibiendo": "No estás recibiendo interacciones.",
-    "sinInteraccion.pasarADisponible": "Pasar a Disponible",
-    "sinInteraccion.nuevaInteraccion": "Nueva interacción saliente",
-    "sinInteraccion.ultimasInteracciones": "Últimas interacciones",
+    // InicioPanel — pantalla de entrada al pad (sin interacción activa) y,
+    // desde el menú, destino fijo que unifica lo que antes eran "Mi turno" e
+    // "Historial" como solapas separadas.
+    "inicio.esperando": "Esperando que el sistema te derive una interacción.",
+    "inicio.noRecibiendo": "No estás recibiendo interacciones.",
+    "inicio.pasarADisponible": "Pasar a Disponible",
+    "inicio.nuevaInteraccion": "Nueva interacción saliente",
+    "inicio.campanias": "Campañas",
+    "inicio.historial": "Historial",
+    "inicio.colCanal": "Canal",
+    "inicio.colFecha": "Fecha y hora",
+    "inicio.colCliente": "Cliente",
+    "inicio.colDuracion": "Duración",
+    "inicio.colTipificacion": "Tipificación",
 
     // NuevaInteraccionForm
     "nuevaInteraccion.campania": "Campaña",
@@ -101,19 +108,6 @@ export const padMock: NamespaceDict = {
     // AgentStatusSelectorMock
     "agentStatus.principales": "Principales",
     "agentStatus.auxiliares": "Auxiliares",
-
-    // StatsPanel ("Mi turno")
-    "statsPanel.campaniasAsignadas": "Campañas asignadas",
-
-    // AgentHistoryPanel
-    "agentHistory.titulo": "Historial",
-    "agentHistory.descripcion":
-      "Tus gestiones, en cualquier canal. Distinto del historial de contacto de un cliente puntual, que se ve dentro de cada interacción.",
-    "agentHistory.colCanal": "Canal",
-    "agentHistory.colFecha": "Fecha y hora",
-    "agentHistory.colCliente": "Cliente",
-    "agentHistory.colDuracion": "Duración",
-    "agentHistory.colTipificacion": "Tipificación",
 
     // HistorialDetailDialog
     "historialDetalle.tipificacion": "Tipificación",

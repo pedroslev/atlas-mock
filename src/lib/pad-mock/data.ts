@@ -87,7 +87,7 @@ export const campaniasAgenteMock: CampaniaAgente[] = [
 
 // A pedido, la cola YA NO arranca precargada: nace vacía en
 // pad-mock-shell.tsx y se llena con lo que el agente contacta desde el "+"
-// o desde SinInteraccionPanel (ver iniciarInteraccion ahí). Ya no hace
+// o desde InicioPanel (ver iniciarInteraccion ahí). Ya no hace
 // falta el ida-y-vuelta "datasetId" que distinguía escenario A (llamada) de
 // B (chat) — sacado el chat, todo mapea al único cliente/guion que queda
 // (clienteMock, tipificaciones), así que se sacó la indirección.

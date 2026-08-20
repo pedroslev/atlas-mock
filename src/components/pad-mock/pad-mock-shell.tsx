@@ -4,10 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LeftNav, type Modo } from "@/components/pad-mock/left-nav";
 import { CenterColumn } from "@/components/pad-mock/center-column";
 import { ContextColumn } from "@/components/pad-mock/context-column";
-import { StatsPanel } from "@/components/pad-mock/stats-panel";
-import { AgentHistoryPanel } from "@/components/pad-mock/agent-history-panel";
 import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
-import { SinInteraccionPanel } from "@/components/pad-mock/sin-interaccion-panel";
+import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import {
   accesosRapidosMock,
   campaniasSalientesMock,
@@ -31,7 +29,7 @@ export function PadMockShell() {
   // A pedido: al ingresar no hay ninguna interacción activa — la cola
   // arranca vacía, no con los dos escenarios de ejemplo precargados. Recién
   // aparecen cuando el agente las crea (ver iniciarInteraccion) desde el "+"
-  // de la cola o desde SinInteraccionPanel.
+  // de la cola o desde InicioPanel.
   const [cola, setCola] = useState<FilaCola[]>([]);
   const [modo, setModo] = useState<Modo>("interaccion");
   const [interaccionActivaId, setInteraccionActivaId] = useState<string | null>(null);
@@ -43,9 +41,9 @@ export function PadMockShell() {
 
   // Estado del agente (Disponible/No disponible/Ausente/Aux) — vive ACÁ
   // porque tanto el selector del menú (LeftNav) como la franja de estado de
-  // la pantalla de inicio (SinInteraccionPanel) tienen que leerlo y poder
-  // cambiarlo, no solo mostrarlo. estadoAgenteDesde ancla el cronómetro que
-  // se ve en los dos lugares — se resetea cada vez que cambia el estado.
+  // InicioPanel tienen que leerlo y poder cambiarlo, no solo mostrarlo.
+  // estadoAgenteDesde ancla el cronómetro que se ve en los dos lugares — se
+  // resetea cada vez que cambia el estado.
   const [estadoAgenteId, setEstadoAgenteId] = useState("disponible");
   const [estadoAgenteDesde, setEstadoAgenteDesde] = useState<number>(() => Date.now());
   const cambiarEstadoAgente = useCallback((id: string) => {
@@ -71,7 +69,7 @@ export function PadMockShell() {
     setAccesoAbiertoId(null);
   }, []);
 
-  // "Contactar" (desde el modal del "+" o desde SinInteraccionPanel) — a
+  // "Contactar" (desde el modal del "+" o desde InicioPanel) — a
   // pedido: ahora sí crea una fila real en la cola y la deja activa. El
   // contenido de la interacción (cliente, tipificaciones) sigue viniendo
   // del único guion fijo que queda (clienteMock/tipificaciones) — este
@@ -95,8 +93,8 @@ export function PadMockShell() {
 
   // "Cerrar interacción" (segundo paso del botón, ver call-controls.tsx —
   // solo se llega acá con tipificación ya cargada): saca la fila de la
-  // cola y, si era la activa, pasa a la próxima que quede o vuelve al
-  // estado "sin interacciones" (SinInteraccionPanel) si no queda ninguna.
+  // cola y, si era la activa, pasa a la próxima que quede o vuelve a
+  // InicioPanel si no queda ninguna.
   const cerrarInteraccion = useCallback(
     (id: string) => {
       setCola((cur) => cur.filter((f) => f.id !== id));
@@ -129,7 +127,7 @@ export function PadMockShell() {
   // Alt+1, Alt+2… salta directo a esa fila de la cola — Alt y no Ctrl/Cmd
   // porque Ctrl/Cmd+número ya lo usan Chrome/Firefox para cambiar de pestaña
   // del navegador. Funciona en cualquier modo (también sirve para volver a
-  // una interacción desde Estadísticas/Historial).
+  // una interacción desde Inicio).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.repeat) return;
@@ -154,6 +152,10 @@ export function PadMockShell() {
 
   const hayInteraccionActiva = interaccionActivaId !== null;
   const accesoActivo = accesosRapidosMock.find((a) => a.id === accesoAbiertoId);
+  // Inicio se ve tanto si el agente lo eligió desde el menú como si
+  // simplemente no hay ninguna interacción activa (mismo criterio que
+  // left-nav.tsx para marcar el botón "Inicio" como activo).
+  const mostrarInicio = modo === "inicio" || !hayInteraccionActiva;
 
   return (
     <div className="flex h-full min-h-0 flex-1">
@@ -177,39 +179,32 @@ export function PadMockShell() {
 
       {accesoActivo ? (
         <QuickAccessOverlay pagina={accesoActivo} onClose={() => setAccesoAbiertoId(null)} />
+      ) : mostrarInicio ? (
+        <InicioPanel
+          estadoAgenteId={estadoAgenteId}
+          estadoAgenteDesde={estadoAgenteDesde}
+          onEstadoAgenteChange={cambiarEstadoAgente}
+          campaniaIdInicial={ultimaCampaniaId}
+          cuentaIdInicial={ultimaCuentaId}
+          onContactar={iniciarInteraccion}
+        />
       ) : (
         <>
-          {modo === "estadisticas" && <StatsPanel />}
-          {modo === "historial" && <AgentHistoryPanel />}
-          {modo === "interaccion" && !hayInteraccionActiva && (
-            <SinInteraccionPanel
-              estadoAgenteId={estadoAgenteId}
-              estadoAgenteDesde={estadoAgenteDesde}
-              onEstadoAgenteChange={cambiarEstadoAgente}
-              campaniaIdInicial={ultimaCampaniaId}
-              cuentaIdInicial={ultimaCuentaId}
-              onContactar={iniciarInteraccion}
-            />
-          )}
-          {modo === "interaccion" && hayInteraccionActiva && (
-            <>
-              <CenterColumn
-                key={`centro-${interaccionActivaId}`}
-                tipificaciones={tipificaciones}
-                enEspera={enEspera}
-                holdStartedAt={holdStartedAt}
-                onToggleEspera={toggleEspera}
-                onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
-              />
-              <ContextColumn
-                key={`contexto-${interaccionActivaId}`}
-                colapsada={contextoColapsada}
-                onToggle={() => setContextoColapsada((v) => !v)}
-                cliente={clienteMock}
-                historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
-              />
-            </>
-          )}
+          <CenterColumn
+            key={`centro-${interaccionActivaId}`}
+            tipificaciones={tipificaciones}
+            enEspera={enEspera}
+            holdStartedAt={holdStartedAt}
+            onToggleEspera={toggleEspera}
+            onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
+          />
+          <ContextColumn
+            key={`contexto-${interaccionActivaId}`}
+            colapsada={contextoColapsada}
+            onToggle={() => setContextoColapsada((v) => !v)}
+            cliente={clienteMock}
+            historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
+          />
         </>
       )}
     </div>

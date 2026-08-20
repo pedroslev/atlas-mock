@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, Link2, Plus } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, ExternalLink, Home, LayoutGrid, Link2, Plus } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,11 @@ import {
 // ítem (ni menú ni interacción) — todos comparten este mismo genérico.
 const ICONO_ACCESO_RAPIDO = Link2;
 
-export type Modo = "interaccion" | "estadisticas" | "historial";
+// A pedido: "Mi turno" e "Historial" se unifican en un solo destino,
+// "Inicio" — la misma pantalla a la que ya se entra al arrancar el pad sin
+// interacciones activas, ahora también accesible desde el menú en
+// cualquier momento (con o sin interacción activa).
+export type Modo = "interaccion" | "inicio";
 
 const ANCHO_MIN = 168;
 const ANCHO_MAX = 320;
@@ -77,6 +81,11 @@ export function LeftNav({
   // del todo) como el tiempo en espera de la fila en Hold.
   const now = useNow(true);
   const cronometroEstado = formatDuration(Math.max(0, Math.floor((now - estadoAgenteDesde) / 1000)));
+  // Inicio se ve tanto si el agente lo eligió explícitamente desde el menú
+  // como si es simplemente lo que se muestra por defecto (sin interacción
+  // activa) — el botón del menú tiene que marcarse como activo en los dos
+  // casos.
+  const mostrarInicio = modo === "inicio" || interaccionActivaId === null;
 
   // Solo externo ("pestana"/"blank"): abre el link directo en pestaña nueva
   // y no queda marcado como seleccionado — a pedido, no debe "posicionarse"
@@ -165,22 +174,12 @@ export function LeftNav({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={t("padMock.leftNav.miTurno")}
-            title={t("padMock.leftNav.miTurno")}
-            onClick={() => onModo("estadisticas")}
-            className={cn(modo === "estadisticas" && "bg-sidebar-accent text-sidebar-accent-foreground")}
+            aria-label={t("padMock.leftNav.inicio")}
+            title={t("padMock.leftNav.inicio")}
+            onClick={() => onModo("inicio")}
+            className={cn(mostrarInicio && "bg-sidebar-accent text-sidebar-accent-foreground")}
           >
-            <CalendarClock className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("padMock.leftNav.historial")}
-            title={t("padMock.leftNav.historial")}
-            onClick={() => onModo("historial")}
-            className={cn(modo === "historial" && "bg-sidebar-accent text-sidebar-accent-foreground")}
-          >
-            <History className="size-4" />
+            <Home className="size-4" />
           </Button>
         </div>
 
@@ -314,36 +313,23 @@ export function LeftNav({
         </div>
       </div>
 
-      {/* Mi turno / Historial del agente — siempre pegados al fondo del
-          menú (mt-auto), sin importar cuánto ocupe la cola. */}
+      {/* Inicio — unifica lo que antes eran "Mi turno" e "Historial" como
+          solapas separadas (a pedido). Siempre pegado al fondo del menú
+          (mt-auto), sin importar cuánto ocupe la cola. */}
       <div className="mt-auto flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
           type="button"
-          onClick={() => onModo("estadisticas")}
-          aria-current={modo === "estadisticas" ? "true" : undefined}
+          onClick={() => onModo("inicio")}
+          aria-current={mostrarInicio ? "true" : undefined}
           className={cn(
             "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-xs transition-colors",
-            modo === "estadisticas"
+            mostrarInicio
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
               : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           )}
         >
-          <CalendarClock className="size-4 shrink-0" />
-          {t("padMock.leftNav.miTurno")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onModo("historial")}
-          aria-current={modo === "historial" ? "true" : undefined}
-          className={cn(
-            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-xs transition-colors",
-            modo === "historial"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
-          )}
-        >
-          <History className="size-4 shrink-0" />
-          {t("padMock.leftNav.historial")}
+          <Home className="size-4 shrink-0" />
+          {t("padMock.leftNav.inicio")}
         </button>
       </div>
 
