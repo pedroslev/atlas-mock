@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, MessageSquareText, Phone } from "lucide-react";
+import { ExternalLink, Link2, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
@@ -13,33 +13,36 @@ import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import { cn } from "@/lib/utils";
 
-// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
-// "Llamada" con ícono de teléfono para una interacción telefónica, o
-// "Conversación" para el resto. Las demás son páginas externas configurables,
-// embebidas o "pestaña aparte" (§4.2). w-full en TabsList para que la línea de
-// abajo llegue hasta el borde con la columna de contexto, no solo hasta donde
-// terminan las solapas. min-w-0 en el contenedor y en Tabs: sin esto, la
-// columna no se achica cuando el contexto crece y el layout se rompe.
+// A pedido: por ahora el ícono de las páginas externas no es configurable
+// por ítem — todas comparten este mismo genérico (mismo criterio que
+// left-nav.tsx para accesos rápidos).
+const ICONO_PAGINA_EXTERNA = Link2;
+
+// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — solo
+// "Llamada" por ahora (a pedido, el canal chat se retiró de esta fase). Las
+// demás son páginas externas configurables, embebidas o "pestaña aparte"
+// (§4.2). w-full en TabsList para que la línea de abajo llegue hasta el
+// borde con la columna de contexto, no solo hasta donde terminan las
+// solapas. min-w-0 en el contenedor y en Tabs: sin esto, la columna no se
+// achica cuando el contexto crece y el layout se rompe.
 //
 // El cronómetro de la interacción vive ACÁ (antes en InteractionControls) y
 // se muestra al lado del título de la solapa fija — a pedido, sacado de la
 // barra de controles de abajo.
 //
 // InteractionControls vive FUERA del Tabs (a pedido: la barra de controles
-// de la interacción queda visible siempre, no solo en Conversación/Llamada).
+// de la interacción queda visible siempre, no solo en la solapa Llamada).
 //
-// Ctrl/Cmd+Alt+N salta a la solapa N (1 = Conversación/Llamada, 2… = cada
-// integración) — mismo "número = posición" que Alt+N en la cola, con un
-// modificador extra para no chocar con ese atajo ni con nada del navegador.
+// Ctrl/Cmd+Alt+N salta a la solapa N (1 = Llamada, 2… = cada integración) —
+// mismo "número = posición" que Alt+N en la cola, con un modificador extra
+// para no chocar con ese atajo ni con nada del navegador.
 export function CenterColumn({
-  variant,
   tipificaciones,
   enEspera,
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
 }: {
-  variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   holdStartedAt: number | null;
@@ -89,8 +92,6 @@ export function CenterColumn({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const PrimerTabIcon = variant === "llamada" ? Phone : MessageSquareText;
-  const primerTabLabel = variant === "llamada" ? "Llamada" : "Conversación";
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
   return (
@@ -120,8 +121,8 @@ export function CenterColumn({
             value="conversacion"
             className="sticky left-0 z-10 flex-none gap-1.5 bg-background!"
           >
-            <PrimerTabIcon className="size-4" />
-            {primerTabLabel}
+            <Phone className="size-4" />
+            Llamada
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",
@@ -144,7 +145,7 @@ export function CenterColumn({
                 onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
                 className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
               >
-                <p.icon className="size-4" />
+                <ICONO_PAGINA_EXTERNA className="size-4" />
                 {p.nombre}
                 <ExternalLink className="size-3 text-muted-foreground" />
                 <Kbd className="ml-1">
@@ -153,7 +154,7 @@ export function CenterColumn({
               </button>
             ) : (
               <TabsTrigger key={p.id} value={p.id} className="flex-none gap-1.5">
-                <p.icon className="size-4" />
+                <ICONO_PAGINA_EXTERNA className="size-4" />
                 {p.nombre}
                 <Kbd className="ml-1">
                   {shortcutMod} {i + 2}
@@ -164,7 +165,7 @@ export function CenterColumn({
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
-          <ConversationPanel variant={variant} />
+          <ConversationPanel />
         </TabsContent>
         {paginasExternas
           .filter((p) => p.modo === "embebido")
@@ -176,7 +177,6 @@ export function CenterColumn({
       </Tabs>
 
       <InteractionControls
-        variant={variant}
         tipificaciones={tipificaciones}
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}

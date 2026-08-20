@@ -1,28 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, MessageCircle, Plus } from "lucide-react";
+import { CalendarClock, ChevronsLeft, ChevronsRight, ExternalLink, History, LayoutGrid, Link2, Plus } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AgentStatusSelectorMock } from "@/components/pad-mock/agent-status-selector-mock";
 import { NewInteractionDialog } from "@/components/pad-mock/new-interaction-dialog";
-import { NewInternalChatDialog } from "@/components/pad-mock/new-internal-chat-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
   CANAL_ICON,
-  chatsInternosMock,
   formatEspera,
   type CampaniaSaliente,
-  type ChatInterno,
   type CuentaSaliente,
-  type DatasetId,
   type FilaCola,
   type PaginaExterna,
 } from "@/lib/pad-mock/data";
+
+// A pedido: por ahora el ícono de accesos rápidos no es configurable por
+// ítem (ni menú ni interacción) — todos comparten este mismo genérico.
+const ICONO_ACCESO_RAPIDO = Link2;
 
 export type Modo = "interaccion" | "estadisticas" | "historial";
 
@@ -47,24 +46,21 @@ export function LeftNav({
   onAbrirAcceso,
   enEspera,
   holdStartedAt,
-  onAbrirChatInterno,
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
   cola: FilaCola[];
   interaccionActivaId: string | null;
-  onSeleccionarInteraccion: (id: string, datasetId: DatasetId) => void;
+  onSeleccionarInteraccion: (id: string) => void;
   onIniciarInteraccion: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   accesoActivoId: string | null;
   onAbrirAcceso: (id: string) => void;
   enEspera: boolean;
   holdStartedAt: number | null;
-  onAbrirChatInterno: (chat: ChatInterno) => void;
 }) {
   const [colapsado, setColapsado] = useState(false);
   const [ancho, setAncho] = useState(ANCHO_INICIAL);
   const [nuevaInteraccionAbierta, setNuevaInteraccionAbierta] = useState(false);
-  const [nuevoChatAbierto, setNuevoChatAbierto] = useState(false);
   // Solo tickea mientras hay alguien en Hold — el resto del tiempo no hace
   // falta un reloj corriendo acá.
   const now = useNow(enEspera);
@@ -87,11 +83,6 @@ export function LeftNav({
         onOpenChange={setNuevaInteraccionAbierta}
         onContactar={onIniciarInteraccion}
       />
-      <NewInternalChatDialog
-        open={nuevoChatAbierto}
-        onOpenChange={setNuevoChatAbierto}
-        onElegirAgente={onAbrirChatInterno}
-      />
     </>
   );
 
@@ -113,7 +104,7 @@ export function LeftNav({
                 key={f.id}
                 type="button"
                 title={`${f.numeroCliente} · Alt+${i + 1}`}
-                onClick={() => onSeleccionarInteraccion(f.id, f.datasetId)}
+                onClick={() => onSeleccionarInteraccion(f.id)}
                 aria-current={activa ? "true" : undefined}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-lg transition-colors",
@@ -124,25 +115,6 @@ export function LeftNav({
               </button>
             );
           })}
-        </div>
-
-        <div className="flex flex-col gap-1 border-t border-sidebar-border pt-2">
-          {chatsInternosMock.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              title={c.nombre}
-              onClick={() => onAbrirChatInterno(c)}
-              className="relative flex size-8 items-center justify-center rounded-lg hover:bg-sidebar-accent/60"
-            >
-              <MessageCircle className="size-4" />
-              {c.noLeidos > 0 && (
-                <span className="absolute top-0.5 right-0.5 flex size-3 items-center justify-center rounded-full bg-primary text-[0.55rem] text-primary-foreground">
-                  {c.noLeidos}
-                </span>
-              )}
-            </button>
-          ))}
         </div>
 
         <div className="flex max-h-[6.5rem] flex-col gap-1 overflow-y-auto border-t border-sidebar-border pt-2">
@@ -158,7 +130,7 @@ export function LeftNav({
                 accesoActivoId === a.id ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
               )}
             >
-              <a.icon className="size-4" />
+              <ICONO_ACCESO_RAPIDO className="size-4" />
             </button>
           ))}
         </div>
@@ -242,7 +214,7 @@ export function LeftNav({
               <button
                 key={f.id}
                 type="button"
-                onClick={() => onSeleccionarInteraccion(f.id, f.datasetId)}
+                onClick={() => onSeleccionarInteraccion(f.id)}
                 aria-current={activa ? "true" : undefined}
                 aria-keyshortcuts={`Alt+${i + 1}`}
                 className={cn(
@@ -271,49 +243,14 @@ export function LeftNav({
         </div>
       </div>
 
-      {/* Chats internos — de la mitad del menú para abajo, la cola tiene
-          prioridad. Se abren como ventana flotante (FloatingChatWindow),
-          no acá adentro. */}
-      <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[0.65rem] font-medium text-muted-foreground">Chats internos</span>
-          <button
-            type="button"
-            aria-label="Nuevo chat interno"
-            title="Nuevo chat interno"
-            onClick={() => setNuevoChatAbierto(true)}
-            className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <Plus className="size-3.5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          {chatsInternosMock.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => onAbrirChatInterno(c)}
-              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60"
-            >
-              <MessageCircle className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{c.nombre}</span>
-              {c.noLeidos > 0 && (
-                <Badge variant="default" className="size-4 shrink-0 justify-center rounded-full p-0">
-                  {c.noLeidos}
-                </Badge>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna
-          interacción puntual. Ícono propio por acceso (a pedido — se
-          configura afuera del pad, acá solo se refleja). Al elegir uno,
-          pad-mock-shell.tsx tapa TODO el área de contenido (menos este menú
-          y el navbar) con QuickAccessOverlay — no es un modal. A pedido, la
-          lista muestra como máximo 3 accesos y el resto queda atrás de
-          scroll (max-h calculado para 3 filas de 28px + 2 gaps de 2px). */}
+          interacción puntual. Ícono genérico compartido (a pedido, por
+          ahora no es configurable por ítem — ver ICONO_ACCESO_RAPIDO). Al
+          elegir uno, pad-mock-shell.tsx tapa TODO el área de contenido
+          (menos este menú y el navbar) con QuickAccessOverlay — no es un
+          modal. A pedido, la lista muestra como máximo 3 accesos y el resto
+          queda atrás de scroll (max-h calculado para 3 filas de 28px + 2
+          gaps de 2px). */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
         <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Accesos rápidos</span>
         <div className="flex max-h-[5.5rem] flex-col gap-0.5 overflow-y-auto">
@@ -330,7 +267,7 @@ export function LeftNav({
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
               )}
             >
-              <a.icon className="size-3.5 shrink-0" />
+              <ICONO_ACCESO_RAPIDO className="size-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{a.nombre}</span>
               {a.modo === "pestana" ? (
                 <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
@@ -343,7 +280,7 @@ export function LeftNav({
       </div>
 
       {/* Mi turno / Historial del agente — siempre pegados al fondo del
-          menú (mt-auto), sin importar cuánto ocupe la cola o los chats. */}
+          menú (mt-auto), sin importar cuánto ocupe la cola. */}
       <div className="mt-auto flex shrink-0 flex-col gap-0.5 border-t border-sidebar-border pt-1.5">
         <button
           type="button"

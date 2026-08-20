@@ -11,7 +11,6 @@ import {
   Bookmark,
   PhoneForwarded,
   Check,
-  CircleX,
   ChevronsUpDown,
   Sparkles,
   HelpCircle,
@@ -185,13 +184,11 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // para poder reflejar el mismo tiempo en espera en la fila de la cola del
 // menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
 export function InteractionControls({
-  variant,
   tipificaciones,
   enEspera,
   onToggleEspera,
   onCerrarInteraccion,
 }: {
-  variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   onToggleEspera: () => void;
@@ -207,8 +204,8 @@ export function InteractionControls({
   const [transferirAbierto, setTransferirAbierto] = useState(false);
   const [dialpadAbierto, setDialpadAbierto] = useState(false);
   const [digitosMarcados, setDigitosMarcados] = useState("");
-  // Flujo a pedido: Corto (o Finalizo, en chat) → tipifico → recién ahí se
-  // habilita Cerrar interacción. El botón de la derecha es el mismo, cambia
+  // Flujo a pedido: Corto → tipifico → recién ahí se habilita Cerrar
+  // interacción. El botón de la derecha es el mismo, cambia
   // de rol según "cortada".
   const [cortada, setCortada] = useState(false);
   const [tipSeleccionada, setTipSeleccionada] = useState(
@@ -250,15 +247,14 @@ export function InteractionControls({
       const key = e.key.toLowerCase();
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
-          // El chat no tiene Hold — a pedido, ese control (y su atajo) es
-          // exclusivo de llamada. Ninguno de estos aplica una vez cortada.
-          if (variant === "llamada" && !cortada) {
+          // Ninguno de estos controles aplica una vez cortada.
+          if (!cortada) {
             e.preventDefault();
             onToggleEspera();
           }
           break;
         case SHORTCUTS.silenciar.toLowerCase():
-          if (variant === "llamada" && !cortada) {
+          if (!cortada) {
             e.preventDefault();
             setSilenciado((v) => !v);
           }
@@ -276,15 +272,15 @@ export function InteractionControls({
           }
           break;
         case SHORTCUTS.dialpad.toLowerCase():
-          if (variant === "llamada" && !cortada) {
+          if (!cortada) {
             e.preventDefault();
             setDialpadAbierto(true);
           }
           break;
         case SHORTCUTS.cerrar.toLowerCase():
           e.preventDefault();
-          // Primer paso: cortar/finalizar. Segundo paso: recién con
-          // tipificación elegida, cerrar de verdad la interacción.
+          // Primer paso: cortar. Segundo paso: recién con tipificación
+          // elegida, cerrar de verdad la interacción.
           if (!cortada) {
             setCortada(true);
           } else if (tipSeleccionada) {
@@ -295,7 +291,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [variant, cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion]);
+  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion]);
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
@@ -310,7 +306,7 @@ export function InteractionControls({
         </span>
       </ActionTooltip>
 
-      {variant === "llamada" && enEspera && (
+      {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
           <Pause className="size-2.5" />
           Espera
@@ -339,77 +335,70 @@ export function InteractionControls({
       )}
 
       <div className="ml-auto flex min-w-0 items-center gap-2">
-        {/* El chat no tiene Hold — a pedido, control exclusivo de llamada. */}
-        {variant === "llamada" && (
-          <ControlButton
-            icon={enEspera ? Play : Pause}
-            label={enEspera ? "Retomar" : "Espera"}
-            shortcutKey={SHORTCUTS.espera}
-            isMac={isMac}
-            tone={enEspera ? "active" : "neutral"}
-            pressed={enEspera}
-            disabled={cortada}
-            onClick={onToggleEspera}
-          />
-        )}
-        {variant === "llamada" && (
-          <ControlButton
-            icon={silenciado ? MicOff : Mic}
-            label={silenciado ? "Reactivar" : "Silenciar"}
-            shortcutKey={SHORTCUTS.silenciar}
-            isMac={isMac}
-            tone={silenciado ? "active" : "neutral"}
-            pressed={silenciado}
-            disabled={cortada}
-            onClick={() => setSilenciado((v) => !v)}
-          />
-        )}
-        {variant === "llamada" && (
-          <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>
-            <PopoverTrigger asChild>
-              <div>
-                <ControlButton
-                  icon={Grid3x3}
-                  label="Teclado numérico"
-                  shortcutKey={SHORTCUTS.dialpad}
-                  isMac={isMac}
-                  tone="neutral"
-                  disabled={cortada}
-                  onClick={() => setDialpadAbierto(true)}
-                />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-52 p-2">
-              <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
-                Enviar tonos (DTMF)
-              </p>
-              <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
-                {digitosMarcados || <span className="text-muted-foreground">Sin dígitos</span>}
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {TECLAS_DIALPAD.map((tecla) => (
-                  <button
-                    key={tecla}
-                    type="button"
-                    onClick={() => setDigitosMarcados((cur) => cur + tecla)}
-                    className="flex h-9 items-center justify-center rounded-md border border-border text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {tecla}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                disabled={!digitosMarcados}
-                onClick={() => setDigitosMarcados((cur) => cur.slice(0, -1))}
-                className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
-              >
-                <Delete className="size-3.5" />
-                Borrar
-              </button>
-            </PopoverContent>
-          </Popover>
-        )}
+        <ControlButton
+          icon={enEspera ? Play : Pause}
+          label={enEspera ? "Retomar" : "Espera"}
+          shortcutKey={SHORTCUTS.espera}
+          isMac={isMac}
+          tone={enEspera ? "active" : "neutral"}
+          pressed={enEspera}
+          disabled={cortada}
+          onClick={onToggleEspera}
+        />
+        <ControlButton
+          icon={silenciado ? MicOff : Mic}
+          label={silenciado ? "Reactivar" : "Silenciar"}
+          shortcutKey={SHORTCUTS.silenciar}
+          isMac={isMac}
+          tone={silenciado ? "active" : "neutral"}
+          pressed={silenciado}
+          disabled={cortada}
+          onClick={() => setSilenciado((v) => !v)}
+        />
+        <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>
+          <PopoverTrigger asChild>
+            <div>
+              <ControlButton
+                icon={Grid3x3}
+                label="Teclado numérico"
+                shortcutKey={SHORTCUTS.dialpad}
+                isMac={isMac}
+                tone="neutral"
+                disabled={cortada}
+                onClick={() => setDialpadAbierto(true)}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-52 p-2">
+            <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
+              Enviar tonos (DTMF)
+            </p>
+            <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
+              {digitosMarcados || <span className="text-muted-foreground">Sin dígitos</span>}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {TECLAS_DIALPAD.map((tecla) => (
+                <button
+                  key={tecla}
+                  type="button"
+                  onClick={() => setDigitosMarcados((cur) => cur + tecla)}
+                  className="flex h-9 items-center justify-center rounded-md border border-border text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                >
+                  {tecla}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={!digitosMarcados}
+              onClick={() => setDigitosMarcados((cur) => cur.slice(0, -1))}
+              className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+            >
+              <Delete className="size-3.5" />
+              Borrar
+            </button>
+          </PopoverContent>
+        </Popover>
 
         <Popover open={marcarAbierto} onOpenChange={cerrarMarcar}>
           <PopoverTrigger asChild>
@@ -502,12 +491,12 @@ export function InteractionControls({
           </PopoverContent>
         </Popover>
 
-        {/* Flujo de dos pasos a pedido: primero cortar/finalizar, después
-            tipificar, y recién ahí el mismo botón cierra la interacción de
-            verdad (deshabilitado hasta que haya tipificación elegida). */}
+        {/* Flujo de dos pasos a pedido: primero cortar, después tipificar,
+            y recién ahí el mismo botón cierra la interacción de verdad
+            (deshabilitado hasta que haya tipificación elegida). */}
         <ControlButton
-          icon={cortada ? X : variant === "llamada" ? PhoneOff : CircleX}
-          label={cortada ? "Cerrar interacción" : variant === "llamada" ? "Cortar" : "Finalizar chat"}
+          icon={cortada ? X : PhoneOff}
+          label={cortada ? "Cerrar interacción" : "Cortar"}
           shortcutKey={SHORTCUTS.cerrar}
           isMac={isMac}
           tone="destructive"

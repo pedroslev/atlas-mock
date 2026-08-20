@@ -7,17 +7,13 @@ import {
   ChevronsRight,
   User,
   History,
-  Sparkles,
-  NotebookPen,
   Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CANAL_ICON, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
-import { OpenQuestion } from "@/components/pad-mock/open-question";
 import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 
@@ -30,21 +26,17 @@ type ClienteMock = {
   antiguedad: string;
 };
 
-type ArticuloCopiloto = { titulo: string; resumen: string; fuente: string };
-
 // Tipificación se mudó a la barra de controles de la interacción (siempre
 // visible, junto a "Cerrar interacción") — ya no vive en este acordeón.
-type SeccionId = "cliente" | "historial" | "copiloto" | "notas";
+// Copiloto y Notas se retiraron a pedido para esta fase.
+type SeccionId = "cliente" | "historial";
 
 const SECCIONES: { id: SeccionId; label: string; icon: typeof User }[] = [
   { id: "cliente", label: "Cliente", icon: User },
   { id: "historial", label: "Historial", icon: History },
-  { id: "copiloto", label: "Copiloto", icon: Sparkles },
-  { id: "notas", label: "Notas", icon: NotebookPen },
 ];
 
-// A pedido: siempre arranca igual, sin importar el escenario — Cliente e
-// Historial abiertas, Copiloto y Notas cerradas.
+// A pedido: siempre arranca igual — Cliente e Historial abiertas.
 const SECCIONES_ABIERTAS_INIT: SeccionId[] = ["cliente", "historial"];
 const HISTORIAL_VISIBLE_INICIAL = 3;
 const ANCHO_MIN = 220;
@@ -59,14 +51,12 @@ function Seccion({
   icon: Icon,
   abierta,
   onToggle,
-  badge,
   children,
 }: {
   label: string;
   icon: typeof User;
   abierta: boolean;
   onToggle: () => void;
-  badge?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -79,7 +69,6 @@ function Seccion({
       >
         <Icon className="size-4 shrink-0 text-muted-foreground" />
         <span className="flex-1">{label}</span>
-        {badge}
         <ChevronDown
           className={cn(
             "size-3.5 shrink-0 text-muted-foreground transition-transform",
@@ -141,13 +130,11 @@ export function ContextColumn({
   onToggle,
   cliente,
   historial,
-  articulo,
 }: {
   colapsada: boolean;
   onToggle: () => void;
   cliente: ClienteMock;
   historial: HistorialEntrada[];
-  articulo?: ArticuloCopiloto;
 }) {
   const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(SECCIONES_ABIERTAS_INIT));
   const [historialCompleto, setHistorialCompleto] = useState(false);
@@ -186,12 +173,8 @@ export function ContextColumn({
               aria-label={label}
               title={label}
               onClick={() => abrirDesdeColapsada(id)}
-              className="relative"
             >
               <Icon className="size-4" />
-              {id === "copiloto" && articulo && (
-                <span className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-info" />
-              )}
             </Button>
           ))}
         </div>
@@ -264,37 +247,6 @@ export function ContextColumn({
               </button>
             )}
           </div>
-        </Seccion>
-
-        <Seccion
-          label="Copiloto"
-          icon={Sparkles}
-          abierta={abiertas.has("copiloto")}
-          onToggle={() => toggle("copiloto")}
-          badge={
-            articulo ? (
-              <Badge variant="info" className="size-4 shrink-0 justify-center rounded-full p-0">
-                1
-              </Badge>
-            ) : undefined
-          }
-        >
-          {articulo ? (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold">{articulo.titulo}</p>
-              <p className="text-xs text-muted-foreground">{articulo.resumen}</p>
-              <p className="font-mono text-[0.65rem] text-muted-foreground">{articulo.fuente}</p>
-              <OpenQuestion>de dónde saca el copiloto lo que sabe.</OpenQuestion>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground italic">
-              Sin sugerencias de conocimiento para esta interacción.
-            </p>
-          )}
-        </Seccion>
-
-        <Seccion label="Notas" icon={NotebookPen} abierta={abiertas.has("notas")} onToggle={() => toggle("notas")}>
-          <Textarea placeholder="Notas libres sobre esta interacción…" rows={3} className="resize-none text-xs" />
         </Seccion>
       </div>
 
