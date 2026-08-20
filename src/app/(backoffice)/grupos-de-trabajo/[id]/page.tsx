@@ -10,13 +10,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { T } from "@/lib/i18n";
 import { gruposTrabajo, getGrupoTrabajo, agentes } from "@/lib/mock-data";
 import { GrupoMiembros } from "./grupo-miembros";
 import { GrupoPermisos } from "./grupo-permisos";
-import { AuxMultiSelect } from "../aux-multi-select";
+import { GrupoConfigHermesTab } from "../grupo-config-hermes";
 
 export function generateStaticParams() {
   return gruposTrabajo.map((g) => ({ id: g.id }));
@@ -50,50 +50,67 @@ export default async function EditarGrupoTrabajoPage({
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <T k="grupos.infoGeneral" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nombre">
-                <T k="common.comunes.nombre" />
-              </Label>
-              <Input id="nombre" defaultValue={grupo.nombre} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="descripcion">
-                <T k="common.comunes.descripcion" />
-              </Label>
-              <Textarea id="descripcion" defaultValue={grupo.descripcion} rows={3} />
-            </div>
-          </CardContent>
-        </Card>
+      {/* A pedido: mismas secciones que Campañas — General, Usuarios,
+          Permisos y Config. Hermes (estados auxiliares + accesos rápidos,
+          que antes vivían sueltos en esta página). */}
+      <Tabs defaultValue="general">
+        <TabsList>
+          <TabsTrigger value="general">
+            <T k="grupos.tab.general" />
+          </TabsTrigger>
+          <TabsTrigger value="usuarios">
+            <T k="grupos.tab.usuarios" />
+          </TabsTrigger>
+          <TabsTrigger value="permisos">
+            <T k="grupos.tab.permisos" />
+          </TabsTrigger>
+          <TabsTrigger value="config-hermes">
+            <T k="grupos.tab.configHermes" />
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <T k="grupos.aux.titulo" />
-            </CardTitle>
-            <CardDescription>
-              <T k="grupos.aux.desc" />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AuxMultiSelect initialIds={grupo.estadosAuxiliares} />
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="general">
+          <Card className="max-w-2xl">
+            <CardHeader>
+              <CardTitle>
+                <T k="grupos.infoGeneral" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="nombre">
+                  <T k="common.comunes.nombre" />
+                </Label>
+                <Input id="nombre" defaultValue={grupo.nombre} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="descripcion">
+                  <T k="common.comunes.descripcion" />
+                </Label>
+                <Textarea id="descripcion" defaultValue={grupo.descripcion} rows={3} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      <GrupoPermisos
-        initialPermisos={grupo.permisos}
-        initialAccesoHermes={grupo.accesoHermes}
-      />
+        <TabsContent value="usuarios">
+          <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
+        </TabsContent>
 
-      <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
+        <TabsContent value="permisos">
+          <GrupoPermisos
+            initialPermisos={grupo.permisos}
+            initialAccesoHermes={grupo.accesoHermes}
+          />
+        </TabsContent>
+
+        <TabsContent value="config-hermes">
+          <GrupoConfigHermesTab
+            initialEstadosAuxiliares={grupo.estadosAuxiliares}
+            initialShortcutButtons={grupo.shortcutButtons}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

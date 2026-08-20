@@ -244,6 +244,22 @@ export type Agente = {
 export type PermisoAccion = "lectura" | "escritura" | "eliminacion";
 export type Permiso = { modulo: string; acciones: PermisoAccion[] };
 
+// working_groups.shortcut_buttons (JSONB) — ver relevamiento-legacy/
+// parametros-campaigns/propuesta/parametrizacion-propuesta.md §11: "se
+// configuran desde Olimpo, por grupo de trabajo (no por campaña)". A
+// diferencia de InteractionUrlEntry (campañas), no tiene "momento": son
+// botones siempre presentes en el menú del pad, no algo que se abre solo en
+// cierto punto de la interacción. "nombre" tampoco está en el documento —
+// mismo criterio que en campañas, lo sumamos para poder identificarlos en
+// la lista.
+export type ShortcutButtonOpenAs = "frame" | "blank";
+export type ShortcutButtonEntry = {
+  id: string;
+  nombre: string;
+  url: string;
+  openAs: ShortcutButtonOpenAs;
+};
+
 export type GrupoTrabajo = {
   id: string;
   nombre: string;
@@ -252,6 +268,7 @@ export type GrupoTrabajo = {
   estadosAuxiliares: string[]; // working_groups.aux_statuses
   permisos: Permiso[]; // working_groups.permissions — Olimpo
   accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
+  shortcutButtons: ShortcutButtonEntry[]; // working_groups.shortcut_buttons
 };
 
 // user_keycloak_map — overrides individuales de un usuario sobre su grupo,
@@ -647,6 +664,20 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       { modulo: "Clasificaciones", acciones: ["lectura", "escritura"] },
     ],
     accesoHermes: true,
+    shortcutButtons: [
+      {
+        id: "sb-cobranzas-1",
+        nombre: "Manual del agente",
+        url: "https://olimpo.bancosur.com/manual-agente",
+        openAs: "frame",
+      },
+      {
+        id: "sb-cobranzas-2",
+        nombre: "Calculadora de cuotas",
+        url: "https://olimpo.bancosur.com/simulador-cuotas",
+        openAs: "frame",
+      },
+    ],
   },
   {
     id: "wg-atencion",
@@ -656,6 +687,14 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     estadosAuxiliares: ["aux-almuerzo"],
     permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
     accesoHermes: true,
+    shortcutButtons: [
+      {
+        id: "sb-atencion-1",
+        nombre: "Base de conocimientos",
+        url: "https://olimpo.bancosur.com/base-conocimiento",
+        openAs: "frame",
+      },
+    ],
   },
   {
     id: "wg-ventas",
@@ -664,6 +703,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     estadosAuxiliares: ["aux-almuerzo", "aux-reunion"],
     permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
     accesoHermes: false,
+    shortcutButtons: [],
   },
 ];
 

@@ -51,6 +51,37 @@ export const grupos: NamespaceDict = {
     "miembros.permisosIndividuales": "+ permisos individuales",
     "miembros.quitar": "Quitar del grupo",
     "miembros.quitarAria": "Quitar a {nombre} del grupo",
+
+    // Solapas del detalle (a pedido, reorganizado igual que Campañas) — solo
+    // ES por ahora, mismo criterio que en campanias.ts: el resto de los
+    // idiomas cae al fallback en español hasta cerrar el contenido.
+    "tab.general": "General",
+    "tab.usuarios": "Usuarios",
+    "tab.permisos": "Permisos",
+    "tab.configHermes": "Config. Hermes",
+
+    "configHermes.titulo": "Configuración de Hermes",
+    "configHermes.desc":
+      "Qué ve este grupo al entrar al PAD del agente: sus estados auxiliares habilitados y sus accesos rápidos.",
+
+    // Accesos rápidos (working_groups.shortcut_buttons) — mismo patrón que
+    // "URLs externas" de campañas, sin el campo "momento": son botones
+    // siempre presentes en el menú del pad, no algo que se abre solo en
+    // cierto punto de la interacción.
+    "shortcuts.titulo": "Accesos rápidos",
+    "shortcuts.desc":
+      "Botones de acceso rápido en el menú del PAD para los usuarios de este grupo. Cada uno abre su URL embebida dentro de Hermes o en una pestaña nueva.",
+    "shortcuts.agregar": "Agregar acceso rápido",
+    "shortcuts.eliminar": "Eliminar acceso rápido",
+    "shortcuts.sin": "Todavía no hay accesos rápidos configurados para este grupo.",
+    "shortcuts.nombre": "Nombre",
+    "shortcuts.nombrePlaceholder": "Ej: Manual del agente",
+    "shortcuts.url": "URL",
+    "shortcuts.urlPlaceholder": "https://…",
+    "shortcuts.urlAyuda": "Admite variables como {{userid}} (a definir).",
+    "shortcuts.openAs": "Modo de apertura",
+    "shortcuts.openAsFrame": "Dentro de Hermes",
+    "shortcuts.openAsBlank": "Pestaña nueva",
   },
   en: {
     "descripcion":
