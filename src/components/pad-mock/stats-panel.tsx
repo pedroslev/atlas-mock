@@ -1,5 +1,8 @@
+"use client";
+
 import { CalendarClock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useT } from "@/lib/i18n";
 import { CANAL_ICON, campaniasAgenteMock } from "@/lib/pad-mock/data";
 
 // Nav item nuevo pedido junto con Historial. A pedido, simplificado para
@@ -8,17 +11,18 @@ import { CANAL_ICON, campaniasAgenteMock } from "@/lib/pad-mock/data";
 // las métricas del día (interacciones, tiempo promedio, por canal), que se
 // retiraron. Contenido de ejemplo, no definido en el brief.
 export function StatsPanel() {
+  const t = useT();
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
       <h1 className="flex items-center gap-2 font-heading text-xl font-semibold">
         <CalendarClock className="size-5 text-muted-foreground" />
-        Mi turno
+        {t("padMock.leftNav.miTurno")}
       </h1>
 
       <Card size="sm">
         <CardHeader>
           <CardTitle as="h3" className="text-sm">
-            Campañas asignadas
+            {t("padMock.statsPanel.campaniasAsignadas")}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">

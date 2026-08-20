@@ -15,6 +15,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { estadosAgenteDisponibles, estadoAgenteMock } from "@/lib/pad-mock/data";
 
 // Selector de estado del agente — a pedido, tiene que dejar elegir entre
@@ -24,6 +25,7 @@ import { estadosAgenteDisponibles, estadoAgenteMock } from "@/lib/pad-mock/data"
 // pero con estado propio — este mock no tiene una llamada real que fuerce el
 // estado.
 export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [estadoId, setEstadoId] = useState("disponible");
   const estado = estadosAgenteDisponibles.find((e) => e.id === estadoId) ?? estadosAgenteDisponibles[0];
@@ -34,7 +36,7 @@ export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
   const lista = (
     <Command>
       <CommandList>
-        <CommandGroup heading="Principales">
+        <CommandGroup heading={t("padMock.agentStatus.principales")}>
           {principales.map((e) => (
             <CommandItem
               key={e.id}
@@ -52,7 +54,7 @@ export function AgentStatusSelectorMock({ colapsado }: { colapsado: boolean }) {
           ))}
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Auxiliares">
+        <CommandGroup heading={t("padMock.agentStatus.auxiliares")}>
           {auxiliares.map((e) => (
             <CommandItem
               key={e.id}

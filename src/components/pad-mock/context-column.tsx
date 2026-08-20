@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useT, type TranslateFn } from "@/lib/i18n";
 import { CANAL_ICON, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
@@ -31,10 +32,12 @@ type ClienteMock = {
 // Copiloto y Notas se retiraron a pedido para esta fase.
 type SeccionId = "cliente" | "historial";
 
-const SECCIONES: { id: SeccionId; label: string; icon: typeof User }[] = [
-  { id: "cliente", label: "Cliente", icon: User },
-  { id: "historial", label: "Historial", icon: History },
-];
+function secciones(t: TranslateFn): { id: SeccionId; label: string; icon: typeof User }[] {
+  return [
+    { id: "cliente", label: t("padMock.contextColumn.cliente"), icon: User },
+    { id: "historial", label: t("padMock.contextColumn.historial"), icon: History },
+  ];
+}
 
 // A pedido: siempre arranca igual — Cliente e Historial abiertas.
 const SECCIONES_ABIERTAS_INIT: SeccionId[] = ["cliente", "historial"];
@@ -88,6 +91,7 @@ function HistorialItem({
   entrada: HistorialEntrada;
   onVerMas: () => void;
 }) {
+  const t = useT();
   const Icon = CANAL_ICON[entrada.canal];
   return (
     <div className="rounded-md border border-border">
@@ -114,7 +118,7 @@ function HistorialItem({
           className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
         >
           <Eye className="size-3" />
-          Ver más
+          {t("padMock.contextColumn.verMasDetalle")}
         </button>
       </div>
     </div>
@@ -136,6 +140,8 @@ export function ContextColumn({
   cliente: ClienteMock;
   historial: HistorialEntrada[];
 }) {
+  const t = useT();
+  const SECCIONES = secciones(t);
   const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(SECCIONES_ABIERTAS_INIT));
   const [historialCompleto, setHistorialCompleto] = useState(false);
   const [detalleId, setDetalleId] = useState<string | null>(null);
@@ -161,7 +167,7 @@ export function ContextColumn({
   if (colapsada) {
     return (
       <div className="flex w-12 shrink-0 flex-col items-center gap-2 border-l border-border bg-card py-2">
-        <Button variant="ghost" size="icon-sm" aria-label="Expandir contexto" onClick={onToggle}>
+        <Button variant="ghost" size="icon-sm" aria-label={t("padMock.contextColumn.expandirContexto")} onClick={onToggle}>
           <ChevronsLeft className="size-4" />
         </Button>
         <div className="flex flex-col gap-1.5">
@@ -195,44 +201,54 @@ export function ContextColumn({
         )}
       >
         <span className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-          Contexto
+          {t("padMock.contextColumn.contexto")}
         </span>
-        <Button variant="ghost" size="icon-sm" aria-label="Colapsar contexto" onClick={onToggle}>
+        <Button variant="ghost" size="icon-sm" aria-label={t("padMock.contextColumn.colapsarContexto")} onClick={onToggle}>
           <ChevronsRight className="size-3.5" />
         </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <Seccion label="Cliente" icon={User} abierta={abiertas.has("cliente")} onToggle={() => toggle("cliente")}>
+        <Seccion
+          label={t("padMock.contextColumn.cliente")}
+          icon={User}
+          abierta={abiertas.has("cliente")}
+          onToggle={() => toggle("cliente")}
+        >
           <dl className="flex flex-col gap-1.5 text-xs">
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">N° cliente</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.numeroCliente")}</dt>
               <dd className="font-medium tabular-nums">{cliente.numeroCliente}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Nombre</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.nombre")}</dt>
               <dd className="text-right font-medium">{cliente.nombre}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Teléfono</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
               <dd className="text-right tabular-nums">{cliente.telefono}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Mail</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.mail")}</dt>
               <dd className="truncate text-right">{cliente.mail}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Segmento</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.segmento")}</dt>
               <dd className="text-right">{cliente.segmento}</dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Antigüedad</dt>
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.antiguedad")}</dt>
               <dd className="text-right">{cliente.antiguedad}</dd>
             </div>
           </dl>
         </Seccion>
 
-        <Seccion label="Historial" icon={History} abierta={abiertas.has("historial")} onToggle={() => toggle("historial")}>
+        <Seccion
+          label={t("padMock.contextColumn.historial")}
+          icon={History}
+          abierta={abiertas.has("historial")}
+          onToggle={() => toggle("historial")}
+        >
           <div className="flex flex-col gap-1.5">
             {historialVisible.map((h) => (
               <HistorialItem key={h.id} entrada={h} onVerMas={() => setDetalleId(h.id)} />
@@ -243,7 +259,7 @@ export function ContextColumn({
                 onClick={() => setHistorialCompleto(true)}
                 className="text-xs font-medium text-primary hover:underline"
               >
-                Ver {historial.length - HISTORIAL_VISIBLE_INICIAL} más
+                {t("padMock.contextColumn.verMas", { n: historial.length - HISTORIAL_VISIBLE_INICIAL })}
               </button>
             )}
           </div>

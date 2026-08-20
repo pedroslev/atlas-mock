@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useT } from "@/lib/i18n";
 import {
   CANAL_ICON,
   CANAL_LABEL,
@@ -34,6 +35,7 @@ export function NuevaInteraccionForm({
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   idPrefix?: string;
 }) {
+  const t = useT();
   // A pedido: campaña y cuenta vienen preseleccionadas con la primera del
   // listado — no arrancan vacías.
   const primeraCampania = campaniasSalientesMock[0];
@@ -60,7 +62,7 @@ export function NuevaInteraccionForm({
       }}
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idPrefix}-campania`}>Campaña</Label>
+        <Label htmlFor={`${idPrefix}-campania`}>{t("padMock.nuevaInteraccion.campania")}</Label>
         <Select
           value={campaniaId}
           onValueChange={(v) => {
@@ -71,7 +73,7 @@ export function NuevaInteraccionForm({
           }}
         >
           <SelectTrigger id={`${idPrefix}-campania`} className="w-full">
-            <SelectValue placeholder="Elegir campaña…" />
+            <SelectValue placeholder={t("padMock.nuevaInteraccion.elegirCampania")} />
           </SelectTrigger>
           <SelectContent>
             {campaniasSalientesMock.map((c) => (
@@ -85,7 +87,7 @@ export function NuevaInteraccionForm({
 
       {campania && (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-cuenta`}>Cuenta</Label>
+          <Label htmlFor={`${idPrefix}-cuenta`}>{t("padMock.nuevaInteraccion.cuenta")}</Label>
           <Select
             value={cuentaId}
             onValueChange={(v) => {
@@ -94,7 +96,7 @@ export function NuevaInteraccionForm({
             }}
           >
             <SelectTrigger id={`${idPrefix}-cuenta`} className="w-full">
-              <SelectValue placeholder="Elegir cuenta…" />
+              <SelectValue placeholder={t("padMock.nuevaInteraccion.elegirCuenta")} />
             </SelectTrigger>
             <SelectContent>
               {campania.cuentas.map((c) => {
@@ -116,12 +118,16 @@ export function NuevaInteraccionForm({
 
       {cuenta && (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-numero`}>Número</Label>
+          <Label htmlFor={`${idPrefix}-numero`}>{t("padMock.nuevaInteraccion.numero")}</Label>
           <Input
             id={`${idPrefix}-numero`}
             value={numero}
             onChange={(e) => setNumero(e.target.value)}
-            placeholder={cuenta.canal === "sms" ? "Número o contacto…" : "+54 11 xxxx-xxxx"}
+            placeholder={
+              cuenta.canal === "sms"
+                ? t("padMock.nuevaInteraccion.numeroPlaceholderSms")
+                : t("padMock.nuevaInteraccion.numeroPlaceholderDefault")
+            }
           />
         </div>
       )}
@@ -130,7 +136,7 @@ export function NuevaInteraccionForm({
         <div className="flex justify-end">
           <Button type="submit" disabled={!numero.trim()} className="gap-1.5">
             <CanalIcon className="size-4" />
-            Contactar
+            {t("padMock.nuevaInteraccion.contactar")}
           </Button>
         </div>
       )}

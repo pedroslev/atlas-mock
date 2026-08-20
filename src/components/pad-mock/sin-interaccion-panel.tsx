@@ -2,6 +2,7 @@
 
 import { PhoneIncoming } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useT } from "@/lib/i18n";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
 import type { CampaniaSaliente, CuentaSaliente } from "@/lib/pad-mock/data";
 
@@ -15,6 +16,7 @@ export function SinInteraccionPanel({
 }: {
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex h-full min-h-0 w-full flex-1 items-center justify-center overflow-y-auto bg-muted/30 p-6">
       <Card className="w-full max-w-sm">
@@ -23,12 +25,8 @@ export function SinInteraccionPanel({
             <span className="flex size-12 items-center justify-center rounded-full bg-info/10 text-info">
               <PhoneIncoming className="size-5" />
             </span>
-            <h1 className="font-heading text-base font-semibold">Sin interacciones activas</h1>
-            <p className="text-sm text-muted-foreground">
-              Pasate a <span className="font-medium text-foreground">Disponible</span> en el menú
-              para que el sistema te empiece a derivar interacciones entrantes, o iniciá una
-              llamada saliente acá abajo.
-            </p>
+            <h1 className="font-heading text-base font-semibold">{t("padMock.sinInteraccion.titulo")}</h1>
+            <p className="text-sm text-muted-foreground">{t("padMock.sinInteraccion.descripcion")}</p>
           </div>
 
           <NuevaInteraccionForm idPrefix="si" onContactar={onContactar} />

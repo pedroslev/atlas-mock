@@ -1,3 +1,5 @@
+"use client";
+
 import { History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useT } from "@/lib/i18n";
 import { CANAL_ICON, CANAL_LABEL, historialAgenteMock } from "@/lib/pad-mock/data";
 
 // Historial DEL AGENTE: la totalidad de lo que gestionó, cualquier canal.
@@ -15,28 +18,26 @@ import { CANAL_ICON, CANAL_LABEL, historialAgenteMock } from "@/lib/pad-mock/dat
 // (context-column.tsx), que es el histórico de contacto de ESE cliente
 // puntual — para no confundir los dos en la demo del lunes.
 export function AgentHistoryPanel() {
+  const t = useT();
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
       <div>
         <h1 className="flex items-center gap-2 font-heading text-xl font-semibold">
           <History className="size-5 text-muted-foreground" />
-          Historial
+          {t("padMock.agentHistory.titulo")}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tus gestiones, en cualquier canal. Distinto del historial de contacto de un
-          cliente puntual, que se ve dentro de cada interacción.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("padMock.agentHistory.descripcion")}</p>
       </div>
 
       <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Canal</TableHead>
-              <TableHead>Fecha y hora</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Duración</TableHead>
-              <TableHead>Tipificación</TableHead>
+              <TableHead>{t("padMock.agentHistory.colCanal")}</TableHead>
+              <TableHead>{t("padMock.agentHistory.colFecha")}</TableHead>
+              <TableHead>{t("padMock.agentHistory.colCliente")}</TableHead>
+              <TableHead>{t("padMock.agentHistory.colDuracion")}</TableHead>
+              <TableHead>{t("padMock.agentHistory.colTipificacion")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

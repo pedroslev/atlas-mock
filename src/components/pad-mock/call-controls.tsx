@@ -38,6 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { marcasDisponibles, destinosTransferencia, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
@@ -115,8 +116,9 @@ function TipificacionSelector({
   value: string | undefined;
   onChange: (id: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
-  const seleccionada = tipificaciones.find((t) => t.id === value);
+  const seleccionada = tipificaciones.find((tip) => tip.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -130,7 +132,7 @@ function TipificacionSelector({
         >
           <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
             <Tag className="size-4 shrink-0 text-muted-foreground" />
-            <span className="truncate">{seleccionada?.nombre ?? "Tipificación…"}</span>
+            <span className="truncate">{seleccionada?.nombre ?? t("padMock.callControls.tipificacionPlaceholder")}</span>
             {seleccionada?.sugerida && (
               <Sparkles className="size-3 shrink-0 text-info" />
             )}
@@ -140,28 +142,28 @@ function TipificacionSelector({
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start">
         <Command>
-          <CommandInput placeholder="Buscar tipificación…" />
+          <CommandInput placeholder={t("padMock.callControls.buscarTipificacion")} />
           <CommandList>
-            <CommandEmpty>Sin resultados.</CommandEmpty>
+            <CommandEmpty>{t("padMock.callControls.sinResultados")}</CommandEmpty>
             <CommandGroup>
-              {tipificaciones.map((t) => (
+              {tipificaciones.map((tip) => (
                 <CommandItem
-                  key={t.id}
-                  value={t.nombre}
+                  key={tip.id}
+                  value={tip.nombre}
                   onSelect={() => {
-                    onChange(t.id);
+                    onChange(tip.id);
                     setOpen(false);
                   }}
                 >
-                  <Check className={cn(value === t.id ? "opacity-100" : "opacity-0")} />
-                  <span className="flex-1">{t.nombre}</span>
-                  {t.sugerida && (
+                  <Check className={cn(value === tip.id ? "opacity-100" : "opacity-0")} />
+                  <span className="flex-1">{tip.nombre}</span>
+                  {tip.sugerida && (
                     <Badge variant="info" className="shrink-0 gap-1">
                       <Sparkles className="size-2.5" />
-                      Sugerida
+                      {t("padMock.callControls.sugerida")}
                     </Badge>
                   )}
-                  <InfoHint>{t.descripcion}</InfoHint>
+                  <InfoHint>{tip.descripcion}</InfoHint>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -194,6 +196,7 @@ export function InteractionControls({
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
 }) {
+  const t = useT();
   const isMac = useIsMac();
   const [silenciado, setSilenciado] = useState(false);
   const [marcas, setMarcas] = useState<MarcaAgregada[]>([]);
@@ -209,7 +212,7 @@ export function InteractionControls({
   // de rol según "cortada".
   const [cortada, setCortada] = useState(false);
   const [tipSeleccionada, setTipSeleccionada] = useState(
-    tipificaciones.find((t) => t.sugerida)?.id ?? tipificaciones[0]?.id
+    tipificaciones.find((tip) => tip.sugerida)?.id ?? tipificaciones[0]?.id
   );
 
   function cerrarMarcar(next: boolean) {
@@ -300,7 +303,7 @@ export function InteractionControls({
         value={tipSeleccionada}
         onChange={setTipSeleccionada}
       />
-      <ActionTooltip label="Cómo se guarda una tipificación sugerida por el copiloto vs. una cargada a mano: abierto.">
+      <ActionTooltip label={t("padMock.callControls.ayudaSugerida")}>
         <span className="flex size-7 shrink-0 items-center justify-center text-muted-foreground">
           <HelpCircle className="size-4" />
         </span>
@@ -309,7 +312,7 @@ export function InteractionControls({
       {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
           <Pause className="size-2.5" />
-          Espera
+          {t("padMock.callControls.espera")}
         </Badge>
       )}
       {marcas.map((m, i) => {
@@ -337,7 +340,7 @@ export function InteractionControls({
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <ControlButton
           icon={enEspera ? Play : Pause}
-          label={enEspera ? "Retomar" : "Espera"}
+          label={enEspera ? t("padMock.callControls.retomar") : t("padMock.callControls.espera")}
           shortcutKey={SHORTCUTS.espera}
           isMac={isMac}
           tone={enEspera ? "active" : "neutral"}
@@ -347,7 +350,7 @@ export function InteractionControls({
         />
         <ControlButton
           icon={silenciado ? MicOff : Mic}
-          label={silenciado ? "Reactivar" : "Silenciar"}
+          label={silenciado ? t("padMock.callControls.reactivar") : t("padMock.callControls.silenciar")}
           shortcutKey={SHORTCUTS.silenciar}
           isMac={isMac}
           tone={silenciado ? "active" : "neutral"}
@@ -360,7 +363,7 @@ export function InteractionControls({
             <div>
               <ControlButton
                 icon={Grid3x3}
-                label="Teclado numérico"
+                label={t("padMock.callControls.tecladoNumerico")}
                 shortcutKey={SHORTCUTS.dialpad}
                 isMac={isMac}
                 tone="neutral"
@@ -371,10 +374,10 @@ export function InteractionControls({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-52 p-2">
             <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
-              Enviar tonos (DTMF)
+              {t("padMock.callControls.enviarTonos")}
             </p>
             <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
-              {digitosMarcados || <span className="text-muted-foreground">Sin dígitos</span>}
+              {digitosMarcados || <span className="text-muted-foreground">{t("padMock.callControls.sinDigitos")}</span>}
             </div>
             <div className="grid grid-cols-3 gap-1.5">
               {TECLAS_DIALPAD.map((tecla) => (
@@ -395,7 +398,7 @@ export function InteractionControls({
               className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
             >
               <Delete className="size-3.5" />
-              Borrar
+              {t("padMock.callControls.borrar")}
             </button>
           </PopoverContent>
         </Popover>
@@ -405,7 +408,7 @@ export function InteractionControls({
             <div>
               <ControlButton
                 icon={Bookmark}
-                label="Marcar"
+                label={t("padMock.callControls.marcar")}
                 shortcutKey={SHORTCUTS.marcar}
                 isMac={isMac}
                 tone="neutral"
@@ -418,9 +421,9 @@ export function InteractionControls({
             {/* Mismo patrón que TipificacionSelector: buscador + ítem con
                 ícono "i" de descripción — a pedido, también acá. */}
             <Command>
-              <CommandInput placeholder="Buscar marca…" />
+              <CommandInput placeholder={t("padMock.callControls.buscarMarca")} />
               <CommandList>
-                <CommandEmpty>Sin resultados.</CommandEmpty>
+                <CommandEmpty>{t("padMock.callControls.sinResultados")}</CommandEmpty>
                 <CommandGroup>
                   {marcasDisponibles.map((m) => (
                     <CommandItem
@@ -440,7 +443,7 @@ export function InteractionControls({
               <Textarea
                 value={comentarioMarca}
                 onChange={(e) => setComentarioMarca(e.target.value)}
-                placeholder="Agregar un comentario (opcional)…"
+                placeholder={t("padMock.callControls.comentarioPlaceholder")}
                 rows={2}
                 className="resize-none text-xs"
               />
@@ -450,7 +453,7 @@ export function InteractionControls({
                 disabled={!marcaSeleccionada}
                 onClick={agregarMarca}
               >
-                Agregar marca
+                {t("padMock.callControls.agregarMarca")}
               </Button>
             </div>
           </PopoverContent>
@@ -461,7 +464,7 @@ export function InteractionControls({
             <div>
               <ControlButton
                 icon={PhoneForwarded}
-                label="Transferir"
+                label={t("padMock.callControls.transferir")}
                 shortcutKey={SHORTCUTS.transferir}
                 isMac={isMac}
                 tone="neutral"
@@ -472,7 +475,7 @@ export function InteractionControls({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64 p-1.5">
             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
-              Transferir a…
+              {t("padMock.callControls.transferirA")}
             </p>
             {destinosTransferencia.map((d) => (
               <button
@@ -496,7 +499,7 @@ export function InteractionControls({
             (deshabilitado hasta que haya tipificación elegida). */}
         <ControlButton
           icon={cortada ? X : PhoneOff}
-          label={cortada ? "Cerrar interacción" : "Cortar"}
+          label={cortada ? t("padMock.callControls.cerrarInteraccion") : t("padMock.callControls.cortar")}
           shortcutKey={SHORTCUTS.cerrar}
           isMac={isMac}
           tone="destructive"

@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useT } from "@/lib/i18n";
 import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ export function HistorialDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   if (!entrada) return null;
   const Icon = CANAL_ICON[entrada.canal];
 
@@ -53,14 +55,14 @@ export function HistorialDetailDialog({
             <div className="rounded-lg bg-accent/50 p-3">
               <p className="mb-1 flex items-center gap-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
                 <Sparkles className="size-3 text-primary" />
-                Resumen (IA)
+                {t("padMock.historialDetalle.resumenIA")}
               </p>
               <p className="text-sm text-foreground/90">{entrada.resumenIA}</p>
             </div>
 
             <div>
               <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                Tipificación
+                {t("padMock.historialDetalle.tipificacion")}
               </p>
               <Badge variant="neutral" className="mb-1">
                 {entrada.tipificacion}
@@ -71,7 +73,7 @@ export function HistorialDetailDialog({
             {entrada.bookmarks.length > 0 && (
               <div>
                 <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-                  Bookmarks
+                  {t("padMock.historialDetalle.bookmarks")}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {entrada.bookmarks.map((b) => (
@@ -87,20 +89,24 @@ export function HistorialDetailDialog({
 
           <div className="flex max-h-[60vh] flex-col overflow-y-auto rounded-lg ring-1 ring-foreground/10">
             <p className="sticky top-0 border-b border-border bg-muted/60 px-3 py-1.5 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase backdrop-blur-sm">
-              {entrada.canal === "llamada" ? "Transcripción" : "Conversación"}
+              {entrada.canal === "llamada"
+                ? t("padMock.historialDetalle.transcripcion")
+                : t("padMock.historialDetalle.conversacion")}
             </p>
             <div className="flex flex-col gap-2 p-3">
-              {entrada.hilo.map((t, i) => (
+              {entrada.hilo.map((turno, i) => (
                 <p key={i} className="text-sm leading-relaxed">
                   <span
                     className={cn(
                       "font-semibold",
-                      t.autor === "agente" ? "text-primary" : "text-foreground"
+                      turno.autor === "agente" ? "text-primary" : "text-foreground"
                     )}
                   >
-                    {t.autor === "agente" ? "Agente: " : "Cliente: "}
+                    {turno.autor === "agente"
+                      ? t("padMock.historialDetalle.agentePrefijo")
+                      : t("padMock.historialDetalle.clientePrefijo")}
                   </span>
-                  {t.texto}
+                  {turno.texto}
                 </p>
               ))}
             </div>

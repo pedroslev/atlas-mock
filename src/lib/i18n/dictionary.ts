@@ -13,6 +13,7 @@ import { grupos } from "@/lib/i18n/dict/grupos";
 import { estados } from "@/lib/i18n/dict/estados";
 import { proyectos } from "@/lib/i18n/dict/proyectos";
 import { pad } from "@/lib/i18n/dict/pad";
+import { padMock } from "@/lib/i18n/dict/pad-mock";
 import { admin } from "@/lib/i18n/dict/admin";
 import { perfil } from "@/lib/i18n/dict/perfil";
 import { login } from "@/lib/i18n/dict/login";
@@ -34,6 +35,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   estados,
   proyectos,
   pad,
+  padMock,
   admin,
   perfil,
   login,

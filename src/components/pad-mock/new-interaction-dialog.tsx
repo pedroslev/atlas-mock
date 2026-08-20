@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useT } from "@/lib/i18n";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
 import type { CampaniaSaliente, CuentaSaliente } from "@/lib/pad-mock/data";
 
@@ -24,17 +25,16 @@ export function NewInteractionDialog({
   onOpenChange: (open: boolean) => void;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
 }) {
+  const t = useT();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PhoneCall className="size-4 text-muted-foreground" />
-            Nueva interacción
+            {t("padMock.newInteractionDialog.titulo")}
           </DialogTitle>
-          <DialogDescription>
-            Elegí la campaña y la cuenta por la que vas a contactar.
-          </DialogDescription>
+          <DialogDescription>{t("padMock.newInteractionDialog.descripcion")}</DialogDescription>
         </DialogHeader>
 
         <NuevaInteraccionForm

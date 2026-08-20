@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import type { PaginaExterna } from "@/lib/pad-mock/data";
 
@@ -17,6 +18,7 @@ export function QuickAccessOverlay({
   pagina: PaginaExterna;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border bg-card px-3">
@@ -25,7 +27,7 @@ export function QuickAccessOverlay({
           variant="ghost"
           size="icon-sm"
           className="ml-auto"
-          aria-label="Cerrar"
+          aria-label={t("padMock.quickAccess.cerrar")}
           onClick={onClose}
         >
           <X className="size-4" />

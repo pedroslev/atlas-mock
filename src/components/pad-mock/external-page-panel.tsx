@@ -1,6 +1,9 @@
+"use client";
+
 import { ExternalLink, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useT } from "@/lib/i18n";
 import type { PaginaExterna } from "@/lib/pad-mock/data";
 
 // Brief §4.2 — modo embebido ("frame"): el contenido vive en la solapa,
@@ -10,17 +13,18 @@ import type { PaginaExterna } from "@/lib/pad-mock/data";
 // CenterColumn y LeftNav las abren directo con window.open, sin quedar
 // seleccionadas.
 export function ExternalPagePanel({ pagina }: { pagina: PaginaExterna }) {
+  const t = useT();
   return (
     <div className="flex h-full flex-col gap-2 p-3">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <Badge variant="neutral" className="w-fit gap-1.5">
           <LayoutGrid className="size-3" />
-          Embebido · {pagina.nombre}
+          {t("padMock.externalPage.embebido")} · {pagina.nombre}
         </Badge>
         <Button asChild variant="outline" size="sm" className="gap-1.5">
           <a href={pagina.url} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="size-3.5" />
-            Abrir en otra pestaña
+            {t("padMock.externalPage.abrirPestana")}
           </a>
         </Button>
       </div>

@@ -9,6 +9,7 @@ import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
 import { paginasExternas, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
+import { useT } from "@/lib/i18n";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ export function CenterColumn({
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
 }) {
+  const t = useT();
   const isMac = useIsMac();
   const [tab, setTab] = useState("conversacion");
   const [startedAt] = useState(() => Date.now());
@@ -122,7 +124,7 @@ export function CenterColumn({
             className="sticky left-0 z-10 flex-none gap-1.5 bg-background!"
           >
             <Phone className="size-4" />
-            Llamada
+            {t("padMock.centerColumn.llamada")}
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",

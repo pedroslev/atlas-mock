@@ -5,6 +5,7 @@ import { CalendarClock, ChevronsLeft, ChevronsRight, ExternalLink, History, Layo
 import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { AgentStatusSelectorMock } from "@/components/pad-mock/agent-status-selector-mock";
 import { NewInteractionDialog } from "@/components/pad-mock/new-interaction-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
@@ -58,6 +59,7 @@ export function LeftNav({
   enEspera: boolean;
   holdStartedAt: number | null;
 }) {
+  const t = useT();
   const [colapsado, setColapsado] = useState(false);
   const [ancho, setAncho] = useState(ANCHO_INICIAL);
   const [nuevaInteraccionAbierta, setNuevaInteraccionAbierta] = useState(false);
@@ -89,7 +91,7 @@ export function LeftNav({
   if (colapsado) {
     return (
       <aside className="flex h-full w-12 shrink-0 flex-col items-center gap-2 border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground">
-        <Button variant="ghost" size="icon-sm" aria-label="Expandir menú" onClick={() => setColapsado(false)}>
+        <Button variant="ghost" size="icon-sm" aria-label={t("padMock.leftNav.expandirMenu")} onClick={() => setColapsado(false)}>
           <ChevronsRight className="size-4" />
         </Button>
 
@@ -139,8 +141,8 @@ export function LeftNav({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Mi turno"
-            title="Mi turno"
+            aria-label={t("padMock.leftNav.miTurno")}
+            title={t("padMock.leftNav.miTurno")}
             onClick={() => onModo("estadisticas")}
             className={cn(modo === "estadisticas" && "bg-sidebar-accent text-sidebar-accent-foreground")}
           >
@@ -149,8 +151,8 @@ export function LeftNav({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Historial"
-            title="Historial"
+            aria-label={t("padMock.leftNav.historial")}
+            title={t("padMock.leftNav.historial")}
             onClick={() => onModo("historial")}
             className={cn(modo === "historial" && "bg-sidebar-accent text-sidebar-accent-foreground")}
           >
@@ -171,8 +173,8 @@ export function LeftNav({
       <ResizeHandle side="right" onResize={(d) => setAncho((w) => Math.min(ANCHO_MAX, Math.max(ANCHO_MIN, w + d)))} />
 
       <div className="flex items-center justify-between">
-        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Mi estado</span>
-        <Button variant="ghost" size="icon-sm" aria-label="Contraer menú" onClick={() => setColapsado(true)}>
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.miEstado")}</span>
+        <Button variant="ghost" size="icon-sm" aria-label={t("padMock.leftNav.contraerMenu")} onClick={() => setColapsado(true)}>
           <ChevronsLeft className="size-3.5" />
         </Button>
       </div>
@@ -188,11 +190,11 @@ export function LeftNav({
           espera (ámbar) en vez del tiempo de cola original. */}
       <div className="flex min-h-0 flex-1 flex-col gap-1">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[0.65rem] font-medium text-muted-foreground">Interacciones en curso</span>
+          <span className="text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.interaccionesEnCurso")}</span>
           <button
             type="button"
-            aria-label="Iniciar nueva interacción"
-            title="Iniciar nueva interacción"
+            aria-label={t("padMock.leftNav.iniciarInteraccion")}
+            title={t("padMock.leftNav.iniciarInteraccion")}
             onClick={() => setNuevaInteraccionAbierta(true)}
             className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
@@ -201,7 +203,7 @@ export function LeftNav({
         </div>
         <div className="flex flex-col gap-0.5 overflow-y-auto">
           {cola.length === 0 && (
-            <p className="px-1.5 py-1 text-xs text-muted-foreground italic">Sin interacciones en curso.</p>
+            <p className="px-1.5 py-1 text-xs text-muted-foreground italic">{t("padMock.leftNav.sinInteracciones")}</p>
           )}
           {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
@@ -252,7 +254,7 @@ export function LeftNav({
           queda atrás de scroll (max-h calculado para 3 filas de 28px + 2
           gaps de 2px). */}
       <div className="flex shrink-0 flex-col gap-1 border-t border-sidebar-border pt-2">
-        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">Accesos rápidos</span>
+        <span className="px-1 text-[0.65rem] font-medium text-muted-foreground">{t("padMock.leftNav.accesosRapidos")}</span>
         <div className="flex max-h-[5.5rem] flex-col gap-0.5 overflow-y-auto">
           {accesosRapidosMock.map((a) => (
             <button
@@ -294,7 +296,7 @@ export function LeftNav({
           )}
         >
           <CalendarClock className="size-4 shrink-0" />
-          Mi turno
+          {t("padMock.leftNav.miTurno")}
         </button>
         <button
           type="button"
@@ -308,7 +310,7 @@ export function LeftNav({
           )}
         >
           <History className="size-4 shrink-0" />
-          Historial
+          {t("padMock.leftNav.historial")}
         </button>
       </div>
 
