@@ -125,7 +125,7 @@ export const campanias: NamespaceDict = {
     "tab.visualizacion": "Visualización",
     "tab.grabacion": "Grabación",
     "tab.configOperativa": "Config. operativa",
-    "tab.urlInteraccion": "URL por interacción",
+    "tab.urlInteraccion": "URLs externas",
 
     "parametros.controlesAgenteTitulo": "Controles del agente",
     "parametros.controlesAgenteDesc":
@@ -139,7 +139,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowAddBookmark": "Permitir agregar bookmark",
     "parametros.allowAddBookmarkDesc":
       "Permite agregar un bookmark durante la llamada.",
-    "parametros.allowAddBookmarkAlcance": "Transversal",
+    "parametros.allowAddBookmarkAlcance": "Omnicanal",
     "parametros.allowMute": "Permitir silenciar (mute)",
     "parametros.allowMuteDesc":
       "Permite usar el botón de silenciar (mute) durante la llamada.",
@@ -147,7 +147,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowClassification": "Permitir tipificar",
     "parametros.allowClassificationDesc":
       "Permite que el agente cargue un resultado de gestión en la interacción.",
-    "parametros.allowClassificationAlcance": "Transversal",
+    "parametros.allowClassificationAlcance": "Omnicanal",
     "parametros.forceClassification": "Obligar tipificación",
     "parametros.forceClassificationDesc":
       "Obliga a cargar un resultado de gestión antes de salir del ACW.",
@@ -164,7 +164,7 @@ export const campanias: NamespaceDict = {
     "parametros.recordHold": "Grabar audio en hold",
     "parametros.recordHoldDesc":
       "Graba el audio del agente durante el hold de la llamada.",
-    "parametros.recordHoldAlcance": "Transversal",
+    "parametros.recordHoldAlcance": "Omnicanal",
     "parametros.recordHoldDependeHold":
       "Deshabilitado porque esta campaña no permite poner interacciones en espera (Controles del agente → Permitir espera).",
 
@@ -174,22 +174,27 @@ export const campanias: NamespaceDict = {
     "parametros.forcedAnswerDesc":
       "Permite que la llamada sea atendida automáticamente sin intervención del agente.",
     "parametros.forcedAnswerAlcance": "Inbound, Discador Predictivo",
-    "parametros.historyLookbackNota":
-      "El historial de interacciones del cliente (días hacia atrás que busca) se configura por grupo de trabajo, no por campaña — no aparece acá.",
 
-    "parametros.urlInteraccionTitulo": "Apertura de URL por interacción",
+    "parametros.urlInteraccionTitulo": "URLs externas",
     "parametros.urlInteraccionDesc":
-      "Si al caer una interacción en esta campaña se abre automáticamente una URL, y cuándo. El botón para abrirla a mano siempre está disponible, salvo que el modo sea “Nunca”.",
+      "Configurá una o más URLs externas para esta campaña. Cada una tiene su propia URL, si se abre embebida dentro de Hermes o en una pestaña nueva del navegador, y en qué momento: al inicio de la interacción, al finalizar, o de forma manual (nunca sola — el agente la abre cuando quiere desde un botón).",
+    "parametros.urlInteraccionNota":
+      "Abierto: si hay más de una URL en modo “Al inicio” o “Al finalizar” para la misma interacción, todavía no está definido si se abren todas juntas o hay algún orden entre ellas.",
+    "parametros.agregarUrl": "Agregar URL",
+    "parametros.eliminarUrl": "Eliminar URL",
+    "parametros.sinUrls": "Todavía no hay URLs externas configuradas para esta campaña.",
+    "parametros.urlNombre": "Nombre",
+    "parametros.urlNombrePlaceholder": "Ej: Ficha del cliente",
     "parametros.url": "URL",
     "parametros.urlPlaceholder": "https://…",
     "parametros.urlAyuda": "Admite variables como {{userid}} o {{iditeraccion}} (a definir).",
     "parametros.openAs": "Modo de apertura",
-    "parametros.openAsFrame": "Iframe dentro de Hermes",
+    "parametros.openAsFrame": "Dentro de Hermes",
     "parametros.openAsBlank": "Pestaña nueva",
     "parametros.momento": "Momento de apertura",
     "parametros.modeStart": "Al inicio de la interacción",
     "parametros.modeEnd": "Al finalizar la interacción",
-    "parametros.modeNone": "Nunca (solo manual)",
+    "parametros.modeManual": "Manual",
   },
   en: {
     // Listado

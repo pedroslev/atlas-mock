@@ -74,9 +74,18 @@ export type AgentOperationSettingsParams = {
   forcedAnswer: boolean;
 };
 
+// A pedido: ya no es una URL única — se van agregando de a una, sin
+// máximo, y cada una configura su propio modo de apertura y momento. Cada
+// entrada lleva "nombre" (no está en el documento original, lo sumamos acá
+// para poder identificarlas en la lista — a definir si conviene o no).
 export type InteractionUrlOpenAs = "frame" | "blank";
-export type InteractionUrlMode = "start" | "end" | "none";
-export type InteractionUrlSettingsParams = {
+// "manual": no se abre sola nunca, el agente la abre a mano cuando quiere —
+// renombrado de "none"/"Nunca" (sonaba negativo) a algo que describe lo que
+// SÍ pasa.
+export type InteractionUrlMode = "start" | "end" | "manual";
+export type InteractionUrlEntry = {
+  id: string;
+  nombre: string;
   url: string;
   openAs: InteractionUrlOpenAs;
   mode: InteractionUrlMode;
@@ -87,7 +96,7 @@ export type CampaniaParametros = {
   displaySettings: DisplaySettingsParams;
   recordingSettings: RecordingSettingsParams;
   agentOperationSettings: AgentOperationSettingsParams;
-  interactionUrlSettings: InteractionUrlSettingsParams;
+  interactionUrlSettings: InteractionUrlEntry[];
 };
 
 // Valores por defecto — columna "Valor default" del documento. Función (no
@@ -112,11 +121,7 @@ export function defaultParametros(): CampaniaParametros {
     agentOperationSettings: {
       forcedAnswer: true,
     },
-    interactionUrlSettings: {
-      url: "",
-      openAs: "frame",
-      mode: "none",
-    },
+    interactionUrlSettings: [],
   };
 }
 
@@ -334,11 +339,15 @@ export const campanias: Campania[] = [
     parametros: {
       ...defaultParametros(),
       agentControls: { ...defaultParametros().agentControls, forceClassification: true },
-      interactionUrlSettings: {
-        url: "https://olimpo.bancosur.com/ficha-cliente?dni={{userid}}&interaccion={{iditeraccion}}",
-        openAs: "frame",
-        mode: "start",
-      },
+      interactionUrlSettings: [
+        {
+          id: "url-camp1-1",
+          nombre: "Ficha del cliente",
+          url: "https://olimpo.bancosur.com/ficha-cliente?dni={{userid}}&interaccion={{iditeraccion}}",
+          openAs: "frame",
+          mode: "start",
+        },
+      ],
     },
   },
   {
@@ -374,11 +383,15 @@ export const campanias: Campania[] = [
     parametros: {
       ...defaultParametros(),
       displaySettings: { allowRinging: false },
-      interactionUrlSettings: {
-        url: "https://olimpo.bancosur.com/tickets?cliente={{userid}}",
-        openAs: "blank",
-        mode: "start",
-      },
+      interactionUrlSettings: [
+        {
+          id: "url-camp4-1",
+          nombre: "Ticket relacionado",
+          url: "https://olimpo.bancosur.com/tickets?cliente={{userid}}",
+          openAs: "blank",
+          mode: "start",
+        },
+      ],
     },
   },
   {

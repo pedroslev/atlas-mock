@@ -1,9 +1,11 @@
 "use client";
 
+import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,7 +25,7 @@ import type {
   AgentControlsParams,
   AgentOperationSettingsParams,
   DisplaySettingsParams,
-  InteractionUrlSettingsParams,
+  InteractionUrlEntry,
   RecordingSettingsParams,
 } from "@/lib/mock-data";
 
@@ -220,85 +222,147 @@ export function ConfigOperativaTab({
         <CardTitle>{t("campanias.parametros.configOperativaTitulo")}</CardTitle>
         <CardDescription>{t("campanias.parametros.configOperativaDesc")}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <ToggleRow
-            id="forced-answer"
-            label={t("campanias.parametros.forcedAnswer")}
-            description={t("campanias.parametros.forcedAnswerDesc")}
-            alcance={t("campanias.parametros.forcedAnswerAlcance")}
-            checked={value.forcedAnswer}
-            onCheckedChange={(v) => onChange({ forcedAnswer: v })}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground italic">
-          {t("campanias.parametros.historyLookbackNota")}
-        </p>
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        <ToggleRow
+          id="forced-answer"
+          label={t("campanias.parametros.forcedAnswer")}
+          description={t("campanias.parametros.forcedAnswerDesc")}
+          alcance={t("campanias.parametros.forcedAnswerAlcance")}
+          checked={value.forcedAnswer}
+          onCheckedChange={(v) => onChange({ forcedAnswer: v })}
+        />
       </CardContent>
     </Card>
   );
 }
 
-export function UrlInteraccionTab({
+function nuevaUrlExterna(): InteractionUrlEntry {
+  return {
+    id: `url-${crypto.randomUUID()}`,
+    nombre: "",
+    url: "",
+    openAs: "frame",
+    mode: "manual",
+  };
+}
+
+// A pedido: ya no es una URL única — se van agregando de a una, sin
+// máximo, y cada una configura su propio modo de apertura y momento.
+export function UrlsExternasTab({
   value,
   onChange,
 }: {
-  value: InteractionUrlSettingsParams;
-  onChange: (v: InteractionUrlSettingsParams) => void;
+  value: InteractionUrlEntry[];
+  onChange: (v: InteractionUrlEntry[]) => void;
 }) {
   const t = useT();
+
+  function actualizar(id: string, patch: Partial<InteractionUrlEntry>) {
+    onChange(value.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+  }
+
+  function eliminar(id: string) {
+    onChange(value.filter((entry) => entry.id !== id));
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("campanias.parametros.urlInteraccionTitulo")}</CardTitle>
         <CardDescription>{t("campanias.parametros.urlInteraccionDesc")}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="interaction-url">{t("campanias.parametros.url")}</Label>
-          <Input
-            id="interaction-url"
-            value={value.url}
-            onChange={(e) => onChange({ ...value, url: e.target.value })}
-            placeholder={t("campanias.parametros.urlPlaceholder")}
-          />
-          <p className="text-xs text-muted-foreground">{t("campanias.parametros.urlAyuda")}</p>
-        </div>
+      <CardContent className="flex flex-col gap-3">
+        {value.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("campanias.parametros.sinUrls")}</p>
+        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="interaction-url-open-as">{t("campanias.parametros.openAs")}</Label>
-            <Select
-              value={value.openAs}
-              onValueChange={(v) => onChange({ ...value, openAs: v as InteractionUrlSettingsParams["openAs"] })}
-            >
-              <SelectTrigger id="interaction-url-open-as" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="frame">{t("campanias.parametros.openAsFrame")}</SelectItem>
-                <SelectItem value="blank">{t("campanias.parametros.openAsBlank")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {value.map((entry) => (
+          <div key={entry.id} className="flex flex-col gap-3 rounded-lg p-3 ring-1 ring-foreground/10">
+            <div className="flex items-start gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Label htmlFor={`url-nombre-${entry.id}`}>{t("campanias.parametros.urlNombre")}</Label>
+                <Input
+                  id={`url-nombre-${entry.id}`}
+                  value={entry.nombre}
+                  onChange={(e) => actualizar(entry.id, { nombre: e.target.value })}
+                  placeholder={t("campanias.parametros.urlNombrePlaceholder")}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={t("campanias.parametros.eliminarUrl")}
+                className="mt-6 shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => eliminar(entry.id)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="interaction-url-mode">{t("campanias.parametros.momento")}</Label>
-            <Select
-              value={value.mode}
-              onValueChange={(v) => onChange({ ...value, mode: v as InteractionUrlSettingsParams["mode"] })}
-            >
-              <SelectTrigger id="interaction-url-mode" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="start">{t("campanias.parametros.modeStart")}</SelectItem>
-                <SelectItem value="end">{t("campanias.parametros.modeEnd")}</SelectItem>
-                <SelectItem value="none">{t("campanias.parametros.modeNone")}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`url-${entry.id}`}>{t("campanias.parametros.url")}</Label>
+              <Input
+                id={`url-${entry.id}`}
+                value={entry.url}
+                onChange={(e) => actualizar(entry.id, { url: e.target.value })}
+                placeholder={t("campanias.parametros.urlPlaceholder")}
+              />
+              <p className="text-xs text-muted-foreground">{t("campanias.parametros.urlAyuda")}</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`url-open-as-${entry.id}`}>{t("campanias.parametros.openAs")}</Label>
+                <Select
+                  value={entry.openAs}
+                  onValueChange={(v) =>
+                    actualizar(entry.id, { openAs: v as InteractionUrlEntry["openAs"] })
+                  }
+                >
+                  <SelectTrigger id={`url-open-as-${entry.id}`} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="frame">{t("campanias.parametros.openAsFrame")}</SelectItem>
+                    <SelectItem value="blank">{t("campanias.parametros.openAsBlank")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`url-mode-${entry.id}`}>{t("campanias.parametros.momento")}</Label>
+                <Select
+                  value={entry.mode}
+                  onValueChange={(v) => actualizar(entry.id, { mode: v as InteractionUrlEntry["mode"] })}
+                >
+                  <SelectTrigger id={`url-mode-${entry.id}`} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="start">{t("campanias.parametros.modeStart")}</SelectItem>
+                    <SelectItem value="end">{t("campanias.parametros.modeEnd")}</SelectItem>
+                    <SelectItem value="manual">{t("campanias.parametros.modeManual")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-fit gap-1.5"
+          onClick={() => onChange([...value, nuevaUrlExterna()])}
+        >
+          <Plus />
+          {t("campanias.parametros.agregarUrl")}
+        </Button>
+
+        <p className="text-xs text-muted-foreground italic">
+          {t("campanias.parametros.urlInteraccionNota")}
+        </p>
       </CardContent>
     </Card>
   );

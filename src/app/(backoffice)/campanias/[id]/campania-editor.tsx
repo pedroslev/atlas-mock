@@ -59,7 +59,7 @@ import {
   VisualizacionTab,
   GrabacionTab,
   ConfigOperativaTab,
-  UrlInteraccionTab,
+  UrlsExternasTab,
 } from "../campania-parametros";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
@@ -219,7 +219,7 @@ export function CampaniaEditor({
       </TabsContent>
 
       <TabsContent value="url-interaccion">
-        <UrlInteraccionTab
+        <UrlsExternasTab
           value={parametros.interactionUrlSettings}
           onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
         />
