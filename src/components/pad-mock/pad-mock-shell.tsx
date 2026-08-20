@@ -98,6 +98,27 @@ export function PadMockShell() {
     [seleccionarInteraccion]
   );
 
+  // "Cerrar interacción" (segundo paso del botón, ver call-controls.tsx —
+  // solo se llega acá con tipificación ya cargada): saca la fila de la
+  // cola y, si era la activa, pasa a la próxima que quede o vuelve al
+  // estado "sin interacciones" (SinInteraccionPanel) si no queda ninguna.
+  const cerrarInteraccion = useCallback(
+    (id: string) => {
+      setCola((cur) => cur.filter((f) => f.id !== id));
+      if (interaccionActivaId !== id) return;
+      const siguiente = cola.find((f) => f.id !== id);
+      if (siguiente) {
+        seleccionarInteraccion(siguiente.id, siguiente.datasetId);
+      } else {
+        setInteraccionActivaId(null);
+        setDatasetId(null);
+        setEnEspera(false);
+        setHoldStartedAt(null);
+      }
+    },
+    [cola, interaccionActivaId, seleccionarInteraccion]
+  );
+
   const toggleEspera = useCallback(() => {
     setEnEspera((prev) => {
       const next = !prev;
@@ -201,6 +222,7 @@ export function PadMockShell() {
                 enEspera={enEspera}
                 holdStartedAt={holdStartedAt}
                 onToggleEspera={toggleEspera}
+                onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
               />
               <ContextColumn
                 key={`contexto-${interaccionActivaId}`}

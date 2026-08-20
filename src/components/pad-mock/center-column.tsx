@@ -37,12 +37,14 @@ export function CenterColumn({
   enEspera,
   holdStartedAt,
   onToggleEspera,
+  onCerrarInteraccion,
 }: {
   variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   holdStartedAt: number | null;
   onToggleEspera: () => void;
+  onCerrarInteraccion: () => void;
 }) {
   const isMac = useIsMac();
   const [tab, setTab] = useState("conversacion");
@@ -178,6 +180,7 @@ export function CenterColumn({
         tipificaciones={tipificaciones}
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}
+        onCerrarInteraccion={onCerrarInteraccion}
       />
     </div>
   );

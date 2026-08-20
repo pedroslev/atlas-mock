@@ -18,6 +18,7 @@ import {
   Tag,
   Grid3x3,
   Delete,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,6 +74,7 @@ function ControlButton({
   tone,
   onClick,
   pressed,
+  disabled,
 }: {
   icon: LucideIcon;
   label: string;
@@ -81,17 +83,19 @@ function ControlButton({
   tone: ActionTone;
   onClick?: () => void;
   pressed?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <ActionTooltip label={label} shortcut={[isMac ? "⌘" : "Ctrl", shortcutKey]}>
       <button
         type="button"
         onClick={onClick}
+        disabled={disabled}
         aria-label={label}
         aria-keyshortcuts={`${isMac ? "Meta" : "Control"}+${shortcutKey}`}
         aria-pressed={pressed}
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40",
           TONE_CLASS[tone]
         )}
       >
@@ -185,11 +189,13 @@ export function InteractionControls({
   tipificaciones,
   enEspera,
   onToggleEspera,
+  onCerrarInteraccion,
 }: {
   variant: "llamada" | "chat";
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   onToggleEspera: () => void;
+  onCerrarInteraccion: () => void;
 }) {
   const isMac = useIsMac();
   const [silenciado, setSilenciado] = useState(false);
@@ -201,6 +207,10 @@ export function InteractionControls({
   const [transferirAbierto, setTransferirAbierto] = useState(false);
   const [dialpadAbierto, setDialpadAbierto] = useState(false);
   const [digitosMarcados, setDigitosMarcados] = useState("");
+  // Flujo a pedido: Corto (o Finalizo, en chat) → tipifico → recién ahí se
+  // habilita Cerrar interacción. El botón de la derecha es el mismo, cambia
+  // de rol según "cortada".
+  const [cortada, setCortada] = useState(false);
   const [tipSeleccionada, setTipSeleccionada] = useState(
     tipificaciones.find((t) => t.sugerida)?.id ?? tipificaciones[0]?.id
   );
@@ -241,40 +251,51 @@ export function InteractionControls({
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
           // El chat no tiene Hold — a pedido, ese control (y su atajo) es
-          // exclusivo de llamada.
-          if (variant === "llamada") {
+          // exclusivo de llamada. Ninguno de estos aplica una vez cortada.
+          if (variant === "llamada" && !cortada) {
             e.preventDefault();
             onToggleEspera();
           }
           break;
         case SHORTCUTS.silenciar.toLowerCase():
-          if (variant === "llamada") {
+          if (variant === "llamada" && !cortada) {
             e.preventDefault();
             setSilenciado((v) => !v);
           }
           break;
         case SHORTCUTS.marcar.toLowerCase():
-          e.preventDefault();
-          setMarcarAbierto(true);
+          if (!cortada) {
+            e.preventDefault();
+            setMarcarAbierto(true);
+          }
           break;
         case SHORTCUTS.transferir.toLowerCase():
-          e.preventDefault();
-          setTransferirAbierto(true);
+          if (!cortada) {
+            e.preventDefault();
+            setTransferirAbierto(true);
+          }
           break;
         case SHORTCUTS.dialpad.toLowerCase():
-          if (variant === "llamada") {
+          if (variant === "llamada" && !cortada) {
             e.preventDefault();
             setDialpadAbierto(true);
           }
           break;
         case SHORTCUTS.cerrar.toLowerCase():
           e.preventDefault();
+          // Primer paso: cortar/finalizar. Segundo paso: recién con
+          // tipificación elegida, cerrar de verdad la interacción.
+          if (!cortada) {
+            setCortada(true);
+          } else if (tipSeleccionada) {
+            onCerrarInteraccion();
+          }
           break;
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [variant, onToggleEspera]);
+  }, [variant, cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion]);
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
@@ -327,6 +348,7 @@ export function InteractionControls({
             isMac={isMac}
             tone={enEspera ? "active" : "neutral"}
             pressed={enEspera}
+            disabled={cortada}
             onClick={onToggleEspera}
           />
         )}
@@ -338,6 +360,7 @@ export function InteractionControls({
             isMac={isMac}
             tone={silenciado ? "active" : "neutral"}
             pressed={silenciado}
+            disabled={cortada}
             onClick={() => setSilenciado((v) => !v)}
           />
         )}
@@ -351,6 +374,7 @@ export function InteractionControls({
                   shortcutKey={SHORTCUTS.dialpad}
                   isMac={isMac}
                   tone="neutral"
+                  disabled={cortada}
                   onClick={() => setDialpadAbierto(true)}
                 />
               </div>
@@ -396,6 +420,7 @@ export function InteractionControls({
                 shortcutKey={SHORTCUTS.marcar}
                 isMac={isMac}
                 tone="neutral"
+                disabled={cortada}
                 onClick={() => setMarcarAbierto(true)}
               />
             </div>
@@ -451,6 +476,7 @@ export function InteractionControls({
                 shortcutKey={SHORTCUTS.transferir}
                 isMac={isMac}
                 tone="neutral"
+                disabled={cortada}
                 onClick={() => setTransferirAbierto(true)}
               />
             </div>
@@ -476,13 +502,23 @@ export function InteractionControls({
           </PopoverContent>
         </Popover>
 
+        {/* Flujo de dos pasos a pedido: primero cortar/finalizar, después
+            tipificar, y recién ahí el mismo botón cierra la interacción de
+            verdad (deshabilitado hasta que haya tipificación elegida). */}
         <ControlButton
-          icon={variant === "llamada" ? PhoneOff : CircleX}
-          label="Cerrar interacción"
+          icon={cortada ? X : variant === "llamada" ? PhoneOff : CircleX}
+          label={cortada ? "Cerrar interacción" : variant === "llamada" ? "Cortar" : "Finalizar chat"}
           shortcutKey={SHORTCUTS.cerrar}
           isMac={isMac}
           tone="destructive"
-          onClick={() => {}}
+          disabled={cortada && !tipSeleccionada}
+          onClick={() => {
+            if (!cortada) {
+              setCortada(true);
+              return;
+            }
+            if (tipSeleccionada) onCerrarInteraccion();
+          }}
         />
       </div>
     </div>
