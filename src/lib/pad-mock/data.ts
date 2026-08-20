@@ -79,10 +79,17 @@ export const campaniasSalientesMock: CampaniaSaliente[] = [
 // tenant, misma convención de nombres que Olimpo).
 export type CampaniaAgente = { id: string; nombre: string; canales: CanalMock[]; horario: string };
 
+// 8 campañas de ejemplo (a pedido, para ver cómo queda el grid de la
+// sección "Campañas" de InicioPanel con más de 3 asignadas).
 export const campaniasAgenteMock: CampaniaAgente[] = [
   { id: "camp-1", nombre: "Cobranzas Activa PCP", canales: ["llamada", "whatsapp"], horario: "09:00 – 18:00" },
   { id: "camp-4", nombre: "Soporte técnico Nivel 1", canales: ["whatsapp"], horario: "09:00 – 18:00" },
   { id: "camp-6", nombre: "Lanzamiento Tarjeta Plus", canales: ["llamada", "sms"], horario: "13:00 – 18:00" },
+  { id: "camp-7", nombre: "Renovación de Seguros", canales: ["llamada"], horario: "09:00 – 17:00" },
+  { id: "camp-8", nombre: "Encuesta de Satisfacción", canales: ["sms", "whatsapp"], horario: "10:00 – 16:00" },
+  { id: "camp-9", nombre: "Recupero Mora Temprana", canales: ["llamada", "whatsapp"], horario: "09:00 – 18:00" },
+  { id: "camp-10", nombre: "Onboarding Cuenta Sueldo", canales: ["mail", "whatsapp"], horario: "09:00 – 18:00" },
+  { id: "camp-11", nombre: "Venta Cruzada Tarjetas", canales: ["llamada"], horario: "11:00 – 19:00" },
 ];
 
 // A pedido, la cola YA NO arranca precargada: nace vacía en
