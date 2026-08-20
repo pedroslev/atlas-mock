@@ -106,12 +106,15 @@ export type FilaCola = {
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
-// A pedido, se sacaron mail/segmento/antigüedad — la sección Cliente del
-// contexto queda solo con N° cliente, nombre y teléfono.
+// A pedido, se sacaron mail/segmento/antigüedad, y ahora también N° cliente
+// y nombre de lo que se MUESTRA en la sección Cliente del contexto (queda
+// solo teléfono y campaña) — numeroCliente se mantiene en el dato porque
+// pad-mock-shell.tsx lo sigue usando como clave para buscar el historial de
+// contacto en historialPorCliente.
 export const clienteMock = {
   numeroCliente: "3345789",
-  nombre: "Valentina Ibarra",
   telefono: "+54 11 4589-2231",
+  campania: "Cobranzas Activa PCP",
 };
 
 // Controles de llamada — Marcar (bookmarks de calidad).

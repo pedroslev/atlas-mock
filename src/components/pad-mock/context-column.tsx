@@ -19,9 +19,8 @@ import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-di
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 
 type ClienteMock = {
-  numeroCliente: string;
-  nombre: string;
   telefono: string;
+  campania: string;
 };
 
 // Tipificación se mudó a la barra de controles de la interacción (siempre
@@ -214,16 +213,12 @@ export function ContextColumn({
         >
           <dl className="flex flex-col gap-1.5 text-xs">
             <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.numeroCliente")}</dt>
-              <dd className="font-medium tabular-nums">{cliente.numeroCliente}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.nombre")}</dt>
-              <dd className="text-right font-medium">{cliente.nombre}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
               <dd className="text-right tabular-nums">{cliente.telefono}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">{t("padMock.contextColumn.campania")}</dt>
+              <dd className="text-right font-medium">{cliente.campania}</dd>
             </div>
           </dl>
         </Seccion>

@@ -58,9 +58,8 @@ export const padMock: NamespaceDict = {
     "contextColumn.expandirContexto": "Expandir contexto",
     "contextColumn.contexto": "Contexto",
     "contextColumn.colapsarContexto": "Colapsar contexto",
-    "contextColumn.numeroCliente": "N° cliente",
-    "contextColumn.nombre": "Nombre",
     "contextColumn.telefono": "Teléfono",
+    "contextColumn.campania": "Campaña",
     "contextColumn.verMas": "Ver {n} más",
     "contextColumn.verMasDetalle": "Ver más",
 

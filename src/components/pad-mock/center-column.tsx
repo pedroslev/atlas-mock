@@ -109,7 +109,7 @@ export function CenterColumn({
           variant="line"
           className={cn(
             ALTO_CABECERA_COLUMNA,
-            "w-full shrink-0 justify-start overflow-x-auto overflow-y-hidden border-b border-border px-2"
+            "w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden border-b border-border px-3"
           )}
         >
           {/* flex-none: la base de TabsTrigger trae flex-1 (pensada para
@@ -118,16 +118,19 @@ export function CenterColumn({
               estiraba y el contenido quedaba centrado a mitad del sobrante.
               bg-background! (con !important): sin forzarlo, pierde contra
               las variantes data-active/dark de TabsTrigger y se veían las
-              solapas de atrás pasando por detrás del texto al hacer scroll. */}
+              solapas de atrás pasando por detrás del texto al hacer scroll.
+              A pedido, esta barra (y las páginas externas de abajo) se
+              agrandaron: texto/íconos más grandes y más padding, además del
+              alto ya crecido en ALTO_CABECERA_COLUMNA. */}
           <TabsTrigger
             value="conversacion"
-            className="sticky left-0 z-10 flex-none gap-1.5 bg-background!"
+            className="sticky left-0 z-10 flex-none gap-2 bg-background! px-4 py-2 text-base"
           >
-            <Phone className="size-4" />
+            <Phone className="size-5" />
             {t("padMock.centerColumn.llamada")}
             <span
               className={cn(
-                "font-mono text-sm font-bold tabular-nums",
+                "font-mono text-base font-bold tabular-nums",
                 enEspera ? "text-warning" : "text-foreground"
               )}
             >
@@ -145,18 +148,18 @@ export function CenterColumn({
                 key={p.id}
                 type="button"
                 onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
-                className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                className="relative inline-flex h-[calc(100%-1px)] flex-none items-center justify-center gap-2 rounded-md border border-transparent px-4 py-2 text-base font-medium whitespace-nowrap text-foreground/60 transition-all hover:bg-muted/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
               >
-                <ICONO_PAGINA_EXTERNA className="size-4" />
+                <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
-                <ExternalLink className="size-3 text-muted-foreground" />
+                <ExternalLink className="size-3.5 text-muted-foreground" />
                 <Kbd className="ml-1">
                   {shortcutMod} {i + 2}
                 </Kbd>
               </button>
             ) : (
-              <TabsTrigger key={p.id} value={p.id} className="flex-none gap-1.5">
-                <ICONO_PAGINA_EXTERNA className="size-4" />
+              <TabsTrigger key={p.id} value={p.id} className="flex-none gap-2 px-4 py-2 text-base">
+                <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
                 <Kbd className="ml-1">
                   {shortcutMod} {i + 2}
