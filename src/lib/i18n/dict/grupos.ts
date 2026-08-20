@@ -56,7 +56,6 @@ export const grupos: NamespaceDict = {
     // ES por ahora, mismo criterio que en campanias.ts: el resto de los
     // idiomas cae al fallback en español hasta cerrar el contenido.
     "tab.general": "General",
-    "tab.usuarios": "Usuarios",
     "tab.permisos": "Permisos",
     "tab.configHermes": "Config. Hermes",
 

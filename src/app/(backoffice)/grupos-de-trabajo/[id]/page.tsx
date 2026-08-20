@@ -50,16 +50,14 @@ export default async function EditarGrupoTrabajoPage({
         }
       />
 
-      {/* A pedido: mismas secciones que Campañas — General, Usuarios,
-          Permisos y Config. Hermes (estados auxiliares + accesos rápidos,
-          que antes vivían sueltos en esta página). */}
+      {/* A pedido: mismas secciones que Campañas, salvo General + Usuarios
+          que van juntas acá — la info general de un grupo es liviana
+          (nombre y descripción nomás, a diferencia de Campañas) así que no
+          justifica solapa propia; queda al lado de sus usuarios. */}
       <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">
             <T k="grupos.tab.general" />
-          </TabsTrigger>
-          <TabsTrigger value="usuarios">
-            <T k="grupos.tab.usuarios" />
           </TabsTrigger>
           <TabsTrigger value="permisos">
             <T k="grupos.tab.permisos" />
@@ -69,8 +67,8 @@ export default async function EditarGrupoTrabajoPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general">
-          <Card className="max-w-2xl">
+        <TabsContent value="general" className="grid gap-6 lg:grid-cols-2">
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>
                 <T k="grupos.infoGeneral" />
@@ -91,10 +89,10 @@ export default async function EditarGrupoTrabajoPage({
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="usuarios">
-          <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
+          <div className="min-w-0">
+            <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
+          </div>
         </TabsContent>
 
         <TabsContent value="permisos">
