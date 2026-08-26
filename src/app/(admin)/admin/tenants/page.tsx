@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
@@ -12,12 +13,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   organizations as organizacionesIniciales,
   regionBadgeVariant,
   getRegion,
   countTenantContacts,
   type Organization,
 } from "@/lib/mock-admin";
+import { getCountry } from "@/lib/countries";
 import { useT } from "@/lib/i18n";
 
 // Listado de tenants (organizations de la base Global) — ABM núcleo de Fase 0.
@@ -25,7 +35,10 @@ import { useT } from "@/lib/i18n";
 // fronted/README.md §3). Estado local, sin persistencia (PRODUCT.md).
 export default function TenantsPage() {
   const t = useT();
+  const router = useRouter();
   const [orgs, setOrgs] = useState<Organization[]>(organizacionesIniciales);
+  const [impersonando, setImpersonando] = useState<Organization | null>(null);
+  const [observando, setObservando] = useState<Organization | null>(null);
 
   const columns = useMemo<MRT_ColumnDef<Organization>[]>(
     () => [
@@ -49,6 +62,11 @@ export default function TenantsPage() {
             </Badge>
           );
         },
+      },
+      {
+        id: "pais",
+        header: t("admin.campos.pais"),
+        accessorFn: (org) => getCountry(org.countryId)?.nombre ?? "—",
       },
       {
         id: "estado",
@@ -96,43 +114,96 @@ export default function TenantsPage() {
         data={orgs}
         options={{
           enableRowActions: true,
+          // Clickear la fila lleva al detalle del cliente — reemplaza al
+          // "Ver detalle" que antes vivía en el menú de tres puntos (a
+          // pedido). El botón de tres puntos hace stopPropagation (ver
+          // row-actions.tsx) para no disparar esta navegación al abrir el menú.
+          muiTableBodyRowProps: ({ row }) => ({
+            onClick: () => router.push(`/admin/tenants/${row.original.tenantId}`),
+            sx: { cursor: "pointer" },
+          }),
           renderRowActions: ({ row }) => (
             <RowActions
               actions={[
                 {
-                  label: t("admin.clientes.accion.verDetalle"),
-                  href: `/admin/tenants/${row.original.tenantId}`,
+                  label: t("admin.clientes.accion.impersonar"),
+                  onSelect: () => setImpersonando(row.original),
                 },
                 {
-                  label: row.original.active
-                    ? t("admin.clientes.accion.desactivar")
-                    : t("admin.clientes.accion.activar"),
-                  onSelect: () =>
-                    setOrgs((prev) =>
-                      prev.map((o) =>
-                        o.tenantId === row.original.tenantId
-                          ? { ...o, active: !o.active }
-                          : o
-                      )
-                    ),
+                  label: t("admin.clientes.accion.observabilidad"),
+                  onSelect: () => setObservando(row.original),
                 },
-                {
-                  label: t("common.acciones.eliminar"),
-                  destructive: true,
-                  separatorBefore: true,
-                  confirmDescription: t("admin.clientes.eliminarDescripcion", {
-                    nombre: row.original.name,
-                  }),
-                  onSelect: () =>
-                    setOrgs((prev) =>
-                      prev.filter((o) => o.tenantId !== row.original.tenantId)
-                    ),
-                },
+                // A pedido: se retira "Eliminar" (la baja de un tenant es
+                // desactivación, no borrado — ver ADR-BD-001 enmienda
+                // 2026-08-11) y se retira "Desactivar" de este menú rápido;
+                // "Activar" se mantiene para poder reactivar un cliente
+                // inactivo sin entrar al detalle.
+                ...(row.original.active
+                  ? []
+                  : [
+                      {
+                        label: t("admin.clientes.accion.activar"),
+                        onSelect: () =>
+                          setOrgs((prev) =>
+                            prev.map((o) =>
+                              o.tenantId === row.original.tenantId
+                                ? { ...o, active: true }
+                                : o
+                            )
+                          ),
+                      },
+                    ]),
               ]}
             />
           ),
         }}
       />
+
+      <Dialog
+        open={impersonando !== null}
+        onOpenChange={(open) => !open && setImpersonando(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t("admin.clientes.impersonar.titulo", {
+                nombre: impersonando?.name ?? "",
+              })}
+            </DialogTitle>
+            <DialogDescription>
+              {t("admin.clientes.impersonar.descripcion")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setImpersonando(null)}>
+              {t("admin.clientes.impersonar.salir")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={observando !== null}
+        onOpenChange={(open) => !open && setObservando(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t("admin.soporte.observabilidad.dialogTitulo", {
+                nombre: observando?.name ?? "",
+              })}
+            </DialogTitle>
+            <DialogDescription>
+              {t("admin.soporte.observabilidad.descripcion")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setObservando(null)}>
+              {t("common.acciones.cerrar")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

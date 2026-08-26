@@ -16,19 +16,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EntityCombobox } from "@/app/(backoffice)/campanias/entity-combobox";
 import { regions, regionLabel } from "@/lib/mock-admin";
+import { countries } from "@/lib/countries";
 import { useT } from "@/lib/i18n";
 
 // Onboarding (alta) de tenant cloud con región asignada (Fase 0, ADR-BD-001).
 // Mock: no persiste; al "crear" vuelve al listado (PRODUCT.md).
+//
+// A pedido: el cliente siempre nace INACTIVO — el switch de abajo arranca en
+// false, y se activa después (desde este mismo formulario antes de crear, o
+// más tarde desde el detalle / el "Activar" del listado).
 export default function NuevoTenantPage() {
   const router = useRouter();
   const t = useT();
   const [name, setName] = useState("");
   const [regionId, setRegionId] = useState("");
-  const [active, setActive] = useState(true);
+  const [countryId, setCountryId] = useState<string | undefined>(undefined);
+  const [active, setActive] = useState(false);
 
-  const puedeCrear = name.trim().length > 0 && regionId.length > 0;
+  const puedeCrear =
+    name.trim().length > 0 && regionId.length > 0 && !!countryId;
 
   function crear() {
     if (!puedeCrear) return;
@@ -77,6 +85,19 @@ export default function NuevoTenantPage() {
             <p className="text-xs text-muted-foreground">
               {t("admin.form.regionAyuda")}
             </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tenant-country">{t("admin.campos.pais")}</Label>
+            <EntityCombobox
+              id="tenant-country"
+              items={countries}
+              value={countryId}
+              onChange={setCountryId}
+              placeholder={t("admin.form.paisPlaceholder")}
+              searchPlaceholder={t("admin.form.paisBuscar")}
+              emptyLabel={t("admin.form.paisVacio")}
+            />
           </div>
 
           <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
