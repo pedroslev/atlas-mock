@@ -54,6 +54,7 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
               type="button"
               aria-label={t("inicio.tabla.masAcciones")}
               className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              onClick={(event) => event.stopPropagation()}
             >
               <MoreVertical className="size-4" />
             </button>

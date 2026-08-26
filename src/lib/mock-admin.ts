@@ -78,20 +78,26 @@ export type Organization = {
   tenantId: string;
   name: string;
   regionId: string;
+  // País del cliente (ISO 3166-1 alfa-2, ver lib/countries.ts) — NO es la
+  // región de despliegue (regionId, catálogo cerrado AR/COL/MX/CL/CUSTOM):
+  // un mismo país puede tener clientes en distintas regiones. Campo nuevo,
+  // todavía no está en el DER de ADR-BD-001 — a confirmar con el Chief
+  // Innovation Architect antes de bajarlo a una columna real.
+  countryId: string;
   active: boolean;
   // settings: JSONB "a definir" en el ADR — no se modela contenido todavía.
   settings: Record<string, never>;
 };
 
 export const organizations: Organization[] = [
-  { tenantId: "org-banco-sur", name: "Banco Sur", regionId: "region-ar", active: true, settings: {} },
-  { tenantId: "org-telco-norte", name: "Telco Norte", regionId: "region-ar", active: true, settings: {} },
-  { tenantId: "org-salud-integral", name: "Salud Integral", regionId: "region-mx", active: true, settings: {} },
-  { tenantId: "org-retail-andes", name: "Retail Andes", regionId: "region-cl", active: true, settings: {} },
-  { tenantId: "org-cobranzas-plata", name: "Cobranzas del Plata", regionId: "region-ar", active: false, settings: {} },
-  { tenantId: "org-seguros-delta", name: "Seguros Delta", regionId: "region-col", active: true, settings: {} },
-  { tenantId: "org-logistica-pampa", name: "Logística Pampa", regionId: "region-custom", active: true, settings: {} },
-  { tenantId: "org-energia-co", name: "EnergíaCo", regionId: "region-mx", active: false, settings: {} },
+  { tenantId: "org-banco-sur", name: "Banco Sur", regionId: "region-ar", countryId: "AR", active: true, settings: {} },
+  { tenantId: "org-telco-norte", name: "Telco Norte", regionId: "region-ar", countryId: "AR", active: true, settings: {} },
+  { tenantId: "org-salud-integral", name: "Salud Integral", regionId: "region-mx", countryId: "MX", active: true, settings: {} },
+  { tenantId: "org-retail-andes", name: "Retail Andes", regionId: "region-cl", countryId: "CL", active: true, settings: {} },
+  { tenantId: "org-cobranzas-plata", name: "Cobranzas del Plata", regionId: "region-ar", countryId: "AR", active: false, settings: {} },
+  { tenantId: "org-seguros-delta", name: "Seguros Delta", regionId: "region-col", countryId: "CO", active: true, settings: {} },
+  { tenantId: "org-logistica-pampa", name: "Logística Pampa", regionId: "region-custom", countryId: "AR", active: true, settings: {} },
+  { tenantId: "org-energia-co", name: "EnergíaCo", regionId: "region-mx", countryId: "MX", active: false, settings: {} },
 ];
 
 export const tenantContacts: TenantContact[] = [

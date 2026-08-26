@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { EntityCombobox } from "@/app/(backoffice)/campanias/entity-combobox";
 import {
   regions,
   regionLabel,
@@ -37,28 +38,14 @@ import {
   type Region,
   type TenantContact,
 } from "@/lib/mock-admin";
+import { countries } from "@/lib/countries";
 import { useT } from "@/lib/i18n";
-
-// Los textos con vocabulario técnico llevan el identificador de base entre
-// <code>; el diccionario lo marca con el placeholder {code} para que cada
-// idioma decida dónde cae dentro de la frase.
-function WithCode({ text, code }: { text: string; code: string }) {
-  const [antes, ...resto] = text.split("{code}");
-  return (
-    <>
-      {antes}
-      <code>{code}</code>
-      {resto.join("{code}")}
-    </>
-  );
-}
 
 // Detalle de un cliente (tenant): vista única (sin solapas) con los 3 bloques
 // distribuidos en un grid. Arriba, lado a lado: General (nombre, región,
-// activo, settings) y Soporte. Abajo, ancho completo: Contactos
-// (tenant_contacts). Los ítems de Fase 1 (impersonar, observabilidad, eventos
-// de billing) viven en el bloque Soporte como afordancias deshabilitadas /
-// "próximamente" — la impersonación NO se duplica en el top-right del header.
+// país, activo) y Soporte. Abajo, ancho completo: Contactos. Impersonar y Ver
+// observabilidad ya están activos (a pedido); eventos de billing sigue como
+// afordancia deshabilitada / "próximamente" en el bloque Soporte.
 // Mock: estado local, sin persistencia (PRODUCT.md).
 export function TenantEditor({
   organization,
@@ -72,6 +59,7 @@ export function TenantEditor({
   const t = useT();
   const [name, setName] = useState(organization.name);
   const [regionId, setRegionId] = useState(organization.regionId);
+  const [countryId, setCountryId] = useState(organization.countryId);
   const [active, setActive] = useState(organization.active);
 
   return (
@@ -92,10 +80,12 @@ export function TenantEditor({
           setName={setName}
           regionId={regionId}
           setRegionId={setRegionId}
+          countryId={countryId}
+          setCountryId={setCountryId}
           active={active}
           setActive={setActive}
         />
-        <SoporteSection />
+        <SoporteSection nombre={organization.name} />
       </div>
 
       <ContactosSection
@@ -111,6 +101,8 @@ function GeneralSection({
   setName,
   regionId,
   setRegionId,
+  countryId,
+  setCountryId,
   active,
   setActive,
 }: {
@@ -118,6 +110,8 @@ function GeneralSection({
   setName: (v: string) => void;
   regionId: string;
   setRegionId: (v: string) => void;
+  countryId: string;
+  setCountryId: (v: string) => void;
   active: boolean;
   setActive: (v: boolean) => void;
 }) {
@@ -154,13 +148,26 @@ function GeneralSection({
           </Select>
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-country">{t("admin.campos.pais")}</Label>
+          <EntityCombobox
+            id="edit-country"
+            items={countries}
+            value={countryId}
+            onChange={(v) => v && setCountryId(v)}
+            placeholder={t("admin.form.paisPlaceholder")}
+            searchPlaceholder={t("admin.form.paisBuscar")}
+            emptyLabel={t("admin.form.paisVacio")}
+          />
+        </div>
+
         <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
           <div className="flex flex-col gap-0.5">
             <Label htmlFor="edit-active">
               {t("admin.form.clienteActivo")}
             </Label>
             <span className="text-xs text-muted-foreground">
-              <WithCode text={t("admin.detalle.activoAyuda")} code="active" />
+              {t("admin.detalle.activoAyuda")}
             </span>
           </div>
           <Switch
@@ -169,52 +176,88 @@ function GeneralSection({
             onCheckedChange={setActive}
           />
         </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label>{t("admin.detalle.settings")}</Label>
-          <div className="rounded-lg border border-dashed border-input bg-muted/40 px-3 py-4 text-sm text-muted-foreground">
-            <WithCode
-              text={t("admin.detalle.settingsAyuda")}
-              code="settings"
-            />
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
 }
 
-// Bloque Soporte: herramientas de asistencia multitenancy. La impersonación
-// vive ÚNICAMENTE acá (no se duplica en el top-right del header).
-function SoporteSection() {
+// Bloque Soporte: herramientas de asistencia multitenancy. Impersonar y Ver
+// observabilidad ya están activos (a pedido) — abren un diálogo que simula la
+// acción (mock, sin backend real); eventos de billing sigue "próximamente".
+// Los diálogos reusan las mismas claves i18n que el menú de tres puntos del
+// listado (admin.clientes.impersonar.* / admin.soporte.observabilidad.*): es
+// la misma acción simulada, solo con otra puerta de entrada.
+function SoporteSection({ nombre }: { nombre: string }) {
   const t = useT();
+  const [impersonando, setImpersonando] = useState(false);
+  const [observando, setObservando] = useState(false);
 
   return (
-    <Card className="h-fit">
-      <CardHeader>
-        <CardTitle>{t("admin.soporte.titulo")}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <p className="max-w-[65ch] text-sm text-muted-foreground">
-          {t("admin.soporte.descripcion")}
-        </p>
-        <FaseUnoRow
-          icon={<LogIn className="size-4" />}
-          title={t("admin.soporte.impersonar.titulo")}
-          description={t("admin.soporte.impersonar.descripcion")}
-        />
-        <FaseUnoRow
-          icon={<LineChart className="size-4" />}
-          title={t("admin.soporte.observabilidad.titulo")}
-          description={t("admin.soporte.observabilidad.descripcion")}
-        />
-        <FaseUnoRow
-          icon={<Receipt className="size-4" />}
-          title={t("admin.soporte.billing.titulo")}
-          description={t("admin.soporte.billing.descripcion")}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card className="h-fit">
+        <CardHeader>
+          <CardTitle>{t("admin.soporte.titulo")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            {t("admin.soporte.descripcion")}
+          </p>
+          <FaseUnoRow
+            icon={<LogIn className="size-4" />}
+            title={t("admin.soporte.impersonar.titulo")}
+            description={t("admin.soporte.impersonar.descripcion")}
+            onClick={() => setImpersonando(true)}
+          />
+          <FaseUnoRow
+            icon={<LineChart className="size-4" />}
+            title={t("admin.soporte.observabilidad.titulo")}
+            description={t("admin.soporte.observabilidad.descripcion")}
+            onClick={() => setObservando(true)}
+          />
+          <FaseUnoRow
+            icon={<Receipt className="size-4" />}
+            title={t("admin.soporte.billing.titulo")}
+            description={t("admin.soporte.billing.descripcion")}
+          />
+        </CardContent>
+      </Card>
+
+      <Dialog open={impersonando} onOpenChange={setImpersonando}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t("admin.clientes.impersonar.titulo", { nombre })}
+            </DialogTitle>
+            <DialogDescription>
+              {t("admin.clientes.impersonar.descripcion")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setImpersonando(false)}>
+              {t("admin.clientes.impersonar.salir")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={observando} onOpenChange={setObservando}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t("admin.soporte.observabilidad.dialogTitulo", { nombre })}
+            </DialogTitle>
+            <DialogDescription>
+              {t("admin.soporte.observabilidad.descripcion")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setObservando(false)}>
+              {t("common.acciones.cerrar")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -222,25 +265,47 @@ function FaseUnoRow({
   icon,
   title,
   description,
+  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
+  /** Si se pasa, la fila deja de ser "próximamente" y se vuelve clickeable. */
+  onClick?: () => void;
 }) {
   const t = useT();
-
-  return (
-    <div className="flex items-start gap-3 rounded-lg ring-1 ring-foreground/10 p-3 opacity-70">
+  const contenido = (
+    <>
       <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {icon}
       </span>
       <div className="flex flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-2 text-sm font-medium">
           {title}
-          <Badge variant="neutral">{t("admin.soporte.proximamente")}</Badge>
+          {!onClick && (
+            <Badge variant="neutral">{t("admin.soporte.proximamente")}</Badge>
+          )}
         </span>
         <span className="text-xs text-muted-foreground">{description}</span>
       </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex items-start gap-3 rounded-lg p-3 text-left ring-1 ring-foreground/10 transition-colors hover:bg-accent"
+      >
+        {contenido}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-lg ring-1 ring-foreground/10 p-3 opacity-70">
+      {contenido}
     </div>
   );
 }
@@ -355,10 +420,7 @@ function ContactosSection({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
-          <WithCode
-            text={t("admin.contactos.descripcion")}
-            code="tenant_contacts"
-          />
+          {t("admin.contactos.descripcion")}
         </p>
         <Button onClick={() => abrir(null)}>
           <Plus />

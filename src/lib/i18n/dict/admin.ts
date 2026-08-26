@@ -12,6 +12,7 @@ export const admin: NamespaceDict = {
     "nav.facturacion": "Facturación",
 
     "campos.region": "Región",
+    "campos.pais": "País",
 
     "clientes.titulo": "Clientes",
     "clientes.descripcion":
@@ -19,11 +20,13 @@ export const admin: NamespaceDict = {
     "clientes.onboarding": "Onboarding de cliente",
     "clientes.col.cliente": "Cliente",
     "clientes.col.contactos": "Contactos",
-    "clientes.accion.verDetalle": "Ver detalle",
     "clientes.accion.activar": "Activar",
-    "clientes.accion.desactivar": "Desactivar",
-    "clientes.eliminarDescripcion":
-      "Se eliminará el cliente “{nombre}” y sus contactos. Esta acción no se puede deshacer.",
+    "clientes.accion.impersonar": "Impersonar cliente",
+    "clientes.accion.observabilidad": "Ver observabilidad",
+    "clientes.impersonar.titulo": "Impersonando a {nombre}",
+    "clientes.impersonar.descripcion":
+      "Estás operando el backoffice/pad como un usuario de este cliente, para diagnóstico.",
+    "clientes.impersonar.salir": "Salir de la impersonación",
 
     "nuevo.descripcion":
       "Alta de una nueva organización cliente con su región de despliegue.",
@@ -33,25 +36,27 @@ export const admin: NamespaceDict = {
     "form.regionPlaceholder": "Seleccionar región",
     "form.regionAyuda":
       "El código de región lo define desarrollo (AR, COL, MX, CL, CUSTOM).",
+    "form.paisPlaceholder": "Seleccionar país",
+    "form.paisBuscar": "Buscar país...",
+    "form.paisVacio": "No se encontró ningún país.",
     "form.clienteActivo": "Cliente activo",
     "form.clienteActivoAyuda":
       "Un cliente inactivo queda dado de alta pero deshabilitado.",
     "form.crearCliente": "Crear cliente",
 
     "detalle.sinRegion": "Sin región asignada",
-    "detalle.activoAyuda": "Refleja el estado del cliente (flag {code}).",
-    "detalle.settings": "Settings",
-    "detalle.settingsAyuda": "Configuración avanzada ({code} JSONB): a definir.",
+    "detalle.activoAyuda": "Refleja el estado del cliente.",
 
     "soporte.titulo": "Soporte multitenancy",
     "soporte.descripcion":
-      "Herramientas de asistencia disponibles en la Fase 1 de la Administración Mitrol.",
+      "Herramientas de asistencia y control para este cliente.",
     "soporte.impersonar.titulo": "Impersonar cliente",
     "soporte.impersonar.descripcion":
       "Operar el backoffice/pad como un usuario del cliente para diagnóstico.",
     "soporte.observabilidad.titulo": "Ver observabilidad",
     "soporte.observabilidad.descripcion":
       "Ir al dashboard de observabilidad filtrado por este cliente.",
+    "soporte.observabilidad.dialogTitulo": "Observabilidad de {nombre}",
     "soporte.billing.titulo": "Eventos de billing",
     "soporte.billing.descripcion":
       "Consumo facturable del cliente (cuando se definan los eventos).",
@@ -59,7 +64,7 @@ export const admin: NamespaceDict = {
     "soporte.rol": "Soporte Mitrol",
 
     "contactos.descripcion":
-      "Contactos comerciales y técnicos del cliente ({code}).",
+      "Contactos comerciales y técnicos del cliente.",
     "contactos.agregar": "Agregar contacto",
     "contactos.nuevo": "Nuevo contacto",
     "contactos.editarTitulo": "Editar {nombre}",
@@ -94,6 +99,7 @@ export const admin: NamespaceDict = {
     "nav.facturacion": "Billing",
 
     "campos.region": "Region",
+    "campos.pais": "Country",
 
     "clientes.titulo": "Clients",
     "clientes.descripcion":
@@ -101,11 +107,13 @@ export const admin: NamespaceDict = {
     "clientes.onboarding": "Client onboarding",
     "clientes.col.cliente": "Client",
     "clientes.col.contactos": "Contacts",
-    "clientes.accion.verDetalle": "View details",
     "clientes.accion.activar": "Activate",
-    "clientes.accion.desactivar": "Deactivate",
-    "clientes.eliminarDescripcion":
-      "The client “{nombre}” and its contacts will be deleted. This action cannot be undone.",
+    "clientes.accion.impersonar": "Impersonate client",
+    "clientes.accion.observabilidad": "View observability",
+    "clientes.impersonar.titulo": "Impersonating {nombre}",
+    "clientes.impersonar.descripcion":
+      "You're operating the backoffice/pad as a user of this client, for diagnostics.",
+    "clientes.impersonar.salir": "Exit impersonation",
 
     "nuevo.descripcion":
       "Create a new client organization with its deployment region.",
@@ -115,26 +123,27 @@ export const admin: NamespaceDict = {
     "form.regionPlaceholder": "Select a region",
     "form.regionAyuda":
       "The region code is defined by development (AR, COL, MX, CL, CUSTOM).",
+    "form.paisPlaceholder": "Select a country",
+    "form.paisBuscar": "Search country...",
+    "form.paisVacio": "No country found.",
     "form.clienteActivo": "Active client",
     "form.clienteActivoAyuda":
       "An inactive client is still created, but disabled.",
     "form.crearCliente": "Create client",
 
     "detalle.sinRegion": "No region assigned",
-    "detalle.activoAyuda": "Reflects the client status (flag {code}).",
-    "detalle.settings": "Settings",
-    "detalle.settingsAyuda":
-      "Advanced configuration ({code} JSONB): to be defined.",
+    "detalle.activoAyuda": "Reflects the client status.",
 
     "soporte.titulo": "Multitenancy support",
     "soporte.descripcion":
-      "Assistance tools available in Phase 1 of Mitrol Administration.",
+      "Assistance and control tools for this client.",
     "soporte.impersonar.titulo": "Impersonate client",
     "soporte.impersonar.descripcion":
       "Operate the backoffice/pad as a user of the client for diagnostics.",
     "soporte.observabilidad.titulo": "View observability",
     "soporte.observabilidad.descripcion":
       "Go to the observability dashboard filtered by this client.",
+    "soporte.observabilidad.dialogTitulo": "Observability for {nombre}",
     "soporte.billing.titulo": "Billing events",
     "soporte.billing.descripcion":
       "Billable usage for the client (once the events are defined).",
@@ -142,7 +151,7 @@ export const admin: NamespaceDict = {
     "soporte.rol": "Mitrol Support",
 
     "contactos.descripcion":
-      "Commercial and technical contacts of the client ({code}).",
+      "Commercial and technical contacts of the client.",
     "contactos.agregar": "Add contact",
     "contactos.nuevo": "New contact",
     "contactos.editarTitulo": "Edit {nombre}",
@@ -177,6 +186,7 @@ export const admin: NamespaceDict = {
     "nav.facturacion": "Faturamento",
 
     "campos.region": "Região",
+    "campos.pais": "País",
 
     "clientes.titulo": "Clientes",
     "clientes.descripcion":
@@ -184,11 +194,13 @@ export const admin: NamespaceDict = {
     "clientes.onboarding": "Onboarding de cliente",
     "clientes.col.cliente": "Cliente",
     "clientes.col.contactos": "Contatos",
-    "clientes.accion.verDetalle": "Ver detalhes",
     "clientes.accion.activar": "Ativar",
-    "clientes.accion.desactivar": "Desativar",
-    "clientes.eliminarDescripcion":
-      "O cliente “{nombre}” e seus contatos serão excluídos. Esta ação não pode ser desfeita.",
+    "clientes.accion.impersonar": "Personificar cliente",
+    "clientes.accion.observabilidad": "Ver observabilidade",
+    "clientes.impersonar.titulo": "Personificando {nombre}",
+    "clientes.impersonar.descripcion":
+      "Você está operando o backoffice/pad como um usuário deste cliente, para diagnóstico.",
+    "clientes.impersonar.salir": "Sair da personificação",
 
     "nuevo.descripcion":
       "Cadastro de uma nova organização cliente com sua região de implantação.",
@@ -198,25 +210,27 @@ export const admin: NamespaceDict = {
     "form.regionPlaceholder": "Selecionar região",
     "form.regionAyuda":
       "O código de região é definido pelo desenvolvimento (AR, COL, MX, CL, CUSTOM).",
+    "form.paisPlaceholder": "Selecionar país",
+    "form.paisBuscar": "Pesquisar país...",
+    "form.paisVacio": "Nenhum país encontrado.",
     "form.clienteActivo": "Cliente ativo",
     "form.clienteActivoAyuda":
       "Um cliente inativo fica cadastrado, porém desabilitado.",
     "form.crearCliente": "Criar cliente",
 
     "detalle.sinRegion": "Sem região atribuída",
-    "detalle.activoAyuda": "Reflete a situação do cliente (flag {code}).",
-    "detalle.settings": "Settings",
-    "detalle.settingsAyuda": "Configuração avançada ({code} JSONB): a definir.",
+    "detalle.activoAyuda": "Reflete a situação do cliente.",
 
     "soporte.titulo": "Suporte multitenancy",
     "soporte.descripcion":
-      "Ferramentas de assistência disponíveis na Fase 1 da Administração Mitrol.",
+      "Ferramentas de assistência e controle para este cliente.",
     "soporte.impersonar.titulo": "Personificar cliente",
     "soporte.impersonar.descripcion":
       "Operar o backoffice/pad como um usuário do cliente para diagnóstico.",
     "soporte.observabilidad.titulo": "Ver observabilidade",
     "soporte.observabilidad.descripcion":
       "Ir ao dashboard de observabilidade filtrado por este cliente.",
+    "soporte.observabilidad.dialogTitulo": "Observabilidade de {nombre}",
     "soporte.billing.titulo": "Eventos de billing",
     "soporte.billing.descripcion":
       "Consumo faturável do cliente (quando os eventos forem definidos).",
@@ -224,7 +238,7 @@ export const admin: NamespaceDict = {
     "soporte.rol": "Suporte Mitrol",
 
     "contactos.descripcion":
-      "Contatos comerciais e técnicos do cliente ({code}).",
+      "Contatos comerciais e técnicos do cliente.",
     "contactos.agregar": "Adicionar contato",
     "contactos.nuevo": "Novo contato",
     "contactos.editarTitulo": "Editar {nombre}",
@@ -259,6 +273,7 @@ export const admin: NamespaceDict = {
     "nav.facturacion": "Facturació",
 
     "campos.region": "Regió",
+    "campos.pais": "País",
 
     "clientes.titulo": "Clients",
     "clientes.descripcion":
@@ -266,11 +281,13 @@ export const admin: NamespaceDict = {
     "clientes.onboarding": "Onboarding de client",
     "clientes.col.cliente": "Client",
     "clientes.col.contactos": "Contactes",
-    "clientes.accion.verDetalle": "Mostra el detall",
     "clientes.accion.activar": "Activa",
-    "clientes.accion.desactivar": "Desactiva",
-    "clientes.eliminarDescripcion":
-      "S'eliminarà el client “{nombre}” i els seus contactes. Aquesta acció no es pot desfer.",
+    "clientes.accion.impersonar": "Suplanta el client",
+    "clientes.accion.observabilidad": "Veure observabilitat",
+    "clientes.impersonar.titulo": "Suplantant {nombre}",
+    "clientes.impersonar.descripcion":
+      "Estàs operant el backoffice/pad com un usuari d'aquest client, per a diagnòstic.",
+    "clientes.impersonar.salir": "Surt de la suplantació",
 
     "nuevo.descripcion":
       "Alta d'una nova organització client amb la seva regió de desplegament.",
@@ -280,26 +297,27 @@ export const admin: NamespaceDict = {
     "form.regionPlaceholder": "Selecciona una regió",
     "form.regionAyuda":
       "El codi de regió el defineix desenvolupament (AR, COL, MX, CL, CUSTOM).",
+    "form.paisPlaceholder": "Selecciona un país",
+    "form.paisBuscar": "Cerca un país...",
+    "form.paisVacio": "No s'ha trobat cap país.",
     "form.clienteActivo": "Client actiu",
     "form.clienteActivoAyuda":
       "Un client inactiu queda donat d'alta però deshabilitat.",
     "form.crearCliente": "Crea el client",
 
     "detalle.sinRegion": "Sense regió assignada",
-    "detalle.activoAyuda": "Reflecteix l'estat del client (flag {code}).",
-    "detalle.settings": "Settings",
-    "detalle.settingsAyuda":
-      "Configuració avançada ({code} JSONB): per definir.",
+    "detalle.activoAyuda": "Reflecteix l'estat del client.",
 
     "soporte.titulo": "Suport multitenancy",
     "soporte.descripcion":
-      "Eines d'assistència disponibles a la Fase 1 de l'Administració Mitrol.",
+      "Eines d'assistència i control per a aquest client.",
     "soporte.impersonar.titulo": "Suplantar el client",
     "soporte.impersonar.descripcion":
       "Operar el backoffice/pad com un usuari del client per a diagnòstic.",
     "soporte.observabilidad.titulo": "Veure observabilitat",
     "soporte.observabilidad.descripcion":
       "Anar al tauler d'observabilitat filtrat per aquest client.",
+    "soporte.observabilidad.dialogTitulo": "Observabilitat de {nombre}",
     "soporte.billing.titulo": "Esdeveniments de billing",
     "soporte.billing.descripcion":
       "Consum facturable del client (quan es defineixin els esdeveniments).",
@@ -307,7 +325,7 @@ export const admin: NamespaceDict = {
     "soporte.rol": "Suport Mitrol",
 
     "contactos.descripcion":
-      "Contactes comercials i tècnics del client ({code}).",
+      "Contactes comercials i tècnics del client.",
     "contactos.agregar": "Afegeix un contacte",
     "contactos.nuevo": "Contacte nou",
     "contactos.editarTitulo": "Edita {nombre}",
