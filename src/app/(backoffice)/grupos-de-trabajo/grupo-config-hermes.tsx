@@ -35,16 +35,23 @@ function nuevoAccesoRapido(): ShortcutButtonEntry {
 // Solapa "Config. Hermes" del grupo (entre Permisos y el final) — a pedido,
 // reorganización del detalle en solapas igual que Campañas. Junta lo que el
 // grupo ve/tiene disponible DENTRO del pad: estados auxiliares (ya vivía
-// acá, solo se mudó de tarjeta) y accesos rápidos (nuevo — working_groups.
-// shortcut_buttons, ver parametrizacion-propuesta.md §11).
+// acá, solo se mudó de tarjeta), historial de interacciones del cliente
+// (nuevo — agent_operation_settings.history_lookback_days, ver
+// parametrizacion-propuesta.md §5: no es por campaña, es por grupo de
+// trabajo) y accesos rápidos (working_groups.shortcut_buttons, §11).
 export function GrupoConfigHermesTab({
   initialEstadosAuxiliares,
+  initialHistoryLookbackDays,
   initialShortcutButtons,
 }: {
   initialEstadosAuxiliares: string[];
+  initialHistoryLookbackDays: number;
   initialShortcutButtons: ShortcutButtonEntry[];
 }) {
   const t = useT();
+  const [historyLookbackDays, setHistoryLookbackDays] = useState(
+    String(initialHistoryLookbackDays)
+  );
   const [shortcuts, setShortcuts] = useState<ShortcutButtonEntry[]>(initialShortcutButtons);
 
   function actualizar(id: string, patch: Partial<ShortcutButtonEntry>) {
@@ -64,6 +71,26 @@ export function GrupoConfigHermesTab({
         </CardHeader>
         <CardContent>
           <AuxMultiSelect initialIds={initialEstadosAuxiliares} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("grupos.historial.titulo")}</CardTitle>
+          <CardDescription>{t("grupos.historial.desc")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-1.5 sm:w-1/3">
+            <Label htmlFor="history-lookback-days">{t("grupos.historial.campo")}</Label>
+            <Input
+              id="history-lookback-days"
+              type="number"
+              min={0}
+              value={historyLookbackDays}
+              onChange={(e) => setHistoryLookbackDays(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">{t("grupos.historial.ayuda")}</p>
+          </div>
         </CardContent>
       </Card>
 

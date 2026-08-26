@@ -61,7 +61,17 @@ export const grupos: NamespaceDict = {
 
     "configHermes.titulo": "Configuración de Hermes",
     "configHermes.desc":
-      "Qué ve este grupo al entrar al PAD del agente: sus estados auxiliares habilitados y sus accesos rápidos.",
+      "Qué ve este grupo al entrar al PAD del agente: sus estados auxiliares habilitados, el historial de interacciones del cliente y sus accesos rápidos.",
+
+    // Historial de interacciones del cliente (agent_operation_settings.
+    // history_lookback_days) — a diferencia del resto de agent_operation_settings,
+    // el propio documento de parametrización dice que esto NO es por campaña,
+    // es por grupo de trabajo (ver parametrizacion-propuesta.md §5).
+    "historial.titulo": "Historial de interacciones del cliente",
+    "historial.desc":
+      "Cuántos días hacia atrás busca Hermes el historial de interacciones del cliente al mostrarlo en el pad. Aplica a los canales omnicanal.",
+    "historial.campo": "Días de historial",
+    "historial.ayuda": "Por defecto, 30 días.",
 
     // Accesos rápidos (working_groups.shortcut_buttons) — mismo patrón que
     // "URLs externas" de campañas, sin el campo "momento": son botones

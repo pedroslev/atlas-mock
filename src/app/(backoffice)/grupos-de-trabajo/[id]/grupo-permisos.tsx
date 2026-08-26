@@ -38,15 +38,20 @@ const MODULO_KEYS: Record<string, string> = {
 // Además de los permisos de Olimpo (por módulo), la card tiene una segunda
 // sección "Hermes": un único check de acceso, porque el PAD no tiene
 // permisos por sección como el backoffice — o el grupo entra, o no entra.
+//
+// `accesoHermes` viene controlado desde afuera (GrupoDetalleTabs) porque
+// también decide si se muestra la solapa "Config. Hermes": sin acceso al
+// PAD no tiene sentido configurar nada de lo que el grupo ve ahí adentro.
 export function GrupoPermisos({
   initialPermisos,
-  initialAccesoHermes,
+  accesoHermes,
+  onAccesoHermesChange,
 }: {
   initialPermisos: Permiso[];
-  initialAccesoHermes: boolean;
+  accesoHermes: boolean;
+  onAccesoHermesChange: (v: boolean) => void;
 }) {
   const [permisos, setPermisos] = useState<Permiso[]>(initialPermisos);
-  const [accesoHermes, setAccesoHermes] = useState(initialAccesoHermes);
   const t = useT();
 
   function tieneAccion(modulo: string, accion: PermisoAccion) {
@@ -138,7 +143,7 @@ export function GrupoPermisos({
               <span className="flex justify-center">
                 <Checkbox
                   checked={accesoHermes}
-                  onCheckedChange={() => setAccesoHermes((v) => !v)}
+                  onCheckedChange={() => onAccesoHermesChange(!accesoHermes)}
                   aria-label={t("grupos.permisos.hermesAria")}
                 />
               </span>
