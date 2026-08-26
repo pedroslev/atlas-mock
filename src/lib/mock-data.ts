@@ -49,7 +49,8 @@ export type Proyecto = {
 // Parámetro de campaña" tiene acá su propia solapa en el editor de campaña
 // (entre General y Usuarios). Quedan AFUERA de este mock, porque el propio
 // documento dice que no van por campaña:
-// - `agent_operation_settings.history_lookback_days` → grupo de trabajo.
+// - `agent_operation_settings.history_lookback_days` → grupo de trabajo (ver
+//   `GrupoTrabajo.historyLookbackDays` más abajo).
 // - `routing_and_wait` (modo de derivación) → Workflow, no campaña (ADR-BD-002
 //   ya dice que las campaigns no tienen workflow propio, vive en `accounts`).
 // - Shortcut Buttons → grupo de trabajo, no campaña (lo dice el documento).
@@ -269,6 +270,7 @@ export type GrupoTrabajo = {
   permisos: Permiso[]; // working_groups.permissions — Olimpo
   accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
   shortcutButtons: ShortcutButtonEntry[]; // working_groups.shortcut_buttons
+  historyLookbackDays: number; // working_groups.parameters.agent_operation_settings.history_lookback_days — default 30 (ver parametrizacion-propuesta.md §5)
 };
 
 // user_keycloak_map — overrides individuales de un usuario sobre su grupo,
@@ -678,6 +680,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
         openAs: "frame",
       },
     ],
+    historyLookbackDays: 90,
   },
   {
     id: "wg-atencion",
@@ -695,6 +698,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
         openAs: "frame",
       },
     ],
+    historyLookbackDays: 30,
   },
   {
     id: "wg-ventas",
@@ -704,6 +708,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
     accesoHermes: false,
     shortcutButtons: [],
+    historyLookbackDays: 30,
   },
 ];
 
