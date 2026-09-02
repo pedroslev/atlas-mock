@@ -39,6 +39,9 @@ export const cuentas: NamespaceDict = {
       "Arrastralo al lienzo y conectá el inicio de interacción con la campaña de destino.",
     "flujo.pantallaCompleta": "Pantalla completa",
     "flujo.salirPantallaCompleta": "Salir de pantalla completa",
+    "flujo.outOfHours": "Fuera de horario",
+    "flujo.outOfHoursAyuda":
+      "Salida opcional: a dónde deriva si la llamada cae fuera del horario de atención o en un feriado de la campaña elegida. Sin conectar, no se aplica ningún desvío.",
   },
   en: {
     "titulo": "Accounts",
@@ -75,6 +78,9 @@ export const cuentas: NamespaceDict = {
       "Drag it onto the canvas and connect the interaction start with the target campaign.",
     "flujo.pantallaCompleta": "Full screen",
     "flujo.salirPantallaCompleta": "Exit full screen",
+    "flujo.outOfHours": "Out of hours",
+    "flujo.outOfHoursAyuda":
+      "Optional exit: where to route the call when it falls outside the chosen campaign's business hours or on a holiday. Unconnected, no diversion is applied.",
   },
   pt: {
     "titulo": "Contas",
@@ -111,6 +117,9 @@ export const cuentas: NamespaceDict = {
       "Arraste-o para a tela e conecte o início da interação com a campanha de destino.",
     "flujo.pantallaCompleta": "Tela cheia",
     "flujo.salirPantallaCompleta": "Sair da tela cheia",
+    "flujo.outOfHours": "Fora do horário",
+    "flujo.outOfHoursAyuda":
+      "Saída opcional: para onde encaminhar quando a chamada cai fora do horário de atendimento ou em feriado da campanha escolhida. Sem conectar, nenhum desvio é aplicado.",
   },
   ca: {
     "titulo": "Comptes",
@@ -147,5 +156,8 @@ export const cuentas: NamespaceDict = {
       "Arrossega'l al llenç i connecta l'inici de la interacció amb la campanya de destinació.",
     "flujo.pantallaCompleta": "Pantalla completa",
     "flujo.salirPantallaCompleta": "Surt de la pantalla completa",
+    "flujo.outOfHours": "Fora d'horari",
+    "flujo.outOfHoursAyuda":
+      "Sortida opcional: on derivar quan la trucada cau fora de l'horari d'atenció o en un festiu de la campanya triada. Sense connectar, no s'aplica cap desviament.",
   },
 };

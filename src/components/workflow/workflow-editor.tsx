@@ -23,6 +23,7 @@ import {
   Trash2,
   Maximize2,
   Minimize2,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -94,6 +95,22 @@ function DerivacionNode({ data }: NodeProps & { data: DerivacionData }) {
           ))}
         </SelectContent>
       </Select>
+
+      {/* Salida transversal opcional (decisiones/workflows/propuesta-motor-
+          workflows.md §4.2): un puntito debajo del selector, sin texto — se
+          conecta solo si hace falta un destino distinto fuera de horario/
+          feriado de la campaña elegida arriba. */}
+      <ActionTooltip label={t("cuentas.flujo.outOfHoursAyuda")}>
+        <div className="relative flex items-center justify-end gap-1 pr-1 text-muted-foreground">
+          <Moon className="size-3.5" />
+          <Handle
+            type="source"
+            id="out_of_hours"
+            position={Position.Right}
+            className="!static !size-1.5 !translate-x-0 !translate-y-0 !bg-muted-foreground"
+          />
+        </div>
+      </ActionTooltip>
     </div>
   );
 }
@@ -143,23 +160,46 @@ export function WorkflowEditor({
       id: e.id,
       source: e.source,
       target: e.target,
+      sourceHandle: e.sourceHandle,
+      // La salida out_of_hours se dibuja distinta (punteada, tono neutro):
+      // es la excepción transversal, no el camino principal del nodo.
+      ...(e.sourceHandle === "out_of_hours"
+        ? { style: { strokeDasharray: "4 3" }, className: "!stroke-muted-foreground" }
+        : {}),
     })) ?? [],
   );
 
   const inicioId = inicioNode.id;
 
-  // Sin nodo if/switch, el inicio admite una única conexión saliente.
+  // Sin nodo if/switch, el inicio admite una única conexión saliente. Cada
+  // salida "out_of_hours" también es de a una por nodo — es una excepción
+  // puntual, no una rama de decisión con múltiples destinos.
   const isValidConnection = useCallback(
-    (connection: Connection | Edge) =>
-      connection.source !== inicioId ||
-      !edges.some((e) => e.source === inicioId),
+    (connection: Connection | Edge) => {
+      if (connection.source === inicioId && edges.some((e) => e.source === inicioId)) {
+        return false;
+      }
+      if (
+        connection.sourceHandle === "out_of_hours" &&
+        edges.some(
+          (e) => e.source === connection.source && e.sourceHandle === "out_of_hours",
+        )
+      ) {
+        return false;
+      }
+      return true;
+    },
     [edges, inicioId],
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!isValidConnection(connection)) return;
-      setEdges((eds) => addEdge(connection, eds));
+      const extra =
+        connection.sourceHandle === "out_of_hours"
+          ? { style: { strokeDasharray: "4 3" }, className: "!stroke-muted-foreground" }
+          : {};
+      setEdges((eds) => addEdge({ ...connection, ...extra }, eds));
     },
     [isValidConnection, setEdges],
   );

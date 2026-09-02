@@ -13,12 +13,12 @@ import type { BadgeVariant } from "@/components/admin/badge-variant";
 import type { TranslateFn } from "@/lib/i18n";
 
 // --- regions -------------------------------------------------------------
-// El code lo define desarrollo (ADR-BD-001): AR, COL, MX, CL o CUSTOM.
-export type RegionCode = "AR" | "COL" | "MX" | "CL" | "CUSTOM";
-
+// El code lo carga quien da de alta la región (Zeus, ver zeus-front) — no es
+// un enum cerrado: además de los códigos de país (AR, COL, MX, CL) admite
+// códigos de despliegue dedicado por cliente (ej. "CLIENTNAME").
 export type Region = {
   id: string;
-  code: RegionCode;
+  code: string;
   /** Nombre legible para la UI (no está en el DER, solo presentación). */
   label: string;
   /**
@@ -26,18 +26,47 @@ export type Region = {
    * dato: los países son dato (no se traducen), "Despliegue dedicado" no.
    */
   labelKey?: string;
+  /**
+   * URL de la región (sin subdominio de aplicativo) — zeus-api la usa para
+   * saber a qué olimpo-api de esa región pegarle al crear un tenant nuevo.
+   */
+  regionUrl: string;
+  /** Nota libre (ej. nombre del proveedor de infra de esta región). */
+  annotations?: string;
 };
 
 export const regions: Region[] = [
-  { id: "region-ar", code: "AR", label: "Argentina" },
-  { id: "region-col", code: "COL", label: "Colombia" },
-  { id: "region-mx", code: "MX", label: "México" },
-  { id: "region-cl", code: "CL", label: "Chile" },
+  {
+    id: "region-ar",
+    code: "AR",
+    label: "Argentina",
+    regionUrl: "ar.atlas.mitrol.com",
+  },
+  {
+    id: "region-col",
+    code: "COL",
+    label: "Colombia",
+    regionUrl: "col.atlas.mitrol.com",
+  },
+  {
+    id: "region-mx",
+    code: "MX",
+    label: "México",
+    regionUrl: "mx.atlas.mitrol.com",
+  },
+  {
+    id: "region-cl",
+    code: "CL",
+    label: "Chile",
+    regionUrl: "cl.atlas.mitrol.com",
+  },
   {
     id: "region-custom",
     code: "CUSTOM",
     label: "Despliegue dedicado",
     labelKey: "admin.regiones.custom",
+    regionUrl: "custom.atlas.mitrol.com",
+    annotations: "Placeholder — cada cliente dedicado tiene su propio code/URL real.",
   },
 ];
 
@@ -46,15 +75,20 @@ export function regionLabel(region: Region, t: TranslateFn): string {
   return region.labelKey ? t(region.labelKey) : region.label;
 }
 
-// Cada región usa una variante tonal distinta del Badge (DESIGN.md: colores
-// distintos para diferenciar, siempre por token, nunca hex crudo).
-export const regionBadgeVariant: Record<RegionCode, BadgeVariant> = {
+// Paleta fija para los códigos ya conocidos (DESIGN.md: colores distintos
+// para diferenciar, siempre por token, nunca hex crudo); un code nuevo dado
+// de alta desde Zeus (ej. un despliegue dedicado) cae a "neutral".
+const KNOWN_REGION_BADGE_VARIANT: Record<string, BadgeVariant> = {
   AR: "info",
   COL: "success",
   MX: "warning",
   CL: "secondary",
   CUSTOM: "neutral",
 };
+
+export function regionBadgeVariant(code: string): BadgeVariant {
+  return KNOWN_REGION_BADGE_VARIANT[code] ?? "neutral";
+}
 
 export function getRegion(id: string): Region | undefined {
   return regions.find((r) => r.id === id);
