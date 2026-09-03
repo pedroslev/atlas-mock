@@ -57,7 +57,7 @@ export default function TenantsPage() {
           const region = getRegion(row.original.regionId);
           if (!region) return <span className="text-muted-foreground">—</span>;
           return (
-            <Badge variant={regionBadgeVariant[region.code]}>
+            <Badge variant={regionBadgeVariant(region.code)}>
               {region.code}
             </Badge>
           );

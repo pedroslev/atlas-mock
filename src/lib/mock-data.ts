@@ -156,7 +156,15 @@ export type WorkflowNode = {
   position: { x: number; y: number };
   campaniaId?: string; // solo en nodos "derivacion": a qué campaña deriva
 };
-export type WorkflowEdge = { id: string; source: string; target: string };
+export type WorkflowEdge = {
+  id: string;
+  source: string;
+  target: string;
+  // Handle de origen cuando el nodo tiene más de una salida — hoy solo
+  // "out_of_hours" (salida transversal, ver decisiones/workflows/
+  // propuesta-motor-workflows.md §4.2). undefined = salida principal del nodo.
+  sourceHandle?: string;
+};
 export type Workflow = { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
 export type Cuenta = {
