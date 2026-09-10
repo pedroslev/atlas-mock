@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
   MitrolTable,
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
+import { RegionMultiSelect } from "@/components/admin/region-multi-select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -35,32 +36,40 @@ import {
   regionBadgeVariant,
   regionLabel,
   getRegion,
+  type Region,
 } from "@/lib/mock-admin";
 import {
   carriers as carriersIniciales,
   outboundNumbers as outboundNumbersIniciales,
   carrierRates as carrierRatesIniciales,
-  getCarrier,
-  getActiveCarriers,
   type Carrier,
   type OutboundNumber,
   type CarrierRate,
 } from "@/lib/mock-telefonia";
 import { useT } from "@/lib/i18n";
 
+// Fila editable de destino SIP en el modal del carrier (la prioridad queda
+// como texto mientras se edita y se convierte a número al guardar).
+type DestinationForm = { id: string; destination: string; priority: string };
+
+function nuevoDestino(): DestinationForm {
+  return { id: `destino-${crypto.randomUUID()}`, destination: "", priority: "10" };
+}
+
 const emptyForm = {
   name: "",
-  regionId: regions[0].id,
-  destination: "",
-  priority: "10",
+  regionIds: [] as string[],
+  destinations: [] as DestinationForm[],
   whitelistIps: "",
-  allowsAnonymousOutbound: false,
+  allowsHiddenCli: false,
+  allowsRandomCli: false,
   active: true,
 };
 
 const emptyOutboundForm = {
   number: "",
   carrierId: "",
+  regionId: "",
 };
 
 const emptyRateForm = {
@@ -69,10 +78,28 @@ const emptyRateForm = {
   ratePerMinute: "",
 };
 
-// Administración de Kamailio por región (alta de proveedores/carriers). Ver
-// documentacion/relevamiento-legacy/administracion-kamailio/propuesta/ —
-// media-api es el dueño real de esto (CRUD sobre `dispatcher`/`address` +
-// reload en caliente); acá es mock de pantalla, estado local sin persistencia.
+// Un badge por región (code). Las regiones que ya no existen se omiten.
+function RegionBadges({ regionIds }: { regionIds: string[] }) {
+  const lista = regionIds
+    .map((id) => getRegion(id))
+    .filter((region): region is Region => Boolean(region));
+  if (lista.length === 0) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {lista.map((region) => (
+        <Badge key={region.id} variant={regionBadgeVariant(region.code)}>
+          {region.code}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+// Administración de carriers de Kamailio desde Zeus (ADR-TELEFONIA-002,
+// "Administración de carriers por región"; modelo en ADR-BD-005). Un carrier es
+// multiregión: zeus-api lo da de alta, con el mismo id, en la media-api de cada
+// región (cluster) donde opera. Acá es mock de pantalla, estado local sin
+// persistencia.
 export default function TelefoniaPage() {
   const t = useT();
   const [carriers, setCarriers] = useState<Carrier[]>(carriersIniciales);
@@ -96,10 +123,26 @@ export default function TelefoniaPage() {
   const [editingRate, setEditingRate] = useState<CarrierRate | null>(null);
   const [rateForm, setRateForm] = useState(emptyRateForm);
 
-  const activeCarriers = getActiveCarriers();
-  const anonymousCarriers = activeCarriers.filter(
-    (c) => c.allowsAnonymousOutbound,
+  // Búsqueda por id sobre el estado actual, para que un carrier recién creado
+  // o editado se vea igual en las solapas de números y tarifas.
+  const carrierPorId = useMemo(
+    () => new Map(carriers.map((carrier) => [carrier.id, carrier])),
+    [carriers],
   );
+  const activeCarriers = carriers.filter((c) => c.active);
+  // Candidatos al LCR: carriers activos que permiten salir con CLI oculto o aleatorio.
+  const anonymousCarriers = activeCarriers.filter(
+    (c) => c.allowsHiddenCli || c.allowsRandomCli,
+  );
+
+  // Filas de destino con URI cargada; las vacías se descartan al guardar.
+  const destinosCargados = form.destinations.filter((d) =>
+    d.destination.trim(),
+  );
+  const puedeGuardarCarrier =
+    form.name.trim().length > 0 &&
+    form.regionIds.length > 0 &&
+    destinosCargados.length > 0;
 
   function abrir(carrier: Carrier | null) {
     setEditing(carrier);
@@ -107,92 +150,149 @@ export default function TelefoniaPage() {
       carrier
         ? {
             name: carrier.name,
-            regionId: carrier.regionId,
-            destination: carrier.destination,
-            priority: String(carrier.priority),
+            regionIds: carrier.regionIds,
+            destinations: carrier.destinations.map((d) => ({
+              id: d.id,
+              destination: d.destination,
+              priority: String(d.priority),
+            })),
             whitelistIps: carrier.whitelistIps.join("\n"),
-            allowsAnonymousOutbound: carrier.allowsAnonymousOutbound,
+            allowsHiddenCli: carrier.allowsHiddenCli,
+            allowsRandomCli: carrier.allowsRandomCli,
             active: carrier.active,
           }
-        : emptyForm,
+        : { ...emptyForm, destinations: [nuevoDestino()] },
     );
     setDialogOpen(true);
   }
 
+  function actualizarDestino(id: string, patch: Partial<DestinationForm>) {
+    setForm((f) => ({
+      ...f,
+      destinations: f.destinations.map((d) =>
+        d.id === id ? { ...d, ...patch } : d,
+      ),
+    }));
+  }
+
+  function quitarDestino(id: string) {
+    setForm((f) => ({
+      ...f,
+      destinations: f.destinations.filter((d) => d.id !== id),
+    }));
+  }
+
   function guardar() {
-    if (!form.name.trim() || !form.destination.trim()) return;
-    const whitelistIps = form.whitelistIps
-      .split("\n")
-      .map((ip) => ip.trim())
-      .filter(Boolean);
-    const priority = Number(form.priority) || 0;
+    if (!puedeGuardarCarrier) return;
+    const datos = {
+      name: form.name.trim(),
+      regionIds: form.regionIds,
+      destinations: destinosCargados.map((d) => ({
+        id: d.id,
+        destination: d.destination.trim(),
+        priority: Number(d.priority) || 0,
+      })),
+      whitelistIps: form.whitelistIps
+        .split("\n")
+        .map((ip) => ip.trim())
+        .filter(Boolean),
+      allowsHiddenCli: form.allowsHiddenCli,
+      allowsRandomCli: form.allowsRandomCli,
+      active: form.active,
+    };
 
     if (editing) {
       setCarriers((prev) =>
-        prev.map((c) =>
-          c.id === editing.id
-            ? {
-                ...c,
-                name: form.name.trim(),
-                regionId: form.regionId,
-                destination: form.destination.trim(),
-                priority,
-                whitelistIps,
-                allowsAnonymousOutbound: form.allowsAnonymousOutbound,
-                active: form.active,
-              }
-            : c,
+        prev.map((c) => (c.id === editing.id ? { ...c, ...datos } : c)),
+      );
+      // Sacar una región es dar de baja el carrier en esa región: sus números
+      // salientes de ahí se van con él.
+      setOutboundNumbers((prev) =>
+        prev.filter(
+          (o) =>
+            o.carrierId !== editing.id || datos.regionIds.includes(o.regionId),
         ),
       );
     } else {
       setCarriers((prev) => [
         ...prev,
-        {
-          id: `carrier-nuevo-${prev.length}-${Date.now()}`,
-          name: form.name.trim(),
-          regionId: form.regionId,
-          destination: form.destination.trim(),
-          priority,
-          whitelistIps,
-          allowsAnonymousOutbound: form.allowsAnonymousOutbound,
-          active: form.active,
-        },
+        { id: `carrier-${crypto.randomUUID()}`, ...datos },
       ]);
     }
     setDialogOpen(false);
   }
 
+  // Borrar un carrier borra también sus números salientes y sus tarifas.
+  function eliminarCarrier(id: string) {
+    setCarriers((prev) => prev.filter((c) => c.id !== id));
+    setOutboundNumbers((prev) => prev.filter((o) => o.carrierId !== id));
+    setCarrierRates((prev) => prev.filter((r) => r.carrierId !== id));
+  }
+
+  // Regiones del carrier elegido: el número saliente solo puede estar en una de ellas.
+  const regionesDelCarrier = regions.filter((region) =>
+    carrierPorId.get(outboundForm.carrierId)?.regionIds.includes(region.id),
+  );
+  // Un mismo número no puede estar cargado dos veces, tampoco en otra región.
+  const numeroNormalizado = outboundForm.number.replace(/\D/g, "");
+  const numeroRepetido = outboundNumbers.some(
+    (o) => o.number === numeroNormalizado && o.id !== editingOutbound?.id,
+  );
+  const puedeGuardarOutbound =
+    numeroNormalizado.length > 0 &&
+    !numeroRepetido &&
+    regionesDelCarrier.some((region) => region.id === outboundForm.regionId);
+
   function abrirOutbound(entry: OutboundNumber | null) {
     setEditingOutbound(entry);
+    const primerCarrier = activeCarriers[0];
     setOutboundForm(
       entry
-        ? { number: entry.number, carrierId: entry.carrierId }
-        : { ...emptyOutboundForm, carrierId: activeCarriers[0]?.id ?? "" },
+        ? {
+            number: entry.number,
+            carrierId: entry.carrierId,
+            regionId: entry.regionId,
+          }
+        : {
+            ...emptyOutboundForm,
+            carrierId: primerCarrier?.id ?? "",
+            regionId: primerCarrier?.regionIds[0] ?? "",
+          },
     );
     setOutboundDialogOpen(true);
   }
 
+  // Al cambiar de carrier se conserva la región si el carrier nuevo también
+  // opera ahí; si no, se pasa a la primera región del carrier nuevo.
+  function elegirCarrierOutbound(carrierId: string) {
+    const regionIds = carrierPorId.get(carrierId)?.regionIds ?? [];
+    setOutboundForm((f) => ({
+      ...f,
+      carrierId,
+      regionId: regionIds.includes(f.regionId)
+        ? f.regionId
+        : (regionIds[0] ?? ""),
+    }));
+  }
+
   function guardarOutbound() {
-    const number = outboundForm.number.replace(/\D/g, "");
-    if (!number || !outboundForm.carrierId) return;
+    if (!puedeGuardarOutbound) return;
+    const datos = {
+      number: numeroNormalizado,
+      carrierId: outboundForm.carrierId,
+      regionId: outboundForm.regionId,
+    };
 
     if (editingOutbound) {
       setOutboundNumbers((prev) =>
         prev.map((o) =>
-          o.id === editingOutbound.id
-            ? { ...o, number, carrierId: outboundForm.carrierId }
-            : o,
+          o.id === editingOutbound.id ? { ...o, ...datos } : o,
         ),
       );
     } else {
       setOutboundNumbers((prev) => [
         ...prev,
-        {
-          id: `outbound-nuevo-${prev.length}-${Date.now()}`,
-          number,
-          carrierId: outboundForm.carrierId,
-          active: true,
-        },
+        { id: `outbound-${crypto.randomUUID()}`, ...datos, active: true },
       ]);
     }
     setOutboundDialogOpen(false);
@@ -229,7 +329,7 @@ export default function TelefoniaPage() {
       setCarrierRates((prev) => [
         ...prev,
         {
-          id: `rate-nuevo-${prev.length}-${Date.now()}`,
+          id: `rate-${crypto.randomUUID()}`,
           carrierId: rateForm.carrierId,
           prefix,
           ratePerMinute,
@@ -251,13 +351,19 @@ export default function TelefoniaPage() {
       },
       {
         id: "carrier",
-        header: t("admin.telefonia.salientes.col.carrier"),
-        accessorFn: (entry) => getCarrier(entry.carrierId)?.name ?? "—",
+        header: t("admin.telefonia.col.carrier"),
+        accessorFn: (entry) => carrierPorId.get(entry.carrierId)?.name ?? "—",
         Cell: ({ row }) => (
           <span className="font-medium">
-            {getCarrier(row.original.carrierId)?.name ?? "—"}
+            {carrierPorId.get(row.original.carrierId)?.name ?? "—"}
           </span>
         ),
+      },
+      {
+        id: "region",
+        header: t("admin.campos.region"),
+        accessorFn: (entry) => getRegion(entry.regionId)?.code ?? "—",
+        Cell: ({ row }) => <RegionBadges regionIds={[row.original.regionId]} />,
       },
       {
         id: "estado",
@@ -272,18 +378,18 @@ export default function TelefoniaPage() {
           ),
       },
     ],
-    [t],
+    [t, carrierPorId],
   );
 
   const rateColumns = useMemo<MRT_ColumnDef<CarrierRate>[]>(
     () => [
       {
         id: "carrier",
-        header: t("admin.telefonia.salientes.col.carrier"),
-        accessorFn: (rate) => getCarrier(rate.carrierId)?.name ?? "—",
+        header: t("admin.telefonia.col.carrier"),
+        accessorFn: (rate) => carrierPorId.get(rate.carrierId)?.name ?? "—",
         Cell: ({ row }) => (
           <span className="font-medium">
-            {getCarrier(row.original.carrierId)?.name ?? "—"}
+            {carrierPorId.get(row.original.carrierId)?.name ?? "—"}
           </span>
         ),
       },
@@ -306,7 +412,7 @@ export default function TelefoniaPage() {
         ),
       },
     ],
-    [t],
+    [t, carrierPorId],
   );
 
   const columns = useMemo<MRT_ColumnDef<Carrier>[]>(
@@ -319,24 +425,20 @@ export default function TelefoniaPage() {
         ),
       },
       {
-        id: "region",
-        header: t("admin.campos.region"),
-        accessorFn: (carrier) => getRegion(carrier.regionId)?.code ?? "—",
-        Cell: ({ row }) => {
-          const region = getRegion(row.original.regionId);
-          if (!region) return <span className="text-muted-foreground">—</span>;
-          return (
-            <Badge variant={regionBadgeVariant(region.code)}>
-              {region.code}
-            </Badge>
-          );
-        },
+        id: "regiones",
+        header: t("admin.telefonia.col.regiones"),
+        accessorFn: (carrier) =>
+          carrier.regionIds.map((id) => getRegion(id)?.code ?? "").join(", "),
+        Cell: ({ row }) => <RegionBadges regionIds={row.original.regionIds} />,
       },
       {
-        accessorKey: "destination",
-        header: t("admin.telefonia.col.destino"),
-        Cell: ({ cell }) => (
-          <span className="font-mono text-xs">{cell.getValue<string>()}</span>
+        id: "destinos",
+        header: t("admin.telefonia.col.destinos"),
+        accessorFn: (carrier) => carrier.destinations.length,
+        Cell: ({ row }) => (
+          <span className="tabular-nums text-muted-foreground">
+            {row.original.destinations.length}
+          </span>
         ),
       },
       {
@@ -372,10 +474,10 @@ export default function TelefoniaPage() {
         description={t("admin.telefonia.descripcion")}
       />
 
-      <Tabs defaultValue="proveedores">
+      <Tabs defaultValue="carriers">
         <TabsList>
-          <TabsTrigger value="proveedores">
-            {t("admin.telefonia.tab.proveedores")}
+          <TabsTrigger value="carriers">
+            {t("admin.telefonia.tab.carriers")}
           </TabsTrigger>
           <TabsTrigger value="salientes">
             {t("admin.telefonia.tab.salientes")}
@@ -385,11 +487,11 @@ export default function TelefoniaPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="proveedores" className="flex flex-col gap-4">
+        <TabsContent value="carriers" className="flex flex-col gap-4">
           <div className="flex justify-end">
             <Button onClick={() => abrir(null)}>
               <Plus />
-              {t("admin.telefonia.nuevoProveedor")}
+              {t("admin.telefonia.nuevoCarrier")}
             </Button>
           </div>
 
@@ -426,10 +528,7 @@ export default function TelefoniaPage() {
                         "admin.telefonia.eliminarDescripcion",
                         { nombre: row.original.name },
                       ),
-                      onSelect: () =>
-                        setCarriers((prev) =>
-                          prev.filter((c) => c.id !== row.original.id),
-                        ),
+                      onSelect: () => eliminarCarrier(row.original.id),
                     },
                   ]}
                 />
@@ -565,18 +664,22 @@ export default function TelefoniaPage() {
                 }
                 placeholder={t("admin.telefonia.salientes.numeroPlaceholder")}
                 className="font-mono text-xs"
+                aria-invalid={numeroRepetido}
                 autoFocus
               />
+              {numeroRepetido && (
+                <span className="text-xs text-destructive">
+                  {t("admin.telefonia.salientes.numeroRepetido")}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="on-carrier">
-                {t("admin.telefonia.salientes.col.carrier")}
+                {t("admin.telefonia.col.carrier")}
               </Label>
               <Select
                 value={outboundForm.carrierId}
-                onValueChange={(v) =>
-                  setOutboundForm((f) => ({ ...f, carrierId: v }))
-                }
+                onValueChange={elegirCarrierOutbound}
               >
                 <SelectTrigger id="on-carrier" className="w-full">
                   <SelectValue />
@@ -590,6 +693,29 @@ export default function TelefoniaPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="on-region">{t("admin.campos.region")}</Label>
+              <Select
+                value={outboundForm.regionId}
+                onValueChange={(v) =>
+                  setOutboundForm((f) => ({ ...f, regionId: v }))
+                }
+              >
+                <SelectTrigger id="on-region" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {regionesDelCarrier.map((region) => (
+                    <SelectItem key={region.id} value={region.id}>
+                      {region.code} · {regionLabel(region, t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {t("admin.telefonia.salientes.regionAyuda")}
+              </span>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -598,10 +724,7 @@ export default function TelefoniaPage() {
             >
               {t("common.acciones.cancelar")}
             </Button>
-            <Button
-              onClick={guardarOutbound}
-              disabled={!outboundForm.number.trim() || !outboundForm.carrierId}
-            >
+            <Button onClick={guardarOutbound} disabled={!puedeGuardarOutbound}>
               {editingOutbound
                 ? t("common.acciones.guardar")
                 : t("admin.telefonia.salientes.agregar")}
@@ -627,7 +750,7 @@ export default function TelefoniaPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="rate-carrier">
-                {t("admin.telefonia.salientes.col.carrier")}
+                {t("admin.telefonia.col.carrier")}
               </Label>
               <Select
                 value={rateForm.carrierId}
@@ -708,146 +831,222 @@ export default function TelefoniaPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        {/* Alto máximo = pantalla: el título y los botones quedan fijos y solo
+            el cuerpo scrollea cuando se cargan muchas regiones o destinos. */}
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-4xl">
+          <DialogHeader className="shrink-0">
             <DialogTitle>
               {editing
                 ? t("admin.telefonia.editarTitulo", { nombre: editing.name })
-                : t("admin.telefonia.nuevoProveedor")}
+                : t("admin.telefonia.nuevoCarrier")}
             </DialogTitle>
             <DialogDescription>
               {t("admin.telefonia.dialogoDescripcion")}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tf-name">{t("common.comunes.nombre")}</Label>
-              <Input
-                id="tf-name"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                placeholder={t("admin.telefonia.nombrePlaceholder")}
-                autoFocus
-              />
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tf-region">{t("admin.campos.region")}</Label>
-              <Select
-                value={form.regionId}
-                onValueChange={(v) => setForm((f) => ({ ...f, regionId: v }))}
-              >
-                <SelectTrigger id="tf-region" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {regions.map((region) => (
-                    <SelectItem key={region.id} value={region.id}>
-                      {region.code} · {regionLabel(region, t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+          {/* En pantallas anchas, dos columnas: datos del carrier y whitelist a
+              la izquierda, destinos SIP a la derecha; los switches abajo. */}
+          <div className="-mx-4 grid min-h-0 flex-1 content-start gap-x-6 gap-y-4 overflow-y-auto overscroll-contain px-4 py-1 md:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tf-destination">
-                  {t("admin.telefonia.col.destino")}
-                </Label>
+                <Label htmlFor="tf-name">{t("common.comunes.nombre")}</Label>
                 <Input
-                  id="tf-destination"
-                  value={form.destination}
+                  id="tf-name"
+                  value={form.name}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, destination: e.target.value }))
+                    setForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  placeholder="sip:200.1.2.3:5060"
+                  placeholder={t("admin.telefonia.nombrePlaceholder")}
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="tf-regions">
+                  {t("admin.telefonia.col.regiones")}
+                </Label>
+                <RegionMultiSelect
+                  id="tf-regions"
+                  value={form.regionIds}
+                  onChange={(regionIds) =>
+                    setForm((f) => ({ ...f, regionIds }))
+                  }
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("admin.telefonia.regiones.ayuda")}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="tf-whitelist">
+                  {t("admin.telefonia.whitelistLabel")}
+                </Label>
+                <Textarea
+                  id="tf-whitelist"
+                  value={form.whitelistIps}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, whitelistIps: e.target.value }))
+                  }
+                  placeholder={"200.1.2.3\n200.1.2.4"}
+                  rows={4}
                   className="font-mono text-xs"
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tf-priority">
-                  {t("admin.telefonia.prioridad")}
-                </Label>
-                <Input
-                  id="tf-priority"
-                  type="number"
-                  className="w-24"
-                  value={form.priority}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, priority: e.target.value }))
-                  }
-                />
+                <span className="text-xs text-muted-foreground">
+                  {t("admin.telefonia.whitelistAyuda")}
+                </span>
               </div>
             </div>
 
+            {/* Destinos SIP: una fila por destino, con su prioridad. */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tf-whitelist">
-                {t("admin.telefonia.whitelistLabel")}
-              </Label>
-              <Textarea
-                id="tf-whitelist"
-                value={form.whitelistIps}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, whitelistIps: e.target.value }))
+              <div className="grid grid-cols-[1fr_5rem_2.25rem] items-center gap-2">
+                <Label htmlFor="tf-destination-0">
+                  {t("admin.telefonia.col.destinos")}
+                </Label>
+                <Label htmlFor="tf-priority-0">
+                  {t("admin.telefonia.prioridad")}
+                </Label>
+                <span />
+                {form.destinations.map((d, index) => (
+                  <DestinationRow
+                    key={d.id}
+                    index={index}
+                    destination={d}
+                    removeLabel={t("admin.telefonia.destinos.quitarAria")}
+                    onChange={(patch) => actualizarDestino(d.id, patch)}
+                    onRemove={() => quitarDestino(d.id)}
+                  />
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-fit gap-1.5"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    destinations: [...f.destinations, nuevoDestino()],
+                  }))
                 }
-                placeholder={"200.1.2.3\n200.1.2.4"}
-                rows={3}
-                className="font-mono text-xs"
-              />
+              >
+                <Plus />
+                {t("admin.telefonia.destinos.agregar")}
+              </Button>
               <span className="text-xs text-muted-foreground">
-                {t("admin.telefonia.whitelistAyuda")}
+                {t("admin.telefonia.destinos.ayuda")}
               </span>
             </div>
 
-            <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
-              <div className="flex flex-col gap-0.5">
-                <Label htmlFor="tf-anonymous">
-                  {t("admin.telefonia.salidaAnonima")}
-                </Label>
-                <span className="text-xs text-muted-foreground">
-                  {t("admin.telefonia.salidaAnonimaAyuda")}
-                </span>
-              </div>
-              <Switch
-                id="tf-anonymous"
-                checked={form.allowsAnonymousOutbound}
+            <div className="grid gap-3 sm:grid-cols-3 md:col-span-2">
+              <SwitchRow
+                id="tf-hidden-cli"
+                label={t("admin.telefonia.cliOculto")}
+                help={t("admin.telefonia.cliOcultoAyuda")}
+                checked={form.allowsHiddenCli}
                 onCheckedChange={(v) =>
-                  setForm((f) => ({ ...f, allowsAnonymousOutbound: v }))
+                  setForm((f) => ({ ...f, allowsHiddenCli: v }))
                 }
               />
-            </div>
-
-            <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
-              <div className="flex flex-col gap-0.5">
-                <Label htmlFor="tf-active">
-                  {t("admin.telefonia.proveedorActivo")}
-                </Label>
-              </div>
-              <Switch
+              <SwitchRow
+                id="tf-random-cli"
+                label={t("admin.telefonia.cliAleatorio")}
+                help={t("admin.telefonia.cliAleatorioAyuda")}
+                checked={form.allowsRandomCli}
+                onCheckedChange={(v) =>
+                  setForm((f) => ({ ...f, allowsRandomCli: v }))
+                }
+              />
+              <SwitchRow
                 id="tf-active"
+                label={t("admin.telefonia.carrierActivo")}
                 checked={form.active}
                 onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))}
               />
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button
-              onClick={guardar}
-              disabled={!form.name.trim() || !form.destination.trim()}
-            >
+            <Button onClick={guardar} disabled={!puedeGuardarCarrier}>
               {editing
                 ? t("common.acciones.guardar")
-                : t("admin.telefonia.nuevoProveedor")}
+                : t("admin.telefonia.nuevoCarrier")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Una fila de destino SIP: URI, prioridad y botón para quitarla. Vive dentro de
+// la grilla de tres columnas del modal del carrier.
+function DestinationRow({
+  index,
+  destination,
+  removeLabel,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  destination: DestinationForm;
+  removeLabel: string;
+  onChange: (patch: Partial<DestinationForm>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <>
+      <Input
+        id={`tf-destination-${index}`}
+        value={destination.destination}
+        onChange={(e) => onChange({ destination: e.target.value })}
+        placeholder="sip:200.1.2.3:5060"
+        className="font-mono text-xs"
+      />
+      <Input
+        id={`tf-priority-${index}`}
+        type="number"
+        value={destination.priority}
+        onChange={(e) => onChange({ priority: e.target.value })}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label={removeLabel}
+        className="text-muted-foreground hover:text-destructive"
+        onClick={onRemove}
+      >
+        <Trash2 />
+      </Button>
+    </>
+  );
+}
+
+// Switch con rótulo y ayuda opcional, en el recuadro que ya usa este modal.
+function SwitchRow({
+  id,
+  label,
+  help,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  help?: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
+      <div className="flex flex-col gap-0.5">
+        <Label htmlFor={id}>{label}</Label>
+        {help && <span className="text-xs text-muted-foreground">{help}</span>}
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }

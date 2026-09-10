@@ -1,98 +1,103 @@
-// Datos mock de Telefonía — administración de Kamailio por región desde Zeus.
-// Ver documentacion/relevamiento-legacy/administracion-kamailio/propuesta/
-// administracion-kamailio-propuesta.md: media-api es quien expone el CRUD real
-// de estas entidades (carriers → tabla `dispatcher`, whitelist → tabla
-// `address`, ambas nativas de los módulos de Kamailio) y dispara el reload en
-// caliente contra el Kamailio de la celda. Acá no pega a ninguna API real.
+// Datos mock de Telefonía — administración de carriers de Kamailio desde Zeus.
+// Ver documentacion/decisiones/telefonia/ADR-TELEFONIA-002 ("Administración de
+// carriers por región") y ADR-BD-005 (modelo de la base `kamailio`). Cada región
+// (un cluster, no un país) tiene su propia base `kamailio` y su media-api: un
+// carrier multiregión es el mismo carrier, con el mismo id, dado de alta por
+// zeus-api en la media-api de cada región donde opera. Acá no pega a ninguna API.
 
 // Reusa el Badge por región que ya define mock-admin.ts (regionBadgeVariant) —
 // no se redefine acá.
 
-// Un proveedor (carrier) telefónico dado de alta por región, con su trunk de
-// ruteo saliente (módulo `dispatcher`) y su whitelist de IP de origen (módulo
-// `permissions` — la única protección anti-fraude decidida, ver
-// ADR-TELEFONIA-002: no hay geo-IP ni rate limiting dentro de Kamailio).
+// Un destino SIP del carrier (una fila de `dispatcher`). Kamailio prueba los
+// destinos del carrier en orden de prioridad y, si uno falla, pasa al siguiente.
+export type CarrierDestination = {
+  id: string;
+  /** URI SIP de destino (`dispatcher.destination`). */
+  destination: string;
+  /** Orden en que Kamailio prueba este destino (`dispatcher.priority`). */
+  priority: number;
+};
+
+// Un carrier telefónico con las regiones donde opera, sus destinos SIP de
+// salida y su whitelist de IP de entrada (la única protección anti-fraude
+// decidida, ver ADR-TELEFONIA-002: no hay geo-IP ni rate limiting en Kamailio).
 export type Carrier = {
   id: string;
   name: string;
-  regionId: string;
-  /** URI SIP de destino del trunk (tabla `dispatcher.destination`). */
-  destination: string;
-  /** Prioridad/peso dentro del set de ruteo (`dispatcher.priority`). */
-  priority: number;
-  /** IPs autorizadas a mandar tráfico entrante (tabla `address`, una fila por IP). */
+  /** Regiones (clusters) donde opera el carrier; al sumar una se copia el carrier completo. */
+  regionIds: string[];
+  destinations: CarrierDestination[];
+  /** IPs autorizadas a mandar tráfico entrante (`carrier_addresses`, una fila por IP). */
   whitelistIps: string[];
-  /**
-   * Si el carrier permite mandar llamadas con CLI oculto/aleatorio. Solo estos
-   * carriers son candidatos al LCR de `carrierRates` (ver §6.2 de la propuesta).
-   */
-  allowsAnonymousOutbound: boolean;
+  /** Permite salir con CLI oculto: candidato al LCR de `carrierRates` para ese caso. */
+  allowsHiddenCli: boolean;
+  /** Permite salir con CLI aleatorio: candidato al LCR de `carrierRates` para ese caso. */
+  allowsRandomCli: boolean;
   active: boolean;
 };
 
 export const carriers: Carrier[] = [
   {
-    id: "carrier-telnyx-ar",
-    name: "Telnyx AR",
-    regionId: "region-ar",
-    destination: "sip:200.1.10.5:5060",
-    priority: 10,
+    id: "carrier-telnyx",
+    name: "Telnyx",
+    regionIds: ["region-ar", "region-mx"],
+    destinations: [
+      { id: "dest-telnyx-1", destination: "sip:200.1.10.5:5060", priority: 10 },
+      { id: "dest-telnyx-2", destination: "sip:200.1.10.6:5060", priority: 5 },
+    ],
     whitelistIps: ["200.1.10.5", "200.1.10.6"],
-    allowsAnonymousOutbound: true,
+    allowsHiddenCli: true,
+    allowsRandomCli: true,
     active: true,
   },
   {
-    id: "carrier-voxbone-ar",
-    name: "Voxbone AR",
-    regionId: "region-ar",
-    destination: "sip:200.1.20.8:5060",
-    priority: 10,
+    id: "carrier-voxbone",
+    name: "Voxbone",
+    regionIds: ["region-ar"],
+    destinations: [
+      { id: "dest-voxbone-1", destination: "sip:200.1.20.8:5060", priority: 10 },
+    ],
     whitelistIps: ["200.1.20.8"],
-    allowsAnonymousOutbound: false,
+    allowsHiddenCli: true,
+    allowsRandomCli: false,
     active: true,
   },
   {
-    id: "carrier-twilio-mx",
-    name: "Twilio MX",
-    regionId: "region-mx",
-    destination: "sip:52.84.10.20:5060",
-    priority: 10,
+    id: "carrier-twilio",
+    name: "Twilio",
+    regionIds: ["region-mx"],
+    destinations: [
+      { id: "dest-twilio-1", destination: "sip:52.84.10.20:5060", priority: 10 },
+    ],
     whitelistIps: ["52.84.10.20"],
-    allowsAnonymousOutbound: true,
+    allowsHiddenCli: false,
+    allowsRandomCli: true,
     active: true,
   },
   {
-    id: "carrier-entel-cl",
-    name: "Entel CL",
-    regionId: "region-cl",
-    destination: "sip:190.98.4.12:5060",
-    priority: 20,
+    id: "carrier-entel",
+    name: "Entel",
+    regionIds: ["region-cl"],
+    destinations: [
+      { id: "dest-entel-1", destination: "sip:190.98.4.12:5060", priority: 20 },
+    ],
     whitelistIps: ["190.98.4.12", "190.98.4.13"],
-    allowsAnonymousOutbound: false,
+    allowsHiddenCli: false,
+    allowsRandomCli: false,
     active: false,
   },
 ];
 
-export function getCarrier(id: string): Carrier | undefined {
-  return carriers.find((c) => c.id === id);
-}
-
-/** Carriers que se pueden elegir para dar de alta un número saliente o una tarifa nueva. */
-export function getActiveCarriers(): Carrier[] {
-  return carriers.filter((c) => c.active);
-}
-
-// Un número saliente (ANI/CLI) y por qué carrier sale — tabla `outbound_numbers`
-// (propia de media-api, no nativa de un módulo de Kamailio). A propósito NO
-// lleva tenant_id: quién es dueño de ese ANI ya lo resuelve olimpo-api
-// (`accounts`/`campaign.outbound_accounts`); acá solo se responde la pregunta
-// de infraestructura — con más de un carrier saliente en la misma región (ver
-// Voxbone AR y Telnyx AR arriba), esto es lo que decide el trunk de salida.
+// Un número saliente (ANI/CLI), por qué carrier sale y en qué región está
+// disponible — tabla `outbound_numbers` de la base `kamailio` de esa región. La
+// región tiene que ser una de las del carrier, y un mismo número no puede estar
+// en dos regiones (lo valida zeus-api antes del alta).
 export type OutboundNumber = {
   id: string;
   /** ANI normalizado a solo dígitos — mismo criterio que accounts.account en olimpo-api. */
   number: string;
   carrierId: string;
+  regionId: string;
   active: boolean;
 };
 
@@ -100,22 +105,25 @@ export const outboundNumbers: OutboundNumber[] = [
   {
     id: "outbound-1161238744",
     number: "1161238744",
-    carrierId: "carrier-telnyx-ar",
+    carrierId: "carrier-telnyx",
+    regionId: "region-ar",
     active: true,
   },
   {
     id: "outbound-1140009911",
     number: "1140009911",
-    carrierId: "carrier-voxbone-ar",
+    carrierId: "carrier-voxbone",
+    regionId: "region-ar",
     active: true,
   },
 ];
 
 // Tabla `carrier_rates` — cuánto cobra cada carrier por minuto, por prefijo de
-// destino. Se usa para elegir el carrier más barato cuando la cuenta/campaña
-// pide salir con CLI oculto/aleatorio (§6.2 de la propuesta): entre los
-// carriers con `allowsAnonymousOutbound`, gana el prefijo más específico que
-// matchee el destino (longest-prefix-match) y, entre esos, el más barato.
+// destino. Es la misma en todas las regiones del carrier (tráfico IP: el precio
+// no depende del cluster desde el que sale). Se usa para elegir el carrier más
+// barato cuando la llamada sale con CLI oculto o aleatorio: entre los carriers
+// que permiten ese modo, gana el prefijo más específico que matchee el destino
+// (longest-prefix-match) y, entre esos, el más barato.
 export type CarrierRate = {
   id: string;
   carrierId: string;
@@ -128,21 +136,21 @@ export type CarrierRate = {
 export const carrierRates: CarrierRate[] = [
   {
     id: "rate-telnyx-54",
-    carrierId: "carrier-telnyx-ar",
+    carrierId: "carrier-telnyx",
     prefix: "54",
     ratePerMinute: 0.018,
     currency: "USD",
   },
   {
     id: "rate-telnyx-5411",
-    carrierId: "carrier-telnyx-ar",
+    carrierId: "carrier-telnyx",
     prefix: "5411",
     ratePerMinute: 0.012,
     currency: "USD",
   },
   {
     id: "rate-twilio-54",
-    carrierId: "carrier-twilio-mx",
+    carrierId: "carrier-twilio",
     prefix: "54",
     ratePerMinute: 0.021,
     currency: "USD",
