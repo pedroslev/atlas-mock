@@ -108,48 +108,63 @@ export const admin: NamespaceDict = {
 
     "telefonia.titulo": "Telefonía",
     "telefonia.descripcion":
-      "Proveedores (carriers) de telefonía por región: trunk de ruteo saliente y whitelist de IP entrante en Kamailio.",
-    "telefonia.tab.proveedores": "Proveedores",
+      "Carriers de telefonía y las regiones donde operan: destinos SIP de salida y whitelist de IP de entrada en Kamailio.",
+    "telefonia.tab.carriers": "Carriers",
     "telefonia.tab.salientes": "Números salientes",
     "telefonia.tab.tarifas": "Tarifas por prefijo",
-    "telefonia.nuevoProveedor": "Nuevo proveedor",
-    "telefonia.col.carrier": "Proveedor",
-    "telefonia.col.destino": "Destino (trunk)",
+    "telefonia.nuevoCarrier": "Nuevo carrier",
+    "telefonia.col.carrier": "Carrier",
+    "telefonia.col.regiones": "Regiones",
+    "telefonia.col.destinos": "Destinos SIP",
     "telefonia.col.whitelist": "IPs en whitelist",
     "telefonia.accion.activar": "Activar",
     "telefonia.accion.desactivar": "Desactivar",
     "telefonia.editarTitulo": "Editar {nombre}",
     "telefonia.dialogoDescripcion":
-      "Alta de proveedor: trunk de ruteo saliente (dispatcher) y whitelist de IP de origen (permissions).",
-    "telefonia.nombrePlaceholder": "Ej: Telnyx AR",
+      "Alta de carrier: regiones donde opera, destinos SIP de salida (dispatcher) y whitelist de IP de origen (permissions).",
+    "telefonia.nombrePlaceholder": "Ej: Telnyx",
     "telefonia.prioridad": "Prioridad",
+    "telefonia.regiones.ayuda":
+      "Regiones donde opera el carrier. Al sumar una región se copian sus IPs, destinos y tarifas.",
+    "telefonia.regiones.placeholder": "Elegir regiones",
+    "telefonia.regiones.seleccionadas": "{n} seleccionadas",
+    "telefonia.regiones.buscar": "Buscar región",
+    "telefonia.regiones.vacio": "Sin resultados.",
+    "telefonia.regiones.quitarAria": "Quitar {nombre}",
+    "telefonia.destinos.agregar": "Agregar destino",
+    "telefonia.destinos.quitarAria": "Quitar destino",
+    "telefonia.destinos.ayuda":
+      "Kamailio prueba los destinos en orden de prioridad: si uno falla, pasa al siguiente.",
     "telefonia.whitelistLabel": "Whitelist de IP (una por línea)",
     "telefonia.whitelistAyuda":
-      "IPs de origen autorizadas a mandar tráfico entrante de este proveedor.",
-    "telefonia.proveedorActivo": "Proveedor activo",
+      "IPs de origen autorizadas a mandar tráfico entrante de este carrier.",
+    "telefonia.cliOculto": "Permite CLI oculto",
+    "telefonia.cliOcultoAyuda": "La llamada puede salir sin mostrar número.",
+    "telefonia.cliAleatorio": "Permite CLI aleatorio",
+    "telefonia.cliAleatorioAyuda":
+      "La llamada puede salir mostrando un número aleatorio.",
+    "telefonia.carrierActivo": "Carrier activo",
     "telefonia.eliminarDescripcion":
-      "Se eliminará el proveedor “{nombre}”. Esta acción no se puede deshacer.",
-    "telefonia.salidaAnonima": "Permite salida oculta/aleatoria",
-    "telefonia.salidaAnonimaAyuda":
-      "Este carrier puede usarse cuando la cuenta pide salir con CLI oculto o aleatorio (ver Tarifas por prefijo).",
+      "Se eliminará el carrier “{nombre}” en todas sus regiones, con sus números salientes y tarifas. Esta acción no se puede deshacer.",
 
-    "telefonia.salientes.titulo": "Números salientes (ANI)",
     "telefonia.salientes.descripcion":
-      "Por qué carrier sale cada número saliente. No depende del tenant: esa validación ya la hace olimpo-api antes de elegir el ANI.",
+      "Por qué carrier sale cada número saliente y en qué región está disponible.",
     "telefonia.salientes.agregar": "Agregar número",
     "telefonia.salientes.nuevo": "Nuevo número saliente",
     "telefonia.salientes.editarTitulo": "Editar {numero}",
     "telefonia.salientes.dialogoDescripcion":
-      "Mapeo de un ANI saliente al carrier por el que sale.",
+      "Mapeo de un ANI saliente al carrier por el que sale y a la región donde está disponible.",
     "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.col.carrier": "Carrier",
     "telefonia.salientes.numeroPlaceholder": "Ej: 1161238744",
+    "telefonia.salientes.numeroRepetido":
+      "Este número ya está cargado. Un número no puede repetirse, tampoco en otra región.",
+    "telefonia.salientes.regionAyuda":
+      "Solo las regiones donde opera el carrier elegido.",
     "telefonia.salientes.eliminarDescripcion":
       "Se eliminará el número saliente “{numero}”. Esta acción no se puede deshacer.",
 
-    "telefonia.tarifas.titulo": "Tarifas por prefijo (LCR)",
     "telefonia.tarifas.descripcion":
-      "Cuánto cobra cada carrier por minuto según el prefijo de destino. Se usa para elegir el carrier más barato cuando la llamada sale con CLI oculto o aleatorio.",
+      "Cuánto cobra cada carrier por minuto según el prefijo de destino, igual en todas sus regiones. Se usa para elegir el carrier más barato cuando la llamada sale con CLI oculto o aleatorio.",
     "telefonia.tarifas.agregar": "Agregar tarifa",
     "telefonia.tarifas.nuevo": "Nueva tarifa",
     "telefonia.tarifas.editarTitulo": "Editar tarifa {prefijo}",
@@ -158,7 +173,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefijo destino",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Solo se listan carriers activos que permiten salida oculta/aleatoria.",
+      "Solo se listan carriers activos que permiten CLI oculto o aleatorio.",
     "telefonia.tarifas.eliminarDescripcion":
       "Se eliminará la tarifa del prefijo “{prefijo}”. Esta acción no se puede deshacer.",
   },
@@ -264,48 +279,63 @@ export const admin: NamespaceDict = {
 
     "telefonia.titulo": "Telephony",
     "telefonia.descripcion":
-      "Telephony providers (carriers) per region: outbound routing trunk and inbound IP whitelist in Kamailio.",
-    "telefonia.tab.proveedores": "Providers",
+      "Telephony carriers and the regions where they operate: outbound SIP destinations and inbound IP whitelist in Kamailio.",
+    "telefonia.tab.carriers": "Carriers",
     "telefonia.tab.salientes": "Outbound numbers",
     "telefonia.tab.tarifas": "Rates by prefix",
-    "telefonia.nuevoProveedor": "New provider",
-    "telefonia.col.carrier": "Provider",
-    "telefonia.col.destino": "Destination (trunk)",
+    "telefonia.nuevoCarrier": "New carrier",
+    "telefonia.col.carrier": "Carrier",
+    "telefonia.col.regiones": "Regions",
+    "telefonia.col.destinos": "SIP destinations",
     "telefonia.col.whitelist": "Whitelisted IPs",
     "telefonia.accion.activar": "Activate",
     "telefonia.accion.desactivar": "Deactivate",
     "telefonia.editarTitulo": "Edit {nombre}",
     "telefonia.dialogoDescripcion":
-      "Provider onboarding: outbound routing trunk (dispatcher) and source IP whitelist (permissions).",
-    "telefonia.nombrePlaceholder": "E.g. Telnyx AR",
+      "Carrier onboarding: regions where it operates, outbound SIP destinations (dispatcher) and source IP whitelist (permissions).",
+    "telefonia.nombrePlaceholder": "E.g. Telnyx",
     "telefonia.prioridad": "Priority",
+    "telefonia.regiones.ayuda":
+      "Regions where the carrier operates. Adding a region copies its IPs, destinations and rates.",
+    "telefonia.regiones.placeholder": "Choose regions",
+    "telefonia.regiones.seleccionadas": "{n} selected",
+    "telefonia.regiones.buscar": "Search region",
+    "telefonia.regiones.vacio": "No results.",
+    "telefonia.regiones.quitarAria": "Remove {nombre}",
+    "telefonia.destinos.agregar": "Add destination",
+    "telefonia.destinos.quitarAria": "Remove destination",
+    "telefonia.destinos.ayuda":
+      "Kamailio tries the destinations in priority order: if one fails, it moves to the next.",
     "telefonia.whitelistLabel": "IP whitelist (one per line)",
     "telefonia.whitelistAyuda":
-      "Source IPs allowed to send inbound traffic for this provider.",
-    "telefonia.proveedorActivo": "Provider active",
+      "Source IPs allowed to send inbound traffic for this carrier.",
+    "telefonia.cliOculto": "Allows hidden CLI",
+    "telefonia.cliOcultoAyuda": "The call can go out without showing a number.",
+    "telefonia.cliAleatorio": "Allows random CLI",
+    "telefonia.cliAleatorioAyuda":
+      "The call can go out showing a random number.",
+    "telefonia.carrierActivo": "Carrier active",
     "telefonia.eliminarDescripcion":
-      "The provider “{nombre}” will be deleted. This action cannot be undone.",
-    "telefonia.salidaAnonima": "Allows hidden/random outbound CLI",
-    "telefonia.salidaAnonimaAyuda":
-      "This carrier can be used when the account requests hidden or random CLI (see Rates by prefix).",
+      "The carrier “{nombre}” will be deleted in all its regions, along with its outbound numbers and rates. This action cannot be undone.",
 
-    "telefonia.salientes.titulo": "Outbound numbers (ANI)",
     "telefonia.salientes.descripcion":
-      "Which carrier each outbound number uses. Not tenant-dependent: that check already happens in olimpo-api before the ANI is picked.",
+      "Which carrier each outbound number uses and in which region it is available.",
     "telefonia.salientes.agregar": "Add number",
     "telefonia.salientes.nuevo": "New outbound number",
     "telefonia.salientes.editarTitulo": "Edit {numero}",
     "telefonia.salientes.dialogoDescripcion":
-      "Mapping of an outbound ANI to the carrier it goes out through.",
+      "Mapping of an outbound ANI to the carrier it goes out through and the region where it is available.",
     "telefonia.salientes.col.numero": "Number (ANI)",
-    "telefonia.salientes.col.carrier": "Carrier",
     "telefonia.salientes.numeroPlaceholder": "E.g. 1161238744",
+    "telefonia.salientes.numeroRepetido":
+      "This number is already loaded. A number cannot be repeated, not even in another region.",
+    "telefonia.salientes.regionAyuda":
+      "Only the regions where the selected carrier operates.",
     "telefonia.salientes.eliminarDescripcion":
       "The outbound number “{numero}” will be deleted. This action cannot be undone.",
 
-    "telefonia.tarifas.titulo": "Rates by prefix (LCR)",
     "telefonia.tarifas.descripcion":
-      "How much each carrier charges per minute by destination prefix. Used to pick the cheapest carrier when the call goes out with hidden or random CLI.",
+      "How much each carrier charges per minute by destination prefix, the same in all its regions. Used to pick the cheapest carrier when the call goes out with hidden or random CLI.",
     "telefonia.tarifas.agregar": "Add rate",
     "telefonia.tarifas.nuevo": "New rate",
     "telefonia.tarifas.editarTitulo": "Edit rate {prefijo}",
@@ -314,7 +344,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Destination prefix",
     "telefonia.tarifas.col.tarifa": "Rate",
     "telefonia.tarifas.carrierAyuda":
-      "Only active carriers that allow anonymous outbound are listed.",
+      "Only active carriers that allow hidden or random CLI are listed.",
     "telefonia.tarifas.eliminarDescripcion":
       "The rate for prefix “{prefijo}” will be deleted. This action cannot be undone.",
   },
@@ -420,48 +450,63 @@ export const admin: NamespaceDict = {
 
     "telefonia.titulo": "Telefonia",
     "telefonia.descripcion":
-      "Provedores (carriers) de telefonia por região: trunk de roteamento de saída e whitelist de IP de entrada no Kamailio.",
-    "telefonia.tab.proveedores": "Provedores",
+      "Carriers de telefonia e as regiões onde operam: destinos SIP de saída e whitelist de IP de entrada no Kamailio.",
+    "telefonia.tab.carriers": "Carriers",
     "telefonia.tab.salientes": "Números de saída",
     "telefonia.tab.tarifas": "Tarifas por prefixo",
-    "telefonia.nuevoProveedor": "Novo provedor",
-    "telefonia.col.carrier": "Provedor",
-    "telefonia.col.destino": "Destino (trunk)",
+    "telefonia.nuevoCarrier": "Novo carrier",
+    "telefonia.col.carrier": "Carrier",
+    "telefonia.col.regiones": "Regiões",
+    "telefonia.col.destinos": "Destinos SIP",
     "telefonia.col.whitelist": "IPs na whitelist",
     "telefonia.accion.activar": "Ativar",
     "telefonia.accion.desactivar": "Desativar",
     "telefonia.editarTitulo": "Editar {nombre}",
     "telefonia.dialogoDescripcion":
-      "Cadastro de provedor: trunk de roteamento de saída (dispatcher) e whitelist de IP de origem (permissions).",
-    "telefonia.nombrePlaceholder": "Ex.: Telnyx AR",
+      "Cadastro de carrier: regiões onde opera, destinos SIP de saída (dispatcher) e whitelist de IP de origem (permissions).",
+    "telefonia.nombrePlaceholder": "Ex.: Telnyx",
     "telefonia.prioridad": "Prioridade",
+    "telefonia.regiones.ayuda":
+      "Regiões onde o carrier opera. Ao adicionar uma região, seus IPs, destinos e tarifas são copiados.",
+    "telefonia.regiones.placeholder": "Escolher regiões",
+    "telefonia.regiones.seleccionadas": "{n} selecionadas",
+    "telefonia.regiones.buscar": "Buscar região",
+    "telefonia.regiones.vacio": "Sem resultados.",
+    "telefonia.regiones.quitarAria": "Remover {nombre}",
+    "telefonia.destinos.agregar": "Adicionar destino",
+    "telefonia.destinos.quitarAria": "Remover destino",
+    "telefonia.destinos.ayuda":
+      "O Kamailio tenta os destinos por ordem de prioridade: se um falhar, passa para o seguinte.",
     "telefonia.whitelistLabel": "Whitelist de IP (uma por linha)",
     "telefonia.whitelistAyuda":
-      "IPs de origem autorizadas a enviar tráfego de entrada deste provedor.",
-    "telefonia.proveedorActivo": "Provedor ativo",
+      "IPs de origem autorizadas a enviar tráfego de entrada deste carrier.",
+    "telefonia.cliOculto": "Permite CLI oculto",
+    "telefonia.cliOcultoAyuda": "A chamada pode sair sem mostrar número.",
+    "telefonia.cliAleatorio": "Permite CLI aleatório",
+    "telefonia.cliAleatorioAyuda":
+      "A chamada pode sair mostrando um número aleatório.",
+    "telefonia.carrierActivo": "Carrier ativo",
     "telefonia.eliminarDescripcion":
-      "O provedor “{nombre}” será excluído. Esta ação não pode ser desfeita.",
-    "telefonia.salidaAnonima": "Permite saída oculta/aleatória",
-    "telefonia.salidaAnonimaAyuda":
-      "Este carrier pode ser usado quando a conta pede saída com CLI oculto ou aleatório (ver Tarifas por prefixo).",
+      "O carrier “{nombre}” será excluído em todas as suas regiões, com seus números de saída e tarifas. Esta ação não pode ser desfeita.",
 
-    "telefonia.salientes.titulo": "Números de saída (ANI)",
     "telefonia.salientes.descripcion":
-      "Por qual carrier sai cada número de saída. Não depende do tenant: essa validação já é feita pela olimpo-api antes de escolher o ANI.",
+      "Por qual carrier sai cada número de saída e em qual região ele está disponível.",
     "telefonia.salientes.agregar": "Adicionar número",
     "telefonia.salientes.nuevo": "Novo número de saída",
     "telefonia.salientes.editarTitulo": "Editar {numero}",
     "telefonia.salientes.dialogoDescripcion":
-      "Mapeamento de um ANI de saída para o carrier pelo qual ele sai.",
+      "Mapeamento de um ANI de saída para o carrier pelo qual ele sai e a região onde está disponível.",
     "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.col.carrier": "Carrier",
     "telefonia.salientes.numeroPlaceholder": "Ex.: 1161238744",
+    "telefonia.salientes.numeroRepetido":
+      "Este número já está cadastrado. Um número não pode se repetir, nem em outra região.",
+    "telefonia.salientes.regionAyuda":
+      "Só as regiões onde o carrier escolhido opera.",
     "telefonia.salientes.eliminarDescripcion":
       "O número de saída “{numero}” será excluído. Esta ação não pode ser desfeita.",
 
-    "telefonia.tarifas.titulo": "Tarifas por prefixo (LCR)",
     "telefonia.tarifas.descripcion":
-      "Quanto cada carrier cobra por minuto conforme o prefixo de destino. Usado para escolher o carrier mais barato quando a chamada sai com CLI oculto ou aleatório.",
+      "Quanto cada carrier cobra por minuto conforme o prefixo de destino, igual em todas as suas regiões. Usado para escolher o carrier mais barato quando a chamada sai com CLI oculto ou aleatório.",
     "telefonia.tarifas.agregar": "Adicionar tarifa",
     "telefonia.tarifas.nuevo": "Nova tarifa",
     "telefonia.tarifas.editarTitulo": "Editar tarifa {prefijo}",
@@ -470,7 +515,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefixo destino",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Só são listados carriers ativos que permitem saída anônima.",
+      "Só são listados carriers ativos que permitem CLI oculto ou aleatório.",
     "telefonia.tarifas.eliminarDescripcion":
       "A tarifa do prefixo “{prefijo}” será excluída. Esta ação não pode ser desfeita.",
   },
@@ -577,48 +622,63 @@ export const admin: NamespaceDict = {
 
     "telefonia.titulo": "Telefonia",
     "telefonia.descripcion":
-      "Proveïdors (carriers) de telefonia per regió: trunk d'encaminament de sortida i whitelist d'IP d'entrada a Kamailio.",
-    "telefonia.tab.proveedores": "Proveïdors",
+      "Carriers de telefonia i les regions on operen: destins SIP de sortida i whitelist d'IP d'entrada a Kamailio.",
+    "telefonia.tab.carriers": "Carriers",
     "telefonia.tab.salientes": "Números de sortida",
     "telefonia.tab.tarifas": "Tarifes per prefix",
-    "telefonia.nuevoProveedor": "Nou proveïdor",
-    "telefonia.col.carrier": "Proveïdor",
-    "telefonia.col.destino": "Destí (trunk)",
+    "telefonia.nuevoCarrier": "Nou carrier",
+    "telefonia.col.carrier": "Carrier",
+    "telefonia.col.regiones": "Regions",
+    "telefonia.col.destinos": "Destins SIP",
     "telefonia.col.whitelist": "IPs a la whitelist",
     "telefonia.accion.activar": "Activa",
     "telefonia.accion.desactivar": "Desactiva",
     "telefonia.editarTitulo": "Edita {nombre}",
     "telefonia.dialogoDescripcion":
-      "Alta de proveïdor: trunk d'encaminament de sortida (dispatcher) i whitelist d'IP d'origen (permissions).",
-    "telefonia.nombrePlaceholder": "Ex.: Telnyx AR",
+      "Alta de carrier: regions on opera, destins SIP de sortida (dispatcher) i whitelist d'IP d'origen (permissions).",
+    "telefonia.nombrePlaceholder": "Ex.: Telnyx",
     "telefonia.prioridad": "Prioritat",
+    "telefonia.regiones.ayuda":
+      "Regions on opera el carrier. En afegir una regió se'n copien les IPs, els destins i les tarifes.",
+    "telefonia.regiones.placeholder": "Tria regions",
+    "telefonia.regiones.seleccionadas": "{n} seleccionades",
+    "telefonia.regiones.buscar": "Cerca una regió",
+    "telefonia.regiones.vacio": "Sense resultats.",
+    "telefonia.regiones.quitarAria": "Treu {nombre}",
+    "telefonia.destinos.agregar": "Afegeix un destí",
+    "telefonia.destinos.quitarAria": "Treu el destí",
+    "telefonia.destinos.ayuda":
+      "Kamailio prova els destins per ordre de prioritat: si un falla, passa al següent.",
     "telefonia.whitelistLabel": "Whitelist d'IP (una per línia)",
     "telefonia.whitelistAyuda":
-      "IPs d'origen autoritzades a enviar trànsit d'entrada d'aquest proveïdor.",
-    "telefonia.proveedorActivo": "Proveïdor actiu",
+      "IPs d'origen autoritzades a enviar trànsit d'entrada d'aquest carrier.",
+    "telefonia.cliOculto": "Permet CLI ocult",
+    "telefonia.cliOcultoAyuda": "La trucada pot sortir sense mostrar número.",
+    "telefonia.cliAleatorio": "Permet CLI aleatori",
+    "telefonia.cliAleatorioAyuda":
+      "La trucada pot sortir mostrant un número aleatori.",
+    "telefonia.carrierActivo": "Carrier actiu",
     "telefonia.eliminarDescripcion":
-      "S'eliminarà el proveïdor “{nombre}”. Aquesta acció no es pot desfer.",
-    "telefonia.salidaAnonima": "Permet sortida oculta/aleatòria",
-    "telefonia.salidaAnonimaAyuda":
-      "Aquest carrier es pot fer servir quan el compte demana sortir amb CLI ocult o aleatori (veure Tarifes per prefix).",
+      "S'eliminarà el carrier “{nombre}” a totes les seves regions, amb els seus números de sortida i tarifes. Aquesta acció no es pot desfer.",
 
-    "telefonia.salientes.titulo": "Números de sortida (ANI)",
     "telefonia.salientes.descripcion":
-      "Per quin carrier surt cada número de sortida. No depèn del tenant: aquesta validació ja la fa olimpo-api abans de triar l'ANI.",
+      "Per quin carrier surt cada número de sortida i a quina regió està disponible.",
     "telefonia.salientes.agregar": "Afegeix un número",
     "telefonia.salientes.nuevo": "Nou número de sortida",
     "telefonia.salientes.editarTitulo": "Edita {numero}",
     "telefonia.salientes.dialogoDescripcion":
-      "Mapeig d'un ANI de sortida al carrier pel qual surt.",
+      "Mapeig d'un ANI de sortida al carrier pel qual surt i a la regió on està disponible.",
     "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.col.carrier": "Carrier",
     "telefonia.salientes.numeroPlaceholder": "Ex.: 1161238744",
+    "telefonia.salientes.numeroRepetido":
+      "Aquest número ja està carregat. Un número no es pot repetir, tampoc en una altra regió.",
+    "telefonia.salientes.regionAyuda":
+      "Només les regions on opera el carrier triat.",
     "telefonia.salientes.eliminarDescripcion":
       "S'eliminarà el número de sortida “{numero}”. Aquesta acció no es pot desfer.",
 
-    "telefonia.tarifas.titulo": "Tarifes per prefix (LCR)",
     "telefonia.tarifas.descripcion":
-      "Quant cobra cada carrier per minut segons el prefix de destinació. S'usa per triar el carrier més barat quan la trucada surt amb CLI ocult o aleatori.",
+      "Quant cobra cada carrier per minut segons el prefix de destinació, igual a totes les seves regions. S'usa per triar el carrier més barat quan la trucada surt amb CLI ocult o aleatori.",
     "telefonia.tarifas.agregar": "Afegeix una tarifa",
     "telefonia.tarifas.nuevo": "Nova tarifa",
     "telefonia.tarifas.editarTitulo": "Edita la tarifa {prefijo}",
@@ -627,7 +687,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefix destinació",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Només es llisten carriers actius que permeten sortida anònima.",
+      "Només es llisten carriers actius que permeten CLI ocult o aleatori.",
     "telefonia.tarifas.eliminarDescripcion":
       "S'eliminarà la tarifa del prefix “{prefijo}”. Aquesta acció no es pot desfer.",
   },
