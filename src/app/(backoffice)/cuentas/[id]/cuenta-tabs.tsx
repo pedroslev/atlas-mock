@@ -58,7 +58,7 @@ export function CuentaTabs({
                 disabled
               />
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 lg:col-span-2">
               <Label htmlFor="descripcion">
                 {t("common.comunes.descripcion")}
               </Label>
