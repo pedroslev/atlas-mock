@@ -41,8 +41,8 @@ export const cuentas: NamespaceDict = {
     "uso.entranteDesc": "Las llamadas entran por acá y se derivan a una campaña.",
     "uso.saliente": "Origina llamadas",
     "uso.salienteDesc": "Se usa para llamar desde las campañas.",
-    "uso.ambas": "Las dos cosas",
-    "uso.ambasDesc": "Recibe y origina llamadas por la misma línea.",
+    "uso.ambas": "Recibe y origina",
+    "uso.ambasDesc": "La misma línea recibe las llamadas y también llama.",
     "uso.salidaMisma": "Número visible",
     "uso.salidaMismaDesc":
       "Es el mismo número por el que entran las llamadas: el destinatario puede devolver el llamado y entra por esta cuenta.",
@@ -125,8 +125,8 @@ export const cuentas: NamespaceDict = {
     "uso.entranteDesc": "Calls come in here and are routed to a campaign.",
     "uso.saliente": "Places calls",
     "uso.salienteDesc": "Used to call out from campaigns.",
-    "uso.ambas": "Both",
-    "uso.ambasDesc": "Receives and places calls on the same line.",
+    "uso.ambas": "Receives and places",
+    "uso.ambasDesc": "The same line receives calls and also calls out.",
     "uso.salidaMisma": "Visible number",
     "uso.salidaMismaDesc":
       "It's the same number calls come in on: the other party can call back and reaches this account.",
@@ -208,8 +208,8 @@ export const cuentas: NamespaceDict = {
     "uso.entranteDesc": "As chamadas entram por aqui e são encaminhadas a uma campanha.",
     "uso.saliente": "Origina chamadas",
     "uso.salienteDesc": "Usada para ligar a partir das campanhas.",
-    "uso.ambas": "As duas coisas",
-    "uso.ambasDesc": "Recebe e origina chamadas pela mesma linha.",
+    "uso.ambas": "Recebe e origina",
+    "uso.ambasDesc": "A mesma linha recebe as chamadas e também liga.",
     "uso.salidaMisma": "Número visível",
     "uso.salidaMismaDesc":
       "É o mesmo número pelo qual entram as chamadas: o destinatário pode retornar a ligação e cai nesta conta.",
@@ -291,8 +291,8 @@ export const cuentas: NamespaceDict = {
     "uso.entranteDesc": "Les trucades entren per aquí i es deriven a una campanya.",
     "uso.saliente": "Origina trucades",
     "uso.salienteDesc": "S'utilitza per trucar des de les campanyes.",
-    "uso.ambas": "Les dues coses",
-    "uso.ambasDesc": "Rep i origina trucades per la mateixa línia.",
+    "uso.ambas": "Rep i origina",
+    "uso.ambasDesc": "La mateixa línia rep les trucades i també truca.",
     "uso.salidaMisma": "Número visible",
     "uso.salidaMismaDesc":
       "És el mateix número pel qual entren les trucades: el destinatari pot tornar la trucada i entra per aquest compte.",

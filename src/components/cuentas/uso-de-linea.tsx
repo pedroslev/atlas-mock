@@ -103,42 +103,24 @@ export function UsoDeLinea({
         <section className="flex flex-col gap-3">
           <Paso numero={1} titulo={t("cuentas.uso.paso1")} />
           <div className="grid gap-3 sm:grid-cols-3">
-            {OPCIONES_USO.map(({ value, icon: Icon }) => {
-              const elegido = uso === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => {
-                    onUsoChange(value);
-                    // "El mismo número" solo existe si la línea también recibe;
-                    // "Número" solo si no recibe. Al cambiar el uso, la opción
-                    // que ya no aplica se limpia.
-                    if (value !== "ambas" && modoSalida === "misma") {
-                      setModoSalida(undefined);
-                    }
-                    if (value === "ambas" && modoSalida === "propio") {
-                      setModoSalida(undefined);
-                    }
-                  }}
-                  className={`flex flex-col items-start gap-1.5 rounded-lg p-3 text-left ring-1 transition-colors ${
-                    elegido
-                      ? "bg-accent/60 ring-2 ring-primary"
-                      : "ring-foreground/10 hover:bg-muted/60"
-                  }`}
-                >
-                  <Icon
-                    className={`size-4 ${elegido ? "text-primary" : "text-secondary"}`}
-                  />
-                  <span className="text-sm font-medium">
-                    {t(`cuentas.uso.${value}`)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t(`cuentas.uso.${value}Desc`)}
-                  </span>
-                </button>
-              );
-            })}
+            {OPCIONES_USO.map(({ value, icon }) => (
+              <Opcion
+                key={value}
+                id={`uso-${value}`}
+                icon={icon}
+                label={t(`cuentas.uso.${value}`)}
+                description={t(`cuentas.uso.${value}Desc`)}
+                elegido={uso === value}
+                onSelect={() => {
+                  onUsoChange(value);
+                  // Al elegir un uso que origina llamadas, la primera opción de
+                  // salida queda marcada: "el mismo número" si la línea también
+                  // recibe, "número visible" si solo origina.
+                  if (value === "ambas") setModoSalida("misma");
+                  if (value === "saliente") setModoSalida("propio");
+                }}
+              />
+            ))}
           </div>
         </section>
 
@@ -150,7 +132,7 @@ export function UsoDeLinea({
                 que van en tres columnas y no queda un hueco en la grilla. */}
             <div className="grid gap-3 sm:grid-cols-3">
               {uso === "ambas" ? (
-                <OpcionSalida
+                <Opcion
                   id="salida-misma"
                   icon={PhoneCall}
                   label={t("cuentas.uso.salidaMisma")}
@@ -159,7 +141,7 @@ export function UsoDeLinea({
                   onSelect={() => setModoSalida("misma")}
                 />
               ) : (
-                <OpcionSalida
+                <Opcion
                   id="salida-numero"
                   icon={PhoneOutgoing}
                   label={t("cuentas.uso.salidaNumero")}
@@ -168,7 +150,7 @@ export function UsoDeLinea({
                   onSelect={() => setModoSalida("propio")}
                 />
               )}
-              <OpcionSalida
+              <Opcion
                 id="salida-aleatorio"
                 icon={Shuffle}
                 label={t("cuentas.uso.salidaAleatorio")}
@@ -177,7 +159,7 @@ export function UsoDeLinea({
                 onSelect={() => setModoSalida("aleatorio")}
                 motivoDeshabilitado={motivoAleatorio}
               />
-              <OpcionSalida
+              <Opcion
                 id="salida-oculto"
                 icon={EyeOff}
                 label={t("cuentas.uso.salidaOculto")}
@@ -201,6 +183,7 @@ export function UsoDeLinea({
             titulo={t("cuentas.uso.paso3")}
             ayuda={!uso ? t("cuentas.uso.elegiUsoPrimero") : undefined}
           />
+
 
           {recibe && (
             <div className="flex flex-col gap-1.5">
@@ -293,7 +276,7 @@ function Paso({
   );
 }
 
-function OpcionSalida({
+function Opcion({
   id,
   icon: Icon,
   label,
