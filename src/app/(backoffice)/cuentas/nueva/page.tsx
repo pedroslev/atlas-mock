@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -9,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsoDeLinea } from "@/components/cuentas/uso-de-linea";
 import { useT } from "@/lib/i18n";
+import type { UsoDeLinea as TipoUso } from "@/lib/mock-data";
 
 // Fase 0: solo cuentas telefónicas — sin selector de tipo ni campos de
 // valorización (una llamada vale siempre 100). Feedback 2026-07-16.
 export default function NuevaCuentaPage() {
   const t = useT();
+  const [uso, setUso] = useState<TipoUso | undefined>();
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,6 +48,15 @@ export default function NuevaCuentaPage() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tipo">{t("cuentas.campo.tipo")}</Label>
+            <Input
+              id="tipo"
+              value={t("cuentas.tipo.telefoniaSip")}
+              readOnly
+              disabled
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="descripcion">{t("common.comunes.descripcion")}</Label>
             <Textarea
               id="descripcion"
@@ -55,7 +67,7 @@ export default function NuevaCuentaPage() {
         </CardContent>
       </Card>
 
-      <UsoDeLinea />
+      <UsoDeLinea uso={uso} onUsoChange={setUso} />
     </div>
   );
 }

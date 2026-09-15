@@ -31,7 +31,7 @@ export const cuentas: NamespaceDict = {
 
     "uso.titulo": "Uso de la línea",
     "uso.descripcion":
-      "Primero definí para qué se va a usar la línea: lo que se puede hacer depende del proveedor de tu región, así que los números se ofrecen recién después.",
+      "Primero definí para qué se va a usar la línea: lo que se puede hacer depende del proveedor, así que los números se ofrecen recién después.",
     "uso.paso1": "¿Para qué se usa esta línea?",
     "uso.paso2": "¿Qué ve el destinatario cuando llamás?",
     "uso.paso3": "Elegí el número",
@@ -45,29 +45,31 @@ export const cuentas: NamespaceDict = {
     "uso.ambasDesc": "Recibe y origina llamadas por la misma línea.",
     "uso.salidaMisma": "El mismo número por el que entran",
     "uso.salidaMismaDesc": "El destinatario puede devolver el llamado y entra por esta cuenta.",
-    "uso.salidaPropio": "Otro número propio",
-    "uso.salidaPropioDesc": "Se muestra otro de los números disponibles en tu región.",
+    "uso.salidaNumero": "Número",
+    "uso.salidaNumeroDesc": "Se muestra un número del listado de disponibles.",
     "uso.salidaAleatorio": "Número aleatorio",
     "uso.salidaAleatorioDesc": "Cada llamada sale con un número distinto.",
     "uso.salidaOculto": "Número oculto",
     "uso.salidaOcultoDesc": "La llamada sale sin mostrar ningún número.",
     "uso.sinProveedorAleatorio":
-      "No disponible: ningún proveedor de tu región ({region}) permite salir con número aleatorio.",
+      "No disponible: ningún proveedor permite salir con número aleatorio.",
     "uso.sinProveedorOculto":
-      "No disponible: ningún proveedor de tu región ({region}) permite salir con número oculto.",
+      "No disponible: ningún proveedor permite salir con número oculto.",
     "uso.sinTarifas":
-      "No disponible: tu región no tiene tarifas cargadas para elegir por dónde sale la llamada.",
-    "uso.validadoRegion":
-      "Las opciones se habilitan según lo que permitan los proveedores de tu región ({region}).",
+      "No disponible: no hay tarifas cargadas para elegir por dónde sale la llamada.",
+    "uso.validado":
+      "Las opciones se habilitan según lo que permitan los proveedores.",
     "uso.lineaEntrante": "Número por el que entran las llamadas",
     "uso.lineaSaliente": "Número que se muestra al llamar",
     "uso.elegirLinea": "Elegir un número…",
     "uso.soloDisponibles":
-      "Solo se muestran las líneas disponibles en tu región ({region}) y todavía no asignadas a otra cuenta.",
+      "Solo se muestran las líneas disponibles y todavía no asignadas a otra cuenta.",
     "uso.sinNumeroElegible":
       "Con esta opción no elegís número: la plataforma resuelve por dónde sale cada llamada.",
-    "uso.noEncuentroNumero": "No encuentro mi número",
-    "uso.numeroPropioAviso": "Requiere que Mitrol dé de alta tu proveedor",
+    "uso.notaAltaNumero":
+      "¿Necesitás usar un número propio? Pedile al administrador de Mitrol que lo dé de alta: una vez cargado aparece en este listado.",
+    "campo.tipo": "Tipo",
+    "tipo.telefoniaSip": "Telefonía SIP",
     "col.uso": "Uso",
 
     "flujo.inicio": "Inicio de interacción",
@@ -111,7 +113,7 @@ export const cuentas: NamespaceDict = {
 
     "uso.titulo": "Line usage",
     "uso.descripcion":
-      "First define what the line is for: what it can do depends on your region's carrier, so numbers are offered only afterwards.",
+      "First define what the line is for: what it can do depends on the carrier, so numbers are offered only afterwards.",
     "uso.paso1": "What is this line used for?",
     "uso.paso2": "What does the other party see when you call?",
     "uso.paso3": "Choose the number",
@@ -125,29 +127,30 @@ export const cuentas: NamespaceDict = {
     "uso.ambasDesc": "Receives and places calls on the same line.",
     "uso.salidaMisma": "The same number calls come in on",
     "uso.salidaMismaDesc": "The other party can call back and reaches this account.",
-    "uso.salidaPropio": "Another own number",
-    "uso.salidaPropioDesc": "Shows another number available in your region.",
+    "uso.salidaNumero": "Number",
+    "uso.salidaNumeroDesc": "Shows a number from the available list.",
     "uso.salidaAleatorio": "Random number",
     "uso.salidaAleatorioDesc": "Each call goes out with a different number.",
     "uso.salidaOculto": "Hidden number",
     "uso.salidaOcultoDesc": "The call goes out without showing any number.",
     "uso.sinProveedorAleatorio":
-      "Not available: no carrier in your region ({region}) allows calling out with a random number.",
+      "Not available: no carrier allows calling out with a random number.",
     "uso.sinProveedorOculto":
-      "Not available: no carrier in your region ({region}) allows calling out with a hidden number.",
+      "Not available: no carrier allows calling out with a hidden number.",
     "uso.sinTarifas":
-      "Not available: your region has no rates loaded to choose how the call goes out.",
-    "uso.validadoRegion":
-      "Options are enabled based on what your region's carriers allow ({region}).",
+      "Not available: there are no rates loaded to choose how the call goes out.",
+    "uso.validado": "Options are enabled based on what the carriers allow.",
     "uso.lineaEntrante": "Number calls come in on",
     "uso.lineaSaliente": "Number shown when calling",
     "uso.elegirLinea": "Choose a number…",
     "uso.soloDisponibles":
-      "Only lines available in your region ({region}) and not yet assigned to another account are listed.",
+      "Only lines that are available and not yet assigned to another account are listed.",
     "uso.sinNumeroElegible":
       "With this option you don't pick a number: the platform decides how each call goes out.",
-    "uso.noEncuentroNumero": "I can't find my number",
-    "uso.numeroPropioAviso": "Requires Mitrol to onboard your carrier",
+    "uso.notaAltaNumero":
+      "Need to use your own number? Ask the Mitrol administrator to onboard it: once loaded, it shows up in this list.",
+    "campo.tipo": "Type",
+    "tipo.telefoniaSip": "SIP telephony",
     "col.uso": "Usage",
 
     "flujo.inicio": "Interaction start",
@@ -191,7 +194,7 @@ export const cuentas: NamespaceDict = {
 
     "uso.titulo": "Uso da linha",
     "uso.descripcion":
-      "Primeiro defina para que a linha vai servir: o que ela pode fazer depende da operadora da sua região, então os números são oferecidos só depois.",
+      "Primeiro defina para que a linha vai servir: o que ela pode fazer depende da operadora, então os números são oferecidos só depois.",
     "uso.paso1": "Para que serve esta linha?",
     "uso.paso2": "O que o destinatário vê quando você liga?",
     "uso.paso3": "Escolha o número",
@@ -205,29 +208,30 @@ export const cuentas: NamespaceDict = {
     "uso.ambasDesc": "Recebe e origina chamadas pela mesma linha.",
     "uso.salidaMisma": "O mesmo número pelo qual entram",
     "uso.salidaMismaDesc": "O destinatário pode retornar a ligação e cai nesta conta.",
-    "uso.salidaPropio": "Outro número próprio",
-    "uso.salidaPropioDesc": "Mostra outro dos números disponíveis na sua região.",
+    "uso.salidaNumero": "Número",
+    "uso.salidaNumeroDesc": "Mostra um número da lista de disponíveis.",
     "uso.salidaAleatorio": "Número aleatório",
     "uso.salidaAleatorioDesc": "Cada chamada sai com um número diferente.",
     "uso.salidaOculto": "Número oculto",
     "uso.salidaOcultoDesc": "A chamada sai sem mostrar nenhum número.",
     "uso.sinProveedorAleatorio":
-      "Indisponível: nenhuma operadora da sua região ({region}) permite sair com número aleatório.",
+      "Indisponível: nenhuma operadora permite sair com número aleatório.",
     "uso.sinProveedorOculto":
-      "Indisponível: nenhuma operadora da sua região ({region}) permite sair com número oculto.",
+      "Indisponível: nenhuma operadora permite sair com número oculto.",
     "uso.sinTarifas":
-      "Indisponível: sua região não tem tarifas carregadas para escolher por onde sai a chamada.",
-    "uso.validadoRegion":
-      "As opções são habilitadas conforme o que permitem as operadoras da sua região ({region}).",
+      "Indisponível: não há tarifas carregadas para escolher por onde sai a chamada.",
+    "uso.validado": "As opções são habilitadas conforme o que as operadoras permitem.",
     "uso.lineaEntrante": "Número pelo qual entram as chamadas",
     "uso.lineaSaliente": "Número exibido ao ligar",
     "uso.elegirLinea": "Escolher um número…",
     "uso.soloDisponibles":
-      "Só aparecem as linhas disponíveis na sua região ({region}) e ainda não atribuídas a outra conta.",
+      "Só aparecem as linhas disponíveis e ainda não atribuídas a outra conta.",
     "uso.sinNumeroElegible":
       "Com esta opção você não escolhe número: a plataforma resolve por onde sai cada chamada.",
-    "uso.noEncuentroNumero": "Não encontro meu número",
-    "uso.numeroPropioAviso": "Requer que a Mitrol cadastre sua operadora",
+    "uso.notaAltaNumero":
+      "Precisa usar um número próprio? Peça ao administrador da Mitrol que o cadastre: depois de carregado, ele aparece nesta lista.",
+    "campo.tipo": "Tipo",
+    "tipo.telefoniaSip": "Telefonia SIP",
     "col.uso": "Uso",
 
     "flujo.inicio": "Início da interação",
@@ -271,7 +275,7 @@ export const cuentas: NamespaceDict = {
 
     "uso.titulo": "Ús de la línia",
     "uso.descripcion":
-      "Primer defineix per a què s'utilitzarà la línia: el que pot fer depèn del proveïdor de la teva regió, així que els números s'ofereixen després.",
+      "Primer defineix per a què s'utilitzarà la línia: el que pot fer depèn del proveïdor, així que els números s'ofereixen després.",
     "uso.paso1": "Per a què s'utilitza aquesta línia?",
     "uso.paso2": "Què veu el destinatari quan truques?",
     "uso.paso3": "Tria el número",
@@ -285,29 +289,30 @@ export const cuentas: NamespaceDict = {
     "uso.ambasDesc": "Rep i origina trucades per la mateixa línia.",
     "uso.salidaMisma": "El mateix número pel qual entren",
     "uso.salidaMismaDesc": "El destinatari pot tornar la trucada i entra per aquest compte.",
-    "uso.salidaPropio": "Un altre número propi",
-    "uso.salidaPropioDesc": "Mostra un altre dels números disponibles a la teva regió.",
+    "uso.salidaNumero": "Número",
+    "uso.salidaNumeroDesc": "Es mostra un número del llistat de disponibles.",
     "uso.salidaAleatorio": "Número aleatori",
     "uso.salidaAleatorioDesc": "Cada trucada surt amb un número diferent.",
     "uso.salidaOculto": "Número ocult",
     "uso.salidaOcultoDesc": "La trucada surt sense mostrar cap número.",
     "uso.sinProveedorAleatorio":
-      "No disponible: cap proveïdor de la teva regió ({region}) permet sortir amb número aleatori.",
+      "No disponible: cap proveïdor permet sortir amb número aleatori.",
     "uso.sinProveedorOculto":
-      "No disponible: cap proveïdor de la teva regió ({region}) permet sortir amb número ocult.",
+      "No disponible: cap proveïdor permet sortir amb número ocult.",
     "uso.sinTarifas":
-      "No disponible: la teva regió no té tarifes carregades per triar per on surt la trucada.",
-    "uso.validadoRegion":
-      "Les opcions s'habiliten segons el que permetin els proveïdors de la teva regió ({region}).",
+      "No disponible: no hi ha tarifes carregades per triar per on surt la trucada.",
+    "uso.validado": "Les opcions s'habiliten segons el que permetin els proveïdors.",
     "uso.lineaEntrante": "Número pel qual entren les trucades",
     "uso.lineaSaliente": "Número que es mostra en trucar",
     "uso.elegirLinea": "Tria un número…",
     "uso.soloDisponibles":
-      "Només es mostren les línies disponibles a la teva regió ({region}) i encara no assignades a un altre compte.",
+      "Només es mostren les línies disponibles i encara no assignades a un altre compte.",
     "uso.sinNumeroElegible":
       "Amb aquesta opció no tries número: la plataforma resol per on surt cada trucada.",
-    "uso.noEncuentroNumero": "No trobo el meu número",
-    "uso.numeroPropioAviso": "Requereix que Mitrol doni d'alta el teu proveïdor",
+    "uso.notaAltaNumero":
+      "Necessites fer servir un número propi? Demana a l'administrador de Mitrol que el doni d'alta: un cop carregat, apareix en aquest llistat.",
+    "campo.tipo": "Tipus",
+    "tipo.telefoniaSip": "Telefonia SIP",
     "col.uso": "Ús",
 
     "flujo.inicio": "Inici de la interacció",

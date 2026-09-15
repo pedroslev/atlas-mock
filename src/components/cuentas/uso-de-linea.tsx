@@ -9,9 +9,7 @@ import {
   PhoneOutgoing,
   Shuffle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -25,37 +23,41 @@ import {
   capacidadesTelefonia,
   lineasDisponibles,
   type ModoDeSalida,
-  type UsoDeLinea,
+  type UsoDeLinea as TipoUso,
 } from "@/lib/mock-data";
 
 // Configuración de la línea de una cuenta, en el orden que propone la
 // propuesta "Líneas telefónicas en Cuentas": PRIMERO para qué se usa la línea,
 // después qué ve el destinatario, y recién al final el número — porque lo que
-// se puede elegir depende de lo que permita el proveedor de la región.
+// se puede elegir depende de lo que permita el proveedor.
 //
-// Mock: las capacidades de la región y el inventario de líneas salen de
-// `mock-data`. En AR el número oculto está permitido y el aleatorio no, para
-// que se vea cómo queda una opción deshabilitada con su motivo.
+// Mock: las capacidades y el inventario de líneas salen de `mock-data`. El
+// número aleatorio está deshabilitado a propósito, para que se vea cómo queda
+// una opción que el proveedor no permite.
+//
+// `uso` es controlado desde afuera porque el detalle de cuenta lo necesita: si
+// la línea solo origina llamadas, la solapa de derivación no se muestra.
 
-const OPCIONES_USO: { value: UsoDeLinea; icon: typeof PhoneIncoming }[] = [
+const OPCIONES_USO: { value: TipoUso; icon: typeof PhoneIncoming }[] = [
   { value: "entrante", icon: PhoneIncoming },
   { value: "saliente", icon: PhoneOutgoing },
   { value: "ambas", icon: PhoneCall },
 ];
 
 export function UsoDeLinea({
-  defaultUso,
+  uso,
+  onUsoChange,
   defaultModoSalida,
   defaultLinea,
   defaultLineaSalida,
 }: {
-  defaultUso?: UsoDeLinea;
+  uso?: TipoUso;
+  onUsoChange: (uso: TipoUso) => void;
   defaultModoSalida?: ModoDeSalida;
   defaultLinea?: string;
   defaultLineaSalida?: string;
 }) {
   const t = useT();
-  const [uso, setUso] = useState<UsoDeLinea | undefined>(defaultUso);
   const [modoSalida, setModoSalida] = useState<ModoDeSalida | undefined>(
     defaultModoSalida
   );
@@ -63,33 +65,26 @@ export function UsoDeLinea({
   const [lineaSalida, setLineaSalida] = useState<string | undefined>(
     defaultLineaSalida
   );
-  const [numeroPropio, setNumeroPropio] = useState(false);
 
   const recibe = uso === "entrante" || uso === "ambas";
   const origina = uso === "saliente" || uso === "ambas";
 
-  // Solo se ofrecen las líneas de la región del cliente que sirven para el uso
-  // elegido y que todavía no están tomadas por otra cuenta.
-  const disponiblesPara = (paraUso: UsoDeLinea, actual?: string) =>
+  // Solo se ofrecen las líneas que sirven para el uso elegido y que todavía no
+  // están tomadas por otra cuenta.
+  const disponiblesPara = (paraUso: TipoUso, actual?: string) =>
     lineasDisponibles.filter(
       (l) =>
-        l.region === capacidadesTelefonia.region &&
-        l.usos.includes(paraUso) &&
-        (!l.asignadaA || l.numero === actual)
+        l.usos.includes(paraUso) && (!l.asignadaA || l.numero === actual)
     );
 
   const motivoAleatorio = !capacidadesTelefonia.permiteAleatorio
-    ? t("cuentas.uso.sinProveedorAleatorio", {
-        region: capacidadesTelefonia.region,
-      })
+    ? t("cuentas.uso.sinProveedorAleatorio")
     : !capacidadesTelefonia.tieneTarifas
       ? t("cuentas.uso.sinTarifas")
       : undefined;
 
   const motivoOculto = !capacidadesTelefonia.permiteOculto
-    ? t("cuentas.uso.sinProveedorOculto", {
-        region: capacidadesTelefonia.region,
-      })
+    ? t("cuentas.uso.sinProveedorOculto")
     : !capacidadesTelefonia.tieneTarifas
       ? t("cuentas.uso.sinTarifas")
       : undefined;
@@ -115,8 +110,14 @@ export function UsoDeLinea({
                   key={value}
                   type="button"
                   onClick={() => {
-                    setUso(value);
+                    onUsoChange(value);
+                    // "El mismo número" solo existe si la línea también recibe;
+                    // "Número" solo si no recibe. Al cambiar el uso, la opción
+                    // que ya no aplica se limpia.
                     if (value !== "ambas" && modoSalida === "misma") {
+                      setModoSalida(undefined);
+                    }
+                    if (value === "ambas" && modoSalida === "propio") {
                       setModoSalida(undefined);
                     }
                   }}
@@ -146,7 +147,7 @@ export function UsoDeLinea({
           <section className="flex flex-col gap-3">
             <Paso numero={2} titulo={t("cuentas.uso.paso2")} />
             <div className="grid gap-3 sm:grid-cols-2">
-              {uso === "ambas" && (
+              {uso === "ambas" ? (
                 <OpcionSalida
                   id="salida-misma"
                   icon={PhoneCall}
@@ -155,15 +156,16 @@ export function UsoDeLinea({
                   elegido={modoSalida === "misma"}
                   onSelect={() => setModoSalida("misma")}
                 />
+              ) : (
+                <OpcionSalida
+                  id="salida-numero"
+                  icon={PhoneOutgoing}
+                  label={t("cuentas.uso.salidaNumero")}
+                  description={t("cuentas.uso.salidaNumeroDesc")}
+                  elegido={modoSalida === "propio"}
+                  onSelect={() => setModoSalida("propio")}
+                />
               )}
-              <OpcionSalida
-                id="salida-propio"
-                icon={PhoneOutgoing}
-                label={t("cuentas.uso.salidaPropio")}
-                description={t("cuentas.uso.salidaPropioDesc")}
-                elegido={modoSalida === "propio"}
-                onSelect={() => setModoSalida("propio")}
-              />
               <OpcionSalida
                 id="salida-aleatorio"
                 icon={Shuffle}
@@ -185,9 +187,7 @@ export function UsoDeLinea({
             </div>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <Info className="mt-0.5 size-3.5 shrink-0" />
-              {t("cuentas.uso.validadoRegion", {
-                region: capacidadesTelefonia.region,
-              })}
+              {t("cuentas.uso.validado")}
             </p>
           </section>
         )}
@@ -210,19 +210,18 @@ export function UsoDeLinea({
                   <SelectValue placeholder={t("cuentas.uso.elegirLinea")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {disponiblesPara(uso === "ambas" ? "ambas" : "entrante", defaultLinea).map(
-                    (l) => (
-                      <SelectItem key={l.numero} value={l.numero}>
-                        {l.numero}
-                      </SelectItem>
-                    )
-                  )}
+                  {disponiblesPara(
+                    uso === "ambas" ? "ambas" : "entrante",
+                    defaultLinea
+                  ).map((l) => (
+                    <SelectItem key={l.numero} value={l.numero}>
+                      {l.numero}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {t("cuentas.uso.soloDisponibles", {
-                  region: capacidadesTelefonia.region,
-                })}
+                {t("cuentas.uso.soloDisponibles")}
               </p>
             </div>
           )}
@@ -254,30 +253,10 @@ export function UsoDeLinea({
           )}
 
           {uso && (
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setNumeroPropio((v) => !v)}
-                className="w-fit text-xs text-primary underline-offset-4 hover:underline"
-              >
-                {t("cuentas.uso.noEncuentroNumero")}
-              </button>
-              {numeroPropio && (
-                <div className="flex flex-col gap-1.5">
-                  <Input
-                    id="numero-propio"
-                    placeholder="+54 11 0000-0000"
-                    className="w-full sm:w-80"
-                  />
-                  <Badge
-                    variant="outline"
-                    className="w-fit text-[0.65rem] font-normal"
-                  >
-                    {t("cuentas.uso.numeroPropioAviso")}
-                  </Badge>
-                </div>
-              )}
-            </div>
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Info className="mt-0.5 size-3.5 shrink-0" />
+              {t("cuentas.uso.notaAltaNumero")}
+            </p>
           )}
         </section>
       </CardContent>
