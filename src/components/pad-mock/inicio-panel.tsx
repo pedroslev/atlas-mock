@@ -10,6 +10,8 @@ import {
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
+import { LlamadaInternaDirectorio } from "@/components/pad-mock/llamada-interna-directorio";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
   CANAL_ICON,
@@ -18,6 +20,7 @@ import {
   estadoAgenteMock,
   estadosAgenteDisponibles,
   historialAgenteMock,
+  type AgenteDirectorio,
   type CampaniaSaliente,
   type CuentaSaliente,
   type HistorialAgenteEntrada,
@@ -44,6 +47,7 @@ export function InicioPanel({
   campaniaIdInicial,
   cuentaIdInicial,
   onContactar,
+  onLlamarInterno,
 }: {
   estadoAgenteId: string;
   estadoAgenteDesde: number;
@@ -51,6 +55,7 @@ export function InicioPanel({
   campaniaIdInicial?: string;
   cuentaIdInicial?: string;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
+  onLlamarInterno: (agente: AgenteDirectorio) => void;
 }) {
   const t = useT();
   const estado =
@@ -162,13 +167,24 @@ export function InicioPanel({
               {t("padMock.inicio.nuevaInteraccion")}
             </span>
             <div className="rounded-xl border border-border bg-card p-3">
-              <NuevaInteraccionForm
-                idPrefix="si"
-                layout="row"
-                campaniaIdInicial={campaniaIdInicial}
-                cuentaIdInicial={cuentaIdInicial}
-                onContactar={onContactar}
-              />
+              <Tabs defaultValue="externo">
+                <TabsList>
+                  <TabsTrigger value="externo">{t("padMock.newInteractionDialog.externo")}</TabsTrigger>
+                  <TabsTrigger value="interno">{t("padMock.newInteractionDialog.interno")}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="externo" className="pt-2">
+                  <NuevaInteraccionForm
+                    idPrefix="si"
+                    layout="row"
+                    campaniaIdInicial={campaniaIdInicial}
+                    cuentaIdInicial={cuentaIdInicial}
+                    onContactar={onContactar}
+                  />
+                </TabsContent>
+                <TabsContent value="interno" className="pt-2">
+                  <LlamadaInternaDirectorio compacto onLlamar={onLlamarInterno} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

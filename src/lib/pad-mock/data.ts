@@ -103,6 +103,8 @@ export type FilaCola = {
   numeroCliente: string;
   canal: CanalMock;
   esperaSeg: number;
+  /** Llamada interna a otro agente: numeroCliente lleva el nombre del agente. */
+  interno?: boolean;
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
@@ -348,6 +350,44 @@ export const estadoAgenteMock = {
   nombre: "Marina Acosta",
   cronometro: "04:12",
 };
+
+// --- Directorio de llamadas internas (modal "Nueva interacción" → Interno) --
+// Propuesta opción A (documentacion: relevamiento-legacy/llamadas-internas/
+// propuesta): el agente ve a los agentes CONECTADOS que le habilita su grupo
+// de trabajo (mismo grupo, mismas campañas, mismos proyectos — las reglas se
+// suman), cada uno con su estado actual. Solo se puede llamar a los que están
+// en Disponible. Los desconectados no vienen en la lista.
+export type EstadoDirectorio = {
+  nombre: string;
+  dotClass: string;
+  llamable: boolean;
+};
+
+export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
+  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
+  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
+  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
+  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },
+  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false },
+  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false },
+};
+
+export type AgenteDirectorio = {
+  id: string;
+  nombre: string;
+  estadoId: keyof typeof ESTADOS_DIRECTORIO;
+};
+
+export const agentesDirectorioMock: AgenteDirectorio[] = [
+  { id: "ad-1", nombre: "Lucas Ferreyra", estadoId: "disponible" },
+  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-interaccion" },
+  { id: "ad-3", nombre: "Julián Pereyra", estadoId: "disponible" },
+  { id: "ad-4", nombre: "Carla Domínguez", estadoId: "acw" },
+  { id: "ad-5", nombre: "Tomás Giménez", estadoId: "almuerzo" },
+  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible" },
+  { id: "ad-7", nombre: "Martín Sosa", estadoId: "no-disponible" },
+  { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
+];
 
 export function formatEspera(seg: number) {
   const m = Math.floor(seg / 60);

@@ -14,6 +14,7 @@ import {
   accesosRapidosMock,
   CANAL_ICON,
   formatEspera,
+  type AgenteDirectorio,
   type CampaniaSaliente,
   type CuentaSaliente,
   type FilaCola,
@@ -47,6 +48,7 @@ export function LeftNav({
   interaccionActivaId,
   onSeleccionarInteraccion,
   onIniciarInteraccion,
+  onLlamarInterno,
   accesoActivoId,
   onAbrirAcceso,
   enEspera,
@@ -63,6 +65,7 @@ export function LeftNav({
   interaccionActivaId: string | null;
   onSeleccionarInteraccion: (id: string) => void;
   onIniciarInteraccion: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
+  onLlamarInterno: (agente: AgenteDirectorio) => void;
   accesoActivoId: string | null;
   onAbrirAcceso: (id: string) => void;
   enEspera: boolean;
@@ -108,6 +111,7 @@ export function LeftNav({
         open={nuevaInteraccionAbierta}
         onOpenChange={setNuevaInteraccionAbierta}
         onContactar={onIniciarInteraccion}
+        onLlamarInterno={onLlamarInterno}
         campaniaIdInicial={ultimaCampaniaId}
         cuentaIdInicial={ultimaCuentaId}
       />
@@ -262,6 +266,9 @@ export function LeftNav({
                 <Icon className="size-3.5 shrink-0" />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
+                  {f.interno && (
+                    <span className="truncate text-[0.65rem] text-muted-foreground">Llamada interna</span>
+                  )}
                 </span>
                 <span
                   className={cn(
