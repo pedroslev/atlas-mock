@@ -1,14 +1,15 @@
 "use client";
 
-import { Phone } from "lucide-react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowEditor } from "@/components/workflow/workflow-editor";
+import { UsoDeLinea } from "@/components/cuentas/uso-de-linea";
 import { useT } from "@/lib/i18n";
-import type { Cuenta } from "@/lib/mock-data";
+import type { Cuenta, UsoDeLinea as TipoUso } from "@/lib/mock-data";
 
 // Cuerpo del detalle de cuenta. Vive en un componente de cliente porque los
 // placeholders exigen strings traducidos (`useT()`), mientras la page sigue
@@ -21,14 +22,21 @@ export function CuentaTabs({
   campanias: { id: string; nombre: string }[];
 }) {
   const t = useT();
+  const [uso, setUso] = useState<TipoUso | undefined>(cuenta.uso);
+
+  // La derivación define a qué campaña va cada llamada que ENTRA. Si la línea
+  // solo origina llamadas, la solapa no aplica y no se muestra.
+  const recibeLlamadas = uso === "entrante" || uso === "ambas";
 
   return (
     <Tabs defaultValue="general">
       <TabsList>
         <TabsTrigger value="general">{t("cuentas.tab.general")}</TabsTrigger>
-        <TabsTrigger value="workflow">
-          {t("cuentas.tab.derivacion")}
-        </TabsTrigger>
+        {recibeLlamadas && (
+          <TabsTrigger value="workflow">
+            {t("cuentas.tab.derivacion")}
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="general">
@@ -42,15 +50,13 @@ export function CuentaTabs({
               <Input id="nombre" defaultValue={cuenta.nombre} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="identificador">{t("cuentas.campo.linea")}</Label>
-              <div className="relative">
-                <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="identificador"
-                  defaultValue={cuenta.identificador}
-                  className="pl-9"
-                />
-              </div>
+              <Label htmlFor="tipo">{t("cuentas.campo.tipo")}</Label>
+              <Input
+                id="tipo"
+                value={t("cuentas.tipo.telefoniaSip")}
+                readOnly
+                disabled
+              />
             </div>
             <div className="flex flex-col gap-1.5 lg:col-span-2">
               <Label htmlFor="descripcion">
@@ -65,6 +71,16 @@ export function CuentaTabs({
             </div>
           </CardContent>
         </Card>
+
+        <div className="mt-4">
+          <UsoDeLinea
+            uso={uso}
+            onUsoChange={setUso}
+            defaultModoSalida={cuenta.modoSalida}
+            defaultLinea={cuenta.identificador}
+            defaultLineaSalida={cuenta.lineaSalida}
+          />
+        </div>
       </TabsContent>
 
       <TabsContent value="workflow">

@@ -167,12 +167,23 @@ export type WorkflowEdge = {
 };
 export type Workflow = { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
+// Para qué se usa la línea de una cuenta. Se define ANTES de elegir el número:
+// lo que la línea puede hacer depende del proveedor de la región, así que
+// primero se valida el uso y recién después se ofrecen los números.
+export type UsoDeLinea = "entrante" | "saliente" | "ambas";
+
+// Qué ve el destinatario cuando la llamada sale por esta cuenta.
+export type ModoDeSalida = "misma" | "propio" | "aleatorio" | "oculto";
+
 export type Cuenta = {
   id: string;
   nombre: string;
   descripcion?: string;
   tipo: "Llamada" | "WhatsApp" | "SMS" | "Email";
   identificador: string;
+  uso?: UsoDeLinea;
+  modoSalida?: ModoDeSalida;
+  lineaSalida?: string;
   workflow?: Workflow;
   interactionValue: number; // 0-100
   provisioning: number;
@@ -446,6 +457,8 @@ export const cuentas: Cuenta[] = [
     descripcion: "Línea saliente principal para las campañas de cobranzas",
     tipo: "Llamada",
     identificador: "+54 11 4000-1000",
+    uso: "ambas",
+    modoSalida: "misma",
     interactionValue: 80,
     provisioning: 500,
     provisioningLock: 3,
@@ -505,6 +518,37 @@ export const cuentas: Cuenta[] = [
     provisioningLock: 1,
   },
 ];
+
+// Líneas que Mitrol dejó disponibles para este cliente en su región. El
+// backoffice del cliente no carga números a mano: elige de acá. Cada línea
+// viene marcada con lo que puede hacer (recibir, originar o las dos cosas).
+export type LineaDisponible = {
+  numero: string;
+  usos: UsoDeLinea[];
+  region: string;
+  asignadaA?: string; // nombre de la cuenta que ya la está usando
+};
+
+export const lineasDisponibles: LineaDisponible[] = [
+  { numero: "+54 11 4000-1000", usos: ["entrante", "saliente", "ambas"], region: "AR", asignadaA: "Línea Cobranzas AR" },
+  { numero: "+54 11 4000-1001", usos: ["entrante", "saliente", "ambas"], region: "AR" },
+  { numero: "+54 11 4000-1002", usos: ["entrante"], region: "AR" },
+  { numero: "+54 11 4000-1003", usos: ["entrante"], region: "AR" },
+  { numero: "+54 11 5000-2000", usos: ["saliente"], region: "AR" },
+  { numero: "+54 11 5000-2001", usos: ["saliente"], region: "AR" },
+  { numero: "+54 341 500-3000", usos: ["entrante", "saliente", "ambas"], region: "AR" },
+];
+
+// Lo que los proveedores de la región del cliente permiten hacer. En la
+// plataforma real esto sale de la pantalla de Telefonía de Zeus: cada proveedor
+// tiene, por separado, permiso de número oculto y de número aleatorio, y para
+// cualquiera de los dos hacen falta tarifas cargadas para el destino.
+export const capacidadesTelefonia = {
+  region: "AR",
+  permiteOculto: true,
+  permiteAleatorio: false, // ningún proveedor de AR lo tiene habilitado
+  tieneTarifas: true,
+};
 
 export const clasificaciones: Clasificacion[] = [
   { id: "clas-cobranzas", nombre: "Cobranzas", tipo: "Neutro" },
