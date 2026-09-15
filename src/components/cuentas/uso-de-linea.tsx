@@ -204,8 +204,11 @@ export function UsoDeLinea({
 
           {recibe && (
             <div className="flex flex-col gap-1.5">
+              {/* El numero solo es "de entrada y salida" cuando la salida usa
+                  ese mismo numero. Con aleatorio u oculto, el numero elegido
+                  solo recibe. */}
               <Label htmlFor="linea-entrante">
-                {uso === "ambas"
+                {uso === "ambas" && modoSalida === "misma"
                   ? t("cuentas.uso.lineaEntranteYSaliente")
                   : t("cuentas.uso.lineaEntrante")}
               </Label>
