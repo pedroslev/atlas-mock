@@ -61,6 +61,7 @@ export const cuentas: NamespaceDict = {
     "uso.validado":
       "Las opciones se habilitan según lo que permitan los proveedores.",
     "uso.lineaEntrante": "Número por el que entran las llamadas",
+    "uso.lineaEntranteYSaliente": "Número por el que entran y salen las llamadas",
     "uso.lineaSaliente": "Número que se muestra al llamar",
     "uso.elegirLinea": "Elegir un número…",
     "uso.soloDisponibles":
@@ -143,6 +144,7 @@ export const cuentas: NamespaceDict = {
       "Not available: there are no rates loaded to choose how the call goes out.",
     "uso.validado": "Options are enabled based on what the carriers allow.",
     "uso.lineaEntrante": "Number calls come in on",
+    "uso.lineaEntranteYSaliente": "Number calls come in and go out on",
     "uso.lineaSaliente": "Number shown when calling",
     "uso.elegirLinea": "Choose a number…",
     "uso.soloDisponibles":
@@ -225,6 +227,7 @@ export const cuentas: NamespaceDict = {
       "Indisponível: não há tarifas carregadas para escolher por onde sai a chamada.",
     "uso.validado": "As opções são habilitadas conforme o que as operadoras permitem.",
     "uso.lineaEntrante": "Número pelo qual entram as chamadas",
+    "uso.lineaEntranteYSaliente": "Número pelo qual entram e saem as chamadas",
     "uso.lineaSaliente": "Número exibido ao ligar",
     "uso.elegirLinea": "Escolher um número…",
     "uso.soloDisponibles":
@@ -307,6 +310,7 @@ export const cuentas: NamespaceDict = {
       "No disponible: no hi ha tarifes carregades per triar per on surt la trucada.",
     "uso.validado": "Les opcions s'habiliten segons el que permetin els proveïdors.",
     "uso.lineaEntrante": "Número pel qual entren les trucades",
+    "uso.lineaEntranteYSaliente": "Número pel qual entren i surten les trucades",
     "uso.lineaSaliente": "Número que es mostra en trucar",
     "uso.elegirLinea": "Tria un número…",
     "uso.soloDisponibles":

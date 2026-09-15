@@ -146,7 +146,9 @@ export function UsoDeLinea({
         {origina && (
           <section className="flex flex-col gap-3">
             <Paso numero={2} titulo={t("cuentas.uso.paso2")} />
-            <div className="grid gap-3 sm:grid-cols-2">
+            {/* Son tres opciones siempre (la primera cambia segun el uso), asi
+                que van en tres columnas y no queda un hueco en la grilla. */}
+            <div className="grid gap-3 sm:grid-cols-3">
               {uso === "ambas" ? (
                 <OpcionSalida
                   id="salida-misma"
@@ -203,7 +205,9 @@ export function UsoDeLinea({
           {recibe && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="linea-entrante">
-                {t("cuentas.uso.lineaEntrante")}
+                {uso === "ambas"
+                  ? t("cuentas.uso.lineaEntranteYSaliente")
+                  : t("cuentas.uso.lineaEntrante")}
               </Label>
               <Select value={linea} onValueChange={setLinea}>
                 <SelectTrigger id="linea-entrante" className="w-full sm:w-80">
