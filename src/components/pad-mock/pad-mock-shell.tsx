@@ -215,13 +215,16 @@ export function PadMockShell() {
             onToggleEspera={toggleEspera}
             onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
           />
-          <ContextColumn
-            key={`contexto-${interaccionActivaId}`}
-            colapsada={contextoColapsada}
-            onToggle={() => setContextoColapsada((v) => !v)}
-            cliente={clienteMock}
-            historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
-          />
+          {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
+          {!cola.find((f) => f.id === interaccionActivaId)?.interno && (
+            <ContextColumn
+              key={`contexto-${interaccionActivaId}`}
+              colapsada={contextoColapsada}
+              onToggle={() => setContextoColapsada((v) => !v)}
+              cliente={clienteMock}
+              historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
+            />
+          )}
         </>
       )}
     </div>
