@@ -80,6 +80,18 @@ export const grupos: NamespaceDict = {
     "shortcuts.titulo": "Accesos rápidos",
     "shortcuts.desc":
       "Botones de acceso rápido en el menú del PAD para los usuarios de este grupo. Cada uno abre su URL embebida dentro de Hermes o en una pestaña nueva.",
+    // Directorio de llamadas internas — propuesta opción A (documentacion:
+    // relevamiento-legacy/llamadas-internas/propuesta). Las reglas se suman;
+    // ninguna tildada = los usuarios del grupo no pueden hacer llamadas internas.
+    "directorio.titulo": "Directorio de llamadas internas",
+    "directorio.desc":
+      "Definí a qué agentes pueden llamar los usuarios de este grupo desde el PAD. Las opciones se suman: se ven los agentes conectados que cumplan al menos una.",
+    "directorio.mismoGrupo": "Agentes del mismo grupo de trabajo",
+    "directorio.mismasCampanias": "Agentes de las mismas campañas",
+    "directorio.mismasCampaniasAyuda": "Comparten al menos una campaña asignada.",
+    "directorio.mismosProyectos": "Agentes de los mismos proyectos",
+    "directorio.mismosProyectosAyuda": "Asignados a campañas de los mismos proyectos.",
+    "directorio.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden hacer llamadas internas.",
     "shortcuts.agregar": "Agregar acceso rápido",
     "shortcuts.eliminar": "Eliminar acceso rápido",
     "shortcuts.sin": "Todavía no hay accesos rápidos configurados para este grupo.",

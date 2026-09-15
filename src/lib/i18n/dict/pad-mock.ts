@@ -69,7 +69,7 @@ export const padMock: NamespaceDict = {
     "inicio.esperando": "Esperando que el sistema te derive una interacción.",
     "inicio.noRecibiendo": "No estás recibiendo interacciones.",
     "inicio.pasarADisponible": "Pasar a Disponible",
-    "inicio.nuevaInteraccion": "Nueva interacción saliente",
+    "inicio.nuevaInteraccion": "Nueva interacción",
     "inicio.campanias": "Campañas",
     "inicio.historial": "Historial",
     "inicio.colCanal": "Canal",
@@ -91,6 +91,18 @@ export const padMock: NamespaceDict = {
     // NewInteractionDialog
     "newInteractionDialog.titulo": "Nueva interacción",
     "newInteractionDialog.descripcion": "Elegí la campaña y la cuenta por la que vas a contactar.",
+    "newInteractionDialog.externo": "Externo",
+    "newInteractionDialog.interno": "Interno",
+    "newInteractionDialog.descripcionInterno": "Elegí a qué agente querés llamar.",
+
+    // LlamadaInternaDirectorio
+    "llamadaInterna.buscar": "Buscar agente por nombre…",
+    "llamadaInterna.llamar": "Llamar",
+    "llamadaInterna.soloDisponibles": "Solo podés llamar a agentes en Disponible.",
+    "llamadaInterna.sinResultados": "Ningún agente conectado coincide con la búsqueda.",
+    "llamadaInterna.sinHabilitados":
+      "No tenés agentes habilitados para llamadas internas. Consultá con tu administrador.",
+    "llamadaInterna.simularSinReglas": "Simular grupo sin reglas",
 
     // QuickAccessOverlay
     "quickAccess.cerrar": "Cerrar",

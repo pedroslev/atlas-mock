@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -53,6 +54,18 @@ export function GrupoConfigHermesTab({
     String(initialHistoryLookbackDays)
   );
   const [shortcuts, setShortcuts] = useState<ShortcutButtonEntry[]>(initialShortcutButtons);
+  // Directorio de llamadas internas (propuesta opción A): reglas que se suman.
+  const [directorio, setDirectorio] = useState({
+    mismoGrupo: true,
+    mismasCampanias: false,
+    mismosProyectos: false,
+  });
+  const reglasDirectorio = [
+    { key: "mismoGrupo", label: t("grupos.directorio.mismoGrupo"), ayuda: null },
+    { key: "mismasCampanias", label: t("grupos.directorio.mismasCampanias"), ayuda: t("grupos.directorio.mismasCampaniasAyuda") },
+    { key: "mismosProyectos", label: t("grupos.directorio.mismosProyectos"), ayuda: t("grupos.directorio.mismosProyectosAyuda") },
+  ] as const;
+  const ningunaRegla = !Object.values(directorio).some(Boolean);
 
   function actualizar(id: string, patch: Partial<ShortcutButtonEntry>) {
     setShortcuts((cur) => cur.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -91,6 +104,32 @@ export function GrupoConfigHermesTab({
             />
             <p className="text-xs text-muted-foreground">{t("grupos.historial.ayuda")}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("grupos.directorio.titulo")}</CardTitle>
+          <CardDescription>{t("grupos.directorio.desc")}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {reglasDirectorio.map((r) => (
+            <div key={r.key} className="flex items-start gap-2.5">
+              <Checkbox
+                id={`dir-${r.key}`}
+                className="mt-0.5"
+                checked={directorio[r.key]}
+                onCheckedChange={(v) => setDirectorio((cur) => ({ ...cur, [r.key]: v === true }))}
+              />
+              <div className="flex flex-col gap-0.5">
+                <Label htmlFor={`dir-${r.key}`}>{r.label}</Label>
+                {r.ayuda && <p className="text-xs text-muted-foreground">{r.ayuda}</p>}
+              </div>
+            </div>
+          ))}
+          {ningunaRegla && (
+            <p className="text-xs text-warning">{t("grupos.directorio.ninguna")}</p>
+          )}
         </CardContent>
       </Card>
 

@@ -12,6 +12,7 @@ import {
   clienteMock,
   historialPorCliente,
   tipificaciones,
+  type AgenteDirectorio,
   type CampaniaSaliente,
   type CuentaSaliente,
   type FilaCola,
@@ -86,6 +87,20 @@ export function PadMockShell() {
       setCola((cur) => [...cur, fila]);
       setUltimaCampaniaId(campania.id);
       setUltimaCuentaId(cuenta.id);
+      seleccionarInteraccion(id);
+    },
+    [seleccionarInteraccion]
+  );
+
+  // Llamada interna desde el directorio (modal "Nueva interacción" → Interno):
+  // entra a la cola como una interacción más, sin campaña ni cuenta.
+  const iniciarLlamadaInterna = useCallback(
+    (agente: AgenteDirectorio) => {
+      const id = `q-interna-${nuevaFilaRef.current++}`;
+      setCola((cur) => [
+        ...cur,
+        { id, numeroCliente: agente.nombre, canal: "llamada", esperaSeg: 0, interno: true },
+      ]);
       seleccionarInteraccion(id);
     },
     [seleccionarInteraccion]
@@ -166,6 +181,7 @@ export function PadMockShell() {
         interaccionActivaId={interaccionActivaId}
         onSeleccionarInteraccion={seleccionarInteraccion}
         onIniciarInteraccion={iniciarInteraccion}
+        onLlamarInterno={iniciarLlamadaInterna}
         accesoActivoId={accesoAbiertoId}
         onAbrirAcceso={setAccesoAbiertoId}
         enEspera={enEspera}
@@ -187,6 +203,7 @@ export function PadMockShell() {
           campaniaIdInicial={ultimaCampaniaId}
           cuentaIdInicial={ultimaCuentaId}
           onContactar={iniciarInteraccion}
+          onLlamarInterno={iniciarLlamadaInterna}
         />
       ) : (
         <>
