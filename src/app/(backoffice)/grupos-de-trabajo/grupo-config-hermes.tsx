@@ -19,8 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
 import { useT } from "@/lib/i18n";
-import type { ShortcutButtonEntry } from "@/lib/mock-data";
+import type {
+  RecordingSettingsParams,
+  ShortcutButtonEntry,
+} from "@/lib/mock-data";
 import { AuxMultiSelect } from "./aux-multi-select";
 
 function nuevoAccesoRapido(): ShortcutButtonEntry {
@@ -43,16 +47,21 @@ export function GrupoConfigHermesTab({
   initialEstadosAuxiliares,
   initialHistoryLookbackDays,
   initialShortcutButtons,
+  initialGrabacion,
 }: {
   initialEstadosAuxiliares: string[];
   initialHistoryLookbackDays: number;
   initialShortcutButtons: ShortcutButtonEntry[];
+  initialGrabacion: RecordingSettingsParams;
 }) {
   const t = useT();
   const [historyLookbackDays, setHistoryLookbackDays] = useState(
     String(initialHistoryLookbackDays)
   );
   const [shortcuts, setShortcuts] = useState<ShortcutButtonEntry[]>(initialShortcutButtons);
+  // Grabación por grupo: alcance nuevo, todavía no acordado — ver la propuesta
+  // de grabaciones en documentacion/relevamiento-legacy/grabaciones/.
+  const [grabacion, setGrabacion] = useState<RecordingSettingsParams>(initialGrabacion);
 
   function actualizar(id: string, patch: Partial<ShortcutButtonEntry>) {
     setShortcuts((cur) => cur.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -170,6 +179,12 @@ export function GrupoConfigHermesTab({
           </Button>
         </CardContent>
       </Card>
+
+      <GrabacionSettings
+        value={grabacion}
+        onChange={setGrabacion}
+        ambito="grupo"
+      />
     </div>
   );
 }

@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
-import { GrabacionResultado } from "@/components/grabacion/grabacion-resultado";
 import { useT } from "@/lib/i18n";
 import type {
   AgentControlsParams,
@@ -181,8 +180,7 @@ export function VisualizacionTab({
 }
 
 // La grabación se configura igual en la campaña y en el grupo de trabajo, así
-// que los switches viven en un componente compartido. Acá se suma el cruce con
-// los grupos, para ver qué termina grabándose.
+// que los switches viven en un componente compartido.
 export function GrabacionTab({
   value,
   onChange,
@@ -193,15 +191,12 @@ export function GrabacionTab({
   holdHabilitado: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-6">
-      <GrabacionSettings
-        value={value}
-        onChange={onChange}
-        ambito="campania"
-        holdHabilitado={holdHabilitado}
-      />
-      <GrabacionResultado propio={value} ambito="campania" />
-    </div>
+    <GrabacionSettings
+      value={value}
+      onChange={onChange}
+      ambito="campania"
+      holdHabilitado={holdHabilitado}
+    />
   );
 }
 

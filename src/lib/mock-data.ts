@@ -80,23 +80,6 @@ export type RecordingSettingsParams = {
   recordAcw: boolean;
 };
 
-// Lo que efectivamente se graba, aplicando "gana lo más restrictivo" entre la
-// campaña y el grupo. Sirve para mostrar en pantalla el resultado real.
-export function grabacionEfectiva(
-  campania: RecordingSettingsParams,
-  grupo: RecordingSettingsParams
-): RecordingSettingsParams {
-  const interaction = campania.recordInteraction && grupo.recordInteraction;
-  return {
-    recordInteraction: interaction,
-    recordAgentAudioDuringHold:
-      interaction &&
-      campania.recordAgentAudioDuringHold &&
-      grupo.recordAgentAudioDuringHold,
-    recordAcw: interaction && campania.recordAcw && grupo.recordAcw,
-  };
-}
-
 export type AgentOperationSettingsParams = {
   forcedAnswer: boolean;
 };

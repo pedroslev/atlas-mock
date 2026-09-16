@@ -28,18 +28,6 @@ export const grabacion: NamespaceDict = {
       "Entre la campaña y el grupo de trabajo gana lo más restrictivo: si el grupo que atiende tiene algo apagado, eso no se graba aunque acá esté encendido.",
     "reglaDesdeGrupo":
       "Entre la campaña y el grupo de trabajo gana lo más restrictivo: si la campaña tiene algo apagado, eso no se graba aunque acá esté encendido.",
-
-    "resultadoTitulo": "Qué se graba realmente",
-    "resultadoDesc":
-      "El resultado de cruzar esta configuración con la otra parte. Gana lo más restrictivo.",
-    "cruceGrupo": "Si atiende el grupo…",
-    "cruceCampania": "En la campaña…",
-    "seGraba": "Se graba",
-    "noSeGraba": "No se graba",
-    "motivoCampania": "Lo apaga la campaña",
-    "motivoGrupo": "Lo apaga el grupo",
-    "motivoAmbos": "Lo apagan los dos",
-    "motivoSinInteraccion": "No se graba la interacción",
   },
   en: {
     "titulo": "Recording",
@@ -63,18 +51,6 @@ export const grabacion: NamespaceDict = {
       "Between the campaign and the working group, the most restrictive one wins: if the group handling the call has something off, that isn't recorded even if it's on here.",
     "reglaDesdeGrupo":
       "Between the campaign and the working group, the most restrictive one wins: if the campaign has something off, that isn't recorded even if it's on here.",
-
-    "resultadoTitulo": "What actually gets recorded",
-    "resultadoDesc":
-      "The result of combining this configuration with the other side. The most restrictive one wins.",
-    "cruceGrupo": "If handled by group…",
-    "cruceCampania": "On campaign…",
-    "seGraba": "Recorded",
-    "noSeGraba": "Not recorded",
-    "motivoCampania": "Turned off by the campaign",
-    "motivoGrupo": "Turned off by the group",
-    "motivoAmbos": "Turned off by both",
-    "motivoSinInteraccion": "The interaction isn't recorded",
   },
   pt: {
     "titulo": "Gravação",
@@ -98,18 +74,6 @@ export const grabacion: NamespaceDict = {
       "Entre a campanha e o grupo de trabalho vence o mais restritivo: se o grupo que atende tiver algo desligado, isso não é gravado mesmo que aqui esteja ligado.",
     "reglaDesdeGrupo":
       "Entre a campanha e o grupo de trabalho vence o mais restritivo: se a campanha tiver algo desligado, isso não é gravado mesmo que aqui esteja ligado.",
-
-    "resultadoTitulo": "O que é gravado de fato",
-    "resultadoDesc":
-      "O resultado de cruzar esta configuração com a outra parte. Vence o mais restritivo.",
-    "cruceGrupo": "Se atende o grupo…",
-    "cruceCampania": "Na campanha…",
-    "seGraba": "É gravado",
-    "noSeGraba": "Não é gravado",
-    "motivoCampania": "Desligado pela campanha",
-    "motivoGrupo": "Desligado pelo grupo",
-    "motivoAmbos": "Desligado pelos dois",
-    "motivoSinInteraccion": "A interação não é gravada",
   },
   ca: {
     "titulo": "Gravació",
@@ -133,17 +97,5 @@ export const grabacion: NamespaceDict = {
       "Entre la campanya i el grup de treball guanya el més restrictiu: si el grup que atén té alguna cosa apagada, això no es grava encara que aquí estigui encès.",
     "reglaDesdeGrupo":
       "Entre la campanya i el grup de treball guanya el més restrictiu: si la campanya té alguna cosa apagada, això no es grava encara que aquí estigui encès.",
-
-    "resultadoTitulo": "Què es grava realment",
-    "resultadoDesc":
-      "El resultat de creuar aquesta configuració amb l'altra part. Guanya el més restrictiu.",
-    "cruceGrupo": "Si atén el grup…",
-    "cruceCampania": "A la campanya…",
-    "seGraba": "Es grava",
-    "noSeGraba": "No es grava",
-    "motivoCampania": "L'apaga la campanya",
-    "motivoGrupo": "L'apaga el grup",
-    "motivoAmbos": "L'apaguen tots dos",
-    "motivoSinInteraccion": "No es grava la interacció",
   },
 };
