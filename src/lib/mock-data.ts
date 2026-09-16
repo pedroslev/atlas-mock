@@ -128,7 +128,7 @@ export function defaultParametros(): CampaniaParametros {
     recordingSettings: {
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
-      recordAcw: false,
+      recordAcw: true,
     },
     agentOperationSettings: {
       forcedAnswer: true,
@@ -722,7 +722,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     recordingSettings: {
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
-      recordAcw: false,
+      recordAcw: true,
     },
   },
   {
@@ -754,8 +754,8 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     historyLookbackDays: 30,
     recordingSettings: {
       recordInteraction: true,
-      recordAgentAudioDuringHold: false,
-      recordAcw: false,
+      recordAgentAudioDuringHold: true,
+      recordAcw: true,
     },
   },
   {
@@ -780,9 +780,9 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 30,
     recordingSettings: {
-      recordInteraction: false,
-      recordAgentAudioDuringHold: false,
-      recordAcw: false,
+      recordInteraction: true,
+      recordAgentAudioDuringHold: true,
+      recordAcw: true,
     },
   },
 ];
