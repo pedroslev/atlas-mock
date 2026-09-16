@@ -60,18 +60,34 @@ export function GrupoPermisos({
     );
   }
 
+  // Sin lectura no hay nada (objetivo semanal 2026-09-14, sección 5): sacar
+  // lectura saca también escritura y eliminación del módulo. Al revés, tildar
+  // escritura o eliminación sin lectura la agrega sola — la matriz nunca deja
+  // guardar una combinación que no cumpla la regla.
   function toggle(modulo: string, accion: PermisoAccion) {
     setPermisos((current) => {
       const existente = current.find((p) => p.modulo === modulo);
-      if (!existente) {
-        return [...current, { modulo, acciones: [accion] }];
+      const actuales = existente?.acciones ?? [];
+      const tiene = actuales.includes(accion);
+
+      let acciones: PermisoAccion[];
+      if (accion === "lectura" && tiene) {
+        acciones = [];
+      } else if (tiene) {
+        acciones = actuales.filter((a) => a !== accion);
+      } else if (accion === "lectura") {
+        acciones = [...actuales, accion];
+      } else {
+        acciones = actuales.includes("lectura")
+          ? [...actuales, accion]
+          : [...actuales, "lectura", accion];
       }
-      const tiene = existente.acciones.includes(accion);
-      const acciones = tiene
-        ? existente.acciones.filter((a) => a !== accion)
-        : [...existente.acciones, accion];
+
       if (acciones.length === 0) {
         return current.filter((p) => p.modulo !== modulo);
+      }
+      if (!existente) {
+        return [...current, { modulo, acciones }];
       }
       return current.map((p) => (p.modulo === modulo ? { ...p, acciones } : p));
     });

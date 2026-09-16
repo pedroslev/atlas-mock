@@ -110,7 +110,7 @@ export const admin: NamespaceDict = {
     "telefonia.descripcion":
       "Carriers de telefonía y las regiones donde operan: destinos SIP de salida y whitelist de IP de entrada en Kamailio.",
     "telefonia.tab.carriers": "Carriers",
-    "telefonia.tab.salientes": "Números salientes",
+    "telefonia.tab.numeros": "Números",
     "telefonia.tab.tarifas": "Tarifas por prefijo",
     "telefonia.nuevoCarrier": "Nuevo carrier",
     "telefonia.col.carrier": "Carrier",
@@ -145,23 +145,32 @@ export const admin: NamespaceDict = {
       "La llamada puede salir mostrando un número aleatorio.",
     "telefonia.carrierActivo": "Carrier activo",
     "telefonia.eliminarDescripcion":
-      "Se eliminará el carrier “{nombre}” en todas sus regiones, con sus números salientes y tarifas. Esta acción no se puede deshacer.",
+      "Se eliminará el carrier “{nombre}” en todas sus regiones, con sus números y tarifas. Esta acción no se puede deshacer.",
 
-    "telefonia.salientes.descripcion":
-      "Por qué carrier sale cada número saliente y en qué región está disponible.",
-    "telefonia.salientes.agregar": "Agregar número",
-    "telefonia.salientes.nuevo": "Nuevo número saliente",
-    "telefonia.salientes.editarTitulo": "Editar {numero}",
-    "telefonia.salientes.dialogoDescripcion":
-      "Mapeo de un ANI saliente al carrier por el que sale y a la región donde está disponible.",
-    "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.numeroPlaceholder": "Ej: 1161238744",
-    "telefonia.salientes.numeroRepetido":
+    "telefonia.numeros.descripcion":
+      "Por qué carrier sale o entra cada número, en qué región está disponible y a qué tenant está asignado.",
+    "telefonia.numeros.agregar": "Agregar número",
+    "telefonia.numeros.nuevo": "Nuevo número",
+    "telefonia.numeros.editarTitulo": "Editar {numero}",
+    "telefonia.numeros.dialogoDescripcion":
+      "Alta de un número: carrier por el que sale/entra, región donde está disponible y, opcionalmente, el tenant al que está asignado.",
+    "telefonia.numeros.col.numero": "Número",
+    "telefonia.numeros.numeroPlaceholder": "Ej: 1161238744",
+    "telefonia.numeros.numeroRepetido":
       "Este número ya está cargado. Un número no puede repetirse, tampoco en otra región.",
-    "telefonia.salientes.regionAyuda":
+    "telefonia.numeros.regionAyuda":
       "Solo las regiones donde opera el carrier elegido.",
-    "telefonia.salientes.eliminarDescripcion":
-      "Se eliminará el número saliente “{numero}”. Esta acción no se puede deshacer.",
+    "telefonia.numeros.col.direccion": "Dirección",
+    "telefonia.numeros.direccion.saliente": "Origina llamadas",
+    "telefonia.numeros.direccion.entrante": "Recibe llamadas",
+    "telefonia.numeros.direccion.ambas": "Recibe y origina",
+    "telefonia.numeros.col.tenant": "Tenant",
+    "telefonia.numeros.tenantLabel": "Asignar a tenant",
+    "telefonia.numeros.tenantLibre": "Libre para cualquier tenant",
+    "telefonia.numeros.tenantAyuda":
+      "Solo tenants de la región elegida. \"Libre\" deja el número disponible para que cualquier cuenta de esa región lo tome desde Cuentas.",
+    "telefonia.numeros.eliminarDescripcion":
+      "Se eliminará el número “{numero}”. Esta acción no se puede deshacer.",
 
     "telefonia.tarifas.descripcion":
       "Cuánto cobra cada carrier por minuto según el prefijo de destino, igual en todas sus regiones. Se usa para elegir el carrier más barato cuando la llamada sale con CLI oculto o aleatorio.",
@@ -281,7 +290,7 @@ export const admin: NamespaceDict = {
     "telefonia.descripcion":
       "Telephony carriers and the regions where they operate: outbound SIP destinations and inbound IP whitelist in Kamailio.",
     "telefonia.tab.carriers": "Carriers",
-    "telefonia.tab.salientes": "Outbound numbers",
+    "telefonia.tab.numeros": "Numbers",
     "telefonia.tab.tarifas": "Rates by prefix",
     "telefonia.nuevoCarrier": "New carrier",
     "telefonia.col.carrier": "Carrier",
@@ -316,23 +325,32 @@ export const admin: NamespaceDict = {
       "The call can go out showing a random number.",
     "telefonia.carrierActivo": "Carrier active",
     "telefonia.eliminarDescripcion":
-      "The carrier “{nombre}” will be deleted in all its regions, along with its outbound numbers and rates. This action cannot be undone.",
+      "The carrier “{nombre}” will be deleted in all its regions, along with its numbers and rates. This action cannot be undone.",
 
-    "telefonia.salientes.descripcion":
-      "Which carrier each outbound number uses and in which region it is available.",
-    "telefonia.salientes.agregar": "Add number",
-    "telefonia.salientes.nuevo": "New outbound number",
-    "telefonia.salientes.editarTitulo": "Edit {numero}",
-    "telefonia.salientes.dialogoDescripcion":
-      "Mapping of an outbound ANI to the carrier it goes out through and the region where it is available.",
-    "telefonia.salientes.col.numero": "Number (ANI)",
-    "telefonia.salientes.numeroPlaceholder": "E.g. 1161238744",
-    "telefonia.salientes.numeroRepetido":
+    "telefonia.numeros.descripcion":
+      "Which carrier each number uses to go out or come in, in which region it is available, and which tenant it is assigned to.",
+    "telefonia.numeros.agregar": "Add number",
+    "telefonia.numeros.nuevo": "New number",
+    "telefonia.numeros.editarTitulo": "Edit {numero}",
+    "telefonia.numeros.dialogoDescripcion":
+      "Number onboarding: which carrier it goes out/comes in through, which region it is available in, and optionally which tenant it is assigned to.",
+    "telefonia.numeros.col.numero": "Number",
+    "telefonia.numeros.numeroPlaceholder": "E.g. 1161238744",
+    "telefonia.numeros.numeroRepetido":
       "This number is already loaded. A number cannot be repeated, not even in another region.",
-    "telefonia.salientes.regionAyuda":
+    "telefonia.numeros.regionAyuda":
       "Only the regions where the selected carrier operates.",
-    "telefonia.salientes.eliminarDescripcion":
-      "The outbound number “{numero}” will be deleted. This action cannot be undone.",
+    "telefonia.numeros.col.direccion": "Direction",
+    "telefonia.numeros.direccion.saliente": "Originates calls",
+    "telefonia.numeros.direccion.entrante": "Receives calls",
+    "telefonia.numeros.direccion.ambas": "Receives and originates",
+    "telefonia.numeros.col.tenant": "Tenant",
+    "telefonia.numeros.tenantLabel": "Assign to tenant",
+    "telefonia.numeros.tenantLibre": "Free for any tenant",
+    "telefonia.numeros.tenantAyuda":
+      "Only tenants in the selected region. \"Free\" leaves the number available for any account in that region to take from Accounts.",
+    "telefonia.numeros.eliminarDescripcion":
+      "The number “{numero}” will be deleted. This action cannot be undone.",
 
     "telefonia.tarifas.descripcion":
       "How much each carrier charges per minute by destination prefix, the same in all its regions. Used to pick the cheapest carrier when the call goes out with hidden or random CLI.",
@@ -452,7 +470,7 @@ export const admin: NamespaceDict = {
     "telefonia.descripcion":
       "Carriers de telefonia e as regiões onde operam: destinos SIP de saída e whitelist de IP de entrada no Kamailio.",
     "telefonia.tab.carriers": "Carriers",
-    "telefonia.tab.salientes": "Números de saída",
+    "telefonia.tab.numeros": "Números",
     "telefonia.tab.tarifas": "Tarifas por prefixo",
     "telefonia.nuevoCarrier": "Novo carrier",
     "telefonia.col.carrier": "Carrier",
@@ -487,23 +505,32 @@ export const admin: NamespaceDict = {
       "A chamada pode sair mostrando um número aleatório.",
     "telefonia.carrierActivo": "Carrier ativo",
     "telefonia.eliminarDescripcion":
-      "O carrier “{nombre}” será excluído em todas as suas regiões, com seus números de saída e tarifas. Esta ação não pode ser desfeita.",
+      "O carrier “{nombre}” será excluído em todas as suas regiões, com seus números e tarifas. Esta ação não pode ser desfeita.",
 
-    "telefonia.salientes.descripcion":
-      "Por qual carrier sai cada número de saída e em qual região ele está disponível.",
-    "telefonia.salientes.agregar": "Adicionar número",
-    "telefonia.salientes.nuevo": "Novo número de saída",
-    "telefonia.salientes.editarTitulo": "Editar {numero}",
-    "telefonia.salientes.dialogoDescripcion":
-      "Mapeamento de um ANI de saída para o carrier pelo qual ele sai e a região onde está disponível.",
-    "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.numeroPlaceholder": "Ex.: 1161238744",
-    "telefonia.salientes.numeroRepetido":
+    "telefonia.numeros.descripcion":
+      "Por qual carrier sai ou entra cada número, em qual região ele está disponível e a qual tenant está atribuído.",
+    "telefonia.numeros.agregar": "Adicionar número",
+    "telefonia.numeros.nuevo": "Novo número",
+    "telefonia.numeros.editarTitulo": "Editar {numero}",
+    "telefonia.numeros.dialogoDescripcion":
+      "Cadastro de um número: carrier pelo qual sai/entra, região onde está disponível e, opcionalmente, o tenant ao qual está atribuído.",
+    "telefonia.numeros.col.numero": "Número",
+    "telefonia.numeros.numeroPlaceholder": "Ex.: 1161238744",
+    "telefonia.numeros.numeroRepetido":
       "Este número já está cadastrado. Um número não pode se repetir, nem em outra região.",
-    "telefonia.salientes.regionAyuda":
+    "telefonia.numeros.regionAyuda":
       "Só as regiões onde o carrier escolhido opera.",
-    "telefonia.salientes.eliminarDescripcion":
-      "O número de saída “{numero}” será excluído. Esta ação não pode ser desfeita.",
+    "telefonia.numeros.col.direccion": "Direção",
+    "telefonia.numeros.direccion.saliente": "Origina chamadas",
+    "telefonia.numeros.direccion.entrante": "Recebe chamadas",
+    "telefonia.numeros.direccion.ambas": "Recebe e origina",
+    "telefonia.numeros.col.tenant": "Tenant",
+    "telefonia.numeros.tenantLabel": "Atribuir a um tenant",
+    "telefonia.numeros.tenantLibre": "Livre para qualquer tenant",
+    "telefonia.numeros.tenantAyuda":
+      "Só tenants da região escolhida. \"Livre\" deixa o número disponível para qualquer conta dessa região tomá-lo em Contas.",
+    "telefonia.numeros.eliminarDescripcion":
+      "O número “{numero}” será excluído. Esta ação não pode ser desfeita.",
 
     "telefonia.tarifas.descripcion":
       "Quanto cada carrier cobra por minuto conforme o prefixo de destino, igual em todas as suas regiões. Usado para escolher o carrier mais barato quando a chamada sai com CLI oculto ou aleatório.",
@@ -624,7 +651,7 @@ export const admin: NamespaceDict = {
     "telefonia.descripcion":
       "Carriers de telefonia i les regions on operen: destins SIP de sortida i whitelist d'IP d'entrada a Kamailio.",
     "telefonia.tab.carriers": "Carriers",
-    "telefonia.tab.salientes": "Números de sortida",
+    "telefonia.tab.numeros": "Números",
     "telefonia.tab.tarifas": "Tarifes per prefix",
     "telefonia.nuevoCarrier": "Nou carrier",
     "telefonia.col.carrier": "Carrier",
@@ -659,23 +686,32 @@ export const admin: NamespaceDict = {
       "La trucada pot sortir mostrant un número aleatori.",
     "telefonia.carrierActivo": "Carrier actiu",
     "telefonia.eliminarDescripcion":
-      "S'eliminarà el carrier “{nombre}” a totes les seves regions, amb els seus números de sortida i tarifes. Aquesta acció no es pot desfer.",
+      "S'eliminarà el carrier “{nombre}” a totes les seves regions, amb els seus números i tarifes. Aquesta acció no es pot desfer.",
 
-    "telefonia.salientes.descripcion":
-      "Per quin carrier surt cada número de sortida i a quina regió està disponible.",
-    "telefonia.salientes.agregar": "Afegeix un número",
-    "telefonia.salientes.nuevo": "Nou número de sortida",
-    "telefonia.salientes.editarTitulo": "Edita {numero}",
-    "telefonia.salientes.dialogoDescripcion":
-      "Mapeig d'un ANI de sortida al carrier pel qual surt i a la regió on està disponible.",
-    "telefonia.salientes.col.numero": "Número (ANI)",
-    "telefonia.salientes.numeroPlaceholder": "Ex.: 1161238744",
-    "telefonia.salientes.numeroRepetido":
+    "telefonia.numeros.descripcion":
+      "Per quin carrier surt o entra cada número, a quina regió està disponible i a quin tenant està assignat.",
+    "telefonia.numeros.agregar": "Afegeix un número",
+    "telefonia.numeros.nuevo": "Nou número",
+    "telefonia.numeros.editarTitulo": "Edita {numero}",
+    "telefonia.numeros.dialogoDescripcion":
+      "Alta d'un número: carrier pel qual surt/entra, regió on està disponible i, opcionalment, el tenant al qual està assignat.",
+    "telefonia.numeros.col.numero": "Número",
+    "telefonia.numeros.numeroPlaceholder": "Ex.: 1161238744",
+    "telefonia.numeros.numeroRepetido":
       "Aquest número ja està carregat. Un número no es pot repetir, tampoc en una altra regió.",
-    "telefonia.salientes.regionAyuda":
+    "telefonia.numeros.regionAyuda":
       "Només les regions on opera el carrier triat.",
-    "telefonia.salientes.eliminarDescripcion":
-      "S'eliminarà el número de sortida “{numero}”. Aquesta acció no es pot desfer.",
+    "telefonia.numeros.col.direccion": "Direcció",
+    "telefonia.numeros.direccion.saliente": "Origina trucades",
+    "telefonia.numeros.direccion.entrante": "Rep trucades",
+    "telefonia.numeros.direccion.ambas": "Rep i origina",
+    "telefonia.numeros.col.tenant": "Tenant",
+    "telefonia.numeros.tenantLabel": "Assigna a un tenant",
+    "telefonia.numeros.tenantLibre": "Lliure per a qualsevol tenant",
+    "telefonia.numeros.tenantAyuda":
+      "Només tenants de la regió triada. \"Lliure\" deixa el número disponible perquè qualsevol compte d'aquesta regió el prengui des de Comptes.",
+    "telefonia.numeros.eliminarDescripcion":
+      "S'eliminarà el número “{numero}”. Aquesta acció no es pot desfer.",
 
     "telefonia.tarifas.descripcion":
       "Quant cobra cada carrier per minut segons el prefix de destinació, igual a totes les seves regions. S'usa per triar el carrier més barat quan la trucada surt amb CLI ocult o aleatori.",

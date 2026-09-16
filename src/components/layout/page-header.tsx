@@ -21,7 +21,13 @@ export function PageHeader({
 }: PageHeaderProps) {
   const t = useT();
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background pt-4 pb-4 sm:flex-row sm:items-start sm:justify-between sm:pt-6">
+      {/* pt-4/pt-6 acá y no en el <main> (layout.tsx): position:sticky en
+          Chrome ignora el margen negativo de un elemento para calcular su
+          posición pegada — el truco de -mt/-mx para "robarle" el padding al
+          <main> se ve bien sin scrollear pero al pegarse salta al padding
+          real y deja ver el fondo scrolleado. Sacando el padding-top del
+          <main> y poniéndolo acá, el header se pega justo al borde real. */}
       <div className="flex min-w-0 flex-col gap-1">
         {backHref && (
           <Link

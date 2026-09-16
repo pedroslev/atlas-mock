@@ -17,7 +17,7 @@ export default function BackofficeLayout({
       <div className="flex min-h-0 flex-1">
         <AppSidebar />
         <SidebarInset>
-          <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 sm:gap-6 sm:p-6">
+          <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
             {children}
           </main>
         </SidebarInset>

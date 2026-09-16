@@ -219,11 +219,12 @@ export function MitrolTable<T extends MRT_RowData>({
         }),
       },
     },
-    ...(dark && {
-      muiTableBodyCellProps: {
-        sx: { borderBottom: "1px solid #2A3547" },
-      },
-    }),
+    // Siempre presente (nunca `...(dark && {...})`): tanstack-table mergea las
+    // opciones contra las del render anterior, así que omitir esta key en
+    // light dejaba el borderBottom de dark pegado al volver.
+    muiTableBodyCellProps: {
+      sx: { borderBottom: dark ? "1px solid #2A3547" : undefined },
+    },
     // Campos de filtro por columna e input de búsqueda: outlined con texto
     // token para que no hereden un gris ilegible en dark.
     muiFilterTextFieldProps: {

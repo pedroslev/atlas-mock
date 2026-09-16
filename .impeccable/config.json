@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "0.65rem",
+        "createdAt": "2026-09-16T16:32:35.103Z",
+        "reason": "preexistente en el badge circular de paso (Paso component), no tocado en esta sesión — visto repetidas veces en ediciones no relacionadas a esa línea"
+      }
+    ]
+  }
+}

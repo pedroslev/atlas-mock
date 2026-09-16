@@ -19,21 +19,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useT } from "@/lib/i18n";
+import { type ModoDeSalida, type UsoDeLinea as TipoUso } from "@/lib/mock-data";
+import { organizations } from "@/lib/mock-admin";
 import {
-  capacidadesTelefonia,
-  lineasDisponibles,
-  type ModoDeSalida,
-  type UsoDeLinea as TipoUso,
-} from "@/lib/mock-data";
+  capacidadesDeRegion,
+  numerosParaTenant,
+  usePhoneNumbers,
+} from "@/lib/mock-telefonia";
+
+// Tenant único del backoffice (Olimpo es single-tenant) — mismo id que usa
+// Zeus (mock-admin.ts, mock-telefonia.ts) para "Banco Sur".
+const TENANT_ID = "org-banco-sur";
 
 // Configuración de la línea de una cuenta, en el orden que propone la
 // propuesta "Líneas telefónicas en Cuentas": PRIMERO para qué se usa la línea,
 // después qué ve el destinatario, y recién al final el número — porque lo que
 // se puede elegir depende de lo que permita el proveedor.
 //
-// Mock: las capacidades y el inventario de líneas salen de `mock-data`. El
-// número aleatorio está deshabilitado a propósito, para que se vea cómo queda
-// una opción que el proveedor no permite.
+// Mock: las capacidades y el inventario de números salen de `mock-telefonia`
+// (los mismos carriers y números que administra Zeus, no una copia aparte).
+// El número aleatorio se deshabilita según lo que permita el proveedor de la
+// región (`capacidadesDeRegion`) — hoy está habilitado para AR.
 //
 // `uso` es controlado desde afuera porque el detalle de cuenta lo necesita: si
 // la línea solo origina llamadas, la solapa de derivación no se muestra.
@@ -66,26 +72,42 @@ export function UsoDeLinea({
     defaultLineaSalida
   );
 
+  // Compartido con Zeus (admin/telefonia) — ver mock-telefonia.ts. Elegir acá
+  // un número libre lo asigna a este tenant, y Zeus lo ve reflejado sin
+  // recargar (mismo store, no una copia).
+  const { numeros, asignarTenant } = usePhoneNumbers();
+  const regionId =
+    organizations.find((o) => o.tenantId === TENANT_ID)?.regionId ??
+    "region-ar";
+  const capacidades = capacidadesDeRegion(regionId);
+
   const recibe = uso === "entrante" || uso === "ambas";
   const origina = uso === "saliente" || uso === "ambas";
 
-  // Solo se ofrecen las líneas que sirven para el uso elegido y que todavía no
-  // están tomadas por otra cuenta.
-  const disponiblesPara = (paraUso: TipoUso, actual?: string) =>
-    lineasDisponibles.filter(
-      (l) =>
-        l.usos.includes(paraUso) && (!l.asignadaA || l.numero === actual)
+  // Solo se ofrecen los números de este tenant en su región (asignados a él o
+  // libres) que sirven para el uso elegido.
+  const disponiblesPara = (paraUso: TipoUso) =>
+    numerosParaTenant(numeros, TENANT_ID, regionId).filter(
+      (n) => n.direction === paraUso || n.direction === "ambas",
     );
 
-  const motivoAleatorio = !capacidadesTelefonia.permiteAleatorio
+  // Un número recién elegido de la lista de libres queda asignado al tenant
+  // en el momento en que se elige — no hay un paso de "guardar" separado acá.
+  function elegirNumero(numero: string, set: (v: string) => void) {
+    set(numero);
+    const elegido = numeros.find((n) => n.number === numero);
+    if (elegido) asignarTenant(elegido.id, TENANT_ID);
+  }
+
+  const motivoAleatorio = !capacidades.permiteAleatorio
     ? t("cuentas.uso.sinProveedorAleatorio")
-    : !capacidadesTelefonia.tieneTarifas
+    : !capacidades.tieneTarifas
       ? t("cuentas.uso.sinTarifas")
       : undefined;
 
-  const motivoOculto = !capacidadesTelefonia.permiteOculto
+  const motivoOculto = !capacidades.permiteOculto
     ? t("cuentas.uso.sinProveedorOculto")
-    : !capacidadesTelefonia.tieneTarifas
+    : !capacidades.tieneTarifas
       ? t("cuentas.uso.sinTarifas")
       : undefined;
 
@@ -150,6 +172,12 @@ export function UsoDeLinea({
                   onSelect={() => setModoSalida("propio")}
                 />
               )}
+              {/* Implementación real: el número que sale acá NO se elige al azar en
+                  runtime — sale de la configuración de números por región/país que
+                  ya tiene cargada Kamailio para ese proveedor. "Aleatorio" es solo
+                  el nombre de la opción para el usuario; el backend resuelve un
+                  número real de la región del destinatario contra esa config, no
+                  un random genérico. */}
               <Opcion
                 id="salida-aleatorio"
                 icon={Shuffle}
@@ -195,19 +223,21 @@ export function UsoDeLinea({
                   ? t("cuentas.uso.lineaEntranteYSaliente")
                   : t("cuentas.uso.lineaEntrante")}
               </Label>
-              <Select value={linea} onValueChange={setLinea}>
+              <Select
+                value={linea}
+                onValueChange={(v) => elegirNumero(v, setLinea)}
+              >
                 <SelectTrigger id="linea-entrante" className="w-full sm:w-80">
                   <SelectValue placeholder={t("cuentas.uso.elegirLinea")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {disponiblesPara(
-                    uso === "ambas" ? "ambas" : "entrante",
-                    defaultLinea
-                  ).map((l) => (
-                    <SelectItem key={l.numero} value={l.numero}>
-                      {l.numero}
-                    </SelectItem>
-                  ))}
+                  {disponiblesPara(uso === "ambas" ? "ambas" : "entrante").map(
+                    (n) => (
+                      <SelectItem key={n.id} value={n.number}>
+                        {n.number}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
@@ -221,14 +251,17 @@ export function UsoDeLinea({
               <Label htmlFor="linea-saliente">
                 {t("cuentas.uso.lineaSaliente")}
               </Label>
-              <Select value={lineaSalida} onValueChange={setLineaSalida}>
+              <Select
+                value={lineaSalida}
+                onValueChange={(v) => elegirNumero(v, setLineaSalida)}
+              >
                 <SelectTrigger id="linea-saliente" className="w-full sm:w-80">
                   <SelectValue placeholder={t("cuentas.uso.elegirLinea")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {disponiblesPara("saliente", defaultLineaSalida).map((l) => (
-                    <SelectItem key={l.numero} value={l.numero}>
-                      {l.numero}
+                  {disponiblesPara("saliente").map((n) => (
+                    <SelectItem key={n.id} value={n.number}>
+                      {n.number}
                     </SelectItem>
                   ))}
                 </SelectContent>

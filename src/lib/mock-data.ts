@@ -456,7 +456,9 @@ export const cuentas: Cuenta[] = [
     nombre: "Línea Cobranzas AR",
     descripcion: "Línea saliente principal para las campañas de cobranzas",
     tipo: "Llamada",
-    identificador: "+54 11 4000-1000",
+    // Mismo número, digitos-only, que mock-telefonia.ts (ya asignado a
+    // org-banco-sur ahí) — así el Select de Cuentas lo muestra preseleccionado.
+    identificador: "1140009911",
     uso: "ambas",
     modoSalida: "misma",
     interactionValue: 80,
@@ -518,37 +520,6 @@ export const cuentas: Cuenta[] = [
     provisioningLock: 1,
   },
 ];
-
-// Líneas que Mitrol dejó disponibles para este cliente en su región. El
-// backoffice del cliente no carga números a mano: elige de acá. Cada línea
-// viene marcada con lo que puede hacer (recibir, originar o las dos cosas).
-export type LineaDisponible = {
-  numero: string;
-  usos: UsoDeLinea[];
-  region: string;
-  asignadaA?: string; // nombre de la cuenta que ya la está usando
-};
-
-export const lineasDisponibles: LineaDisponible[] = [
-  { numero: "+54 11 4000-1000", usos: ["entrante", "saliente", "ambas"], region: "AR", asignadaA: "Línea Cobranzas AR" },
-  { numero: "+54 11 4000-1001", usos: ["entrante", "saliente", "ambas"], region: "AR" },
-  { numero: "+54 11 4000-1002", usos: ["entrante"], region: "AR" },
-  { numero: "+54 11 4000-1003", usos: ["entrante"], region: "AR" },
-  { numero: "+54 11 5000-2000", usos: ["saliente"], region: "AR" },
-  { numero: "+54 11 5000-2001", usos: ["saliente"], region: "AR" },
-  { numero: "+54 341 500-3000", usos: ["entrante", "saliente", "ambas"], region: "AR" },
-];
-
-// Lo que los proveedores de la región del cliente permiten hacer. En la
-// plataforma real esto sale de la pantalla de Telefonía de Zeus: cada proveedor
-// tiene, por separado, permiso de número oculto y de número aleatorio, y para
-// cualquiera de los dos hacen falta tarifas cargadas para el destino.
-export const capacidadesTelefonia = {
-  region: "AR",
-  permiteOculto: true,
-  permiteAleatorio: false, // ningún proveedor de AR lo tiene habilitado
-  tieneTarifas: true,
-};
 
 export const clasificaciones: Clasificacion[] = [
   { id: "clas-cobranzas", nombre: "Cobranzas", tipo: "Neutro" },
@@ -740,7 +711,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     descripcion: "Equipo de soporte N1",
     usuarioIds: ["ag-3", "ag-5"],
     estadosAuxiliares: ["aux-almuerzo"],
-    permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
+    permisos: [
+      { modulo: "Campañas", acciones: ["lectura"] },
+      { modulo: "Cuentas", acciones: ["lectura"] },
+      { modulo: "Clasificaciones", acciones: ["lectura"] },
+    ],
     accesoHermes: true,
     shortcutButtons: [
       {
@@ -749,17 +724,35 @@ export const gruposTrabajo: GrupoTrabajo[] = [
         url: "https://olimpo.bancosur.com/base-conocimiento",
         openAs: "frame",
       },
+      {
+        id: "sb-atencion-2",
+        nombre: "Estado de reclamos",
+        url: "https://olimpo.bancosur.com/reclamos",
+        openAs: "frame",
+      },
     ],
     historyLookbackDays: 30,
   },
   {
     id: "wg-ventas",
     nombre: "Ventas",
+    descripcion: "Equipo comercial de ventas salientes",
     usuarioIds: ["ag-2"],
     estadosAuxiliares: ["aux-almuerzo", "aux-reunion"],
-    permisos: [{ modulo: "Campañas", acciones: ["lectura"] }],
-    accesoHermes: false,
-    shortcutButtons: [],
+    permisos: [
+      { modulo: "Campañas", acciones: ["lectura", "escritura"] },
+      { modulo: "Cuentas", acciones: ["lectura"] },
+      { modulo: "Marcas", acciones: ["lectura"] },
+    ],
+    accesoHermes: true,
+    shortcutButtons: [
+      {
+        id: "sb-ventas-1",
+        nombre: "Catálogo de productos",
+        url: "https://olimpo.bancosur.com/catalogo-productos",
+        openAs: "frame",
+      },
+    ],
     historyLookbackDays: 30,
   },
 ];
