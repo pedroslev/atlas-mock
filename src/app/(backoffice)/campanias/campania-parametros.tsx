@@ -20,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
+import { GrabacionResultado } from "@/components/grabacion/grabacion-resultado";
 import { useT } from "@/lib/i18n";
 import type {
   AgentControlsParams,
@@ -178,6 +180,9 @@ export function VisualizacionTab({
   );
 }
 
+// La grabación se configura igual en la campaña y en el grupo de trabajo, así
+// que los switches viven en un componente compartido. Acá se suma el cruce con
+// los grupos, para ver qué termina grabándose.
 export function GrabacionTab({
   value,
   onChange,
@@ -187,26 +192,16 @@ export function GrabacionTab({
   onChange: (v: RecordingSettingsParams) => void;
   holdHabilitado: boolean;
 }) {
-  const t = useT();
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("campanias.parametros.grabacionTitulo")}</CardTitle>
-        <CardDescription>{t("campanias.parametros.grabacionDesc")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
-        <ToggleRow
-          id="record-hold"
-          label={t("campanias.parametros.recordHold")}
-          description={t("campanias.parametros.recordHoldDesc")}
-          disabledReason={t("campanias.parametros.recordHoldDependeHold")}
-          alcance={t("campanias.parametros.recordHoldAlcance")}
-          checked={holdHabilitado && value.recordAgentAudioDuringHold}
-          disabled={!holdHabilitado}
-          onCheckedChange={(v) => onChange({ recordAgentAudioDuringHold: v })}
-        />
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <GrabacionSettings
+        value={value}
+        onChange={onChange}
+        ambito="campania"
+        holdHabilitado={holdHabilitado}
+      />
+      <GrabacionResultado propio={value} ambito="campania" />
+    </div>
   );
 }
 

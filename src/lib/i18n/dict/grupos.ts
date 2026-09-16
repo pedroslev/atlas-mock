@@ -57,6 +57,7 @@ export const grupos: NamespaceDict = {
     // idiomas cae al fallback en español hasta cerrar el contenido.
     "tab.general": "General",
     "tab.permisos": "Permisos",
+    "tab.grabacion": "Grabación",
     "tab.configHermes": "Config. Hermes",
 
     "configHermes.titulo": "Configuración de Hermes",

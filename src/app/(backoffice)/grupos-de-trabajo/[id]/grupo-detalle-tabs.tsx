@@ -11,8 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
+import { GrabacionResultado } from "@/components/grabacion/grabacion-resultado";
 import { T } from "@/lib/i18n";
-import type { Agente, GrupoTrabajo } from "@/lib/mock-data";
+import type {
+  Agente,
+  GrupoTrabajo,
+  RecordingSettingsParams,
+} from "@/lib/mock-data";
 import { GrupoMiembros } from "./grupo-miembros";
 import { GrupoPermisos } from "./grupo-permisos";
 import { GrupoConfigHermesTab } from "../grupo-config-hermes";
@@ -31,6 +37,12 @@ export function GrupoDetalleTabs({
 }) {
   const [accesoHermes, setAccesoHermes] = useState(grupo.accesoHermes);
   const [tab, setTab] = useState("general");
+  // Grabación por grupo: alcance nuevo, todavía no acordado. La solapa se
+  // muestra siempre — es configuración operativa del grupo, no algo que el
+  // agente vea dentro del pad (por eso no va en "Config. Hermes").
+  const [grabacion, setGrabacion] = useState<RecordingSettingsParams>(
+    grupo.recordingSettings
+  );
 
   useEffect(() => {
     if (!accesoHermes && tab === "config-hermes") setTab("general");
@@ -44,6 +56,9 @@ export function GrupoDetalleTabs({
         </TabsTrigger>
         <TabsTrigger value="permisos">
           <T k="grupos.tab.permisos" />
+        </TabsTrigger>
+        <TabsTrigger value="grabacion">
+          <T k="grupos.tab.grabacion" />
         </TabsTrigger>
         {accesoHermes && (
           <TabsTrigger value="config-hermes">
@@ -84,6 +99,15 @@ export function GrupoDetalleTabs({
           accesoHermes={accesoHermes}
           onAccesoHermesChange={setAccesoHermes}
         />
+      </TabsContent>
+
+      <TabsContent value="grabacion" className="flex flex-col gap-6">
+        <GrabacionSettings
+          value={grabacion}
+          onChange={setGrabacion}
+          ambito="grupo"
+        />
+        <GrabacionResultado propio={grabacion} ambito="grupo" />
       </TabsContent>
 
       {accesoHermes && (

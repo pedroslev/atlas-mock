@@ -67,9 +67,35 @@ export type DisplaySettingsParams = {
   allowRinging: boolean;
 };
 
+// Cómo se maneja la grabación. Se configura en la campaña Y en el grupo de
+// trabajo, y entre los dos gana lo más restrictivo: si cualquiera de los dos
+// dice que no se grabe, no se graba (decisión del PO, 2026-09-16 — pendiente
+// de acordar con el Chief Innovation Architect).
 export type RecordingSettingsParams = {
+  // Switch principal: si está apagado no se graba nada, y los otros dos
+  // quedan sin efecto.
+  recordInteraction: boolean;
   recordAgentAudioDuringHold: boolean;
+  // ACW = after call work, el trabajo posterior a la llamada (tipificación).
+  recordAcw: boolean;
 };
+
+// Lo que efectivamente se graba, aplicando "gana lo más restrictivo" entre la
+// campaña y el grupo. Sirve para mostrar en pantalla el resultado real.
+export function grabacionEfectiva(
+  campania: RecordingSettingsParams,
+  grupo: RecordingSettingsParams
+): RecordingSettingsParams {
+  const interaction = campania.recordInteraction && grupo.recordInteraction;
+  return {
+    recordInteraction: interaction,
+    recordAgentAudioDuringHold:
+      interaction &&
+      campania.recordAgentAudioDuringHold &&
+      grupo.recordAgentAudioDuringHold,
+    recordAcw: interaction && campania.recordAcw && grupo.recordAcw,
+  };
+}
 
 export type AgentOperationSettingsParams = {
   forcedAnswer: boolean;
@@ -117,7 +143,9 @@ export function defaultParametros(): CampaniaParametros {
       allowRinging: true,
     },
     recordingSettings: {
+      recordInteraction: true,
       recordAgentAudioDuringHold: true,
+      recordAcw: false,
     },
     agentOperationSettings: {
       forcedAnswer: true,
@@ -290,6 +318,10 @@ export type GrupoTrabajo = {
   accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
   shortcutButtons: ShortcutButtonEntry[]; // working_groups.shortcut_buttons
   historyLookbackDays: number; // working_groups.parameters.agent_operation_settings.history_lookback_days — default 30 (ver parametrizacion-propuesta.md §5)
+  // Grabación por grupo: se cruza con la de la campaña y gana lo más
+  // restrictivo. Alcance nuevo, todavía no acordado — ver la propuesta de
+  // grabaciones en documentacion/relevamiento-legacy/grabaciones/.
+  recordingSettings: RecordingSettingsParams;
 };
 
 // user_keycloak_map — overrides individuales de un usuario sobre su grupo,
@@ -704,6 +736,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 90,
+    recordingSettings: {
+      recordInteraction: true,
+      recordAgentAudioDuringHold: true,
+      recordAcw: false,
+    },
   },
   {
     id: "wg-atencion",
@@ -732,6 +769,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 30,
+    recordingSettings: {
+      recordInteraction: true,
+      recordAgentAudioDuringHold: false,
+      recordAcw: false,
+    },
   },
   {
     id: "wg-ventas",
@@ -754,6 +796,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 30,
+    recordingSettings: {
+      recordInteraction: false,
+      recordAgentAudioDuringHold: false,
+      recordAcw: false,
+    },
   },
 ];
 
