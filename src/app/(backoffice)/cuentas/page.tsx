@@ -9,6 +9,7 @@ import {
   MitrolTable,
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cuentas, type Cuenta } from "@/lib/mock-data";
@@ -42,6 +43,18 @@ export default function CuentasPage() {
             {cell.getValue<string>()}
           </span>
         ),
+      },
+      {
+        accessorKey: "uso",
+        header: t("cuentas.col.uso"),
+        Cell: ({ row }) =>
+          row.original.uso ? (
+            <Badge variant="outline" className="font-normal">
+              {t(`cuentas.uso.${row.original.uso}`)}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
       },
     ],
     [t]
