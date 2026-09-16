@@ -71,7 +71,15 @@ export type DisplaySettingsParams = {
 // trabajo, y entre los dos gana lo más restrictivo: si cualquiera de los dos
 // dice que no se grabe, no se graba (decisión del PO, 2026-09-16 — pendiente
 // de acordar con el Chief Innovation Architect).
+// Qué se graba: solo las interacciones (y dentro de ellas, qué momentos), o
+// todo el tiempo que el agente está conectado — incluido lo que pasa entre
+// llamada y llamada.
+export type RecordingMode = "interaccion" | "sesion";
+
 export type RecordingSettingsParams = {
+  mode: RecordingMode;
+  // Los tres momentos solo se eligen en modo "interaccion". En modo "sesion"
+  // quedan incluidos por definición.
   // Switch principal: si está apagado no se graba nada, y los otros dos
   // quedan sin efecto.
   recordInteraction: boolean;
@@ -126,6 +134,7 @@ export function defaultParametros(): CampaniaParametros {
       allowRinging: true,
     },
     recordingSettings: {
+      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
@@ -720,6 +729,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 90,
     recordingSettings: {
+      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
@@ -753,6 +763,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 30,
     recordingSettings: {
+      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
@@ -780,6 +791,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 30,
     recordingSettings: {
+      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,

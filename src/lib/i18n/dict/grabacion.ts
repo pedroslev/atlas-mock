@@ -6,9 +6,17 @@ export const grabacion: NamespaceDict = {
   es: {
     "titulo": "Grabación",
     "descCampania":
-      "Qué momentos de la llamada se graban en esta campaña.",
+      "Qué se graba en esta campaña, y en qué momentos.",
     "descGrupo":
-      "Qué momentos de la llamada se graban cuando atiende un agente de este grupo.",
+      "Qué se graba cuando atiende un agente de este grupo, y en qué momentos.",
+
+    "modoInteraccion": "Solo las interacciones",
+    "modoInteraccionDesc":
+      "Se graba cuando hay una llamada. Entre llamada y llamada no se graba nada.",
+    "modoSesion": "Toda la sesión del agente",
+    "modoSesionDesc":
+      "Se graba desde que el agente se conecta hasta que se desconecta, haya llamada o no.",
+    "incluidoEnSesion": "Incluido: se graba toda la sesión del agente.",
 
     "interaccion": "Grabar la interacción",
     "interaccionDesc":
@@ -31,9 +39,17 @@ export const grabacion: NamespaceDict = {
   },
   en: {
     "titulo": "Recording",
-    "descCampania": "Which moments of the call are recorded in this campaign.",
+    "descCampania": "What gets recorded in this campaign, and at which moments.",
     "descGrupo":
-      "Which moments of the call are recorded when an agent from this group handles it.",
+      "What gets recorded when an agent from this group handles the call, and at which moments.",
+
+    "modoInteraccion": "Interactions only",
+    "modoInteraccionDesc":
+      "Records while there's a call. Between calls nothing is recorded.",
+    "modoSesion": "The agent's whole session",
+    "modoSesionDesc":
+      "Records from the moment the agent logs in until they log out, call or no call.",
+    "incluidoEnSesion": "Included: the agent's whole session is recorded.",
 
     "interaccion": "Record the interaction",
     "interaccionDesc":
@@ -54,9 +70,17 @@ export const grabacion: NamespaceDict = {
   },
   pt: {
     "titulo": "Gravação",
-    "descCampania": "Que momentos da chamada são gravados nesta campanha.",
+    "descCampania": "O que se grava nesta campanha, e em que momentos.",
     "descGrupo":
-      "Que momentos da chamada são gravados quando atende um agente deste grupo.",
+      "O que se grava quando atende um agente deste grupo, e em que momentos.",
+
+    "modoInteraccion": "Apenas as interações",
+    "modoInteraccionDesc":
+      "Grava quando há uma chamada. Entre uma chamada e outra não grava nada.",
+    "modoSesion": "Toda a sessão do agente",
+    "modoSesionDesc":
+      "Grava desde que o agente se conecta até se desconectar, haja chamada ou não.",
+    "incluidoEnSesion": "Incluído: grava-se toda a sessão do agente.",
 
     "interaccion": "Gravar a interação",
     "interaccionDesc":
@@ -77,9 +101,17 @@ export const grabacion: NamespaceDict = {
   },
   ca: {
     "titulo": "Gravació",
-    "descCampania": "Quins moments de la trucada es graven en aquesta campanya.",
+    "descCampania": "Què es grava en aquesta campanya, i en quins moments.",
     "descGrupo":
-      "Quins moments de la trucada es graven quan atén un agent d'aquest grup.",
+      "Què es grava quan atén un agent d'aquest grup, i en quins moments.",
+
+    "modoInteraccion": "Només les interaccions",
+    "modoInteraccionDesc":
+      "Es grava quan hi ha una trucada. Entre trucada i trucada no es grava res.",
+    "modoSesion": "Tota la sessió de l'agent",
+    "modoSesionDesc":
+      "Es grava des que l'agent es connecta fins que es desconnecta, hi hagi trucada o no.",
+    "incluidoEnSesion": "Inclòs: es grava tota la sessió de l'agent.",
 
     "interaccion": "Gravar la interacció",
     "interaccionDesc":
