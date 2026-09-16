@@ -18,7 +18,7 @@ export const grabacion: NamespaceDict = {
       "Sigue grabando mientras la llamada está en espera (hold).",
     "acw": "Grabar el trabajo posterior",
     "acwDesc":
-      "Graba el rato posterior a la llamada, mientras el agente tipifica la gestión (ACW).",
+      "Graba el tiempo posterior a la llamada, mientras el agente tipifica la gestión (ACW).",
 
     "dependeInteraccion": "Se habilita al activar «Grabar la interacción».",
     "dependeHold":
@@ -88,7 +88,7 @@ export const grabacion: NamespaceDict = {
     "holdDesc": "Continua gravant mentre la trucada està en espera (hold).",
     "acw": "Gravar la feina posterior",
     "acwDesc":
-      "Grava l'estona posterior a la trucada, mentre l'agent tipifica la gestió (ACW).",
+      "Grava el temps posterior a la trucada, mentre l'agent tipifica la gestió (ACW).",
 
     "dependeInteraccion": "S'habilita en activar «Gravar la interacció».",
     "dependeHold": "S'habilita si la campanya permet posar la trucada en espera.",
