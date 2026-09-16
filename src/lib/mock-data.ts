@@ -71,21 +71,23 @@ export type DisplaySettingsParams = {
 // trabajo, y entre los dos gana lo más restrictivo: si cualquiera de los dos
 // dice que no se grabe, no se graba (decisión del PO, 2026-09-16 — pendiente
 // de acordar con el Chief Innovation Architect).
-// Qué se graba: solo las interacciones (y dentro de ellas, qué momentos), o
-// todo el tiempo que el agente está conectado — incluido lo que pasa entre
-// llamada y llamada.
-export type RecordingMode = "interaccion" | "sesion";
+// Hasta dónde llega la grabación de pantalla: solo mientras hay una
+// interacción (lo que hace el mercado), o todo el tiempo que el agente está
+// conectado.
+export type ScreenRecordingScope = "interaccion" | "sesion";
 
 export type RecordingSettingsParams = {
-  mode: RecordingMode;
-  // Los tres momentos solo se eligen en modo "interaccion". En modo "sesion"
-  // quedan incluidos por definición.
-  // Switch principal: si está apagado no se graba nada, y los otros dos
-  // quedan sin efecto.
+  // Audio. Switch principal: si está apagado no se graba audio, y los otros
+  // dos quedan sin efecto.
   recordInteraction: boolean;
   recordAgentAudioDuringHold: boolean;
   // ACW = after call work, el trabajo posterior a la llamada (tipificación).
   recordAcw: boolean;
+  // Pantalla: es una grabación aparte del audio (en el ADR de grabaciones, una
+  // object_class distinta con su propio egress), así que se activa por
+  // separado y tiene su propio alcance.
+  recordScreen: boolean;
+  screenScope: ScreenRecordingScope;
 };
 
 export type AgentOperationSettingsParams = {
@@ -134,10 +136,11 @@ export function defaultParametros(): CampaniaParametros {
       allowRinging: true,
     },
     recordingSettings: {
-      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
+      recordScreen: true,
+      screenScope: "interaccion",
     },
     agentOperationSettings: {
       forcedAnswer: true,
@@ -729,10 +732,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 90,
     recordingSettings: {
-      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
+      recordScreen: true,
+      screenScope: "interaccion",
     },
   },
   {
@@ -763,10 +767,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 30,
     recordingSettings: {
-      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
+      recordScreen: true,
+      screenScope: "interaccion",
     },
   },
   {
@@ -791,10 +796,11 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     historyLookbackDays: 30,
     recordingSettings: {
-      mode: "interaccion",
       recordInteraction: true,
       recordAgentAudioDuringHold: true,
       recordAcw: true,
+      recordScreen: true,
+      screenScope: "interaccion",
     },
   },
 ];
