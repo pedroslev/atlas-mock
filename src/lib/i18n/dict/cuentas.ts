@@ -49,7 +49,8 @@ export const cuentas: NamespaceDict = {
     "uso.salidaNumero": "Número visible",
     "uso.salidaNumeroDesc": "Se muestra un número del listado de disponibles.",
     "uso.salidaAleatorio": "Número aleatorio",
-    "uso.salidaAleatorioDesc": "Cada llamada sale con un número distinto.",
+    "uso.salidaAleatorioDesc":
+      "La llamada sale con un número aleatorio del país del destinatario: si llamás a Argentina, sale con un número de Argentina.",
     "uso.salidaOculto": "Número oculto",
     "uso.salidaOcultoDesc": "La llamada sale sin mostrar ningún número.",
     "uso.sinProveedorAleatorio":
@@ -133,7 +134,8 @@ export const cuentas: NamespaceDict = {
     "uso.salidaNumero": "Visible number",
     "uso.salidaNumeroDesc": "Shows a number from the available list.",
     "uso.salidaAleatorio": "Random number",
-    "uso.salidaAleatorioDesc": "Each call goes out with a different number.",
+    "uso.salidaAleatorioDesc":
+      "The call goes out with a random number from the recipient's country: calling Argentina shows an Argentine number.",
     "uso.salidaOculto": "Hidden number",
     "uso.salidaOcultoDesc": "The call goes out without showing any number.",
     "uso.sinProveedorAleatorio":
@@ -216,7 +218,8 @@ export const cuentas: NamespaceDict = {
     "uso.salidaNumero": "Número visível",
     "uso.salidaNumeroDesc": "Mostra um número da lista de disponíveis.",
     "uso.salidaAleatorio": "Número aleatório",
-    "uso.salidaAleatorioDesc": "Cada chamada sai com um número diferente.",
+    "uso.salidaAleatorioDesc":
+      "A chamada sai com um número aleatório do país do destinatário: ligar para a Argentina mostra um número argentino.",
     "uso.salidaOculto": "Número oculto",
     "uso.salidaOcultoDesc": "A chamada sai sem mostrar nenhum número.",
     "uso.sinProveedorAleatorio":
@@ -299,7 +302,8 @@ export const cuentas: NamespaceDict = {
     "uso.salidaNumero": "Número visible",
     "uso.salidaNumeroDesc": "Es mostra un número del llistat de disponibles.",
     "uso.salidaAleatorio": "Número aleatori",
-    "uso.salidaAleatorioDesc": "Cada trucada surt amb un número diferent.",
+    "uso.salidaAleatorioDesc":
+      "La trucada surt amb un número aleatori del país del destinatari: trucar a l'Argentina mostra un número argentí.",
     "uso.salidaOculto": "Número ocult",
     "uso.salidaOcultoDesc": "La trucada surt sense mostrar cap número.",
     "uso.sinProveedorAleatorio":

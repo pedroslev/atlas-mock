@@ -16,7 +16,7 @@ export default function AdminLayout({
       <div className="flex min-h-0 flex-1">
         <AdminSidebar />
         <SidebarInset>
-          <main className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-6">
+          <main className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-none px-6 pb-6">
             {children}
           </main>
         </SidebarInset>

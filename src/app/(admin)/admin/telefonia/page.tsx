@@ -36,14 +36,16 @@ import {
   regionBadgeVariant,
   regionLabel,
   getRegion,
+  organizations,
   type Region,
 } from "@/lib/mock-admin";
 import {
   carriers as carriersIniciales,
-  outboundNumbers as outboundNumbersIniciales,
   carrierRates as carrierRatesIniciales,
+  usePhoneNumbers,
   type Carrier,
-  type OutboundNumber,
+  type PhoneNumber,
+  type NumberDirection,
   type CarrierRate,
 } from "@/lib/mock-telefonia";
 import { useT } from "@/lib/i18n";
@@ -66,11 +68,19 @@ const emptyForm = {
   active: true,
 };
 
-const emptyOutboundForm = {
+// Valor de Select para "libre para cualquier tenant" — Select no admite value
+// vacío; se traduce a tenantId: null recién al guardar.
+const TENANT_LIBRE = "libre";
+
+const emptyNumeroForm = {
   number: "",
   carrierId: "",
   regionId: "",
+  direction: "saliente" as NumberDirection,
+  tenantId: TENANT_LIBRE as string,
 };
+
+const DIRECTIONS: NumberDirection[] = ["saliente", "entrante", "ambas"];
 
 const emptyRateForm = {
   carrierId: "",
@@ -107,14 +117,13 @@ export default function TelefoniaPage() {
   const [editing, setEditing] = useState<Carrier | null>(null);
   const [form, setForm] = useState(emptyForm);
 
-  const [outboundNumbers, setOutboundNumbers] = useState<OutboundNumber[]>(
-    outboundNumbersIniciales,
-  );
-  const [outboundDialogOpen, setOutboundDialogOpen] = useState(false);
-  const [editingOutbound, setEditingOutbound] = useState<OutboundNumber | null>(
+  // Compartido con Cuentas (olimpo-front) — ver mock-telefonia.ts.
+  const { numeros, setNumeros } = usePhoneNumbers();
+  const [numeroDialogOpen, setNumeroDialogOpen] = useState(false);
+  const [editingNumero, setEditingNumero] = useState<PhoneNumber | null>(
     null,
   );
-  const [outboundForm, setOutboundForm] = useState(emptyOutboundForm);
+  const [numeroForm, setNumeroForm] = useState(emptyNumeroForm);
 
   const [carrierRates, setCarrierRates] = useState<CarrierRate[]>(
     carrierRatesIniciales,
@@ -128,6 +137,12 @@ export default function TelefoniaPage() {
   const carrierPorId = useMemo(
     () => new Map(carriers.map((carrier) => [carrier.id, carrier])),
     [carriers],
+  );
+  // organizations no cambia en esta pantalla (se administra desde Cuentas/Zeus
+  // Tenants) — no hace falta useState, solo el map de lookup por id.
+  const organizacionPorId = useMemo(
+    () => new Map(organizations.map((org) => [org.tenantId, org])),
+    [],
   );
   const activeCarriers = carriers.filter((c) => c.active);
   // Candidatos al LCR: carriers activos que permiten salir con CLI oculto o aleatorio.
@@ -206,8 +221,8 @@ export default function TelefoniaPage() {
         prev.map((c) => (c.id === editing.id ? { ...c, ...datos } : c)),
       );
       // Sacar una región es dar de baja el carrier en esa región: sus números
-      // salientes de ahí se van con él.
-      setOutboundNumbers((prev) =>
+      // de ahí se van con él.
+      setNumeros((prev) =>
         prev.filter(
           (o) =>
             o.carrierId !== editing.id || datos.regionIds.includes(o.regionId),
@@ -222,80 +237,95 @@ export default function TelefoniaPage() {
     setDialogOpen(false);
   }
 
-  // Borrar un carrier borra también sus números salientes y sus tarifas.
+  // Borrar un carrier borra también sus números y sus tarifas.
   function eliminarCarrier(id: string) {
     setCarriers((prev) => prev.filter((c) => c.id !== id));
-    setOutboundNumbers((prev) => prev.filter((o) => o.carrierId !== id));
+    setNumeros((prev) => prev.filter((o) => o.carrierId !== id));
     setCarrierRates((prev) => prev.filter((r) => r.carrierId !== id));
   }
 
-  // Regiones del carrier elegido: el número saliente solo puede estar en una de ellas.
+  // Regiones del carrier elegido: el número solo puede estar en una de ellas.
   const regionesDelCarrier = regions.filter((region) =>
-    carrierPorId.get(outboundForm.carrierId)?.regionIds.includes(region.id),
+    carrierPorId.get(numeroForm.carrierId)?.regionIds.includes(region.id),
+  );
+  // Tenants candidatos a la asignación: solo los de la región elegida — un
+  // número no se puede asignar a un tenant de otra región.
+  const tenantsDeRegion = organizations.filter(
+    (org) => org.regionId === numeroForm.regionId,
   );
   // Un mismo número no puede estar cargado dos veces, tampoco en otra región.
-  const numeroNormalizado = outboundForm.number.replace(/\D/g, "");
-  const numeroRepetido = outboundNumbers.some(
-    (o) => o.number === numeroNormalizado && o.id !== editingOutbound?.id,
+  const numeroNormalizado = numeroForm.number.replace(/\D/g, "");
+  const numeroRepetido = numeros.some(
+    (o) => o.number === numeroNormalizado && o.id !== editingNumero?.id,
   );
-  const puedeGuardarOutbound =
+  const puedeGuardarNumero =
     numeroNormalizado.length > 0 &&
     !numeroRepetido &&
-    regionesDelCarrier.some((region) => region.id === outboundForm.regionId);
+    regionesDelCarrier.some((region) => region.id === numeroForm.regionId);
 
-  function abrirOutbound(entry: OutboundNumber | null) {
-    setEditingOutbound(entry);
+  function abrirNumero(entry: PhoneNumber | null) {
+    setEditingNumero(entry);
     const primerCarrier = activeCarriers[0];
-    setOutboundForm(
+    setNumeroForm(
       entry
         ? {
             number: entry.number,
             carrierId: entry.carrierId,
             regionId: entry.regionId,
+            direction: entry.direction,
+            tenantId: entry.tenantId ?? TENANT_LIBRE,
           }
         : {
-            ...emptyOutboundForm,
+            ...emptyNumeroForm,
             carrierId: primerCarrier?.id ?? "",
             regionId: primerCarrier?.regionIds[0] ?? "",
           },
     );
-    setOutboundDialogOpen(true);
+    setNumeroDialogOpen(true);
   }
 
   // Al cambiar de carrier se conserva la región si el carrier nuevo también
-  // opera ahí; si no, se pasa a la primera región del carrier nuevo.
-  function elegirCarrierOutbound(carrierId: string) {
+  // opera ahí; si no, se pasa a la primera región del carrier nuevo. Cambiar
+  // de región puede dejar sin sentido el tenant elegido (es de otra región),
+  // así que vuelve a "libre".
+  function elegirCarrierNumero(carrierId: string) {
     const regionIds = carrierPorId.get(carrierId)?.regionIds ?? [];
-    setOutboundForm((f) => ({
+    setNumeroForm((f) => ({
       ...f,
       carrierId,
       regionId: regionIds.includes(f.regionId)
         ? f.regionId
         : (regionIds[0] ?? ""),
+      tenantId: TENANT_LIBRE,
     }));
   }
 
-  function guardarOutbound() {
-    if (!puedeGuardarOutbound) return;
+  function elegirRegionNumero(regionId: string) {
+    setNumeroForm((f) => ({ ...f, regionId, tenantId: TENANT_LIBRE }));
+  }
+
+  function guardarNumero() {
+    if (!puedeGuardarNumero) return;
     const datos = {
       number: numeroNormalizado,
-      carrierId: outboundForm.carrierId,
-      regionId: outboundForm.regionId,
+      carrierId: numeroForm.carrierId,
+      regionId: numeroForm.regionId,
+      direction: numeroForm.direction,
+      tenantId:
+        numeroForm.tenantId === TENANT_LIBRE ? null : numeroForm.tenantId,
     };
 
-    if (editingOutbound) {
-      setOutboundNumbers((prev) =>
-        prev.map((o) =>
-          o.id === editingOutbound.id ? { ...o, ...datos } : o,
-        ),
+    if (editingNumero) {
+      setNumeros((prev) =>
+        prev.map((o) => (o.id === editingNumero.id ? { ...o, ...datos } : o)),
       );
     } else {
-      setOutboundNumbers((prev) => [
+      setNumeros((prev) => [
         ...prev,
-        { id: `outbound-${crypto.randomUUID()}`, ...datos, active: true },
+        { id: `number-${crypto.randomUUID()}`, ...datos, active: true },
       ]);
     }
-    setOutboundDialogOpen(false);
+    setNumeroDialogOpen(false);
   }
 
   function abrirRate(rate: CarrierRate | null) {
@@ -340,11 +370,11 @@ export default function TelefoniaPage() {
     setRateDialogOpen(false);
   }
 
-  const outboundColumns = useMemo<MRT_ColumnDef<OutboundNumber>[]>(
+  const numeroColumns = useMemo<MRT_ColumnDef<PhoneNumber>[]>(
     () => [
       {
         accessorKey: "number",
-        header: t("admin.telefonia.salientes.col.numero"),
+        header: t("admin.telefonia.numeros.col.numero"),
         Cell: ({ cell }) => (
           <span className="font-mono text-xs">{cell.getValue<string>()}</span>
         ),
@@ -366,6 +396,35 @@ export default function TelefoniaPage() {
         Cell: ({ row }) => <RegionBadges regionIds={[row.original.regionId]} />,
       },
       {
+        id: "direction",
+        header: t("admin.telefonia.numeros.col.direccion"),
+        accessorFn: (entry) =>
+          t(`admin.telefonia.numeros.direccion.${entry.direction}`),
+        Cell: ({ row }) => (
+          <span>
+            {t(`admin.telefonia.numeros.direccion.${row.original.direction}`)}
+          </span>
+        ),
+      },
+      {
+        id: "tenant",
+        header: t("admin.telefonia.numeros.col.tenant"),
+        accessorFn: (entry) =>
+          entry.tenantId
+            ? (organizacionPorId.get(entry.tenantId)?.name ?? "—")
+            : t("admin.telefonia.numeros.tenantLibre"),
+        Cell: ({ row }) =>
+          row.original.tenantId ? (
+            <span className="font-medium">
+              {organizacionPorId.get(row.original.tenantId)?.name ?? "—"}
+            </span>
+          ) : (
+            <Badge variant="neutral">
+              {t("admin.telefonia.numeros.tenantLibre")}
+            </Badge>
+          ),
+      },
+      {
         id: "estado",
         header: t("common.comunes.estado"),
         accessorFn: (entry) =>
@@ -378,7 +437,7 @@ export default function TelefoniaPage() {
           ),
       },
     ],
-    [t, carrierPorId],
+    [t, carrierPorId, organizacionPorId],
   );
 
   const rateColumns = useMemo<MRT_ColumnDef<CarrierRate>[]>(
@@ -479,8 +538,8 @@ export default function TelefoniaPage() {
           <TabsTrigger value="carriers">
             {t("admin.telefonia.tab.carriers")}
           </TabsTrigger>
-          <TabsTrigger value="salientes">
-            {t("admin.telefonia.tab.salientes")}
+          <TabsTrigger value="numeros">
+            {t("admin.telefonia.tab.numeros")}
           </TabsTrigger>
           <TabsTrigger value="tarifas">
             {t("admin.telefonia.tab.tarifas")}
@@ -537,20 +596,20 @@ export default function TelefoniaPage() {
           />
         </TabsContent>
 
-        <TabsContent value="salientes" className="flex flex-col gap-4">
+        <TabsContent value="numeros" className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
             <p className="max-w-[70ch] text-sm text-muted-foreground">
-              {t("admin.telefonia.salientes.descripcion")}
+              {t("admin.telefonia.numeros.descripcion")}
             </p>
-            <Button onClick={() => abrirOutbound(null)}>
+            <Button onClick={() => abrirNumero(null)}>
               <Plus />
-              {t("admin.telefonia.salientes.agregar")}
+              {t("admin.telefonia.numeros.agregar")}
             </Button>
           </div>
 
           <MitrolTable
-            columns={outboundColumns}
-            data={outboundNumbers}
+            columns={numeroColumns}
+            data={numeros}
             options={{
               enableRowActions: true,
               renderRowActions: ({ row }) => (
@@ -558,14 +617,14 @@ export default function TelefoniaPage() {
                   actions={[
                     {
                       label: t("common.acciones.editar"),
-                      onSelect: () => abrirOutbound(row.original),
+                      onSelect: () => abrirNumero(row.original),
                     },
                     {
                       label: row.original.active
                         ? t("admin.telefonia.accion.desactivar")
                         : t("admin.telefonia.accion.activar"),
                       onSelect: () =>
-                        setOutboundNumbers((prev) =>
+                        setNumeros((prev) =>
                           prev.map((o) =>
                             o.id === row.original.id
                               ? { ...o, active: !o.active }
@@ -578,11 +637,11 @@ export default function TelefoniaPage() {
                       destructive: true,
                       separatorBefore: true,
                       confirmDescription: t(
-                        "admin.telefonia.salientes.eliminarDescripcion",
+                        "admin.telefonia.numeros.eliminarDescripcion",
                         { numero: row.original.number },
                       ),
                       onSelect: () =>
-                        setOutboundNumbers((prev) =>
+                        setNumeros((prev) =>
                           prev.filter((o) => o.id !== row.original.id),
                         ),
                     },
@@ -637,49 +696,74 @@ export default function TelefoniaPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={outboundDialogOpen} onOpenChange={setOutboundDialogOpen}>
+      <Dialog open={numeroDialogOpen} onOpenChange={setNumeroDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingOutbound
-                ? t("admin.telefonia.salientes.editarTitulo", {
-                    numero: editingOutbound.number,
+              {editingNumero
+                ? t("admin.telefonia.numeros.editarTitulo", {
+                    numero: editingNumero.number,
                   })
-                : t("admin.telefonia.salientes.nuevo")}
+                : t("admin.telefonia.numeros.nuevo")}
             </DialogTitle>
             <DialogDescription>
-              {t("admin.telefonia.salientes.dialogoDescripcion")}
+              {t("admin.telefonia.numeros.dialogoDescripcion")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="on-number">
-                {t("admin.telefonia.salientes.col.numero")}
+                {t("admin.telefonia.numeros.col.numero")}
               </Label>
               <Input
                 id="on-number"
-                value={outboundForm.number}
+                value={numeroForm.number}
                 onChange={(e) =>
-                  setOutboundForm((f) => ({ ...f, number: e.target.value }))
+                  setNumeroForm((f) => ({ ...f, number: e.target.value }))
                 }
-                placeholder={t("admin.telefonia.salientes.numeroPlaceholder")}
+                placeholder={t("admin.telefonia.numeros.numeroPlaceholder")}
                 className="font-mono text-xs"
                 aria-invalid={numeroRepetido}
                 autoFocus
               />
               {numeroRepetido && (
                 <span className="text-xs text-destructive">
-                  {t("admin.telefonia.salientes.numeroRepetido")}
+                  {t("admin.telefonia.numeros.numeroRepetido")}
                 </span>
               )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="on-direction">
+                {t("admin.telefonia.numeros.col.direccion")}
+              </Label>
+              <Select
+                value={numeroForm.direction}
+                onValueChange={(v) =>
+                  setNumeroForm((f) => ({
+                    ...f,
+                    direction: v as NumberDirection,
+                  }))
+                }
+              >
+                <SelectTrigger id="on-direction" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIRECTIONS.map((direction) => (
+                    <SelectItem key={direction} value={direction}>
+                      {t(`admin.telefonia.numeros.direccion.${direction}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="on-carrier">
                 {t("admin.telefonia.col.carrier")}
               </Label>
               <Select
-                value={outboundForm.carrierId}
-                onValueChange={elegirCarrierOutbound}
+                value={numeroForm.carrierId}
+                onValueChange={elegirCarrierNumero}
               >
                 <SelectTrigger id="on-carrier" className="w-full">
                   <SelectValue />
@@ -695,12 +779,7 @@ export default function TelefoniaPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="on-region">{t("admin.campos.region")}</Label>
-              <Select
-                value={outboundForm.regionId}
-                onValueChange={(v) =>
-                  setOutboundForm((f) => ({ ...f, regionId: v }))
-                }
-              >
+              <Select value={numeroForm.regionId} onValueChange={elegirRegionNumero}>
                 <SelectTrigger id="on-region" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -713,21 +792,51 @@ export default function TelefoniaPage() {
                 </SelectContent>
               </Select>
               <span className="text-xs text-muted-foreground">
-                {t("admin.telefonia.salientes.regionAyuda")}
+                {t("admin.telefonia.numeros.regionAyuda")}
+              </span>
+            </div>
+            {/* Condicional a la región elegida: solo tenants de esa región,
+                más "libre" — un número no se ofrece a tenants de otra región. */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="on-tenant">
+                {t("admin.telefonia.numeros.tenantLabel")}
+              </Label>
+              <Select
+                value={numeroForm.tenantId}
+                onValueChange={(v) =>
+                  setNumeroForm((f) => ({ ...f, tenantId: v }))
+                }
+              >
+                <SelectTrigger id="on-tenant" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TENANT_LIBRE}>
+                    {t("admin.telefonia.numeros.tenantLibre")}
+                  </SelectItem>
+                  {tenantsDeRegion.map((org) => (
+                    <SelectItem key={org.tenantId} value={org.tenantId}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {t("admin.telefonia.numeros.tenantAyuda")}
               </span>
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setOutboundDialogOpen(false)}
+              onClick={() => setNumeroDialogOpen(false)}
             >
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={guardarOutbound} disabled={!puedeGuardarOutbound}>
-              {editingOutbound
+            <Button onClick={guardarNumero} disabled={!puedeGuardarNumero}>
+              {editingNumero
                 ? t("common.acciones.guardar")
-                : t("admin.telefonia.salientes.agregar")}
+                : t("admin.telefonia.numeros.agregar")}
             </Button>
           </DialogFooter>
         </DialogContent>
