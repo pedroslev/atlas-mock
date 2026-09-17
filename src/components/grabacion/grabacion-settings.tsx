@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Mic, Monitor } from "lucide-react";
+import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,13 +14,10 @@ import {
 import { useT } from "@/lib/i18n";
 import type { RecordingSettingsParams } from "@/lib/mock-data";
 
-// La pantalla NO es un cuarto momento: es otro canal (audio / pantalla) que se
-// graba en los MISMOS momentos elegidos arriba. Por eso va debajo de los tres,
-// en una fila aparte que va mostrando los momentos que hereda — así la
-// dependencia se ve sin tener que explicarla por escrito.
-//
-// "Grabar la interacción" es el principal: apagado, no se graba nada, ni audio
-// ni pantalla.
+// Se lee de arriba hacia abajo: primero si se graba el audio de la
+// interacción (si eso está apagado no se graba nada), después los dos momentos
+// que dependen de eso —la espera y el trabajo posterior—, y al final la
+// pantalla, que se suma a lo elegido arriba.
 //
 // La pantalla se graba siempre durante la interacción y su trabajo posterior:
 // grabar toda la sesión del agente se descartó (2026-09-16), ver la propuesta
@@ -95,13 +92,6 @@ export function GrabacionSettings({
     onChange({ ...value, [key]: v });
   }
 
-  // Los momentos activos, que la pantalla hereda tal cual.
-  const momentos = [
-    graba && t("grabacion.momentoInteraccion"),
-    holdDisponible && value.recordAgentAudioDuringHold && t("grabacion.momentoHold"),
-    graba && value.recordAcw && t("grabacion.momentoAcw"),
-  ].filter(Boolean) as string[];
-
   return (
     <Card>
       <CardHeader>
@@ -112,15 +102,17 @@ export function GrabacionSettings({
             : t("grabacion.descGrupo")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ToggleRow
-            id={`rec-interaccion-${ambito}`}
-            label={t("grabacion.interaccion")}
-            description={t("grabacion.interaccionDesc")}
-            checked={value.recordInteraction}
-            onCheckedChange={(v) => set("recordInteraction", v)}
-          />
+      <CardContent className="flex flex-col gap-3">
+        <ToggleRow
+          id={`rec-interaccion-${ambito}`}
+          label={t("grabacion.interaccion")}
+          description={t("grabacion.interaccionDesc")}
+          checked={value.recordInteraction}
+          onCheckedChange={(v) => set("recordInteraction", v)}
+        />
+
+        {/* Cuelgan del de arriba: la barra a la izquierda lo muestra. */}
+        <div className="grid gap-3 border-l-2 border-foreground/10 pl-4 sm:grid-cols-2">
           <ToggleRow
             id={`rec-hold-${ambito}`}
             label={t("grabacion.hold")}
@@ -145,33 +137,17 @@ export function GrabacionSettings({
           />
         </div>
 
-        {/* Los dos canales, en la misma fila y con los mismos momentos al
-            lado: el audio va siempre, la pantalla es opcional. */}
-        <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
-          <CanalRow
-            icon={Mic}
-            label={t("grabacion.canalAudio")}
-            momentos={momentos}
-            vacio={t("grabacion.sinMomentos")}
-          />
-          <div className="h-px bg-foreground/10" />
-          <CanalRow
-            icon={Monitor}
-            label={t("grabacion.canalPantalla")}
-            momentos={value.recordScreen ? momentos : []}
-            vacio={t("grabacion.sinMomentos")}
-            control={
-              <Switch
-                id={`rec-pantalla-${ambito}`}
-                checked={graba && value.recordScreen}
-                disabled={!graba}
-                onCheckedChange={(v) => set("recordScreen", v)}
-              />
-            }
-          />
-        </div>
+        <ToggleRow
+          id={`rec-pantalla-${ambito}`}
+          label={t("grabacion.pantalla")}
+          description={t("grabacion.pantallaDesc")}
+          disabled={!graba}
+          disabledReason={t("grabacion.dependeInteraccion")}
+          checked={graba && value.recordScreen}
+          onCheckedChange={(v) => set("recordScreen", v)}
+        />
 
-        <p className="flex items-start gap-2 text-xs text-muted-foreground">
+        <p className="flex items-start gap-2 pt-1 text-xs text-muted-foreground">
           <Info className="mt-0.5 size-3.5 shrink-0" />
           {ambito === "campania"
             ? t("grabacion.reglaDesdeCampania")
@@ -179,53 +155,5 @@ export function GrabacionSettings({
         </p>
       </CardContent>
     </Card>
-  );
-}
-
-// Una línea por canal: el nombre a la izquierda, los momentos que graba en el
-// medio y, si es opcional, su interruptor a la derecha.
-function CanalRow({
-  icon: Icon,
-  label,
-  momentos,
-  vacio,
-  control,
-}: {
-  icon: typeof Mic;
-  label: string;
-  momentos: string[];
-  vacio: string;
-  control?: React.ReactNode;
-}) {
-  const activo = momentos.length > 0;
-  return (
-    <div className="flex items-center gap-3 py-1">
-      <span
-        className={`flex w-40 shrink-0 items-center gap-2 text-sm font-medium ${
-          activo ? "" : "text-muted-foreground"
-        }`}
-      >
-        <Icon
-          className={`size-3.5 ${activo ? "text-secondary" : "text-muted-foreground"}`}
-        />
-        {label}
-      </span>
-      <span className="flex flex-1 flex-wrap items-center gap-1.5">
-        {activo ? (
-          momentos.map((m) => (
-            <Badge
-              key={m}
-              variant="outline"
-              className="bg-accent/50 text-[0.7rem] font-normal"
-            >
-              {m}
-            </Badge>
-          ))
-        ) : (
-          <span className="text-xs text-muted-foreground">{vacio}</span>
-        )}
-      </span>
-      {control}
-    </div>
   );
 }

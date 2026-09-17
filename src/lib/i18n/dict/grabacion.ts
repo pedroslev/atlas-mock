@@ -9,7 +9,7 @@ export const grabacion: NamespaceDict = {
     "descGrupo":
       "Qué se graba cuando atiende un agente de este grupo, y en qué momentos.",
 
-    "interaccion": "Grabar la interacción",
+    "interaccion": "Grabar el audio de la interacción",
     "interaccionDesc":
       "Graba la conversación entre el agente y el cliente. Si está apagado no se graba nada.",
     "hold": "Grabar durante la espera",
@@ -17,15 +17,12 @@ export const grabacion: NamespaceDict = {
     "acw": "Grabar el trabajo posterior",
     "acwDesc":
       "Graba el tiempo posterior a la llamada, mientras el agente tipifica la gestión (ACW).",
+    "pantalla": "Grabar también la pantalla",
+    "pantallaDesc":
+      "Suma el video de la pantalla del agente a lo que ya se graba.",
 
-    "canalAudio": "Audio",
-    "canalPantalla": "Pantalla",
-    "momentoInteraccion": "Interacción",
-    "momentoHold": "Espera",
-    "momentoAcw": "Trabajo posterior",
-    "sinMomentos": "No se graba",
 
-    "dependeInteraccion": "Se habilita al activar «Grabar la interacción».",
+    "dependeInteraccion": "Se habilita al activar «Grabar el audio de la interacción».",
     "dependeHold":
       "Se habilita si la campaña permite poner la llamada en espera.",
 
@@ -40,7 +37,7 @@ export const grabacion: NamespaceDict = {
     "descGrupo":
       "What gets recorded when an agent from this group handles the call, and at which moments.",
 
-    "interaccion": "Record the interaction",
+    "interaccion": "Record the interaction audio",
     "interaccionDesc":
       "Records the conversation between agent and customer. With this off, nothing is recorded.",
     "hold": "Record while on hold",
@@ -48,15 +45,11 @@ export const grabacion: NamespaceDict = {
     "acw": "Record after-call work",
     "acwDesc":
       "Records the time after the call, while the agent classifies the interaction (ACW).",
+    "pantalla": "Also record the screen",
+    "pantallaDesc": "Adds video of the agent's screen to what is already recorded.",
 
-    "canalAudio": "Audio",
-    "canalPantalla": "Screen",
-    "momentoInteraccion": "Interaction",
-    "momentoHold": "Hold",
-    "momentoAcw": "After-call work",
-    "sinMomentos": "Not recorded",
 
-    "dependeInteraccion": "Enabled by turning on “Record the interaction”.",
+    "dependeInteraccion": "Enabled by turning on “Record the interaction audio”.",
     "dependeHold": "Enabled if the campaign allows putting calls on hold.",
 
     "reglaDesdeCampania":
@@ -70,7 +63,7 @@ export const grabacion: NamespaceDict = {
     "descGrupo":
       "O que se grava quando atende um agente deste grupo, e em que momentos.",
 
-    "interaccion": "Gravar a interação",
+    "interaccion": "Gravar o áudio da interação",
     "interaccionDesc":
       "Grava a conversa entre o agente e o cliente. Se estiver desligado, nada é gravado.",
     "hold": "Gravar durante a espera",
@@ -78,15 +71,11 @@ export const grabacion: NamespaceDict = {
     "acw": "Gravar o trabalho posterior",
     "acwDesc":
       "Grava o período posterior à chamada, enquanto o agente tipifica o atendimento (ACW).",
+    "pantalla": "Gravar também a tela",
+    "pantallaDesc": "Soma o vídeo da tela do agente ao que já se grava.",
 
-    "canalAudio": "Áudio",
-    "canalPantalla": "Tela",
-    "momentoInteraccion": "Interação",
-    "momentoHold": "Espera",
-    "momentoAcw": "Trabalho posterior",
-    "sinMomentos": "Não se grava",
 
-    "dependeInteraccion": "É habilitado ao ativar “Gravar a interação”.",
+    "dependeInteraccion": "É habilitado ao ativar “Gravar o áudio da interação”.",
     "dependeHold":
       "É habilitado se a campanha permitir colocar a chamada em espera.",
 
@@ -101,7 +90,7 @@ export const grabacion: NamespaceDict = {
     "descGrupo":
       "Què es grava quan atén un agent d'aquest grup, i en quins moments.",
 
-    "interaccion": "Gravar la interacció",
+    "interaccion": "Gravar l'àudio de la interacció",
     "interaccionDesc":
       "Grava la conversa entre l'agent i el client. Si està apagat no es grava res.",
     "hold": "Gravar durant l'espera",
@@ -109,15 +98,11 @@ export const grabacion: NamespaceDict = {
     "acw": "Gravar la feina posterior",
     "acwDesc":
       "Grava el temps posterior a la trucada, mentre l'agent tipifica la gestió (ACW).",
+    "pantalla": "Gravar també la pantalla",
+    "pantallaDesc": "Suma el vídeo de la pantalla de l'agent al que ja es grava.",
 
-    "canalAudio": "Àudio",
-    "canalPantalla": "Pantalla",
-    "momentoInteraccion": "Interacció",
-    "momentoHold": "Espera",
-    "momentoAcw": "Feina posterior",
-    "sinMomentos": "No es grava",
 
-    "dependeInteraccion": "S'habilita en activar «Gravar la interacció».",
+    "dependeInteraccion": "S'habilita en activar «Gravar l'àudio de la interacció».",
     "dependeHold":
       "S'habilita si la campanya permet posar la trucada en espera.",
 
