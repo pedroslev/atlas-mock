@@ -10,6 +10,7 @@ import { feriados } from "@/lib/i18n/dict/feriados";
 import { listas } from "@/lib/i18n/dict/listas";
 import { usuarios } from "@/lib/i18n/dict/usuarios";
 import { grupos } from "@/lib/i18n/dict/grupos";
+import { grabacion } from "@/lib/i18n/dict/grabacion";
 import { estados } from "@/lib/i18n/dict/estados";
 import { proyectos } from "@/lib/i18n/dict/proyectos";
 import { padMock } from "@/lib/i18n/dict/pad-mock";
@@ -31,6 +32,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   listas,
   usuarios,
   grupos,
+  grabacion,
   estados,
   proyectos,
   padMock,

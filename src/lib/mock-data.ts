@@ -67,8 +67,25 @@ export type DisplaySettingsParams = {
   allowRinging: boolean;
 };
 
+// Cómo se maneja la grabación. Se configura en la campaña Y en el grupo de
+// trabajo, y entre los dos gana lo más restrictivo: si cualquiera de los dos
+// dice que no se grabe, no se graba (decisión del PO, 2026-09-16 — pendiente
+// de acordar con el Chief Innovation Architect).
+// Dos ejes: QUÉ se graba (audio, pantalla) y EN QUÉ MOMENTOS. Si no se graba
+// ni audio ni pantalla, no se graba nada y los momentos no aplican.
+//
+// La conversación no es opcional: si algo se graba, se graba la conversación.
+// Lo que se elige es si además se sigue grabando en la espera y en el trabajo
+// posterior.
 export type RecordingSettingsParams = {
+  recordAudio: boolean;
+  // La pantalla es una grabación aparte del audio (en el ADR de grabaciones,
+  // una object_class distinta con su propio egress). Siempre acotada a la
+  // interacción: grabar toda la sesión del agente se descartó (2026-09-16).
+  recordScreen: boolean;
   recordAgentAudioDuringHold: boolean;
+  // ACW = after call work, el trabajo posterior a la llamada (tipificación).
+  recordAcw: boolean;
 };
 
 export type AgentOperationSettingsParams = {
@@ -117,7 +134,10 @@ export function defaultParametros(): CampaniaParametros {
       allowRinging: true,
     },
     recordingSettings: {
+      recordAudio: true,
+      recordScreen: true,
       recordAgentAudioDuringHold: true,
+      recordAcw: true,
     },
     agentOperationSettings: {
       forcedAnswer: true,
@@ -290,6 +310,10 @@ export type GrupoTrabajo = {
   accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
   shortcutButtons: ShortcutButtonEntry[]; // working_groups.shortcut_buttons
   historyLookbackDays: number; // working_groups.parameters.agent_operation_settings.history_lookback_days — default 30 (ver parametrizacion-propuesta.md §5)
+  // Grabación por grupo: se cruza con la de la campaña y gana lo más
+  // restrictivo. Alcance nuevo, todavía no acordado — ver la propuesta de
+  // grabaciones en documentacion/relevamiento-legacy/grabaciones/.
+  recordingSettings: RecordingSettingsParams;
 };
 
 // user_keycloak_map — overrides individuales de un usuario sobre su grupo,
@@ -704,6 +728,12 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 90,
+    recordingSettings: {
+      recordAudio: true,
+      recordScreen: true,
+      recordAgentAudioDuringHold: true,
+      recordAcw: true,
+    },
   },
   {
     id: "wg-atencion",
@@ -732,6 +762,12 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 30,
+    recordingSettings: {
+      recordAudio: true,
+      recordScreen: true,
+      recordAgentAudioDuringHold: true,
+      recordAcw: true,
+    },
   },
   {
     id: "wg-ventas",
@@ -754,6 +790,12 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       },
     ],
     historyLookbackDays: 30,
+    recordingSettings: {
+      recordAudio: true,
+      recordScreen: true,
+      recordAgentAudioDuringHold: true,
+      recordAcw: true,
+    },
   },
 ];
 

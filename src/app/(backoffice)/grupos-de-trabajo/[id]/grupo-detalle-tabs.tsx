@@ -92,6 +92,7 @@ export function GrupoDetalleTabs({
             initialEstadosAuxiliares={grupo.estadosAuxiliares}
             initialHistoryLookbackDays={grupo.historyLookbackDays}
             initialShortcutButtons={grupo.shortcutButtons}
+            initialGrabacion={grupo.recordingSettings}
           />
         </TabsContent>
       )}
