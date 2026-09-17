@@ -18,7 +18,7 @@ const ACCIONES: PermisoAccion[] = ["lectura", "escritura", "eliminacion"];
 // se mapean a claves de traducción. Los nombres coinciden con secciones del
 // nav, así que se reusan las claves de `common.nav.*` en vez de duplicarlas.
 const MODULO_KEYS: Record<string, string> = {
-  "Proyectos": "common.buscador.proyectos",
+  "Proyectos": "common.nav.proyectos",
   "Campañas": "common.nav.campanias",
   "Cuentas": "common.nav.cuentas",
   "Clasificaciones": "common.nav.clasificaciones",
