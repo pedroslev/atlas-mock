@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
@@ -52,6 +52,9 @@ export function GrupoPermisos({
   onAccesoHermesChange: (v: boolean) => void;
 }) {
   const [permisos, setPermisos] = useState<Permiso[]>(initialPermisos);
+  const extrasAntesDeQuitarLectura = useRef<Record<string, PermisoAccion[]>>(
+    {}
+  );
   const t = useT();
 
   function tieneAccion(modulo: string, accion: PermisoAccion) {
@@ -60,37 +63,57 @@ export function GrupoPermisos({
     );
   }
 
-  // Sin lectura no hay nada (objetivo semanal 2026-09-14, sección 5): sacar
-  // lectura saca también escritura y eliminación del módulo. Al revés, tildar
-  // escritura o eliminación sin lectura la agrega sola — la matriz nunca deja
-  // guardar una combinación que no cumpla la regla.
-  function toggle(modulo: string, accion: PermisoAccion) {
+  // Sin lectura no hay nada: sacar lectura saca también escritura y
+  // eliminación. Tildar lectura por primera vez marca las tres; si se
+  // destildó por error y se vuelve a tildar antes de Confirmar, escritura y
+  // eliminación vuelven a como estaban (ATLAS-778).
+  function setModulo(modulo: string, acciones: PermisoAccion[]) {
     setPermisos((current) => {
-      const existente = current.find((p) => p.modulo === modulo);
-      const actuales = existente?.acciones ?? [];
-      const tiene = actuales.includes(accion);
-
-      let acciones: PermisoAccion[];
-      if (accion === "lectura" && tiene) {
-        acciones = [];
-      } else if (tiene) {
-        acciones = actuales.filter((a) => a !== accion);
-      } else if (accion === "lectura") {
-        acciones = [...actuales, accion];
-      } else {
-        acciones = actuales.includes("lectura")
-          ? [...actuales, accion]
-          : [...actuales, "lectura", accion];
-      }
-
       if (acciones.length === 0) {
         return current.filter((p) => p.modulo !== modulo);
       }
-      if (!existente) {
-        return [...current, { modulo, acciones }];
+      if (current.some((p) => p.modulo === modulo)) {
+        return current.map((p) => (p.modulo === modulo ? { ...p, acciones } : p));
       }
-      return current.map((p) => (p.modulo === modulo ? { ...p, acciones } : p));
+      return [...current, { modulo, acciones }];
     });
+  }
+
+  function toggle(modulo: string, accion: PermisoAccion) {
+    const tieneLectura = tieneAccion(modulo, "lectura");
+    if (accion !== "lectura" && !tieneLectura) {
+      return;
+    }
+    if (accion === "lectura") {
+      if (tieneLectura) {
+        const extras = (
+          permisos.find((p) => p.modulo === modulo)?.acciones ?? []
+        ).filter((a) => a !== "lectura");
+        extrasAntesDeQuitarLectura.current[modulo] = extras;
+        setModulo(modulo, []);
+        return;
+      }
+      if (
+        Object.prototype.hasOwnProperty.call(
+          extrasAntesDeQuitarLectura.current,
+          modulo
+        )
+      ) {
+        const extras = extrasAntesDeQuitarLectura.current[modulo];
+        delete extrasAntesDeQuitarLectura.current[modulo];
+        setModulo(modulo, ["lectura", ...extras]);
+        return;
+      }
+      setModulo(modulo, ["lectura", "escritura", "eliminacion"]);
+      return;
+    }
+    const existente = permisos.find((p) => p.modulo === modulo);
+    const accionesActuales = existente?.acciones ?? ["lectura"];
+    const tiene = accionesActuales.includes(accion);
+    const acciones = tiene
+      ? accionesActuales.filter((a) => a !== accion)
+      : [...accionesActuales, accion];
+    setModulo(modulo, acciones);
   }
 
   return (
@@ -128,6 +151,7 @@ export function GrupoPermisos({
                     <span key={accion} className="flex justify-center">
                       <Checkbox
                         checked={tieneAccion(modulo, accion)}
+                        disabled={accion !== "lectura" && !tieneAccion(modulo, "lectura")}
                         onCheckedChange={() => toggle(modulo, accion)}
                         aria-label={t("grupos.permisos.aria", {
                           accion: t(`grupos.permiso.${accion}`),
