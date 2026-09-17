@@ -1,6 +1,6 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { Info, Mic, Monitor } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,11 +14,13 @@ import {
 import { useT } from "@/lib/i18n";
 import type { RecordingSettingsParams } from "@/lib/mock-data";
 
-// Cuatro cosas que se activan por separado: los tres momentos del audio (la
-// conversación, la espera y el trabajo posterior) y la pantalla, que es una
-// grabación aparte (en el ADR de grabaciones, una object_class con su propio
-// egress). "Grabar la interacción" es el principal del audio: apagado, no se
-// graba audio.
+// La pantalla NO es un cuarto momento: es otro canal (audio / pantalla) que se
+// graba en los MISMOS momentos elegidos arriba. Por eso va debajo de los tres,
+// en una fila aparte que va mostrando los momentos que hereda — así la
+// dependencia se ve sin tener que explicarla por escrito.
+//
+// "Grabar la interacción" es el principal: apagado, no se graba nada, ni audio
+// ni pantalla.
 //
 // La pantalla se graba siempre durante la interacción y su trabajo posterior:
 // grabar toda la sesión del agente se descartó (2026-09-16), ver la propuesta
@@ -93,6 +95,13 @@ export function GrabacionSettings({
     onChange({ ...value, [key]: v });
   }
 
+  // Los momentos activos, que la pantalla hereda tal cual.
+  const momentos = [
+    graba && t("grabacion.momentoInteraccion"),
+    holdDisponible && value.recordAgentAudioDuringHold && t("grabacion.momentoHold"),
+    graba && value.recordAcw && t("grabacion.momentoAcw"),
+  ].filter(Boolean) as string[];
+
   return (
     <Card>
       <CardHeader>
@@ -104,7 +113,7 @@ export function GrabacionSettings({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-3">
           <ToggleRow
             id={`rec-interaccion-${ambito}`}
             label={t("grabacion.interaccion")}
@@ -134,12 +143,31 @@ export function GrabacionSettings({
             checked={graba && value.recordAcw}
             onCheckedChange={(v) => set("recordAcw", v)}
           />
-          <ToggleRow
-            id={`rec-pantalla-${ambito}`}
-            label={t("grabacion.pantalla")}
-            description={t("grabacion.pantallaToggleDesc")}
-            checked={value.recordScreen}
-            onCheckedChange={(v) => set("recordScreen", v)}
+        </div>
+
+        {/* Los dos canales, en la misma fila y con los mismos momentos al
+            lado: el audio va siempre, la pantalla es opcional. */}
+        <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
+          <CanalRow
+            icon={Mic}
+            label={t("grabacion.canalAudio")}
+            momentos={momentos}
+            vacio={t("grabacion.sinMomentos")}
+          />
+          <div className="h-px bg-foreground/10" />
+          <CanalRow
+            icon={Monitor}
+            label={t("grabacion.canalPantalla")}
+            momentos={value.recordScreen ? momentos : []}
+            vacio={t("grabacion.sinMomentos")}
+            control={
+              <Switch
+                id={`rec-pantalla-${ambito}`}
+                checked={graba && value.recordScreen}
+                disabled={!graba}
+                onCheckedChange={(v) => set("recordScreen", v)}
+              />
+            }
           />
         </div>
 
@@ -151,5 +179,53 @@ export function GrabacionSettings({
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+// Una línea por canal: el nombre a la izquierda, los momentos que graba en el
+// medio y, si es opcional, su interruptor a la derecha.
+function CanalRow({
+  icon: Icon,
+  label,
+  momentos,
+  vacio,
+  control,
+}: {
+  icon: typeof Mic;
+  label: string;
+  momentos: string[];
+  vacio: string;
+  control?: React.ReactNode;
+}) {
+  const activo = momentos.length > 0;
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span
+        className={`flex w-40 shrink-0 items-center gap-2 text-sm font-medium ${
+          activo ? "" : "text-muted-foreground"
+        }`}
+      >
+        <Icon
+          className={`size-3.5 ${activo ? "text-secondary" : "text-muted-foreground"}`}
+        />
+        {label}
+      </span>
+      <span className="flex flex-1 flex-wrap items-center gap-1.5">
+        {activo ? (
+          momentos.map((m) => (
+            <Badge
+              key={m}
+              variant="outline"
+              className="bg-accent/50 text-[0.7rem] font-normal"
+            >
+              {m}
+            </Badge>
+          ))
+        ) : (
+          <span className="text-xs text-muted-foreground">{vacio}</span>
+        )}
+      </span>
+      {control}
+    </div>
   );
 }
