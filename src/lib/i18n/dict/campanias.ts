@@ -44,7 +44,7 @@ export const campanias: NamespaceDict = {
     "detalle.descripcion": "Campaña de {proyecto}",
     "tab.general": "General",
     configHeredadaDescProyecto:
-      "Se toma de {proyecto}, salvo lo que personalices acá.",
+      "Se toma del proyecto, salvo que lo personalices acá.",
     configHeredadaDescLibre: "Podés personalizarla para esta campaña.",
     horariosDesc:
       "Heredados del proyecto salvo que los personalices para esta campaña.",
@@ -235,7 +235,7 @@ export const campanias: NamespaceDict = {
     "detalle.descripcion": "Campaign of {proyecto}",
     "tab.general": "General",
     configHeredadaDescProyecto:
-      "Taken from {proyecto}, except for what you customize here.",
+      "Taken from the project, unless you customize it here.",
     configHeredadaDescLibre: "You can customize it for this campaign.",
     horariosDesc:
       "Inherited from the project unless you customize them for this campaign.",
@@ -344,7 +344,7 @@ export const campanias: NamespaceDict = {
     "detalle.descripcion": "Campanha de {proyecto}",
     "tab.general": "Geral",
     configHeredadaDescProyecto:
-      "É obtida de {proyecto}, exceto o que você personalizar aqui.",
+      "É obtida do projeto, salvo se você personalizar aqui.",
     configHeredadaDescLibre: "Você pode personalizá-la para esta campanha.",
     horariosDesc:
       "Herdados do projeto, a menos que você os personalize para esta campanha.",
@@ -455,7 +455,7 @@ export const campanias: NamespaceDict = {
     "detalle.descripcion": "Campanya de {proyecto}",
     "tab.general": "General",
     configHeredadaDescProyecto:
-      "Es pren de {proyecto}, excepte allò que personalitzis aquí.",
+      "Es pren del projecte, tret que la personalitzis aquí.",
     configHeredadaDescLibre: "La pots personalitzar per a aquesta campanya.",
     horariosDesc:
       "Heretats del projecte tret que els personalitzis per a aquesta campanya.",

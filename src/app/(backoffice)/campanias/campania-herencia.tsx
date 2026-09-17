@@ -128,7 +128,7 @@ export function CampaniaHerencia({
               items={feriados}
               value={feriadosId}
               onChange={setFeriadosId}
-              placeholder={heredaCopy}
+              placeholder={t("campanias.sinAsignar")}
               searchPlaceholder={t("campanias.buscarFeriados")}
               emptyLabel={t("campanias.vacioFeriados")}
             />

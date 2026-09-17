@@ -156,9 +156,7 @@ export function CampaniaEditor({
               <CardTitle>{t("campanias.configHeredada")}</CardTitle>
               <CardDescription>
                 {nombreProyecto
-                  ? t("campanias.configHeredadaDescProyecto", {
-                      proyecto: nombreProyecto,
-                    })
+                  ? t("campanias.configHeredadaDescProyecto")
                   : t("campanias.configHeredadaDescLibre")}
               </CardDescription>
             </CardHeader>
