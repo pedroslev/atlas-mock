@@ -71,11 +71,6 @@ export type DisplaySettingsParams = {
 // trabajo, y entre los dos gana lo más restrictivo: si cualquiera de los dos
 // dice que no se grabe, no se graba (decisión del PO, 2026-09-16 — pendiente
 // de acordar con el Chief Innovation Architect).
-// Hasta dónde llega la grabación de pantalla: solo mientras hay una
-// interacción (lo que hace el mercado), o todo el tiempo que el agente está
-// conectado.
-export type ScreenRecordingScope = "interaccion" | "sesion";
-
 export type RecordingSettingsParams = {
   // Audio. Switch principal: si está apagado no se graba audio, y los otros
   // dos quedan sin efecto.
@@ -85,9 +80,11 @@ export type RecordingSettingsParams = {
   recordAcw: boolean;
   // Pantalla: es una grabación aparte del audio (en el ADR de grabaciones, una
   // object_class distinta con su propio egress), así que se activa por
-  // separado y tiene su propio alcance.
+  // separado. Siempre acotada a la interacción y su trabajo posterior — se
+  // descartó grabar toda la sesión del agente (2026-09-16): ninguna plataforma
+  // del mercado lo hace y el monitoreo continuo de empleados es
+  // desproporcionado para las autoridades de protección de datos.
   recordScreen: boolean;
-  screenScope: ScreenRecordingScope;
 };
 
 export type AgentOperationSettingsParams = {
@@ -140,7 +137,6 @@ export function defaultParametros(): CampaniaParametros {
       recordAgentAudioDuringHold: true,
       recordAcw: true,
       recordScreen: true,
-      screenScope: "interaccion",
     },
     agentOperationSettings: {
       forcedAnswer: true,
@@ -736,7 +732,6 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       recordAgentAudioDuringHold: true,
       recordAcw: true,
       recordScreen: true,
-      screenScope: "interaccion",
     },
   },
   {
@@ -771,7 +766,6 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       recordAgentAudioDuringHold: true,
       recordAcw: true,
       recordScreen: true,
-      screenScope: "interaccion",
     },
   },
   {
@@ -800,7 +794,6 @@ export const gruposTrabajo: GrupoTrabajo[] = [
       recordAgentAudioDuringHold: true,
       recordAcw: true,
       recordScreen: true,
-      screenScope: "interaccion",
     },
   },
 ];
