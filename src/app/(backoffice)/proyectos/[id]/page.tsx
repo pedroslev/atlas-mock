@@ -19,7 +19,6 @@ import {
   getProyecto,
   feriados,
   clasificacionGrupos,
-  campanias,
 } from "@/lib/mock-data";
 import { ProyectoHerencia } from "./proyecto-herencia";
 import { ProyectoEliminar } from "./proyecto-eliminar";
@@ -37,9 +36,6 @@ export default async function EditarProyectoPage({
   const { id } = await params;
   const proyecto = getProyecto(id);
   if (!proyecto) notFound();
-
-  // Un proyecto con campañas no se puede eliminar.
-  const campaniasActivas = campanias.filter((c) => c.proyectoId === id).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -149,10 +145,7 @@ export default async function EditarProyectoPage({
         </Card>
       </div>
 
-      <ProyectoEliminar
-        nombre={proyecto.nombre}
-        campaniasActivas={campaniasActivas}
-      />
+      <ProyectoEliminar nombre={proyecto.nombre} proyectoId={proyecto.id} />
     </div>
   );
 }

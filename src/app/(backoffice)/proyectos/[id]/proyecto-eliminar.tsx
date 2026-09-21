@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useT } from "@/lib/i18n";
+import { useCampanias } from "@/lib/campanias-store";
 
 // Un proyecto solo se puede eliminar cuando ya no tiene campañas: mientras
 // tenga, el botón queda bloqueado y el tooltip dice cuántas hay que mover o
@@ -34,13 +35,17 @@ import { useT } from "@/lib/i18n";
 // (ver PRODUCT.md).
 export function ProyectoEliminar({
   nombre,
-  campaniasActivas,
+  proyectoId,
 }: {
   nombre: string;
-  campaniasActivas: number;
+  proyectoId: string;
 }) {
   const [open, setOpen] = useState(false);
   const t = useT();
+  // Se cuenta contra el estado de la sesión: al eliminar las campañas desde
+  // Campañas, el botón se habilita sin recargar.
+  const { contarPorProyecto } = useCampanias();
+  const campaniasActivas = contarPorProyecto(proyectoId);
   const bloqueado = campaniasActivas > 0;
 
   return (
