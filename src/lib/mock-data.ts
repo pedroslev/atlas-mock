@@ -195,6 +195,11 @@ export type UsoDeLinea = "entrante" | "saliente" | "ambas";
 // Qué ve el destinatario cuando la llamada sale por esta cuenta.
 export type ModoDeSalida = "misma" | "propio" | "aleatorio" | "oculto";
 
+// Con salida aleatoria: entre qué números rota cada llamada. "carrier" usa los
+// del proveedor y los resuelve la plataforma; "propios" rota entre los números
+// del tenant que se elijan — y para eso tienen que estar vinculados en Zeus.
+export type PoolAleatorio = "carrier" | "propios";
+
 export type Cuenta = {
   id: string;
   nombre: string;
@@ -204,6 +209,9 @@ export type Cuenta = {
   uso?: UsoDeLinea;
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
+  poolAleatorio?: PoolAleatorio;
+  /** Números propios entre los que rota la salida aleatoria. */
+  numerosAleatorios?: string[];
   workflow?: Workflow;
   interactionValue: number; // 0-100
   provisioning: number;

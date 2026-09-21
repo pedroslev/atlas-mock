@@ -8,8 +8,10 @@ import {
   PhoneIncoming,
   PhoneOutgoing,
   Shuffle,
+  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,7 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useT } from "@/lib/i18n";
-import { type ModoDeSalida, type UsoDeLinea as TipoUso } from "@/lib/mock-data";
+import {
+  type ModoDeSalida,
+  type PoolAleatorio,
+  type UsoDeLinea as TipoUso,
+} from "@/lib/mock-data";
 import { organizations } from "@/lib/mock-admin";
 import {
   capacidadesDeRegion,
@@ -56,12 +62,16 @@ export function UsoDeLinea({
   defaultModoSalida,
   defaultLinea,
   defaultLineaSalida,
+  defaultPoolAleatorio,
+  defaultNumerosAleatorios,
 }: {
   uso?: TipoUso;
   onUsoChange: (uso: TipoUso) => void;
   defaultModoSalida?: ModoDeSalida;
   defaultLinea?: string;
   defaultLineaSalida?: string;
+  defaultPoolAleatorio?: PoolAleatorio;
+  defaultNumerosAleatorios?: string[];
 }) {
   const t = useT();
   const [modoSalida, setModoSalida] = useState<ModoDeSalida | undefined>(
@@ -70,6 +80,13 @@ export function UsoDeLinea({
   const [linea, setLinea] = useState<string | undefined>(defaultLinea);
   const [lineaSalida, setLineaSalida] = useState<string | undefined>(
     defaultLineaSalida
+  );
+  // Con salida aleatoria: de dónde salen los números que rotan.
+  const [poolAleatorio, setPoolAleatorio] = useState<PoolAleatorio>(
+    defaultPoolAleatorio ?? "carrier"
+  );
+  const [numerosAleatorios, setNumerosAleatorios] = useState<string[]>(
+    defaultNumerosAleatorios ?? []
   );
 
   // Compartido con Zeus (admin/telefonia) — ver mock-telefonia.ts. Elegir acá
@@ -98,6 +115,32 @@ export function UsoDeLinea({
     const elegido = numeros.find((n) => n.number === numero);
     if (elegido) asignarTenant(elegido.id, TENANT_ID);
   }
+
+  // Para rotar con números propios solo sirven los que YA están vinculados a
+  // este tenant: los libres se vinculan desde Zeus, no desde acá.
+  const propiosParaSalida = numeros.filter(
+    (n) =>
+      n.active &&
+      n.regionId === regionId &&
+      n.tenantId === TENANT_ID &&
+      (n.direction === "saliente" || n.direction === "ambas"),
+  );
+
+  function alternarNumeroAleatorio(numero: string) {
+    setNumerosAleatorios((cur) =>
+      cur.includes(numero)
+        ? cur.filter((n) => n !== numero)
+        : [...cur, numero],
+    );
+  }
+
+  // Qué pasos se muestran, para numerarlos sin huecos ni repetidos: con
+  // salida aleatoria u oculta no hay número que elegir, así que ese paso
+  // desaparece si la línea tampoco recibe.
+  const muestraNumeros = recibe || (origina && modoSalida === "propio");
+  const muestraPool = origina && modoSalida === "aleatorio";
+  const pasoNumeros = origina ? 3 : 2;
+  const pasoPool = muestraNumeros ? pasoNumeros + 1 : pasoNumeros;
 
   const motivoAleatorio = !capacidades.permiteAleatorio
     ? t("cuentas.uso.sinProveedorAleatorio")
@@ -205,9 +248,10 @@ export function UsoDeLinea({
         )}
 
         {/* Paso 3 — recién acá se eligen los números */}
+        {(!uso || muestraNumeros) && (
         <section className="flex flex-col gap-3">
           <Paso
-            numero={origina ? 3 : 2}
+            numero={pasoNumeros}
             titulo={t("cuentas.uso.paso3")}
             ayuda={!uso ? t("cuentas.uso.elegiUsoPrimero") : undefined}
           />
@@ -269,11 +313,6 @@ export function UsoDeLinea({
             </div>
           )}
 
-          {origina && (modoSalida === "aleatorio" || modoSalida === "oculto") && (
-            <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-              {t("cuentas.uso.sinNumeroElegible")}
-            </p>
-          )}
 
           {uso && (
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -282,6 +321,75 @@ export function UsoDeLinea({
             </p>
           )}
         </section>
+        )}
+
+        {/* Con salida oculta no se elige ningún número en ninguna parte. */}
+        {origina && modoSalida === "oculto" && !recibe && (
+          <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+            {t("cuentas.uso.sinNumeroElegible")}
+          </p>
+        )}
+
+        {/* Paso 4 (3 si la línea no recibe) — con qué números rota la salida
+            aleatoria. Solo aparece con salida aleatoria: el resto de los modos
+            ya resolvió su número arriba. */}
+        {muestraPool && (
+          <section className="flex flex-col gap-3">
+            <Paso numero={pasoPool} titulo={t("cuentas.uso.paso4")} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Opcion
+                id="pool-carrier"
+                icon={Shuffle}
+                label={t("cuentas.uso.poolCarrier")}
+                description={t("cuentas.uso.poolCarrierDesc")}
+                elegido={poolAleatorio === "carrier"}
+                onSelect={() => setPoolAleatorio("carrier")}
+              />
+              <Opcion
+                id="pool-propios"
+                icon={Users}
+                label={t("cuentas.uso.poolPropios")}
+                description={t("cuentas.uso.poolPropiosDesc")}
+                elegido={poolAleatorio === "propios"}
+                onSelect={() => setPoolAleatorio("propios")}
+                motivoDeshabilitado={
+                  propiosParaSalida.length === 0
+                    ? t("cuentas.uso.sinNumerosPropios")
+                    : undefined
+                }
+              />
+            </div>
+
+            {poolAleatorio === "propios" && (
+              <div className="flex flex-col gap-2">
+                <Label>{t("cuentas.uso.elegirPropios")}</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {propiosParaSalida.map((n) => (
+                    <label
+                      key={n.id}
+                      htmlFor={`aleatorio-${n.id}`}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg p-2.5 text-sm ring-1 ring-foreground/10 hover:bg-muted/60"
+                    >
+                      <Checkbox
+                        id={`aleatorio-${n.id}`}
+                        checked={numerosAleatorios.includes(n.number)}
+                        onCheckedChange={() =>
+                          alternarNumeroAleatorio(n.number)
+                        }
+                      />
+                      {n.number}
+                    </label>
+                  ))}
+                </div>
+                {numerosAleatorios.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("cuentas.uso.elegiAlMenosUno")}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </CardContent>
     </Card>
   );

@@ -167,6 +167,26 @@ export const phoneNumbers: PhoneNumber[] = [
     tenantId: null,
     active: true,
   },
+  // Dos números de salida ya vinculados a Banco Sur: son los que la cuenta
+  // puede elegir para rotar cuando la salida es aleatoria con números propios.
+  {
+    id: "number-1150002001",
+    number: "1150002001",
+    carrierId: "carrier-telnyx",
+    regionId: "region-ar",
+    direction: "saliente",
+    tenantId: "org-banco-sur",
+    active: true,
+  },
+  {
+    id: "number-1150002002",
+    number: "1150002002",
+    carrierId: "carrier-telnyx",
+    regionId: "region-ar",
+    direction: "saliente",
+    tenantId: "org-banco-sur",
+    active: true,
+  },
 ];
 
 // Tabla `carrier_rates` — cuánto cobra cada carrier por minuto, por prefijo de
