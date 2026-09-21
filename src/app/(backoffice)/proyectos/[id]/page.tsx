@@ -14,8 +14,15 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { T } from "@/lib/i18n";
-import { proyectos, getProyecto, feriados, clasificacionGrupos } from "@/lib/mock-data";
+import {
+  proyectos,
+  getProyecto,
+  feriados,
+  clasificacionGrupos,
+  campanias,
+} from "@/lib/mock-data";
 import { ProyectoHerencia } from "./proyecto-herencia";
+import { ProyectoEliminar } from "./proyecto-eliminar";
 import { BusinessHoursEditor } from "../business-hours-editor";
 
 export function generateStaticParams() {
@@ -30,6 +37,9 @@ export default async function EditarProyectoPage({
   const { id } = await params;
   const proyecto = getProyecto(id);
   if (!proyecto) notFound();
+
+  // Un proyecto con campañas no se puede eliminar.
+  const campaniasActivas = campanias.filter((c) => c.proyectoId === id).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,6 +148,11 @@ export default async function EditarProyectoPage({
           </CardContent>
         </Card>
       </div>
+
+      <ProyectoEliminar
+        nombre={proyecto.nombre}
+        campaniasActivas={campaniasActivas}
+      />
     </div>
   );
 }
