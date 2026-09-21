@@ -22,11 +22,10 @@ export const proyectos: NamespaceDict = {
     "eliminar.descripcion":
       "Este proyecto no tiene campañas, así que se puede eliminar. Es una acción definitiva.",
     "eliminar.descripcionBloqueado":
-      "No se puede eliminar mientras tenga campañas. Tiene {n}: movelas a otro proyecto o eliminalas primero.",
+      "No se puede eliminar mientras tenga campañas. Tiene {n}: eliminalas primero.",
     "eliminar.boton": "Eliminar proyecto",
     "eliminar.tooltip": "Eliminar este proyecto de forma definitiva",
-    "eliminar.tooltipBloqueado":
-      "Primero mové o eliminá sus {n} campaña(s)",
+    "eliminar.tooltipBloqueado": "Primero eliminá sus {n} campaña(s)",
     "eliminar.dialogoTitulo": "¿Eliminar el proyecto «{nombre}»?",
     "eliminar.dialogoDescripcion":
       "El proyecto se elimina junto con su configuración: horarios de atención, grupos heredados y todo lo que las campañas tomaban de él.",
@@ -85,10 +84,10 @@ export const proyectos: NamespaceDict = {
     "eliminar.descripcion":
       "This project has no campaigns, so it can be deleted. This is a final action.",
     "eliminar.descripcionBloqueado":
-      "It can't be deleted while it has campaigns. It has {n}: move them to another project or delete them first.",
+      "It can't be deleted while it has campaigns. It has {n}: delete them first.",
     "eliminar.boton": "Delete project",
     "eliminar.tooltip": "Permanently delete this project",
-    "eliminar.tooltipBloqueado": "First move or delete its {n} campaign(s)",
+    "eliminar.tooltipBloqueado": "First delete its {n} campaign(s)",
     "eliminar.dialogoTitulo": "Delete the project “{nombre}”?",
     "eliminar.dialogoDescripcion":
       "The project is deleted along with its configuration: business hours, inherited groups and everything campaigns took from it.",
@@ -146,10 +145,10 @@ export const proyectos: NamespaceDict = {
     "eliminar.descripcion":
       "Este projeto não tem campanhas, então pode ser excluído. É uma ação definitiva.",
     "eliminar.descripcionBloqueado":
-      "Não pode ser excluído enquanto tiver campanhas. Tem {n}: mova-as para outro projeto ou exclua-as primeiro.",
+      "Não pode ser excluído enquanto tiver campanhas. Tem {n}: exclua-as primeiro.",
     "eliminar.boton": "Excluir projeto",
     "eliminar.tooltip": "Excluir este projeto de forma definitiva",
-    "eliminar.tooltipBloqueado": "Primeiro mova ou exclua suas {n} campanha(s)",
+    "eliminar.tooltipBloqueado": "Primeiro exclua suas {n} campanha(s)",
     "eliminar.dialogoTitulo": "Excluir o projeto “{nombre}”?",
     "eliminar.dialogoDescripcion":
       "O projeto é excluído junto com sua configuração: horários de atendimento, grupos herdados e tudo o que as campanhas tomavam dele.",
@@ -208,10 +207,10 @@ export const proyectos: NamespaceDict = {
     "eliminar.descripcion":
       "Aquest projecte no té campanyes, així que es pot eliminar. És una acció definitiva.",
     "eliminar.descripcionBloqueado":
-      "No es pot eliminar mentre tingui campanyes. En té {n}: mou-les a un altre projecte o elimina-les primer.",
+      "No es pot eliminar mentre tingui campanyes. En té {n}: elimina-les primer.",
     "eliminar.boton": "Eliminar projecte",
     "eliminar.tooltip": "Eliminar aquest projecte de manera definitiva",
-    "eliminar.tooltipBloqueado": "Primer mou o elimina les seves {n} campanya(es)",
+    "eliminar.tooltipBloqueado": "Primer elimina les seves {n} campanya(es)",
     "eliminar.dialogoTitulo": "Vols eliminar el projecte «{nombre}»?",
     "eliminar.dialogoDescripcion":
       "El projecte s'elimina juntament amb la seva configuració: horaris d'atenció, grups heretats i tot el que les campanyes en prenien.",
