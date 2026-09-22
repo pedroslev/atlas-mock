@@ -6,6 +6,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 export const common: NamespaceDict = {
   es: {
     "nav.campanias": "Campañas",
+    "nav.proyectos": "Proyectos",
     "nav.cuentas": "Cuentas",
     "nav.clasificaciones": "Clasificaciones",
     "nav.marcas": "Marcas",
@@ -71,6 +72,7 @@ export const common: NamespaceDict = {
   },
   en: {
     "nav.campanias": "Campaigns",
+    "nav.proyectos": "Projects",
     "nav.cuentas": "Accounts",
     "nav.clasificaciones": "Classifications",
     "nav.marcas": "Marks",
@@ -136,6 +138,7 @@ export const common: NamespaceDict = {
   },
   pt: {
     "nav.campanias": "Campanhas",
+    "nav.proyectos": "Projetos",
     "nav.cuentas": "Contas",
     "nav.clasificaciones": "Classificações",
     "nav.marcas": "Marcas",
@@ -201,6 +204,7 @@ export const common: NamespaceDict = {
   },
   ca: {
     "nav.campanias": "Campanyes",
+    "nav.proyectos": "Projectes",
     "nav.cuentas": "Comptes",
     "nav.clasificaciones": "Classificacions",
     "nav.marcas": "Marques",

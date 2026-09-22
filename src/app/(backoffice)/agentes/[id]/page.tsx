@@ -26,7 +26,7 @@ import { AgenteEliminar } from "./agente-eliminar";
 // archivo): acá se mapean a claves de traducción. Los nombres coinciden con
 // secciones del nav, así que se reusan las claves de `common.nav.*`.
 const MODULO_KEYS: Record<string, string> = {
-  "Proyectos": "common.buscador.proyectos",
+  "Proyectos": "common.nav.proyectos",
   "Campañas": "common.nav.campanias",
   "Cuentas": "common.nav.cuentas",
   "Clasificaciones": "common.nav.clasificaciones",
