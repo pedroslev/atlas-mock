@@ -167,6 +167,22 @@ export const phoneNumbers: PhoneNumber[] = [
     tenantId: null,
     active: true,
   },
+  // Rango de salida contratado para Banco Sur: números contiguos ya vinculados
+  // al tenant. Son varios a propósito — es el caso que el pool de la salida
+  // aleatoria tiene que resolver, donde elegirlos uno por uno no escala y la
+  // búsqueda por prefijo es lo que sirve.
+  ...Array.from({ length: 12 }, (_, i) => {
+    const number = `115000${(2001 + i).toString()}`;
+    return {
+      id: `number-${number}`,
+      number,
+      carrierId: "carrier-telnyx",
+      regionId: "region-ar",
+      direction: "saliente" as NumberDirection,
+      tenantId: "org-banco-sur",
+      active: true,
+    };
+  }),
 ];
 
 // Tabla `carrier_rates` — cuánto cobra cada carrier por minuto, por prefijo de

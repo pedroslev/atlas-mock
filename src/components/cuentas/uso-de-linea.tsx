@@ -2,15 +2,35 @@
 
 import { useState } from "react";
 import {
+  Check,
+  ChevronsUpDown,
   EyeOff,
   Info,
+  ListChecks,
   PhoneCall,
   PhoneIncoming,
   PhoneOutgoing,
   Shuffle,
+  Users,
+  X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -18,8 +38,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { type ModoDeSalida, type UsoDeLinea as TipoUso } from "@/lib/mock-data";
+import {
+  type ModoDeSalida,
+  type PoolAleatorio,
+  type UsoDeLinea as TipoUso,
+} from "@/lib/mock-data";
 import { organizations } from "@/lib/mock-admin";
 import {
   capacidadesDeRegion,
@@ -56,12 +81,16 @@ export function UsoDeLinea({
   defaultModoSalida,
   defaultLinea,
   defaultLineaSalida,
+  defaultPoolAleatorio,
+  defaultNumerosAleatorios,
 }: {
   uso?: TipoUso;
   onUsoChange: (uso: TipoUso) => void;
   defaultModoSalida?: ModoDeSalida;
   defaultLinea?: string;
   defaultLineaSalida?: string;
+  defaultPoolAleatorio?: PoolAleatorio;
+  defaultNumerosAleatorios?: string[];
 }) {
   const t = useT();
   const [modoSalida, setModoSalida] = useState<ModoDeSalida | undefined>(
@@ -70,6 +99,13 @@ export function UsoDeLinea({
   const [linea, setLinea] = useState<string | undefined>(defaultLinea);
   const [lineaSalida, setLineaSalida] = useState<string | undefined>(
     defaultLineaSalida
+  );
+  // Con salida aleatoria: de dónde salen los números que rotan.
+  const [poolAleatorio, setPoolAleatorio] = useState<PoolAleatorio>(
+    defaultPoolAleatorio ?? "carrier"
+  );
+  const [numerosAleatorios, setNumerosAleatorios] = useState<string[]>(
+    defaultNumerosAleatorios ?? []
   );
 
   // Compartido con Zeus (admin/telefonia) — ver mock-telefonia.ts. Elegir acá
@@ -98,6 +134,37 @@ export function UsoDeLinea({
     const elegido = numeros.find((n) => n.number === numero);
     if (elegido) asignarTenant(elegido.id, TENANT_ID);
   }
+
+  // Para rotar con números propios solo sirven los que YA están vinculados a
+  // este tenant: los libres se vinculan desde Zeus, no desde acá.
+  const propiosParaSalida = numeros.filter(
+    (n) =>
+      n.active &&
+      n.regionId === regionId &&
+      n.tenantId === TENANT_ID &&
+      (n.direction === "saliente" || n.direction === "ambas"),
+  );
+
+  const motivoPropios =
+    propiosParaSalida.length === 0
+      ? t("cuentas.uso.sinNumerosPropios")
+      : undefined;
+
+  function alternarNumeroAleatorio(numero: string) {
+    setNumerosAleatorios((cur) =>
+      cur.includes(numero)
+        ? cur.filter((n) => n !== numero)
+        : [...cur, numero],
+    );
+  }
+
+  // Qué pasos se muestran, para numerarlos sin huecos ni repetidos: con
+  // salida aleatoria u oculta no hay número que elegir, así que ese paso
+  // desaparece si la línea tampoco recibe.
+  const muestraNumeros = recibe || (origina && modoSalida === "propio");
+  const muestraPool = origina && modoSalida === "aleatorio";
+  const pasoNumeros = origina ? 3 : 2;
+  const pasoPool = muestraNumeros ? pasoNumeros + 1 : pasoNumeros;
 
   const motivoAleatorio = !capacidades.permiteAleatorio
     ? t("cuentas.uso.sinProveedorAleatorio")
@@ -205,9 +272,10 @@ export function UsoDeLinea({
         )}
 
         {/* Paso 3 — recién acá se eligen los números */}
+        {(!uso || muestraNumeros) && (
         <section className="flex flex-col gap-3">
           <Paso
-            numero={origina ? 3 : 2}
+            numero={pasoNumeros}
             titulo={t("cuentas.uso.paso3")}
             ayuda={!uso ? t("cuentas.uso.elegiUsoPrimero") : undefined}
           />
@@ -269,11 +337,6 @@ export function UsoDeLinea({
             </div>
           )}
 
-          {origina && (modoSalida === "aleatorio" || modoSalida === "oculto") && (
-            <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-              {t("cuentas.uso.sinNumeroElegible")}
-            </p>
-          )}
 
           {uso && (
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -282,6 +345,64 @@ export function UsoDeLinea({
             </p>
           )}
         </section>
+        )}
+
+        {/* Con salida oculta no se elige ningún número en ninguna parte. */}
+        {origina && modoSalida === "oculto" && !recibe && (
+          <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+            {t("cuentas.uso.sinNumeroElegible")}
+          </p>
+        )}
+
+        {/* Paso 4 (3 si la línea no recibe) — con qué números rota la salida
+            aleatoria. Solo aparece con salida aleatoria: el resto de los modos
+            ya resolvió su número arriba. */}
+        {muestraPool && (
+          <section className="flex flex-col gap-3">
+            <Paso numero={pasoPool} titulo={t("cuentas.uso.paso4")} />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Opcion
+                id="pool-carrier"
+                icon={Shuffle}
+                label={t("cuentas.uso.poolCarrier")}
+                description={t("cuentas.uso.poolCarrierDesc")}
+                elegido={poolAleatorio === "carrier"}
+                onSelect={() => setPoolAleatorio("carrier")}
+              />
+              <Opcion
+                id="pool-todos"
+                icon={Users}
+                label={t("cuentas.uso.poolTodos")}
+                description={t("cuentas.uso.poolTodosDesc", {
+                  n: propiosParaSalida.length,
+                })}
+                elegido={poolAleatorio === "todos"}
+                onSelect={() => setPoolAleatorio("todos")}
+                motivoDeshabilitado={motivoPropios}
+              />
+              <Opcion
+                id="pool-algunos"
+                icon={ListChecks}
+                label={t("cuentas.uso.poolAlgunos")}
+                description={t("cuentas.uso.poolAlgunosDesc")}
+                elegido={poolAleatorio === "algunos"}
+                onSelect={() => setPoolAleatorio("algunos")}
+                motivoDeshabilitado={motivoPropios}
+              />
+            </div>
+
+            {poolAleatorio === "algunos" && (
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("cuentas.uso.elegirPropios")}</Label>
+                <NumerosSelector
+                  numeros={propiosParaSalida.map((n) => n.number)}
+                  elegidos={numerosAleatorios}
+                  onToggle={alternarNumeroAleatorio}
+                />
+              </div>
+            )}
+          </section>
+        )}
       </CardContent>
     </Card>
   );
@@ -358,5 +479,92 @@ function Opcion({
         </span>
       </span>
     </button>
+  );
+}
+
+// Selector de números para el pool "solo algunos": search-first, como el de
+// estados auxiliares de Grupos de trabajo — un tenant puede tener decenas o
+// cientos de números y una lista plana de casillas no sirve. La búsqueda
+// funciona por prefijo, que es como vienen los rangos contratados.
+function NumerosSelector({
+  numeros,
+  elegidos,
+  onToggle,
+}: {
+  numeros: string[];
+  elegidos: string[];
+  onToggle: (numero: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const t = useT();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between font-normal sm:w-80"
+          >
+            <span className={cn(elegidos.length === 0 && "text-muted-foreground")}>
+              {elegidos.length > 0
+                ? t("cuentas.uso.numerosElegidos", { n: elegidos.length })
+                : t("cuentas.uso.buscarNumeroPlaceholder")}
+            </span>
+            <ChevronsUpDown className="size-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+          <Command>
+            <CommandInput placeholder={t("cuentas.uso.buscarNumero")} />
+            <CommandList>
+              <CommandEmpty>{t("cuentas.uso.sinResultados")}</CommandEmpty>
+              <CommandGroup>
+                {numeros.map((numero) => (
+                  <CommandItem
+                    key={numero}
+                    value={numero}
+                    onSelect={() => onToggle(numero)}
+                  >
+                    <Check
+                      className={cn(
+                        "size-4",
+                        elegidos.includes(numero) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {numero}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {elegidos.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {elegidos.map((numero) => (
+            <Badge key={numero} variant="outline" className="gap-1 font-normal">
+              {numero}
+              <button
+                type="button"
+                aria-label={t("cuentas.uso.quitarNumero", { numero })}
+                onClick={() => onToggle(numero)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {t("cuentas.uso.elegiAlMenosUno")}
+        </p>
+      )}
+    </div>
   );
 }

@@ -37,6 +37,26 @@ export const cuentas: NamespaceDict = {
     "uso.paso3": "Elegí el número",
     "uso.elegiUsoPrimero":
       "Elegí primero para qué se va a usar la línea; con eso se filtran los números que podés usar.",
+    "uso.paso4": "¿Con qué números salen las llamadas?",
+    "uso.poolCarrier": "Los del proveedor",
+    "uso.poolCarrierDesc":
+      "Cada llamada sale con un número del proveedor. Se asignan solos, no hay que elegir ninguno.",
+    "uso.poolTodos": "Todos mis números",
+    "uso.poolTodosDesc":
+      "Las llamadas rotan entre tus {n} números. Si Mitrol te vincula uno nuevo, entra solo.",
+    "uso.poolAlgunos": "Solo algunos",
+    "uso.poolAlgunosDesc":
+      "Elegís vos entre cuáles rotar. Los que se vinculen después no entran hasta que los agregues.",
+    "uso.numerosElegidos": "{n} elegidos",
+    "uso.buscarNumeroPlaceholder": "Elegir números…",
+    "uso.buscarNumero": "Buscar número o prefijo…",
+    "uso.sinResultados": "No se encontró ningún número.",
+    "uso.quitarNumero": "Quitar {numero}",
+    "uso.sinNumerosPropios":
+      "Todavía no tenés números propios para salida. Pedile al administrador de Mitrol que te los vincule.",
+    "uso.elegirPropios": "Elegí los números entre los que rotar",
+    "uso.elegiAlMenosUno": "Elegí al menos uno.",
+
     "uso.entrante": "Recibe llamadas",
     "uso.entranteDesc": "Las llamadas entran por acá y se derivan a una campaña.",
     "uso.saliente": "Origina llamadas",
@@ -122,6 +142,26 @@ export const cuentas: NamespaceDict = {
     "uso.paso3": "Choose the number",
     "uso.elegiUsoPrimero":
       "Choose what the line is for first; that filters the numbers you can use.",
+    "uso.paso4": "Which numbers do calls go out with?",
+    "uso.poolCarrier": "The carrier's",
+    "uso.poolCarrierDesc":
+      "Each call goes out with a carrier number. They're assigned automatically, nothing to pick.",
+    "uso.poolTodos": "All my numbers",
+    "uso.poolTodosDesc":
+      "Calls rotate between your {n} numbers. If Mitrol links a new one, it joins automatically.",
+    "uso.poolAlgunos": "Only some",
+    "uso.poolAlgunosDesc":
+      "You pick which ones to rotate between. Numbers linked later won't join until you add them.",
+    "uso.numerosElegidos": "{n} selected",
+    "uso.buscarNumeroPlaceholder": "Pick numbers…",
+    "uso.buscarNumero": "Search number or prefix…",
+    "uso.sinResultados": "No number found.",
+    "uso.quitarNumero": "Remove {numero}",
+    "uso.sinNumerosPropios":
+      "You don't have outbound numbers of your own yet. Ask the Mitrol administrator to link them.",
+    "uso.elegirPropios": "Pick the numbers to rotate between",
+    "uso.elegiAlMenosUno": "Pick at least one.",
+
     "uso.entrante": "Receives calls",
     "uso.entranteDesc": "Calls come in here and are routed to a campaign.",
     "uso.saliente": "Places calls",
@@ -206,6 +246,26 @@ export const cuentas: NamespaceDict = {
     "uso.paso3": "Escolha o número",
     "uso.elegiUsoPrimero":
       "Escolha primeiro para que a linha vai servir; isso filtra os números que você pode usar.",
+    "uso.paso4": "Com que números saem as chamadas?",
+    "uso.poolCarrier": "Os da operadora",
+    "uso.poolCarrierDesc":
+      "Cada chamada sai com um número da operadora. São atribuídos sozinhos, não há o que escolher.",
+    "uso.poolTodos": "Todos os meus números",
+    "uso.poolTodosDesc":
+      "As chamadas alternam entre os seus {n} números. Se a Mitrol vincular um novo, ele entra sozinho.",
+    "uso.poolAlgunos": "Apenas alguns",
+    "uso.poolAlgunosDesc":
+      "Você escolhe entre quais alternar. Os vinculados depois não entram até que você os adicione.",
+    "uso.numerosElegidos": "{n} escolhidos",
+    "uso.buscarNumeroPlaceholder": "Escolher números…",
+    "uso.buscarNumero": "Buscar número ou prefixo…",
+    "uso.sinResultados": "Nenhum número encontrado.",
+    "uso.quitarNumero": "Remover {numero}",
+    "uso.sinNumerosPropios":
+      "Você ainda não tem números próprios para saída. Peça ao administrador da Mitrol que os vincule.",
+    "uso.elegirPropios": "Escolha os números entre os quais alternar",
+    "uso.elegiAlMenosUno": "Escolha pelo menos um.",
+
     "uso.entrante": "Recebe chamadas",
     "uso.entranteDesc": "As chamadas entram por aqui e são encaminhadas a uma campanha.",
     "uso.saliente": "Origina chamadas",
@@ -290,6 +350,26 @@ export const cuentas: NamespaceDict = {
     "uso.paso3": "Tria el número",
     "uso.elegiUsoPrimero":
       "Tria primer per a què s'utilitzarà la línia; això filtra els números que pots fer servir.",
+    "uso.paso4": "Amb quins números surten les trucades?",
+    "uso.poolCarrier": "Els del proveïdor",
+    "uso.poolCarrierDesc":
+      "Cada trucada surt amb un número del proveïdor. S'assignen sols, no cal triar-ne cap.",
+    "uso.poolTodos": "Tots els meus números",
+    "uso.poolTodosDesc":
+      "Les trucades alternen entre els teus {n} números. Si Mitrol te'n vincula un de nou, hi entra sol.",
+    "uso.poolAlgunos": "Només alguns",
+    "uso.poolAlgunosDesc":
+      "Tries tu entre quins alternar. Els que es vinculin després no hi entren fins que els afegeixis.",
+    "uso.numerosElegidos": "{n} triats",
+    "uso.buscarNumeroPlaceholder": "Triar números…",
+    "uso.buscarNumero": "Cercar número o prefix…",
+    "uso.sinResultados": "No s'ha trobat cap número.",
+    "uso.quitarNumero": "Treure {numero}",
+    "uso.sinNumerosPropios":
+      "Encara no tens números propis per a sortida. Demana a l'administrador de Mitrol que te'ls vinculi.",
+    "uso.elegirPropios": "Tria els números entre els quals alternar",
+    "uso.elegiAlMenosUno": "Tria'n almenys un.",
+
     "uso.entrante": "Rep trucades",
     "uso.entranteDesc": "Les trucades entren per aquí i es deriven a una campanya.",
     "uso.saliente": "Origina trucades",
