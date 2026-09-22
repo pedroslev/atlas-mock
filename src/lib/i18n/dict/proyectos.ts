@@ -18,6 +18,22 @@ export const proyectos: NamespaceDict = {
     "campos.nombrePlaceholder": "Ej: Cobranzas",
     "campos.objetivo": "Objetivo",
 
+    "eliminar.titulo": "Eliminar el proyecto",
+    "eliminar.descripcion":
+      "Este proyecto no tiene campañas, así que se puede eliminar. Es una acción definitiva.",
+    "eliminar.descripcionBloqueado":
+      "No se puede eliminar mientras tenga campañas. Tiene {n}: eliminalas primero.",
+    "eliminar.boton": "Eliminar proyecto",
+    "eliminar.tooltip": "Eliminar este proyecto de forma definitiva",
+    "eliminar.tooltipBloqueado": "Primero eliminá sus {n} campaña(s)",
+    "eliminar.dialogoTitulo": "¿Eliminar el proyecto «{nombre}»?",
+    "eliminar.dialogoDescripcion":
+      "El proyecto se elimina junto con su configuración: horarios de atención, grupos heredados y todo lo que las campañas tomaban de él.",
+    "eliminar.avisoTitulo": "Esto no se puede deshacer.",
+    "eliminar.aviso":
+      "Se pierde toda la información histórica de las campañas que este proyecto tuvo alguna vez, incluidas las que ya fueron eliminadas: llamadas, gestiones y reportes dejan de estar disponibles.",
+    "eliminar.confirmar": "Eliminar definitivamente",
+
     "acciones.titulo": "Acciones rápidas",
     "acciones.descripcion": "Atajos frecuentes al gestionar este proyecto.",
     "acciones.crearFeriados": "Crear grupo de feriados",
@@ -64,6 +80,22 @@ export const proyectos: NamespaceDict = {
     "campos.nombrePlaceholder": "e.g. Collections",
     "campos.objetivo": "Objective",
 
+    "eliminar.titulo": "Delete the project",
+    "eliminar.descripcion":
+      "This project has no campaigns, so it can be deleted. This is a final action.",
+    "eliminar.descripcionBloqueado":
+      "It can't be deleted while it has campaigns. It has {n}: delete them first.",
+    "eliminar.boton": "Delete project",
+    "eliminar.tooltip": "Permanently delete this project",
+    "eliminar.tooltipBloqueado": "First delete its {n} campaign(s)",
+    "eliminar.dialogoTitulo": "Delete the project “{nombre}”?",
+    "eliminar.dialogoDescripcion":
+      "The project is deleted along with its configuration: business hours, inherited groups and everything campaigns took from it.",
+    "eliminar.avisoTitulo": "This can't be undone.",
+    "eliminar.aviso":
+      "All historical data from every campaign this project ever had is lost, including campaigns already deleted: calls, interactions and reports stop being available.",
+    "eliminar.confirmar": "Delete permanently",
+
     "acciones.titulo": "Quick actions",
     "acciones.descripcion": "Frequent shortcuts for managing this project.",
     "acciones.crearFeriados": "Create holiday group",
@@ -108,6 +140,22 @@ export const proyectos: NamespaceDict = {
 
     "campos.nombrePlaceholder": "Ex.: Cobranças",
     "campos.objetivo": "Objetivo",
+
+    "eliminar.titulo": "Excluir o projeto",
+    "eliminar.descripcion":
+      "Este projeto não tem campanhas, então pode ser excluído. É uma ação definitiva.",
+    "eliminar.descripcionBloqueado":
+      "Não pode ser excluído enquanto tiver campanhas. Tem {n}: exclua-as primeiro.",
+    "eliminar.boton": "Excluir projeto",
+    "eliminar.tooltip": "Excluir este projeto de forma definitiva",
+    "eliminar.tooltipBloqueado": "Primeiro exclua suas {n} campanha(s)",
+    "eliminar.dialogoTitulo": "Excluir o projeto “{nombre}”?",
+    "eliminar.dialogoDescripcion":
+      "O projeto é excluído junto com sua configuração: horários de atendimento, grupos herdados e tudo o que as campanhas tomavam dele.",
+    "eliminar.avisoTitulo": "Isso não pode ser desfeito.",
+    "eliminar.aviso":
+      "Perde-se toda a informação histórica das campanhas que este projeto teve alguma vez, incluindo as já excluídas: chamadas, atendimentos e relatórios deixam de estar disponíveis.",
+    "eliminar.confirmar": "Excluir definitivamente",
 
     "acciones.titulo": "Ações rápidas",
     "acciones.descripcion": "Atalhos frequentes para gerenciar este projeto.",
@@ -154,6 +202,22 @@ export const proyectos: NamespaceDict = {
 
     "campos.nombrePlaceholder": "Ex.: Cobraments",
     "campos.objetivo": "Objectiu",
+
+    "eliminar.titulo": "Eliminar el projecte",
+    "eliminar.descripcion":
+      "Aquest projecte no té campanyes, així que es pot eliminar. És una acció definitiva.",
+    "eliminar.descripcionBloqueado":
+      "No es pot eliminar mentre tingui campanyes. En té {n}: elimina-les primer.",
+    "eliminar.boton": "Eliminar projecte",
+    "eliminar.tooltip": "Eliminar aquest projecte de manera definitiva",
+    "eliminar.tooltipBloqueado": "Primer elimina les seves {n} campanya(es)",
+    "eliminar.dialogoTitulo": "Vols eliminar el projecte «{nombre}»?",
+    "eliminar.dialogoDescripcion":
+      "El projecte s'elimina juntament amb la seva configuració: horaris d'atenció, grups heretats i tot el que les campanyes en prenien.",
+    "eliminar.avisoTitulo": "Això no es pot desfer.",
+    "eliminar.aviso":
+      "Es perd tota la informació històrica de les campanyes que aquest projecte va tenir alguna vegada, incloses les ja eliminades: trucades, gestions i informes deixen d'estar disponibles.",
+    "eliminar.confirmar": "Eliminar definitivament",
 
     "acciones.titulo": "Accions ràpides",
     "acciones.descripcion": "Dreceres freqüents per gestionar aquest projecte.",

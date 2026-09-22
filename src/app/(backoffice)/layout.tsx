@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { CampaniasProvider } from "@/lib/campanias-store";
 
 // SidebarProvider ahora envuelve todo (header incluido) para que AppHeader
 // tenga acceso a useSidebar() y pueda mostrar el trigger mobile — pero se
@@ -12,16 +13,18 @@ export default function BackofficeLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider className="h-screen w-full flex-col">
-      <AppHeader />
-      <div className="flex min-h-0 flex-1">
-        <AppSidebar />
-        <SidebarInset>
-          <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <CampaniasProvider>
+      <SidebarProvider className="h-screen w-full flex-col">
+        <AppHeader />
+        <div className="flex min-h-0 flex-1">
+          <AppSidebar />
+          <SidebarInset>
+            <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
+              {children}
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </CampaniasProvider>
   );
 }

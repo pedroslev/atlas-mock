@@ -14,8 +14,14 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { T } from "@/lib/i18n";
-import { proyectos, getProyecto, feriados, clasificacionGrupos } from "@/lib/mock-data";
+import {
+  proyectos,
+  getProyecto,
+  feriados,
+  clasificacionGrupos,
+} from "@/lib/mock-data";
 import { ProyectoHerencia } from "./proyecto-herencia";
+import { ProyectoEliminar } from "./proyecto-eliminar";
 import { BusinessHoursEditor } from "../business-hours-editor";
 
 export function generateStaticParams() {
@@ -138,6 +144,8 @@ export default async function EditarProyectoPage({
           </CardContent>
         </Card>
       </div>
+
+      <ProyectoEliminar nombre={proyecto.nombre} proyectoId={proyecto.id} />
     </div>
   );
 }
