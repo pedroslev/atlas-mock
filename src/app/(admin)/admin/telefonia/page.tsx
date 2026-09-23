@@ -43,6 +43,8 @@ import {
   carriers as carriersIniciales,
   carrierRates as carrierRatesIniciales,
   usePhoneNumbers,
+  useOcupacionDeNumeros,
+  ocupanteDeNumero,
   type Carrier,
   type PhoneNumber,
   type NumberDirection,
@@ -119,6 +121,9 @@ export default function TelefoniaPage() {
 
   // Compartido con Cuentas (olimpo-front) — ver mock-telefonia.ts.
   const { numeros, setNumeros } = usePhoneNumbers();
+  // Quién usa hoy cada número libre — sale de las cuentas de la región, no
+  // de la tabla `numbers` (ADR-BD-005).
+  const { ocupacion } = useOcupacionDeNumeros();
   const [numeroDialogOpen, setNumeroDialogOpen] = useState(false);
   const [editingNumero, setEditingNumero] = useState<PhoneNumber | null>(
     null,
@@ -413,16 +418,44 @@ export default function TelefoniaPage() {
           entry.tenantId
             ? (organizacionPorId.get(entry.tenantId)?.name ?? "—")
             : t("admin.telefonia.numeros.tenantLibre"),
-        Cell: ({ row }) =>
-          row.original.tenantId ? (
-            <span className="font-medium">
-              {organizacionPorId.get(row.original.tenantId)?.name ?? "—"}
-            </span>
-          ) : (
-            <Badge variant="neutral">
-              {t("admin.telefonia.numeros.tenantLibre")}
-            </Badge>
-          ),
+        // Un número libre lleva un segundo badge con su ocupación: la reserva
+        // (esta columna) dice para quién está guardado, la ocupación dice quién
+        // lo está usando hoy en una cuenta. Son dos datos distintos y salen de
+        // dos lados distintos — ADR-BD-005, "Ocupación de un número".
+        Cell: ({ row }) => {
+          if (row.original.tenantId) {
+            return (
+              <span className="font-medium">
+                {organizacionPorId.get(row.original.tenantId)?.name ?? "—"}
+              </span>
+            );
+          }
+          const ocupante = ocupanteDeNumero(ocupacion, row.original.number);
+          return (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant="neutral">
+                {t("admin.telefonia.numeros.tenantLibre")}
+              </Badge>
+              {ocupante ? (
+                <Badge
+                  variant="warning"
+                  data-testid={`numero-ocupado-${row.original.number}`}
+                >
+                  {t("admin.telefonia.numeros.ocupadoPor", {
+                    tenant: organizacionPorId.get(ocupante)?.name ?? "—",
+                  })}
+                </Badge>
+              ) : (
+                <Badge
+                  variant="success"
+                  data-testid={`numero-sin-usar-${row.original.number}`}
+                >
+                  {t("admin.telefonia.numeros.sinUsar")}
+                </Badge>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: "estado",
@@ -437,7 +470,7 @@ export default function TelefoniaPage() {
           ),
       },
     ],
-    [t, carrierPorId, organizacionPorId],
+    [t, carrierPorId, organizacionPorId, ocupacion],
   );
 
   const rateColumns = useMemo<MRT_ColumnDef<CarrierRate>[]>(

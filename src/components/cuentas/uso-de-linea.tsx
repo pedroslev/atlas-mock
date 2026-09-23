@@ -25,6 +25,7 @@ import {
   capacidadesDeRegion,
   numerosParaTenant,
   usePhoneNumbers,
+  useOcupacionDeNumeros,
 } from "@/lib/mock-telefonia";
 
 // Tenant único del backoffice (Olimpo es single-tenant) — mismo id que usa
@@ -73,9 +74,11 @@ export function UsoDeLinea({
   );
 
   // Compartido con Zeus (admin/telefonia) — ver mock-telefonia.ts. Elegir acá
-  // un número libre lo asigna a este tenant, y Zeus lo ve reflejado sin
-  // recargar (mismo store, no una copia).
-  const { numeros, asignarTenant } = usePhoneNumbers();
+  // un número libre NO lo asigna a este tenant: la reserva (`numbers.tenant_id`)
+  // solo la toca Zeus. Lo que cambia es la ocupación, que es lo que hace que el
+  // número deje de ofrecerse a los demás tenants de la región (ADR-BD-005).
+  const { numeros } = usePhoneNumbers();
+  const { ocupacion, ocupar } = useOcupacionDeNumeros();
   const regionId =
     organizations.find((o) => o.tenantId === TENANT_ID)?.regionId ??
     "region-ar";
@@ -87,16 +90,17 @@ export function UsoDeLinea({
   // Solo se ofrecen los números de este tenant en su región (asignados a él o
   // libres) que sirven para el uso elegido.
   const disponiblesPara = (paraUso: TipoUso) =>
-    numerosParaTenant(numeros, TENANT_ID, regionId).filter(
+    numerosParaTenant(numeros, ocupacion, TENANT_ID, regionId).filter(
       (n) => n.direction === paraUso || n.direction === "ambas",
     );
 
-  // Un número recién elegido de la lista de libres queda asignado al tenant
-  // en el momento en que se elige — no hay un paso de "guardar" separado acá.
+  // Elegir un número lo marca como ocupado por este tenant. `ocupar` es el
+  // guard: si otro tenant lo tomó entre que se cargó la lista y este click, no
+  // se pisa y la selección se descarta — el backend real devuelve 409 acá y el
+  // usuario tiene que elegir de nuevo sobre la lista refrescada.
   function elegirNumero(numero: string, set: (v: string) => void) {
+    if (!ocupar(numero, TENANT_ID)) return;
     set(numero);
-    const elegido = numeros.find((n) => n.number === numero);
-    if (elegido) asignarTenant(elegido.id, TENANT_ID);
   }
 
   const motivoAleatorio = !capacidades.permiteAleatorio

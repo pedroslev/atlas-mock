@@ -167,6 +167,8 @@ export const admin: NamespaceDict = {
     "telefonia.numeros.col.tenant": "Tenant",
     "telefonia.numeros.tenantLabel": "Asignar a tenant",
     "telefonia.numeros.tenantLibre": "Libre para cualquier tenant",
+    "telefonia.numeros.ocupadoPor": "Lo usa {tenant}",
+    "telefonia.numeros.sinUsar": "Sin usar",
     "telefonia.numeros.tenantAyuda":
       "Solo tenants de la región elegida. \"Libre\" deja el número disponible para que cualquier cuenta de esa región lo tome desde Cuentas.",
     "telefonia.numeros.eliminarDescripcion":
@@ -347,6 +349,8 @@ export const admin: NamespaceDict = {
     "telefonia.numeros.col.tenant": "Tenant",
     "telefonia.numeros.tenantLabel": "Assign to tenant",
     "telefonia.numeros.tenantLibre": "Free for any tenant",
+    "telefonia.numeros.ocupadoPor": "In use by {tenant}",
+    "telefonia.numeros.sinUsar": "Not in use",
     "telefonia.numeros.tenantAyuda":
       "Only tenants in the selected region. \"Free\" leaves the number available for any account in that region to take from Accounts.",
     "telefonia.numeros.eliminarDescripcion":
@@ -527,6 +531,8 @@ export const admin: NamespaceDict = {
     "telefonia.numeros.col.tenant": "Tenant",
     "telefonia.numeros.tenantLabel": "Atribuir a um tenant",
     "telefonia.numeros.tenantLibre": "Livre para qualquer tenant",
+    "telefonia.numeros.ocupadoPor": "Em uso por {tenant}",
+    "telefonia.numeros.sinUsar": "Sem uso",
     "telefonia.numeros.tenantAyuda":
       "Só tenants da região escolhida. \"Livre\" deixa o número disponível para qualquer conta dessa região tomá-lo em Contas.",
     "telefonia.numeros.eliminarDescripcion":

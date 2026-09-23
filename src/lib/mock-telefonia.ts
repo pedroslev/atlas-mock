@@ -112,10 +112,13 @@ export type PhoneNumber = {
   regionId: string;
   direction: NumberDirection;
   /**
-   * Tenant dueño del número (`Organization.tenantId` de mock-admin). `null`
-   * es libre para cualquier tenant de esta región: una cuenta lo puede tomar
-   * desde Cuentas (olimpo-front) y esa asignación se refleja acá mismo — es
-   * la misma fila, no dos inventarios separados.
+   * **Reserva** del número (`Organization.tenantId` de mock-admin), declarada
+   * desde Zeus y solo desde Zeus. `null` es libre para cualquier tenant de la
+   * región; con valor, queda reservado para ese tenant lo use o no.
+   *
+   * Que una cuenta tome un número libre NO toca este campo (ADR-BD-005,
+   * "Ocupación de un número"): quién lo tiene hoy es `OcupacionDeNumero`, que
+   * sale de consultar las cuentas de la región, no de esta tabla.
    */
   tenantId: string | null;
   active: boolean;
@@ -210,75 +213,141 @@ export const carrierRates: CarrierRate[] = [
 
 // --- Estado compartido entre Zeus (admin/telefonia) y Cuentas -------------
 // Sin backend real, Zeus y Cuentas (olimpo-front) tendrían que leer/escribir
-// la misma tabla `numbers` de la base kamailio (ADR-BD-005). Acá se comparte
-// vía localStorage + evento, mismo patrón que ya usa `use-locale.ts`: así,
-// asignar un número desde Cuentas se ve reflejado en Zeus sin recargar.
-const NUMBERS_STORAGE_KEY = "atlas-phone-numbers";
-const NUMBERS_EVENT = "atlas-phone-numbers-change";
+// las mismas tablas. Acá se comparte vía localStorage + evento, mismo patrón
+// que ya usa `use-locale.ts`: así, tomar un número desde Cuentas se ve
+// reflejado en Zeus sin recargar.
 
-// useSyncExternalStore exige que getSnapshot devuelva la MISMA referencia
-// si nada cambió — JSON.parse a secas crea un array nuevo en cada llamada y
-// dispara un loop infinito. Se cachea contra el string crudo de localStorage.
-let numbersCacheRaw: string | null = null;
-let numbersCacheParsed: PhoneNumber[] = phoneNumbers;
+/**
+ * Crea un store de mock compartido entre pantallas, listo para
+ * `useSyncExternalStore`.
+ *
+ * El cache contra el string crudo no es opcional: `useSyncExternalStore` exige
+ * que `read()` devuelva la MISMA referencia si nada cambió, y un `JSON.parse` a
+ * secas crea un array nuevo en cada llamada y dispara un loop infinito.
+ */
+function createMockStore<T>(key: string, seed: T) {
+  const evento = `${key}-change`;
+  let rawCache: string | null = null;
+  let parsedCache: T = seed;
 
-function readNumbers(): PhoneNumber[] {
-  if (typeof window === "undefined") return phoneNumbers;
-  const stored = window.localStorage.getItem(NUMBERS_STORAGE_KEY);
-  if (!stored) return phoneNumbers;
-  if (stored === numbersCacheRaw) return numbersCacheParsed;
-  try {
-    numbersCacheParsed = JSON.parse(stored) as PhoneNumber[];
-    numbersCacheRaw = stored;
-    return numbersCacheParsed;
-  } catch {
-    return phoneNumbers;
-  }
-}
-
-function writeNumbers(next: PhoneNumber[]) {
-  window.localStorage.setItem(NUMBERS_STORAGE_KEY, JSON.stringify(next));
-  window.dispatchEvent(new Event(NUMBERS_EVENT));
-}
-
-function subscribeNumbers(callback: () => void) {
-  window.addEventListener(NUMBERS_EVENT, callback);
-  window.addEventListener("storage", callback);
-  return () => {
-    window.removeEventListener(NUMBERS_EVENT, callback);
-    window.removeEventListener("storage", callback);
+  const read = (): T => {
+    if (typeof window === "undefined") return seed;
+    const stored = window.localStorage.getItem(key);
+    if (!stored) return seed;
+    if (stored === rawCache) return parsedCache;
+    try {
+      parsedCache = JSON.parse(stored) as T;
+      rawCache = stored;
+      return parsedCache;
+    } catch {
+      return seed;
+    }
   };
+
+  const write = (next: T) => {
+    window.localStorage.setItem(key, JSON.stringify(next));
+    window.dispatchEvent(new Event(evento));
+  };
+
+  // "storage" cubre otra pestaña; el evento propio cubre esta misma.
+  const subscribe = (callback: () => void) => {
+    window.addEventListener(evento, callback);
+    window.addEventListener("storage", callback);
+    return () => {
+      window.removeEventListener(evento, callback);
+      window.removeEventListener("storage", callback);
+    };
+  };
+
+  return { read, write, subscribe, serverSnapshot: () => seed };
 }
 
-function getServerSnapshotNumbers(): PhoneNumber[] {
-  return phoneNumbers;
-}
+const numbersStore = createMockStore("atlas-phone-numbers", phoneNumbers);
 
 /** Números en vivo, compartidos entre todas las pantallas que los usan. */
 export function usePhoneNumbers() {
   const numeros = useSyncExternalStore(
-    subscribeNumbers,
-    readNumbers,
-    getServerSnapshotNumbers,
+    numbersStore.subscribe,
+    numbersStore.read,
+    numbersStore.serverSnapshot,
   );
 
   const setNumeros = useCallback(
     (updater: (prev: PhoneNumber[]) => PhoneNumber[]) => {
-      writeNumbers(updater(readNumbers()));
+      numbersStore.write(updater(numbersStore.read()));
     },
     [],
   );
 
-  /** Asigna un número libre a un tenant — no hace nada si ya tiene dueño. */
-  const asignarTenant = useCallback((numberId: string, tenantId: string) => {
-    writeNumbers(
-      readNumbers().map((n) =>
-        n.id === numberId && n.tenantId === null ? { ...n, tenantId } : n,
-      ),
+  return { numeros, setNumeros };
+}
+
+// --- Ocupación: qué tenant usa hoy cada número ----------------------------
+// No es una tabla de la base kamailio. Es el resultado de consultar `accounts`
+// de la región (ADR-BD-005, "Ocupación de un número"), mirando los dos lugares
+// donde aparece un número: la línea de la cuenta y el `outbound_number` de sus
+// settings. Se mockea como lista porque el mock no tiene las cuentas de los
+// otros tenants de la región.
+
+export type OcupacionDeNumero = {
+  /** El número en dígitos, igual que `PhoneNumber.number`. */
+  number: string;
+  /** Tenant que lo tiene tomado en alguna cuenta. Como mucho uno por número. */
+  tenantId: string;
+};
+
+export const ocupacionDeNumeros: OcupacionDeNumero[] = [
+  // Libre en la tabla `numbers`, pero Telco Norte ya lo usa en una cuenta:
+  // Zeus lo muestra tomado y ningún otro tenant de la región lo ve en Cuentas.
+  // Si Telco Norte borra esa cuenta, vuelve al pool — la reserva sigue en null.
+  { number: "1140001001", tenantId: "org-telco-norte" },
+  // Reservado a Banco Sur y además usado por él (cuenta acc-1 de mock-data).
+  { number: "1140009911", tenantId: "org-banco-sur" },
+];
+
+const ocupacionStore = createMockStore(
+  "atlas-numeros-ocupacion",
+  ocupacionDeNumeros,
+);
+
+/** Tenant que hoy tiene tomado el número en una cuenta, o `null` si nadie. */
+export function ocupanteDeNumero(
+  ocupacion: OcupacionDeNumero[],
+  numero: string,
+): string | null {
+  return ocupacion.find((o) => o.number === numero)?.tenantId ?? null;
+}
+
+/** Ocupación en vivo, compartida entre Zeus y Cuentas. */
+export function useOcupacionDeNumeros() {
+  const ocupacion = useSyncExternalStore(
+    ocupacionStore.subscribe,
+    ocupacionStore.read,
+    ocupacionStore.serverSnapshot,
+  );
+
+  /**
+   * Una cuenta toma el número. Es el guard del alta de cuenta: si otro tenant
+   * lo ocupó entremedio, no se pisa — devuelve `false` y la pantalla tiene que
+   * refrescar el selector, igual que el `409` del backend real.
+   */
+  const ocupar = useCallback((numero: string, tenantId: string) => {
+    const actual = ocupacionStore.read();
+    const ocupante = ocupanteDeNumero(actual, numero);
+    if (ocupante && ocupante !== tenantId) return false;
+    if (ocupante === tenantId) return true;
+    ocupacionStore.write([...actual, { number: numero, tenantId }]);
+    return true;
+  }, []);
+
+  /** La cuenta se borra: el número vuelve al pool si su reserva era libre. */
+  const liberar = useCallback((numero: string) => {
+    ocupacionStore.write(
+      ocupacionStore.read().filter((o) => o.number !== numero),
     );
   }, []);
 
-  return { numeros, setNumeros, asignarTenant };
+  return { ocupacion, ocupar, liberar };
 }
 
 /**
@@ -300,19 +369,23 @@ export function capacidadesDeRegion(regionId: string) {
 }
 
 /**
- * Números que una cuenta de `tenantId` puede elegir: los ya asignados a ese
- * tenant, más los libres de su región. Nunca los de otro tenant ni los de
- * otra región (ADR-BD-005: un número solo se ofrece a tenants de su región).
+ * Números que una cuenta de `tenantId` puede elegir: los reservados para ese
+ * tenant, más los libres de su región que no tenga tomados otro tenant en una
+ * cuenta. Nunca los de otro tenant ni los de otra región (ADR-BD-005: un
+ * número solo se ofrece a tenants de su región).
  */
 export function numerosParaTenant(
   numeros: PhoneNumber[],
+  ocupacion: OcupacionDeNumero[],
   tenantId: string,
   regionId: string,
 ): PhoneNumber[] {
-  return numeros.filter(
-    (n) =>
-      n.active &&
-      n.regionId === regionId &&
-      (n.tenantId === tenantId || n.tenantId === null),
-  );
+  return numeros.filter((n) => {
+    if (!n.active || n.regionId !== regionId) return false;
+    if (n.tenantId === tenantId) return true;
+    if (n.tenantId !== null) return false;
+    // Libre: lo ve mientras nadie más lo tenga tomado en una cuenta.
+    const ocupante = ocupanteDeNumero(ocupacion, n.number);
+    return ocupante === null || ocupante === tenantId;
+  });
 }
