@@ -40,6 +40,26 @@ export const usuarios: NamespaceDict = {
     "detalle.sinPermisos": "Sin permisos asignados.",
     "detalle.sinAuxiliares": "Sin estados auxiliares asignados.",
     "detalle.individual": "+ individual",
+    "supervision.titulo": "Supervisión",
+    "supervision.descripcion":
+      "Qué puede mirar esta persona. Es distinto de los permisos del grupo, que definen a qué secciones entra, y de las campañas donde atiende: trabajar en una campaña no es supervisarla.",
+    "supervision.campanias": "Campañas que supervisa",
+    "supervision.campaniasAyuda":
+      "Ve las interacciones de estas campañas, esté quien esté atendiéndolas.",
+    "supervision.elegirCampanias": "Elegir campañas…",
+    "supervision.buscarCampania": "Buscar campaña…",
+    "supervision.campaniasElegidas": "{n} campañas",
+    "supervision.grupos": "Grupos que supervisa",
+    "supervision.gruposAyuda":
+      "Ve a los agentes de estos grupos y su estado, trabajen en la campaña que trabajen.",
+    "supervision.elegirGrupos": "Elegir grupos…",
+    "supervision.buscarGrupo": "Buscar grupo…",
+    "supervision.gruposElegidos": "{n} grupos",
+    "supervision.sinResultados": "No se encontró nada.",
+    "supervision.quitar": "Quitar {nombre}",
+    "supervision.noSupervisa":
+      "No supervisa nada todavía: solo va a ver su propio trabajo.",
+
     "detalle.peligroTitulo": "Zona de peligro",
     "detalle.peligroDesc":
       "Eliminar el usuario es permanente. Solo se habilita cuando ya está deshabilitado.",
@@ -90,6 +110,26 @@ export const usuarios: NamespaceDict = {
     "detalle.sinPermisos": "No permissions assigned.",
     "detalle.sinAuxiliares": "No auxiliary states assigned.",
     "detalle.individual": "+ individual",
+    "supervision.titulo": "Supervision",
+    "supervision.descripcion":
+      "What this person can watch. Different from group permissions, which define which sections they enter, and from the campaigns they work on: working on a campaign isn't supervising it.",
+    "supervision.campanias": "Campaigns they supervise",
+    "supervision.campaniasAyuda":
+      "Sees the interactions of these campaigns, whoever is handling them.",
+    "supervision.elegirCampanias": "Pick campaigns…",
+    "supervision.buscarCampania": "Search campaign…",
+    "supervision.campaniasElegidas": "{n} campaigns",
+    "supervision.grupos": "Groups they supervise",
+    "supervision.gruposAyuda":
+      "Sees the agents of these groups and their status, whatever campaign they work on.",
+    "supervision.elegirGrupos": "Pick groups…",
+    "supervision.buscarGrupo": "Search group…",
+    "supervision.gruposElegidos": "{n} groups",
+    "supervision.sinResultados": "Nothing found.",
+    "supervision.quitar": "Remove {nombre}",
+    "supervision.noSupervisa":
+      "Doesn't supervise anything yet: they'll only see their own work.",
+
     "detalle.peligroTitulo": "Danger zone",
     "detalle.peligroDesc":
       "Deleting the user is permanent. It is only enabled once the user is already disabled.",
@@ -139,6 +179,26 @@ export const usuarios: NamespaceDict = {
     "detalle.sinPermisos": "Sem permissões atribuídas.",
     "detalle.sinAuxiliares": "Sem estados auxiliares atribuídos.",
     "detalle.individual": "+ individual",
+    "supervision.titulo": "Supervisão",
+    "supervision.descripcion":
+      "O que esta pessoa pode ver. É diferente das permissões do grupo, que definem a que seções entra, e das campanhas onde atende: trabalhar numa campanha não é supervisioná-la.",
+    "supervision.campanias": "Campanhas que supervisiona",
+    "supervision.campaniasAyuda":
+      "Vê as interações destas campanhas, seja quem for que as atenda.",
+    "supervision.elegirCampanias": "Escolher campanhas…",
+    "supervision.buscarCampania": "Buscar campanha…",
+    "supervision.campaniasElegidas": "{n} campanhas",
+    "supervision.grupos": "Grupos que supervisiona",
+    "supervision.gruposAyuda":
+      "Vê os agentes destes grupos e seu estado, trabalhem na campanha que trabalharem.",
+    "supervision.elegirGrupos": "Escolher grupos…",
+    "supervision.buscarGrupo": "Buscar grupo…",
+    "supervision.gruposElegidos": "{n} grupos",
+    "supervision.sinResultados": "Nada encontrado.",
+    "supervision.quitar": "Remover {nombre}",
+    "supervision.noSupervisa":
+      "Ainda não supervisiona nada: só vai ver o próprio trabalho.",
+
     "detalle.peligroTitulo": "Zona de perigo",
     "detalle.peligroDesc":
       "Excluir o usuário é permanente. Só fica habilitado quando ele já está desabilitado.",
@@ -189,6 +249,26 @@ export const usuarios: NamespaceDict = {
     "detalle.sinPermisos": "Sense permisos assignats.",
     "detalle.sinAuxiliares": "Sense estats auxiliars assignats.",
     "detalle.individual": "+ individual",
+    "supervision.titulo": "Supervisió",
+    "supervision.descripcion":
+      "Què pot mirar aquesta persona. És diferent dels permisos del grup, que defineixen a quines seccions entra, i de les campanyes on atén: treballar en una campanya no és supervisar-la.",
+    "supervision.campanias": "Campanyes que supervisa",
+    "supervision.campaniasAyuda":
+      "Veu les interaccions d'aquestes campanyes, sigui qui sigui qui les atengui.",
+    "supervision.elegirCampanias": "Triar campanyes…",
+    "supervision.buscarCampania": "Cercar campanya…",
+    "supervision.campaniasElegidas": "{n} campanyes",
+    "supervision.grupos": "Grups que supervisa",
+    "supervision.gruposAyuda":
+      "Veu els agents d'aquests grups i el seu estat, treballin a la campanya que treballin.",
+    "supervision.elegirGrupos": "Triar grups…",
+    "supervision.buscarGrupo": "Cercar grup…",
+    "supervision.gruposElegidos": "{n} grups",
+    "supervision.sinResultados": "No s'ha trobat res.",
+    "supervision.quitar": "Treure {nombre}",
+    "supervision.noSupervisa":
+      "Encara no supervisa res: només veurà la seva pròpia feina.",
+
     "detalle.peligroTitulo": "Zona de perill",
     "detalle.peligroDesc":
       "Eliminar l'usuari és permanent. Només s'habilita quan ja està deshabilitat.",

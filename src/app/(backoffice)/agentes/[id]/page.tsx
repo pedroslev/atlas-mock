@@ -16,11 +16,14 @@ import {
 import { T } from "@/lib/i18n";
 import {
   agentes,
+  campanias,
+  gruposTrabajo,
   getGruposDeUsuario,
   getOverrideDeUsuario,
   getEstadoAuxiliar,
 } from "@/lib/mock-data";
 import { AgenteEliminar } from "./agente-eliminar";
+import { AgenteSupervision } from "./agente-supervision";
 
 // Los módulos de permiso viven en mock-data en español (no se toca ese
 // archivo): acá se mapean a claves de traducción. Los nombres coinciden con
@@ -200,6 +203,13 @@ export default async function EditarAgentePage({
         </CardContent>
         </Card>
       </div>
+
+      <AgenteSupervision
+        campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre }))}
+        grupos={gruposTrabajo.map((g) => ({ id: g.id, nombre: g.nombre }))}
+        initialCampaniaIds={agente.supervisaCampaniaIds ?? []}
+        initialGrupoIds={agente.supervisaGrupoIds ?? []}
+      />
 
       <Card>
         <CardHeader>

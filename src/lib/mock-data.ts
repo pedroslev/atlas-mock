@@ -276,6 +276,12 @@ export type Agente = {
   nombre: string;
   email: string;
   habilitado: boolean;
+  // Alcance de supervisión: qué campañas y qué grupos puede mirar esta
+  // persona. Es independiente de los permisos del grupo (que dicen a qué
+  // secciones del backoffice entra) y de las campañas donde atiende: una cosa
+  // es trabajar en una campaña y otra es supervisarla. Vacío = no supervisa.
+  supervisaCampaniaIds?: string[];
+  supervisaGrupoIds?: string[];
 };
 
 // working_groups.permissions (JSONB): claves {modulo}.{accion}. Simplificado
@@ -665,7 +671,15 @@ export const listasExclusion: ListaExclusion[] = [
 ];
 
 export const agentes: Agente[] = [
-  { id: "ag-1", nombre: "Marina Acosta", email: "marina.acosta@bancosur.com", habilitado: true },
+  // Marina supervisa: mira dos campañas de Cobranzas y el grupo que las atiende.
+  {
+    id: "ag-1",
+    nombre: "Marina Acosta",
+    email: "marina.acosta@bancosur.com",
+    habilitado: true,
+    supervisaCampaniaIds: ["camp-1", "camp-2"],
+    supervisaGrupoIds: ["wg-cobranzas"],
+  },
   { id: "ag-2", nombre: "Julián Ferreyra", email: "julian.ferreyra@bancosur.com", habilitado: true },
   { id: "ag-3", nombre: "Rocío Benítez", email: "rocio.benitez@bancosur.com", habilitado: true },
   { id: "ag-4", nombre: "Tomás Ibarra", email: "tomas.ibarra@bancosur.com", habilitado: false },
