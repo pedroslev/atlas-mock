@@ -7,9 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { EntityCombobox } from "@/app/(backoffice)/campanias/entity-combobox";
-import { Label } from "@/components/ui/label";
-import { husos } from "@/lib/timezones";
 import {
   diasSemana,
   type BandaHoraria,
@@ -37,7 +34,6 @@ export function BusinessHoursEditor({
 }: {
   initialValue?: BusinessHours;
 }) {
-  const t = useT();
   const [horas, setHoras] = useState<Record<DiaSemana, BandaHoraria[]>>(
     () => {
       const inicial = {} as Record<DiaSemana, BandaHoraria[]>;
@@ -104,25 +100,8 @@ export function BusinessHoursEditor({
     );
   }
 
-  const [timezone, setTimezone] = useState("");
-
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="horarios-huso">{t("proyectos.horarios.huso")}</Label>
-        <EntityCombobox
-          id="horarios-huso"
-          items={husos}
-          value={timezone}
-          onChange={(valor) => setTimezone(valor ?? "")}
-          placeholder={t("proyectos.horarios.husoPlaceholder")}
-          searchPlaceholder={t("proyectos.horarios.husoBuscar")}
-          emptyLabel={t("proyectos.horarios.husoVacio")}
-        />
-        <p className="text-xs text-muted-foreground">
-          {t("proyectos.horarios.husoAyuda")}
-        </p>
-      </div>
       <div className="flex flex-col gap-1">
       {/* El `label` de `diasSemana` (mock-data) viene fijo en español: la UI
           traduce por `key` contra el diccionario. */}

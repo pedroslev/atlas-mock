@@ -19,7 +19,6 @@ import {
 import { EntityCombobox } from "@/app/(backoffice)/campanias/entity-combobox";
 import { regions, regionLabel } from "@/lib/mock-admin";
 import { countries } from "@/lib/countries";
-import { husos } from "@/lib/timezones";
 import { useT } from "@/lib/i18n";
 
 // Onboarding (alta) de tenant cloud con región asignada (Fase 0, ADR-BD-001).
@@ -34,11 +33,10 @@ export default function NuevoTenantPage() {
   const [name, setName] = useState("");
   const [regionId, setRegionId] = useState("");
   const [countryId, setCountryId] = useState<string | undefined>(undefined);
-  const [timezone, setTimezone] = useState<string | undefined>(undefined);
   const [active, setActive] = useState(false);
 
   const puedeCrear =
-    name.trim().length > 0 && regionId.length > 0 && !!countryId && !!timezone;
+    name.trim().length > 0 && regionId.length > 0 && !!countryId;
 
   function crear() {
     if (!puedeCrear) return;
@@ -100,22 +98,6 @@ export default function NuevoTenantPage() {
               searchPlaceholder={t("admin.form.paisBuscar")}
               emptyLabel={t("admin.form.paisVacio")}
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tenant-timezone">{t("admin.campos.huso")}</Label>
-            <EntityCombobox
-              id="tenant-timezone"
-              items={husos}
-              value={timezone}
-              onChange={setTimezone}
-              placeholder={t("admin.form.husoPlaceholder")}
-              searchPlaceholder={t("admin.form.husoBuscar")}
-              emptyLabel={t("admin.form.husoVacio")}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("admin.form.husoAyuda")}
-            </p>
           </div>
 
           <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">
