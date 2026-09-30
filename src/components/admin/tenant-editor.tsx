@@ -39,6 +39,7 @@ import {
   type TenantContact,
 } from "@/lib/mock-admin";
 import { countries } from "@/lib/countries";
+import { husos } from "@/lib/timezones";
 import { useT } from "@/lib/i18n";
 
 // Detalle de un cliente (tenant): vista única (sin solapas) con los 3 bloques
@@ -60,6 +61,7 @@ export function TenantEditor({
   const [name, setName] = useState(organization.name);
   const [regionId, setRegionId] = useState(organization.regionId);
   const [countryId, setCountryId] = useState(organization.countryId);
+  const [timezone, setTimezone] = useState(organization.timezone);
   const [active, setActive] = useState(organization.active);
 
   return (
@@ -82,6 +84,8 @@ export function TenantEditor({
           setRegionId={setRegionId}
           countryId={countryId}
           setCountryId={setCountryId}
+          timezone={timezone}
+          setTimezone={setTimezone}
           active={active}
           setActive={setActive}
         />
@@ -103,6 +107,8 @@ function GeneralSection({
   setRegionId,
   countryId,
   setCountryId,
+  timezone,
+  setTimezone,
   active,
   setActive,
 }: {
@@ -112,6 +118,8 @@ function GeneralSection({
   setRegionId: (v: string) => void;
   countryId: string;
   setCountryId: (v: string) => void;
+  timezone: string;
+  setTimezone: (v: string) => void;
   active: boolean;
   setActive: (v: boolean) => void;
 }) {
@@ -159,6 +167,22 @@ function GeneralSection({
             searchPlaceholder={t("admin.form.paisBuscar")}
             emptyLabel={t("admin.form.paisVacio")}
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-timezone">{t("admin.campos.huso")}</Label>
+          <EntityCombobox
+            id="edit-timezone"
+            items={husos}
+            value={timezone}
+            onChange={(v) => v && setTimezone(v)}
+            placeholder={t("admin.form.husoPlaceholder")}
+            searchPlaceholder={t("admin.form.husoBuscar")}
+            emptyLabel={t("admin.form.husoVacio")}
+          />
+          <span className="text-xs text-muted-foreground">
+            {t("admin.form.husoAyuda")}
+          </span>
         </div>
 
         <div className="flex items-start justify-between gap-4 rounded-lg ring-1 ring-foreground/10 p-3">

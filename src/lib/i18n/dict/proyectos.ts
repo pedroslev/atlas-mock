@@ -59,6 +59,11 @@ export const proyectos: NamespaceDict = {
     "horarios.quitarBanda": "Quitar banda horaria",
     "horarios.agregarBanda":
       "Agregar otra banda horaria (ej. pausa de almuerzo)",
+    "horarios.huso": "Huso horario",
+    "horarios.husoPlaceholder": "Seleccionar huso",
+    "horarios.husoBuscar": "Buscar huso...",
+    "horarios.husoVacio": "No se encontró ningún huso.",
+    "horarios.husoAyuda": "Ejemplo: Buenos Aires.",
 
     "dias.lunes": "Lunes",
     "dias.martes": "Martes",
@@ -120,6 +125,11 @@ export const proyectos: NamespaceDict = {
     "horarios.horaFin": "End time, band {n}, {dia}",
     "horarios.quitarBanda": "Remove time band",
     "horarios.agregarBanda": "Add another time band (e.g. lunch break)",
+    "horarios.huso": "Time zone",
+    "horarios.husoPlaceholder": "Select a time zone",
+    "horarios.husoBuscar": "Search time zone...",
+    "horarios.husoVacio": "No time zone found.",
+    "horarios.husoAyuda": "Example: Buenos Aires.",
 
     "dias.lunes": "Monday",
     "dias.martes": "Tuesday",
@@ -182,6 +192,11 @@ export const proyectos: NamespaceDict = {
     "horarios.quitarBanda": "Remover faixa de horário",
     "horarios.agregarBanda":
       "Adicionar outra faixa de horário (ex.: pausa para o almoço)",
+    "horarios.huso": "Fuso horário",
+    "horarios.husoPlaceholder": "Selecionar fuso",
+    "horarios.husoBuscar": "Pesquisar fuso...",
+    "horarios.husoVacio": "Nenhum fuso encontrado.",
+    "horarios.husoAyuda": "Exemplo: Buenos Aires.",
 
     "dias.lunes": "Segunda-feira",
     "dias.martes": "Terça-feira",
@@ -244,6 +259,11 @@ export const proyectos: NamespaceDict = {
     "horarios.quitarBanda": "Treu la franja horària",
     "horarios.agregarBanda":
       "Afegeix una altra franja horària (p. ex., pausa per dinar)",
+    "horarios.huso": "Fus horari",
+    "horarios.husoPlaceholder": "Selecciona un fus",
+    "horarios.husoBuscar": "Cerca un fus...",
+    "horarios.husoVacio": "No s'ha trobat cap fus.",
+    "horarios.husoAyuda": "Exemple: Buenos Aires.",
 
     "dias.lunes": "Dilluns",
     "dias.martes": "Dimarts",
