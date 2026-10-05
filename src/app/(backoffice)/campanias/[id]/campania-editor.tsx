@@ -61,6 +61,8 @@ import {
   ConfigOperativaTab,
   UrlsExternasTab,
 } from "../campania-parametros";
+import { ObjetivosContactoTab } from "../campania-objetivos";
+import { EstrategiaSalidaTab } from "../campania-estrategia";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -101,6 +103,8 @@ export function CampaniaEditor({
           {t("campanias.tab.urlInteraccion")}
         </TabsTrigger>
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
+        <TabsTrigger value="objetivos">{t("clientes.obj.titulo")}</TabsTrigger>
+        <TabsTrigger value="estrategia">{t("clientes.est.titulo")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="grid gap-6 lg:grid-cols-2">
@@ -227,6 +231,16 @@ export function CampaniaEditor({
 
       <TabsContent value="usuarios">
         <UsuariosTab initialUsuarioIds={campania.usuariosAsignados} />
+      </TabsContent>
+
+      {/* Propuesta 2026-10-05 (relevamiento/clientes-y-contactaciones):
+          reemplaza la idea de "Listas de contactos" de fase 0. */}
+      <TabsContent value="objetivos">
+        <ObjetivosContactoTab campaniaId={campania.id} />
+      </TabsContent>
+
+      <TabsContent value="estrategia">
+        <EstrategiaSalidaTab campaniaId={campania.id} />
       </TabsContent>
     </Tabs>
   );

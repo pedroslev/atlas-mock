@@ -9,6 +9,7 @@ import {
   Users,
   UsersRound,
   CircleDot,
+  Contact,
 } from "lucide-react";
 
 export type NavItem = {
@@ -29,6 +30,9 @@ export type NavItem = {
 // de producto 2026-07-16). Las rutas /proyectos/* siguen existiendo.
 export const navItems: NavItem[] = [
   { href: "/campanias", labelKey: "common.nav.campanias", icon: Megaphone },
+  // Clientes (propuesta 2026-10-05, relevamiento/clientes-y-contactaciones):
+  // base de clientes por proyecto, compartible con otros proyectos.
+  { href: "/clientes", labelKey: "common.nav.clientes", icon: Contact },
   { href: "/cuentas", labelKey: "common.nav.cuentas", icon: Landmark },
   { href: "/clasificaciones", labelKey: "common.nav.clasificaciones", icon: Tags },
   { href: "/marcadores", labelKey: "common.nav.marcas", icon: Bookmark },
