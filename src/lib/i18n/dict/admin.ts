@@ -144,6 +144,20 @@ export const admin: NamespaceDict = {
     "telefonia.cliAleatorioAyuda":
       "La llamada puede salir mostrando un número aleatorio.",
     "telefonia.carrierActivo": "Carrier activo",
+    "telefonia.col.autenticacion": "Autenticación",
+    "telefonia.auth.titulo": "Autenticación de salida",
+    "telefonia.auth.modo.ip": "Por IP",
+    "telefonia.auth.modo.credenciales": "Usuario y contraseña",
+    "telefonia.auth.ayuda.ip": "El carrier tiene whitelisteada la IP pública de salida de cada región. No se manda usuario ni contraseña.",
+    "telefonia.auth.ayuda.credenciales": "El carrier nos dio usuario y contraseña. Kamailio los usa cuando el carrier pide autenticación.",
+    "telefonia.auth.usuario": "Usuario",
+    "telefonia.auth.contrasena": "Contraseña",
+    "telefonia.auth.realm": "Realm",
+    "telefonia.auth.opcional": "Opcional",
+    "telefonia.auth.registrar": "Registrarse en el carrier",
+    "telefonia.auth.registrarAyuda": "Para carriers que exigen REGISTER antes de aceptar llamadas.",
+    "telefonia.auth.servidorRegistro": "Servidor de registro",
+    "telefonia.auth.servidorRegistroPlaceholder": "Vacío = el destino de mayor prioridad",
     "telefonia.eliminarDescripcion":
       "Se eliminará el carrier “{nombre}” en todas sus regiones, con sus números y tarifas. Esta acción no se puede deshacer.",
 
@@ -326,6 +340,20 @@ export const admin: NamespaceDict = {
     "telefonia.cliAleatorioAyuda":
       "The call can go out showing a random number.",
     "telefonia.carrierActivo": "Carrier active",
+    "telefonia.col.autenticacion": "Authentication",
+    "telefonia.auth.titulo": "Outbound authentication",
+    "telefonia.auth.modo.ip": "By IP",
+    "telefonia.auth.modo.credenciales": "Username and password",
+    "telefonia.auth.ayuda.ip": "The carrier whitelists each region's public egress IP. No username or password is sent.",
+    "telefonia.auth.ayuda.credenciales": "The carrier gave us a username and password. Kamailio uses them when the carrier asks for authentication.",
+    "telefonia.auth.usuario": "Username",
+    "telefonia.auth.contrasena": "Password",
+    "telefonia.auth.realm": "Realm",
+    "telefonia.auth.opcional": "Optional",
+    "telefonia.auth.registrar": "Register with the carrier",
+    "telefonia.auth.registrarAyuda": "For carriers that require REGISTER before accepting calls.",
+    "telefonia.auth.servidorRegistro": "Registrar",
+    "telefonia.auth.servidorRegistroPlaceholder": "Empty = highest-priority destination",
     "telefonia.eliminarDescripcion":
       "The carrier “{nombre}” will be deleted in all its regions, along with its numbers and rates. This action cannot be undone.",
 
@@ -508,6 +536,20 @@ export const admin: NamespaceDict = {
     "telefonia.cliAleatorioAyuda":
       "A chamada pode sair mostrando um número aleatório.",
     "telefonia.carrierActivo": "Carrier ativo",
+    "telefonia.col.autenticacion": "Autenticação",
+    "telefonia.auth.titulo": "Autenticação de saída",
+    "telefonia.auth.modo.ip": "Por IP",
+    "telefonia.auth.modo.credenciales": "Usuário e senha",
+    "telefonia.auth.ayuda.ip": "O carrier tem na whitelist o IP público de saída de cada região. Não se envia usuário nem senha.",
+    "telefonia.auth.ayuda.credenciales": "O carrier nos deu usuário e senha. O Kamailio os usa quando o carrier pede autenticação.",
+    "telefonia.auth.usuario": "Usuário",
+    "telefonia.auth.contrasena": "Senha",
+    "telefonia.auth.realm": "Realm",
+    "telefonia.auth.opcional": "Opcional",
+    "telefonia.auth.registrar": "Registrar-se no carrier",
+    "telefonia.auth.registrarAyuda": "Para carriers que exigem REGISTER antes de aceitar chamadas.",
+    "telefonia.auth.servidorRegistro": "Servidor de registro",
+    "telefonia.auth.servidorRegistroPlaceholder": "Vazio = o destino de maior prioridade",
     "telefonia.eliminarDescripcion":
       "O carrier “{nombre}” será excluído em todas as suas regiões, com seus números e tarifas. Esta ação não pode ser desfeita.",
 
@@ -691,6 +733,20 @@ export const admin: NamespaceDict = {
     "telefonia.cliAleatorioAyuda":
       "La trucada pot sortir mostrant un número aleatori.",
     "telefonia.carrierActivo": "Carrier actiu",
+    "telefonia.col.autenticacion": "Autenticació",
+    "telefonia.auth.titulo": "Autenticació de sortida",
+    "telefonia.auth.modo.ip": "Per IP",
+    "telefonia.auth.modo.credenciales": "Usuari i contrasenya",
+    "telefonia.auth.ayuda.ip": "El carrier té a la whitelist la IP pública de sortida de cada regió. No s'envia usuari ni contrasenya.",
+    "telefonia.auth.ayuda.credenciales": "El carrier ens va donar usuari i contrasenya. Kamailio els fa servir quan el carrier demana autenticació.",
+    "telefonia.auth.usuario": "Usuari",
+    "telefonia.auth.contrasena": "Contrasenya",
+    "telefonia.auth.realm": "Realm",
+    "telefonia.auth.opcional": "Opcional",
+    "telefonia.auth.registrar": "Registrar-se al carrier",
+    "telefonia.auth.registrarAyuda": "Per a carriers que exigeixen REGISTER abans d'acceptar trucades.",
+    "telefonia.auth.servidorRegistro": "Servidor de registre",
+    "telefonia.auth.servidorRegistroPlaceholder": "Buit = la destinació de més prioritat",
     "telefonia.eliminarDescripcion":
       "S'eliminarà el carrier “{nombre}” a totes les seves regions, amb els seus números i tarifes. Aquesta acció no es pot desfer.",
 

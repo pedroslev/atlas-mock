@@ -87,14 +87,14 @@ export function CuentaTabs({
         <Card>
           <CardHeader>
             <CardTitle>{t("cuentas.derivacion.titulo")}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {t("cuentas.derivacion.descripcion")}
-            </p>
           </CardHeader>
           <CardContent>
+            {/* El PLAY con texto solo vale en cuentas de chat; esta pantalla
+                es de líneas telefónicas (tipo fijo Telefonía SIP). */}
             <WorkflowEditor
               initialWorkflow={cuenta.workflow}
               campanias={campanias}
+              admiteTexto={false}
             />
           </CardContent>
         </Card>

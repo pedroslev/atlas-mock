@@ -46,6 +46,7 @@ import {
   useOcupacionDeNumeros,
   ocupanteDeNumero,
   type Carrier,
+  type CarrierAuthMode,
   type PhoneNumber,
   type NumberDirection,
   type CarrierRate,
@@ -65,6 +66,12 @@ const emptyForm = {
   regionIds: [] as string[],
   destinations: [] as DestinationForm[],
   whitelistIps: "",
+  authMode: "ip" as CarrierAuthMode,
+  authUsername: "",
+  authPassword: "",
+  authRealm: "",
+  authRegister: false,
+  authRegistrar: "",
   allowsHiddenCli: false,
   allowsRandomCli: false,
   active: true,
@@ -159,10 +166,15 @@ export default function TelefoniaPage() {
   const destinosCargados = form.destinations.filter((d) =>
     d.destination.trim(),
   );
+  // Con usuario y contraseña, los dos son obligatorios; realm y registrar no.
+  const credencialesCompletas =
+    form.authMode === "ip" ||
+    (form.authUsername.trim().length > 0 && form.authPassword.length > 0);
   const puedeGuardarCarrier =
     form.name.trim().length > 0 &&
     form.regionIds.length > 0 &&
-    destinosCargados.length > 0;
+    destinosCargados.length > 0 &&
+    credencialesCompletas;
 
   function abrir(carrier: Carrier | null) {
     setEditing(carrier);
@@ -177,6 +189,12 @@ export default function TelefoniaPage() {
               priority: String(d.priority),
             })),
             whitelistIps: carrier.whitelistIps.join("\n"),
+            authMode: carrier.authMode,
+            authUsername: carrier.credentials?.username ?? "",
+            authPassword: carrier.credentials?.password ?? "",
+            authRealm: carrier.credentials?.realm ?? "",
+            authRegister: carrier.credentials?.register ?? false,
+            authRegistrar: carrier.credentials?.registrar ?? "",
             allowsHiddenCli: carrier.allowsHiddenCli,
             allowsRandomCli: carrier.allowsRandomCli,
             active: carrier.active,
@@ -216,6 +234,18 @@ export default function TelefoniaPage() {
         .split("\n")
         .map((ip) => ip.trim())
         .filter(Boolean),
+      authMode: form.authMode,
+      // Al pasar a "ip" se descartan las credenciales que hubiera.
+      credentials:
+        form.authMode === "credenciales"
+          ? {
+              username: form.authUsername.trim(),
+              password: form.authPassword,
+              realm: form.authRealm.trim(),
+              register: form.authRegister,
+              registrar: form.authRegister ? form.authRegistrar.trim() : "",
+            }
+          : null,
       allowsHiddenCli: form.allowsHiddenCli,
       allowsRandomCli: form.allowsRandomCli,
       active: form.active,
@@ -541,6 +571,16 @@ export default function TelefoniaPage() {
           <span className="tabular-nums text-muted-foreground">
             {row.original.whitelistIps.length}
           </span>
+        ),
+      },
+      {
+        id: "autenticacion",
+        header: t("admin.telefonia.col.autenticacion"),
+        accessorFn: (carrier) => t(`admin.telefonia.auth.modo.${carrier.authMode}`),
+        Cell: ({ row }) => (
+          <Badge variant="neutral" data-testid="carrier-auth-badge">
+            {t(`admin.telefonia.auth.modo.${row.original.authMode}`)}
+          </Badge>
         ),
       },
       {
@@ -1078,6 +1118,13 @@ export default function TelefoniaPage() {
               <span className="text-xs text-muted-foreground">
                 {t("admin.telefonia.destinos.ayuda")}
               </span>
+
+              {/* Autenticación de la salida: va con los destinos porque es cómo
+                  nos presentamos ante ellos. */}
+              <CarrierAuthFields
+                form={form}
+                onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 md:col-span-2">
@@ -1165,6 +1212,116 @@ function DestinationRow({
         <Trash2 />
       </Button>
     </>
+  );
+}
+
+type CarrierAuthForm = Pick<
+  typeof emptyForm,
+  | "authMode"
+  | "authUsername"
+  | "authPassword"
+  | "authRealm"
+  | "authRegister"
+  | "authRegistrar"
+>;
+
+// Cómo nos autenticamos ante el carrier en la salida: por IP whitelisteada
+// (no se carga nada) o con usuario y contraseña, con registro opcional.
+function CarrierAuthFields({
+  form,
+  onChange,
+}: {
+  form: CarrierAuthForm;
+  onChange: (patch: Partial<CarrierAuthForm>) => void;
+}) {
+  const t = useT();
+  return (
+    <div
+      className="mt-2 flex flex-col gap-3 rounded-lg p-3 ring-1 ring-foreground/10"
+      data-testid="carrier-auth"
+    >
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="tf-auth-mode">{t("admin.telefonia.auth.titulo")}</Label>
+        <Select
+          value={form.authMode}
+          onValueChange={(v) => onChange({ authMode: v as CarrierAuthMode })}
+        >
+          <SelectTrigger id="tf-auth-mode" data-testid="carrier-auth-mode">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ip">{t("admin.telefonia.auth.modo.ip")}</SelectItem>
+            <SelectItem value="credenciales">
+              {t("admin.telefonia.auth.modo.credenciales")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground">
+          {t(`admin.telefonia.auth.ayuda.${form.authMode}`)}
+        </span>
+      </div>
+
+      {form.authMode === "credenciales" && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="tf-auth-user">{t("admin.telefonia.auth.usuario")}</Label>
+              <Input
+                id="tf-auth-user"
+                data-testid="carrier-auth-username"
+                value={form.authUsername}
+                onChange={(e) => onChange({ authUsername: e.target.value })}
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="tf-auth-pass">{t("admin.telefonia.auth.contrasena")}</Label>
+              <Input
+                id="tf-auth-pass"
+                data-testid="carrier-auth-password"
+                type="password"
+                value={form.authPassword}
+                onChange={(e) => onChange({ authPassword: e.target.value })}
+                autoComplete="new-password"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tf-auth-realm">{t("admin.telefonia.auth.realm")}</Label>
+            <Input
+              id="tf-auth-realm"
+              data-testid="carrier-auth-realm"
+              value={form.authRealm}
+              onChange={(e) => onChange({ authRealm: e.target.value })}
+              placeholder={t("admin.telefonia.auth.opcional")}
+              className="font-mono text-xs"
+            />
+          </div>
+          <SwitchRow
+            id="tf-auth-register"
+            label={t("admin.telefonia.auth.registrar")}
+            help={t("admin.telefonia.auth.registrarAyuda")}
+            checked={form.authRegister}
+            onCheckedChange={(v) => onChange({ authRegister: v })}
+          />
+          {form.authRegister && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="tf-auth-registrar">
+                {t("admin.telefonia.auth.servidorRegistro")}
+              </Label>
+              <Input
+                id="tf-auth-registrar"
+                data-testid="carrier-auth-registrar"
+                value={form.authRegistrar}
+                onChange={(e) => onChange({ authRegistrar: e.target.value })}
+                placeholder={t("admin.telefonia.auth.servidorRegistroPlaceholder")}
+                className="font-mono text-xs"
+              />
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
