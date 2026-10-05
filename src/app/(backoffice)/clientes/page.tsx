@@ -28,6 +28,7 @@ import {
   getObjetivosDeCliente,
   nombreCompleto,
   telefonoPrincipal,
+  visibleEn,
   type Cliente,
 } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
@@ -42,16 +43,12 @@ export default function ClientesPage() {
   const t = useT();
   const [proyectoId, setProyectoId] = useState<string>("todos");
 
-  // Un cliente "se ve" en un proyecto si es su dueño o si se lo compartieron.
+  // Clientes globales: un cliente se ve en un proyecto salvo que se le haya
+  // sacado la visibilidad ahí.
   const filas = useMemo<Fila[]>(
     () =>
       clientes
-        .filter(
-          (c) =>
-            proyectoId === "todos" ||
-            c.proyectoId === proyectoId ||
-            c.compartidoCon.includes(proyectoId)
-        )
+        .filter((c) => proyectoId === "todos" || visibleEn(c, proyectoId))
         .map((c) => ({
           ...c,
           nombreCompleto: nombreCompleto(c),
@@ -89,20 +86,22 @@ export default function ClientesPage() {
         accessorFn: (c) => telefonoPrincipal(c) ?? "—",
       },
       {
-        id: "proyecto",
-        header: t("clientes.col.proyecto"),
-        accessorFn: (c) => getProyecto(c.proyectoId)?.nombre ?? "—",
-        filterVariant: "select",
-        Cell: ({ row, cell }) => (
-          <div className="flex flex-wrap items-center gap-1">
-            <Badge variant="outline">{cell.getValue<string>()}</Badge>
-            {row.original.compartidoCon.map((pid) => (
-              <Badge key={pid} variant="info" title={t("clientes.compartidoCon")}>
-                + {getProyecto(pid)?.nombre}
-              </Badge>
-            ))}
-          </div>
-        ),
+        id: "visibilidad",
+        header: t("clientes.col.visibilidad"),
+        accessorFn: (c) => c.ocultoEn.length,
+        Cell: ({ row }) =>
+          row.original.ocultoEn.length === 0 ? (
+            <span className="text-muted-foreground">{t("clientes.visibleTodos")}</span>
+          ) : (
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-xs text-muted-foreground">{t("clientes.todosMenos")}</span>
+              {row.original.ocultoEn.map((pid) => (
+                <Badge key={pid} variant="neutral">
+                  {getProyecto(pid)?.nombre}
+                </Badge>
+              ))}
+            </div>
+          ),
       },
       {
         accessorKey: "objetivosActivos",

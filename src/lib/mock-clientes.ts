@@ -20,9 +20,10 @@ export type Cliente = {
   apellido: string;
   tipoDoc: "DNI" | "CUIT" | "Pasaporte";
   nroDoc: string;
-  idCrm?: string;
-  proyectoId: string;
-  compartidoCon: string[];
+  idExterno?: string;
+  // Clientes globales del tenant: se ven en todos los proyectos salvo en los
+  // que se les sacó la visibilidad (pedido de producto 2026-10-05).
+  ocultoEn: string[];
   formasContacto: FormaContacto[];
   infoAdicional: Record<string, string>;
   creado: string;
@@ -94,14 +95,6 @@ export type PasoEstrategia = {
   saleSi: string[];
 };
 
-// Campos de información adicional que define cada proyecto (N campos
-// personalizables). La deuda vive acá, en el cliente.
-export const camposAdicionalesPorProyecto: Record<string, string[]> = {
-  "proj-1": ["Producto", "Nro. de cuenta", "Deuda", "Días de mora", "Vencimiento", "Sucursal"],
-  "proj-2": ["Plan", "Antigüedad", "Segmento"],
-  "proj-3": ["Producto ofrecido", "Score"],
-};
-
 const tel = (valor: string, etiqueta = "Celular", principal = false, estado: FormaContacto["estado"] = "valido"): FormaContacto => ({
   tipo: "telefono",
   valor,
@@ -139,9 +132,8 @@ export const clientes: Cliente[] = [
     apellido: "Fernández",
     tipoDoc: "DNI",
     nroDoc: "28.456.789",
-    idCrm: "CRM-100234",
-    proyectoId: "proj-1",
-    compartidoCon: ["proj-2"],
+    idExterno: "CRM-100234",
+    ocultoEn: [],
     formasContacto: [
       tel("+54 9 11 5523-4410", "Celular", true),
       tel("+54 11 4788-2210", "Laboral"),
@@ -159,9 +151,8 @@ export const clientes: Cliente[] = [
     apellido: "Pereyra",
     tipoDoc: "DNI",
     nroDoc: "31.902.115",
-    idCrm: "CRM-100871",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-100871",
+    ocultoEn: [],
     formasContacto: [
       tel("+54 9 11 6012-7788", "Celular", true),
       tel("+54 9 11 4400-1122", "Celular", false, "invalido"),
@@ -178,9 +169,8 @@ export const clientes: Cliente[] = [
     apellido: "Gómez",
     tipoDoc: "DNI",
     nroDoc: "35.220.674",
-    idCrm: "CRM-101005",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-101005",
+    ocultoEn: [],
     formasContacto: [tel("+54 9 351 555-0192", "Celular", true), mail("lu.gomez@mail.com")],
     infoAdicional: deuda("Tarjeta Mastercard", "5412-****-8890", "$ 58.740", "8", "2026-09-27", "Córdoba Centro"),
     creado: "2026-09-01T08:00:00",
@@ -193,9 +183,8 @@ export const clientes: Cliente[] = [
     apellido: "Sosa",
     tipoDoc: "DNI",
     nroDoc: "22.118.903",
-    idCrm: "CRM-099120",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-099120",
+    ocultoEn: ["proj-3"],
     formasContacto: [
       tel("+54 9 11 3344-9900", "Celular", true, "noContactar"),
       mail("rsosa@empresa.com.ar", true),
@@ -211,9 +200,8 @@ export const clientes: Cliente[] = [
     apellido: "Torres",
     tipoDoc: "DNI",
     nroDoc: "40.551.238",
-    idCrm: "CRM-101188",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-101188",
+    ocultoEn: [],
     formasContacto: [tel("+54 9 261 444-7781", "Celular", true), wa("+54 9 261 444-7781")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-7765", "$ 23.100", "5", "2026-09-30", "Mendoza"),
     creado: "2026-10-03T07:05:00",
@@ -226,9 +214,8 @@ export const clientes: Cliente[] = [
     apellido: "Acosta",
     tipoDoc: "CUIT",
     nroDoc: "20-27884512-3",
-    idCrm: "CRM-097754",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-097754",
+    ocultoEn: [],
     formasContacto: [tel("+54 11 4312-5500", "Laboral", true), mail("pagos@acostayasoc.com.ar", true)],
     infoAdicional: deuda("Cuenta corriente", "CC-55120", "$ 890.450", "41", "2026-08-25", "Microcentro"),
     creado: "2026-02-14T09:30:00",
@@ -241,9 +228,8 @@ export const clientes: Cliente[] = [
     apellido: "Ramírez",
     tipoDoc: "DNI",
     nroDoc: "37.664.020",
-    idCrm: "CRM-100990",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-100990",
+    ocultoEn: [],
     formasContacto: [tel("+54 9 11 2290-1144", "Celular", true), wa("+54 9 11 2290-1144"), mail("sofi.ramirez@mail.com")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-0012", "$ 131.870", "19", "2026-09-16", "Flores"),
     creado: "2026-07-22T12:00:00",
@@ -256,9 +242,8 @@ export const clientes: Cliente[] = [
     apellido: "Herrera",
     tipoDoc: "DNI",
     nroDoc: "29.003.481",
-    idCrm: "CRM-098431",
-    proyectoId: "proj-1",
-    compartidoCon: [],
+    idExterno: "CRM-098431",
+    ocultoEn: [],
     formasContacto: [tel("+54 9 341 600-2233", "Celular", true)],
     infoAdicional: deuda("Préstamo personal", "PP-701233", "$ 275.000", "90", "2026-07-06", "Rosario"),
     creado: "2026-04-01T09:00:00",
@@ -271,8 +256,7 @@ export const clientes: Cliente[] = [
     apellido: "Medina",
     tipoDoc: "DNI",
     nroDoc: "42.118.657",
-    proyectoId: "proj-2",
-    compartidoCon: [],
+    ocultoEn: ["proj-1"],
     formasContacto: [tel("+54 9 11 7788-1200", "Celular", true), wa("+54 9 11 7788-1200"), mail("vale.medina@mail.com")],
     infoAdicional: { Plan: "Fibra 300", Antigüedad: "3 años", Segmento: "Residencial" },
     creado: "2026-08-11T15:20:00",
@@ -285,8 +269,7 @@ export const clientes: Cliente[] = [
     apellido: "Castro",
     tipoDoc: "DNI",
     nroDoc: "33.775.902",
-    proyectoId: "proj-2",
-    compartidoCon: [],
+    ocultoEn: ["proj-1", "proj-3"],
     formasContacto: [tel("+54 9 221 400-5566", "Celular", true)],
     infoAdicional: { Plan: "Móvil 20GB", Antigüedad: "8 meses", Segmento: "Residencial" },
     creado: "2026-09-15T10:00:00",
@@ -418,6 +401,10 @@ export const plantillasMensaje = [
   "Mora tardía — último aviso",
   "Propuesta de refinanciación",
 ];
+
+export function visibleEn(c: Cliente, proyectoId: string) {
+  return !c.ocultoEn.includes(proyectoId);
+}
 
 export function getCliente(id: string) {
   return clientes.find((c) => c.id === id);

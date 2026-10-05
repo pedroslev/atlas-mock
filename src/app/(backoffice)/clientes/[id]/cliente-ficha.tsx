@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Plus, Share2, Star, X, AtSign, Phone, MessageCircle, Globe } from "lucide-react";
+import { Plus, Star, AtSign, Phone, MessageCircle, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -14,43 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  ADefinir,
-  CanalBadge,
-  CanalIcon,
-  EstadoObjetivoBadge,
-  OrigenBadge,
-} from "@/components/clientes/clientes-ui";
-import { getCampania, getProyecto, proyectos } from "@/lib/mock-data";
-import {
-  camposAdicionalesPorProyecto,
-  formatFecha,
-  getInteraccionesDeCliente,
-  getObjetivosDeCliente,
-  type Cliente,
-  type FormaContacto,
-} from "@/lib/mock-clientes";
+import { ADefinir } from "@/components/clientes/clientes-ui";
+import { proyectos } from "@/lib/mock-data";
+import { formatFecha, type Cliente, type FormaContacto } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
 const FORMA_ICON: Record<FormaContacto["tipo"], typeof Phone> = {
@@ -60,33 +26,20 @@ const FORMA_ICON: Record<FormaContacto["tipo"], typeof Phone> = {
   red: Globe,
 };
 
+// Pantalla de edición del cliente: solo sus datos. El historial de
+// interacciones y los objetivos de contacto no van acá (feedback de producto
+// 2026-10-05).
 export function ClienteFicha({ cliente }: { cliente: Cliente }) {
-  const t = useT();
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-6">
-          <DatosBasicos cliente={cliente} />
-          <Alcance cliente={cliente} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-6">
-          <FormasContacto formas={cliente.formasContacto} />
-          <InfoAdicional cliente={cliente} />
-        </div>
+    <div className="grid gap-6 lg:grid-cols-2">
+      <div className="flex min-w-0 flex-col gap-6">
+        <DatosBasicos cliente={cliente} />
+        <Visibilidad cliente={cliente} />
       </div>
-
-      <Tabs defaultValue="historial">
-        <TabsList>
-          <TabsTrigger value="historial">{t("clientes.ficha.tab.historial")}</TabsTrigger>
-          <TabsTrigger value="objetivos">{t("clientes.ficha.tab.objetivos")}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="historial">
-          <Historial clienteId={cliente.id} />
-        </TabsContent>
-        <TabsContent value="objetivos">
-          <Objetivos clienteId={cliente.id} />
-        </TabsContent>
-      </Tabs>
+      <div className="flex min-w-0 flex-col gap-6">
+        <FormasContacto formas={cliente.formasContacto} />
+        <InfoAdicional cliente={cliente} />
+      </div>
     </div>
   );
 }
@@ -119,7 +72,7 @@ function DatosBasicos({ cliente }: { cliente: Cliente }) {
         <Campo id="tipoDoc" label={t("clientes.ficha.tipoDoc")} value={cliente.tipoDoc} />
         <Campo id="nroDoc" label={t("clientes.ficha.nroDoc")} value={cliente.nroDoc} />
         <div className="sm:col-span-2">
-          <Campo id="idCrm" label={t("clientes.ficha.idCrm")} value={cliente.idCrm} />
+          <Campo id="idExterno" label={t("clientes.ficha.idExterno")} value={cliente.idExterno} />
         </div>
       </CardContent>
     </Card>
@@ -182,77 +135,54 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
   );
 }
 
-function Alcance({ cliente }: { cliente: Cliente }) {
+// Clientes globales: por defecto se ven en todos los proyectos y se puede
+// sacar la visibilidad en los que no corresponda (ej. BPO con mandantes).
+function Visibilidad({ cliente }: { cliente: Cliente }) {
   const t = useT();
-  const [compartidos, setCompartidos] = useState<string[]>(cliente.compartidoCon);
-  const [open, setOpen] = useState(false);
-  const disponibles = proyectos.filter(
-    (p) => p.id !== cliente.proyectoId && !compartidos.includes(p.id)
-  );
+  const [ocultoEn, setOcultoEn] = useState<string[]>(cliente.ocultoEn);
+  const visibles = proyectos.length - ocultoEn.length;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{t("clientes.ficha.alcance")}</CardTitle>
-        <CardDescription>{t("clientes.ficha.alcanceDesc")}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <CardTitle>{t("clientes.ficha.visibilidad")}</CardTitle>
+          <CardDescription>{t("clientes.ficha.visibilidadDesc")}</CardDescription>
+        </div>
+        <ADefinir nota={t("clientes.ficha.visibilidadDefault")} />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">{t("clientes.ficha.proyectoDuenio")}</span>
-          <Badge variant="outline">{getProyecto(cliente.proyectoId)?.nombre}</Badge>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">{t("clientes.compartidoCon")}</span>
-          <div className="flex flex-wrap items-center gap-2">
-            {compartidos.length === 0 && (
-              <span className="text-sm text-muted-foreground">
-                {t("clientes.noCompartido")}
-              </span>
-            )}
-            {compartidos.map((pid) => (
-              <Badge key={pid} variant="info" className="gap-1 pr-1">
-                {getProyecto(pid)?.nombre}
-                <button
-                  type="button"
-                  aria-label={t("clientes.ficha.dejarDeCompartir")}
-                  className="rounded-full hover:bg-info/20"
-                  onClick={() => setCompartidos((ids) => ids.filter((id) => id !== pid))}
-                >
-                  <X />
-                </button>
-              </Badge>
-            ))}
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" disabled={disponibles.length === 0}>
-                  <Share2 />
-                  {t("clientes.ficha.compartir")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-0" align="start">
-                <Command>
-                  <CommandList>
-                    <CommandEmpty>—</CommandEmpty>
-                    <CommandGroup>
-                      {disponibles.map((p) => (
-                        <CommandItem
-                          key={p.id}
-                          value={p.nombre}
-                          onSelect={() => {
-                            setCompartidos((ids) => [...ids, p.id]);
-                            setOpen(false);
-                          }}
-                        >
-                          {p.nombre}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
+      <CardContent className="flex flex-col gap-3">
+        <span className="text-sm text-muted-foreground">
+          {ocultoEn.length === 0
+            ? t("clientes.visibleTodos")
+            : t("clientes.ficha.visibleEnN", { n: visibles, total: proyectos.length })}
+        </span>
+        <ul className="flex flex-col divide-y rounded-lg border">
+          {proyectos.map((p) => {
+            const visible = !ocultoEn.includes(p.id);
+            return (
+              <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <label htmlFor={`vis-${p.id}`} className="flex flex-col">
+                  <span className={visible ? "text-sm font-medium" : "text-sm text-muted-foreground"}>
+                    {p.nombre}
+                  </span>
+                  {!visible && (
+                    <span className="text-xs text-muted-foreground">
+                      {t("clientes.ficha.ocultoEnProyecto")}
+                    </span>
+                  )}
+                </label>
+                <Switch
+                  id={`vis-${p.id}`}
+                  checked={visible}
+                  onCheckedChange={(on) =>
+                    setOcultoEn((ids) => (on ? ids.filter((id) => id !== p.id) : [...ids, p.id]))
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
       </CardContent>
     </Card>
   );
@@ -260,162 +190,25 @@ function Alcance({ cliente }: { cliente: Cliente }) {
 
 function InfoAdicional({ cliente }: { cliente: Cliente }) {
   const t = useT();
-  const campos = camposAdicionalesPorProyecto[cliente.proyectoId] ?? [];
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div>
+        <div className="flex flex-col gap-1.5">
           <CardTitle>{t("clientes.ficha.infoAdicional")}</CardTitle>
           <CardDescription>{t("clientes.ficha.infoAdicionalDesc")}</CardDescription>
         </div>
         <ADefinir nota={t("clientes.ficha.infoAdicionalPisa")} />
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {campos.map((campo) => (
-          <Campo
-            key={campo}
-            id={`info-${campo}`}
-            label={campo}
-            value={cliente.infoAdicional[campo]}
-          />
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function Historial({ clienteId }: { clienteId: string }) {
-  const t = useT();
-  const items = getInteraccionesDeCliente(clienteId);
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <CardDescription>{t("clientes.ficha.historialVisibilidad")}</CardDescription>
-        <ADefinir nota={t("clientes.ficha.historialVisibilidad")} />
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("clientes.hist.fecha")}</TableHead>
-                <TableHead>{t("clientes.hist.canal")}</TableHead>
-                <TableHead>{t("clientes.hist.direccion")}</TableHead>
-                <TableHead>{t("clientes.hist.campania")}</TableHead>
-                <TableHead>{t("clientes.hist.agente")}</TableHead>
-                <TableHead>{t("clientes.hist.duracion")}</TableHead>
-                <TableHead>{t("clientes.hist.clasificacion")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    {t("clientes.ficha.sinInteracciones")}
-                  </TableCell>
-                </TableRow>
-              )}
-              {items.map((i) => (
-                <TableRow key={i.id}>
-                  <TableCell className="whitespace-nowrap">{formatFecha(i.fecha, true)}</TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-1.5">
-                      <CanalIcon canal={i.canal} />
-                      {t(`clientes.canal.${i.canal}`)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span>{t(`clientes.hist.${i.direccion}`)}</span>
-                      {i.objetivoId && (
-                        <span className="text-xs text-muted-foreground">
-                          {t("clientes.hist.porObjetivo")}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/campanias/${i.campaniaId}`}
-                      className="hover:underline"
-                    >
-                      {getCampania(i.campaniaId)?.nombre}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{i.agente ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{i.duracion ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{i.clasificacion}</Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+      <CardContent className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Object.entries(cliente.infoAdicional).map(([campo, valor]) => (
+            <Campo key={campo} id={`info-${campo}`} label={campo} value={valor} />
+          ))}
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Objetivos({ clienteId }: { clienteId: string }) {
-  const t = useT();
-  const items = getObjetivosDeCliente(clienteId);
-  return (
-    <Card>
-      <CardContent>
-        <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("clientes.hist.campania")}</TableHead>
-                <TableHead>{t("clientes.obj.col.cargado")}</TableHead>
-                <TableHead>{t("clientes.obj.col.origen")}</TableHead>
-                <TableHead>{t("clientes.obj.col.medios")}</TableHead>
-                <TableHead>{t("clientes.obj.col.ventana")}</TableHead>
-                <TableHead>{t("clientes.obj.col.paso")}</TableHead>
-                <TableHead>{t("clientes.obj.col.estado")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    {t("clientes.ficha.sinObjetivos")}
-                  </TableCell>
-                </TableRow>
-              )}
-              {items.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell>
-                    <Link href={`/campanias/${o.campaniaId}`} className="font-medium hover:underline">
-                      {getCampania(o.campaniaId)?.nombre}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{formatFecha(o.cargado, true)}</TableCell>
-                  <TableCell>
-                    <OrigenBadge origen={o.origen} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {o.medios.map((m, idx) => (
-                        <CanalBadge key={m} canal={m} orden={idx + 1} />
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {formatFecha(o.desde)} – {formatFecha(o.hasta)}
-                  </TableCell>
-                  <TableCell>
-                    {o.pasoActual ? t("clientes.obj.paso", { n: o.pasoActual }) : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <EstadoObjetivoBadge estado={o.estado} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Button variant="outline" size="sm" className="self-start">
+          <Plus />
+          {t("clientes.ficha.agregarCampo")}
+        </Button>
       </CardContent>
     </Card>
   );

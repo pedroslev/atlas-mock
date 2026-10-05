@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
-import { getProyecto } from "@/lib/mock-data";
 import { clientes, getCliente, nombreCompleto } from "@/lib/mock-clientes";
 import { ClienteFicha } from "./cliente-ficha";
 
@@ -26,10 +25,7 @@ export default async function ClientePage({
         description={
           <T
             k="clientes.ficha.descripcion"
-            vars={{
-              doc: `${cliente.tipoDoc} ${cliente.nroDoc}`,
-              proyecto: getProyecto(cliente.proyectoId)?.nombre ?? "—",
-            }}
+            vars={{ doc: `${cliente.tipoDoc} ${cliente.nroDoc}` }}
           />
         }
         backHref="/clientes"
