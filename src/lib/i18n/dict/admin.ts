@@ -14,6 +14,7 @@ export const admin: NamespaceDict = {
 
     "campos.region": "Región",
     "campos.pais": "País",
+    "campos.huso": "Huso horario",
 
     "clientes.titulo": "Clientes",
     "clientes.descripcion":
@@ -40,6 +41,10 @@ export const admin: NamespaceDict = {
     "form.paisPlaceholder": "Seleccionar país",
     "form.paisBuscar": "Buscar país...",
     "form.paisVacio": "No se encontró ningún país.",
+    "form.husoPlaceholder": "Seleccionar huso",
+    "form.husoBuscar": "Buscar huso...",
+    "form.husoVacio": "No se encontró ningún huso.",
+    "form.husoAyuda": "Ejemplo: Buenos Aires.",
     "form.clienteActivo": "Cliente activo",
     "form.clienteActivoAyuda":
       "Un cliente inactivo queda dado de alta pero deshabilitado.",
@@ -210,6 +215,7 @@ export const admin: NamespaceDict = {
 
     "campos.region": "Region",
     "campos.pais": "Country",
+    "campos.huso": "Time zone",
 
     "clientes.titulo": "Clients",
     "clientes.descripcion":
@@ -236,6 +242,10 @@ export const admin: NamespaceDict = {
     "form.paisPlaceholder": "Select a country",
     "form.paisBuscar": "Search country...",
     "form.paisVacio": "No country found.",
+    "form.husoPlaceholder": "Select a time zone",
+    "form.husoBuscar": "Search time zone...",
+    "form.husoVacio": "No time zone found.",
+    "form.husoAyuda": "Example: Buenos Aires.",
     "form.clienteActivo": "Active client",
     "form.clienteActivoAyuda":
       "An inactive client is still created, but disabled.",
@@ -406,6 +416,7 @@ export const admin: NamespaceDict = {
 
     "campos.region": "Região",
     "campos.pais": "País",
+    "campos.huso": "Fuso horário",
 
     "clientes.titulo": "Clientes",
     "clientes.descripcion":
@@ -432,6 +443,10 @@ export const admin: NamespaceDict = {
     "form.paisPlaceholder": "Selecionar país",
     "form.paisBuscar": "Pesquisar país...",
     "form.paisVacio": "Nenhum país encontrado.",
+    "form.husoPlaceholder": "Selecionar fuso",
+    "form.husoBuscar": "Pesquisar fuso...",
+    "form.husoVacio": "Nenhum fuso encontrado.",
+    "form.husoAyuda": "Exemplo: Buenos Aires.",
     "form.clienteActivo": "Cliente ativo",
     "form.clienteActivoAyuda":
       "Um cliente inativo fica cadastrado, porém desabilitado.",
@@ -602,6 +617,7 @@ export const admin: NamespaceDict = {
 
     "campos.region": "Regió",
     "campos.pais": "País",
+    "campos.huso": "Fus horari",
 
     "clientes.titulo": "Clients",
     "clientes.descripcion":
@@ -628,6 +644,10 @@ export const admin: NamespaceDict = {
     "form.paisPlaceholder": "Selecciona un país",
     "form.paisBuscar": "Cerca un país...",
     "form.paisVacio": "No s'ha trobat cap país.",
+    "form.husoPlaceholder": "Selecciona un fus",
+    "form.husoBuscar": "Cerca un fus...",
+    "form.husoVacio": "No s'ha trobat cap fus.",
+    "form.husoAyuda": "Exemple: Buenos Aires.",
     "form.clienteActivo": "Client actiu",
     "form.clienteActivoAyuda":
       "Un client inactiu queda donat d'alta però deshabilitat.",

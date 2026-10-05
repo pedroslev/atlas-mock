@@ -101,7 +101,8 @@ export function BusinessHoursEditor({
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
       {/* El `label` de `diasSemana` (mock-data) viene fijo en español: la UI
           traduce por `key` contra el diccionario. */}
       {diasSemana.map(({ key }) => {
@@ -122,6 +123,7 @@ export function BusinessHoursEditor({
           />
         );
       })}
+      </div>
     </div>
   );
 }
