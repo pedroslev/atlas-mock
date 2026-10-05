@@ -169,7 +169,15 @@ export type Campania = {
 
 // accounts.workflow (JSONB) — fase 0: solo dos macro-estados (inicio de
 // interacción y derivación a campaña), editado como grafo con react-flow.
-export type WorkflowNodeType = "inicio" | "derivacion";
+// "play", "collect", "if" y "case" son el primer set de macroestados de la
+// Fase 1 (decisiones/workflows/propuesta-motor-workflows.md §5).
+export type WorkflowNodeType =
+  | "inicio"
+  | "derivacion"
+  | "play"
+  | "collect"
+  | "if"
+  | "case";
 export type WorkflowNode = {
   id: string;
   type: WorkflowNodeType;

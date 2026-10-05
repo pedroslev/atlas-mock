@@ -24,6 +24,23 @@ export type CarrierDestination = {
   priority: number;
 };
 
+// Cómo se autentica la plataforma ante el carrier al mandarle una llamada
+// saliente: o el carrier tiene whitelisteada la IP pública de salida de cada
+// región (`ip`), o nos dio usuario y contraseña (`credenciales`, digest SIP).
+export type CarrierAuthMode = "ip" | "credenciales";
+
+// Usuario y contraseña que el carrier nos dio (`carrier_credentials`). Con
+// `register`, Kamailio además se registra en el carrier (REGISTER periódico).
+export type CarrierCredentials = {
+  username: string;
+  password: string;
+  /** Realm del digest; vacío = el que mande el carrier en el desafío. */
+  realm: string;
+  register: boolean;
+  /** Servidor de registro; vacío = el destino SIP de mayor prioridad. */
+  registrar: string;
+};
+
 // Un carrier telefónico con las regiones donde opera, sus destinos SIP de
 // salida y su whitelist de IP de entrada (la única protección anti-fraude
 // decidida, ver ADR-TELEFONIA-002: no hay geo-IP ni rate limiting en Kamailio).
@@ -35,6 +52,10 @@ export type Carrier = {
   destinations: CarrierDestination[];
   /** IPs autorizadas a mandar tráfico entrante (`carrier_addresses`, una fila por IP). */
   whitelistIps: string[];
+  /** Cómo nos autenticamos al mandarle llamadas salientes (`carriers.auth_mode`). */
+  authMode: CarrierAuthMode;
+  /** Solo con `authMode` `credenciales`. */
+  credentials: CarrierCredentials | null;
   /** Permite salir con CLI oculto: candidato al LCR de `carrierRates` para ese caso. */
   allowsHiddenCli: boolean;
   /** Permite salir con CLI aleatorio: candidato al LCR de `carrierRates` para ese caso. */
@@ -52,6 +73,14 @@ export const carriers: Carrier[] = [
       { id: "dest-telnyx-2", destination: "sip:200.1.10.6:5060", priority: 5 },
     ],
     whitelistIps: ["200.1.10.5", "200.1.10.6"],
+    authMode: "credenciales",
+    credentials: {
+      username: "mitrol-ar",
+      password: "s3cr3t-telnyx",
+      realm: "sip.telnyx.com",
+      register: true,
+      registrar: "sip:sip.telnyx.com",
+    },
     allowsHiddenCli: true,
     allowsRandomCli: true,
     active: true,
@@ -64,6 +93,8 @@ export const carriers: Carrier[] = [
       { id: "dest-voxbone-1", destination: "sip:200.1.20.8:5060", priority: 10 },
     ],
     whitelistIps: ["200.1.20.8"],
+    authMode: "ip",
+    credentials: null,
     allowsHiddenCli: true,
     allowsRandomCli: false,
     active: true,
@@ -76,6 +107,8 @@ export const carriers: Carrier[] = [
       { id: "dest-twilio-1", destination: "sip:52.84.10.20:5060", priority: 10 },
     ],
     whitelistIps: ["52.84.10.20"],
+    authMode: "ip",
+    credentials: null,
     allowsHiddenCli: false,
     allowsRandomCli: true,
     active: true,
@@ -88,6 +121,8 @@ export const carriers: Carrier[] = [
       { id: "dest-entel-1", destination: "sip:190.98.4.12:5060", priority: 20 },
     ],
     whitelistIps: ["190.98.4.12", "190.98.4.13"],
+    authMode: "ip",
+    credentials: null,
     allowsHiddenCli: false,
     allowsRandomCli: false,
     active: false,
