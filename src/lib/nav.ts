@@ -9,7 +9,10 @@ import {
   Users,
   UsersRound,
   CircleDot,
+  Settings,
+  KeyRound,
 } from "lucide-react";
+import type { PermisoClaveApi } from "@/lib/mock-data";
 
 export type NavItem = {
   href: string;
@@ -37,4 +40,27 @@ export const navItems: NavItem[] = [
   { href: "/agentes", labelKey: "common.nav.usuarios", icon: Users },
   { href: "/grupos-de-trabajo", labelKey: "common.nav.gruposRoles", icon: UsersRound },
   { href: "/estados-auxiliares", labelKey: "common.nav.estadosAuxiliares", icon: CircleDot },
+];
+
+// Configuración del tenant: lo que es del tenant entero. Va al pie del menú
+// lateral y adentro tiene su propio submenú. Hoy solo tiene las claves de
+// acceso API, así que /configuracion abre directo ahí.
+export const configuracionNav: NavItem = {
+  href: "/configuracion",
+  labelKey: "common.nav.configuracion",
+  icon: Settings,
+};
+
+export type ConfigItem = NavItem & {
+  /** Permiso que hace falta para ver el ítem (y la pantalla). */
+  permiso: PermisoClaveApi;
+};
+
+export const configuracionItems: ConfigItem[] = [
+  {
+    href: "/configuracion/claves-api",
+    labelKey: "common.nav.clavesApi",
+    icon: KeyRound,
+    permiso: "ver",
+  },
 ];
