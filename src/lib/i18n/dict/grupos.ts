@@ -41,6 +41,14 @@ export const grupos: NamespaceDict = {
       "Habilita el acceso de este grupo al PAD del agente.",
     "permisos.hermesAcceso": "Acceso",
     "permisos.hermesAria": "Acceso al PAD (Hermes)",
+    "permisos.seccionClavesApi": "Claves de acceso API",
+    "permisos.clavesApiDescripcion":
+      "Define qué puede hacer este grupo con las claves con las que aplicaciones propias del cliente se conectan a Atlas. Sin «Ver» no hay ningún otro, y el grupo no ve la opción en el menú.",
+    "permisos.clavesApiEncabezado": "Integraciones",
+    "permisos.clavesApi.ver": "Ver",
+    "permisos.clavesApi.crear": "Crear",
+    "permisos.clavesApi.editar": "Editar",
+    "permisos.clavesApi.revocar": "Revocar",
 
     "miembros.titulo": "Usuarios del grupo",
     "miembros.conteo": "{n} usuario(s).",
@@ -128,6 +136,14 @@ export const grupos: NamespaceDict = {
       "Grants this group access to the agent's PAD.",
     "permisos.hermesAcceso": "Access",
     "permisos.hermesAria": "Access to the PAD (Hermes)",
+    "permisos.seccionClavesApi": "API access keys",
+    "permisos.clavesApiDescripcion":
+      "Defines what this group can do with the keys that the customer's own applications use to connect to Atlas. Without “View” none of the others apply, and the group doesn't see the option in the menu.",
+    "permisos.clavesApiEncabezado": "Integrations",
+    "permisos.clavesApi.ver": "View",
+    "permisos.clavesApi.crear": "Create",
+    "permisos.clavesApi.editar": "Edit",
+    "permisos.clavesApi.revocar": "Revoke",
 
     "miembros.titulo": "Group users",
     "miembros.conteo": "{n} user(s).",
@@ -175,6 +191,14 @@ export const grupos: NamespaceDict = {
       "Habilita o acesso deste grupo ao PAD do agente.",
     "permisos.hermesAcceso": "Acesso",
     "permisos.hermesAria": "Acesso ao PAD (Hermes)",
+    "permisos.seccionClavesApi": "Chaves de acesso API",
+    "permisos.clavesApiDescripcion":
+      "Define o que este grupo pode fazer com as chaves com que aplicações próprias do cliente se conectam ao Atlas. Sem «Ver» não há nenhuma outra, e o grupo não vê a opção no menu.",
+    "permisos.clavesApiEncabezado": "Integrações",
+    "permisos.clavesApi.ver": "Ver",
+    "permisos.clavesApi.crear": "Criar",
+    "permisos.clavesApi.editar": "Editar",
+    "permisos.clavesApi.revocar": "Revogar",
 
     "miembros.titulo": "Usuários do grupo",
     "miembros.conteo": "{n} usuário(s).",
@@ -222,6 +246,14 @@ export const grupos: NamespaceDict = {
       "Habilita l'accés d'aquest grup al PAD de l'agent.",
     "permisos.hermesAcceso": "Accés",
     "permisos.hermesAria": "Accés al PAD (Hermes)",
+    "permisos.seccionClavesApi": "Claus d'accés API",
+    "permisos.clavesApiDescripcion":
+      "Defineix què pot fer aquest grup amb les claus amb què les aplicacions pròpies del client es connecten a Atlas. Sense «Veure» no n'hi ha cap altra, i el grup no veu l'opció al menú.",
+    "permisos.clavesApiEncabezado": "Integracions",
+    "permisos.clavesApi.ver": "Veure",
+    "permisos.clavesApi.crear": "Crear",
+    "permisos.clavesApi.editar": "Editar",
+    "permisos.clavesApi.revocar": "Revocar",
 
     "miembros.titulo": "Usuaris del grup",
     "miembros.conteo": "{n} usuari(s).",

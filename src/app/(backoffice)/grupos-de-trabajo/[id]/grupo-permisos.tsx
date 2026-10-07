@@ -10,7 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useT } from "@/lib/i18n";
-import { modulosPermisos, type Permiso, type PermisoAccion } from "@/lib/mock-data";
+import {
+  modulosPermisos,
+  type Permiso,
+  type PermisoAccion,
+  type PermisoClaveApi,
+} from "@/lib/mock-data";
 
 const ACCIONES: PermisoAccion[] = ["lectura", "escritura", "eliminacion"];
 
@@ -42,16 +47,25 @@ const MODULO_KEYS: Record<string, string> = {
 // `accesoHermes` viene controlado desde afuera (GrupoDetalleTabs) porque
 // también decide si se muestra la solapa "Config. Hermes": sin acceso al
 // PAD no tiene sentido configurar nada de lo que el grupo ve ahí adentro.
+//
+// La tercera sección, "Claves de acceso API", tiene sus propios cuatro
+// permisos (ver, crear, editar, revocar) con la misma regla que la matriz de
+// Olimpo: sin "ver" no hay ningún otro.
 export function GrupoPermisos({
   initialPermisos,
   accesoHermes,
   onAccesoHermesChange,
+  initialPermisosClavesApi,
 }: {
   initialPermisos: Permiso[];
   accesoHermes: boolean;
   onAccesoHermesChange: (v: boolean) => void;
+  initialPermisosClavesApi: PermisoClaveApi[];
 }) {
   const [permisos, setPermisos] = useState<Permiso[]>(initialPermisos);
+  const [permisosClavesApi, setPermisosClavesApi] = useState<PermisoClaveApi[]>(
+    initialPermisosClavesApi
+  );
   const t = useT();
 
   function tieneAccion(modulo: string, accion: PermisoAccion) {
@@ -142,31 +156,128 @@ export function GrupoPermisos({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("grupos.permisos.seccionHermes")}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("grupos.permisos.hermesDescripcion")}
-          </p>
-          <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
-            <div className="grid grid-cols-[1fr_110px] items-center gap-x-2 border-b bg-muted/50 px-3 py-2 text-sm font-medium">
-              <span>{t("common.apps.hermes.tagline")}</span>
-              <span className="text-center">{t("grupos.permisos.hermesAcceso")}</span>
-            </div>
-            <div className="grid grid-cols-[1fr_110px] items-center gap-x-2 px-3 py-2 text-sm">
-              <span className="font-medium">{t("grupos.permisos.seccionHermes")}</span>
-              <span className="flex justify-center">
-                <Checkbox
-                  checked={accesoHermes}
-                  onCheckedChange={() => onAccesoHermesChange(!accesoHermes)}
-                  aria-label={t("grupos.permisos.hermesAria")}
-                />
-              </span>
-            </div>
-          </div>
-        </div>
+        <PermisoUnico
+          titulo={t("grupos.permisos.seccionHermes")}
+          descripcion={t("grupos.permisos.hermesDescripcion")}
+          encabezado={t("common.apps.hermes.tagline")}
+          columna={t("grupos.permisos.hermesAcceso")}
+          fila={t("grupos.permisos.seccionHermes")}
+          aria={t("grupos.permisos.hermesAria")}
+          checked={accesoHermes}
+          onChange={onAccesoHermesChange}
+        />
+
+        <PermisosClavesApi
+          permisos={permisosClavesApi}
+          onChange={setPermisosClavesApi}
+        />
       </CardContent>
     </Card>
+  );
+}
+
+// Sección de un solo permiso sí/no (acceso a Hermes):
+// título, explicación y una tabla de una fila con un check, con el mismo
+// aspecto que la matriz de Olimpo para que la card se lea como un todo.
+function PermisoUnico({
+  titulo,
+  descripcion,
+  encabezado,
+  columna,
+  fila,
+  aria,
+  checked,
+  onChange,
+}: {
+  titulo: string;
+  descripcion: string;
+  encabezado: string;
+  columna: string;
+  fila: string;
+  aria: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold text-foreground">{titulo}</h3>
+      <p className="text-sm text-muted-foreground">{descripcion}</p>
+      <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
+        <div className="grid grid-cols-[1fr_110px] items-center gap-x-2 border-b bg-muted/50 px-3 py-2 text-sm font-medium">
+          <span>{encabezado}</span>
+          <span className="text-center">{columna}</span>
+        </div>
+        <div className="grid grid-cols-[1fr_110px] items-center gap-x-2 px-3 py-2 text-sm">
+          <span className="font-medium">{fila}</span>
+          <span className="flex justify-center">
+            <Checkbox
+              checked={checked}
+              onCheckedChange={() => onChange(!checked)}
+              aria-label={aria}
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ACCIONES_CLAVES: PermisoClaveApi[] = ["ver", "crear", "editar", "revocar"];
+
+// Permisos sobre las claves de acceso API: una fila con cuatro checks. Misma
+// regla que la matriz de Olimpo: sacar "ver" saca todo, y tildar crear, editar
+// o revocar sin "ver" lo agrega solo — nunca queda una combinación inválida.
+function PermisosClavesApi({
+  permisos,
+  onChange,
+}: {
+  permisos: PermisoClaveApi[];
+  onChange: (permisos: PermisoClaveApi[]) => void;
+}) {
+  const t = useT();
+  const fila = t("grupos.permisos.seccionClavesApi");
+
+  function toggle(accion: PermisoClaveApi) {
+    const tiene = permisos.includes(accion);
+    if (accion === "ver" && tiene) return onChange([]);
+    if (tiene) return onChange(permisos.filter((p) => p !== accion));
+    const con = new Set<PermisoClaveApi>([...permisos, accion, "ver"]);
+    // Orden fijo de las columnas, no el orden en que se tildaron.
+    onChange(ACCIONES_CLAVES.filter((a) => con.has(a)));
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold text-foreground">{fila}</h3>
+      <p className="text-sm text-muted-foreground">
+        {t("grupos.permisos.clavesApiDescripcion")}
+      </p>
+      <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
+        <div className="grid grid-cols-[1fr_repeat(4,110px)] items-center gap-x-2 border-b bg-muted/50 px-3 py-2 text-sm font-medium">
+          <span>{t("grupos.permisos.clavesApiEncabezado")}</span>
+          {ACCIONES_CLAVES.map((accion) => (
+            <span key={accion} className="text-center">
+              {t(`grupos.permisos.clavesApi.${accion}`)}
+            </span>
+          ))}
+        </div>
+        <div className="grid grid-cols-[1fr_repeat(4,110px)] items-center gap-x-2 px-3 py-2 text-sm">
+          <span className="font-medium">{fila}</span>
+          {ACCIONES_CLAVES.map((accion) => (
+            <span key={accion} className="flex justify-center">
+              <Checkbox
+                checked={permisos.includes(accion)}
+                onCheckedChange={() => toggle(accion)}
+                aria-label={t("grupos.permisos.aria", {
+                  accion: t(`grupos.permisos.clavesApi.${accion}`),
+                  modulo: fila,
+                })}
+                data-testid={`permiso-claves-api-${accion}`}
+              />
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

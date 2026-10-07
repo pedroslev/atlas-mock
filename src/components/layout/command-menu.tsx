@@ -13,7 +13,9 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+import { KeyRound } from "lucide-react";
 import { navItems } from "@/lib/nav";
+import { puedeClaves } from "@/lib/mock-claves-api";
 import { campanias, proyectos, cuentas, getProyecto } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 
@@ -95,6 +97,21 @@ export function CommandMenu({
                   {t(item.labelKey)}
                 </CommandItem>
               ))}
+              {/* Las claves están adentro de Configuración, un nivel más
+                  abajo que el resto de las secciones: el buscador lleva
+                  directo. Mismo permiso "Ver" que la pantalla. Las keywords
+                  cubren cómo la busca un integrador, que no dice "clave". */}
+              {puedeClaves("ver") && (
+                <CommandItem
+                  onSelect={() => go("/configuracion/claves-api")}
+                  keywords={["api", "api key", "token", "sdk", "integraciones", "integrations", "configuración", "settings"]}
+                  data-testid="buscador-claves-api"
+                >
+                  <KeyRound />
+                  {t("common.nav.clavesApi")}
+                  <CommandShortcut>{t("common.nav.configuracion")}</CommandShortcut>
+                </CommandItem>
+              )}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading={t("common.buscador.campanias")}>
