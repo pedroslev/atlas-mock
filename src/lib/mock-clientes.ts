@@ -402,6 +402,33 @@ export const plantillasMensaje = [
   "Propuesta de refinanciación",
 ];
 
+// Notas del cliente: quedan en el cliente (no en una interacción puntual) para
+// que el próximo agente las vea. Se cargan y se ven desde Hermes (el pad), no
+// desde la ficha de Olimpo — decisión de producto 2026-10-08. Datos listos
+// para cuando se mockee el pad.
+export type NotaCliente = {
+  id: string;
+  clienteId: string;
+  texto: string;
+  autor: string;
+  desde: "Hermes" | "Olimpo";
+  fecha: string;
+  fijada?: boolean;
+};
+
+export const notasClientes: NotaCliente[] = [
+  { id: "nota-1", clienteId: "cli-1", texto: "Prefiere que la contacten por WhatsApp; en horario laboral no atiende llamadas.", autor: "Juan Pérez", desde: "Hermes", fecha: "2026-09-22T11:10:00", fijada: true },
+  { id: "nota-2", clienteId: "cli-1", texto: "Consultó por el resumen de septiembre en Atención; quedó conforme.", autor: "Laura Gómez", desde: "Hermes", fecha: "2026-10-03T16:48:00" },
+  { id: "nota-3", clienteId: "cli-4", texto: "Pidió no ser llamado al celular. Solo contacto por mail, a pedido del titular.", autor: "Sup. Carla Ruiz", desde: "Olimpo", fecha: "2026-09-28T16:50:00", fijada: true },
+  { id: "nota-4", clienteId: "cli-6", texto: "Atiende el contador, Sr. Roldán. Pedir por él.", autor: "Ana Martínez", desde: "Hermes", fecha: "2026-10-01T14:35:00" },
+];
+
+export function getNotasDeCliente(clienteId: string) {
+  return notasClientes
+    .filter((n) => n.clienteId === clienteId)
+    .sort((a, b) => Number(!!b.fijada) - Number(!!a.fijada) || b.fecha.localeCompare(a.fecha));
+}
+
 export function visibleEn(c: Cliente, proyectoId: string) {
   return !c.ocultoEn.includes(proyectoId);
 }
