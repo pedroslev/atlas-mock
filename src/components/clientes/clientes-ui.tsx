@@ -11,6 +11,7 @@ import { useT } from "@/lib/i18n";
 import type {
   CanalContacto,
   EstadoObjetivo,
+  Etiqueta,
   OrigenObjetivo,
 } from "@/lib/mock-clientes";
 
@@ -64,6 +65,21 @@ export function OrigenBadge({ origen }: { origen: OrigenObjetivo }) {
         {origen.detalle} · {origen.quien}
       </span>
     </div>
+  );
+}
+
+export function EtiquetaBadge({
+  etiqueta,
+  children,
+}: {
+  etiqueta: Etiqueta;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Badge variant={etiqueta.color} title={etiqueta.descripcion} className="gap-1">
+      {etiqueta.nombre}
+      {children}
+    </Badge>
   );
 }
 

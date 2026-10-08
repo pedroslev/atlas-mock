@@ -1,7 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Star, AtSign, Phone, MessageCircle, Globe } from "lucide-react";
+import { Plus, Star, AtSign, Phone, MessageCircle, Globe, X } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +27,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ADefinir } from "@/components/clientes/clientes-ui";
+import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { proyectos } from "@/lib/mock-data";
-import { formatFecha, type Cliente, type FormaContacto } from "@/lib/mock-clientes";
+import {
+  etiquetasCatalogo,
+  formatFecha,
+  getEtiqueta,
+  type Cliente,
+  type FormaContacto,
+} from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
 const FORMA_ICON: Record<FormaContacto["tipo"], typeof Phone> = {
@@ -37,10 +56,83 @@ export function ClienteFicha({ cliente }: { cliente: Cliente }) {
         <Visibilidad cliente={cliente} />
       </div>
       <div className="flex min-w-0 flex-col gap-6">
+        <Etiquetas cliente={cliente} />
         <FormasContacto formas={cliente.formasContacto} />
         <InfoAdicional cliente={cliente} />
       </div>
     </div>
+  );
+}
+
+// Etiquetas del catálogo (no texto libre). No cambian la visibilidad —
+// decisión de producto 2026-10-08.
+function Etiquetas({ cliente }: { cliente: Cliente }) {
+  const t = useT();
+  const [ids, setIds] = useState<string[]>(cliente.etiquetas);
+  const [open, setOpen] = useState(false);
+  const disponibles = etiquetasCatalogo.filter((e) => !ids.includes(e.id));
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <CardTitle>{t("clientes.ficha.etiquetas")}</CardTitle>
+          <CardDescription>{t("clientes.ficha.etiquetasDesc")}</CardDescription>
+        </div>
+        <ADefinir nota={t("clientes.ficha.etiquetasQuien")} />
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-center gap-2">
+        {ids.length === 0 && (
+          <span className="text-sm text-muted-foreground">{t("clientes.ficha.sinEtiquetas")}</span>
+        )}
+        {ids.map((id) => {
+          const e = getEtiqueta(id);
+          if (!e) return null;
+          return (
+            <EtiquetaBadge key={id} etiqueta={e}>
+              <button
+                type="button"
+                aria-label={t("clientes.ficha.quitarEtiqueta", { nombre: e.nombre })}
+                className="-mr-1 rounded-full opacity-70 hover:opacity-100"
+                onClick={() => setIds((xs) => xs.filter((x) => x !== id))}
+              >
+                <X />
+              </button>
+            </EtiquetaBadge>
+          );
+        })}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" disabled={disponibles.length === 0}>
+              <Plus />
+              {t("clientes.ficha.agregarEtiqueta")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-0" align="start">
+            <Command>
+              <CommandInput placeholder={t("clientes.ficha.buscarEtiqueta")} />
+              <CommandList>
+                <CommandEmpty>—</CommandEmpty>
+                <CommandGroup>
+                  {disponibles.map((e) => (
+                    <CommandItem
+                      key={e.id}
+                      value={e.nombre}
+                      onSelect={() => {
+                        setIds((xs) => [...xs, e.id]);
+                        setOpen(false);
+                      }}
+                    >
+                      <EtiquetaBadge etiqueta={e} />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </CardContent>
+    </Card>
   );
 }
 

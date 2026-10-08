@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Tags, Upload } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -18,12 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ADefinir } from "@/components/clientes/clientes-ui";
+import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { proyectos, getProyecto } from "@/lib/mock-data";
 import {
   clientes,
   esActivo,
+  etiquetasCatalogo,
   formatFecha,
+  getEtiqueta,
   getInteraccionesDeCliente,
   getObjetivosDeCliente,
   nombreCompleto,
@@ -42,6 +44,7 @@ type Fila = Cliente & {
 export default function ClientesPage() {
   const t = useT();
   const [proyectoId, setProyectoId] = useState<string>("todos");
+  const [etiquetaId, setEtiquetaId] = useState<string>("todas");
 
   // Clientes globales: un cliente se ve en un proyecto salvo que se le haya
   // sacado la visibilidad ahí.
@@ -49,13 +52,14 @@ export default function ClientesPage() {
     () =>
       clientes
         .filter((c) => proyectoId === "todos" || visibleEn(c, proyectoId))
+        .filter((c) => etiquetaId === "todas" || c.etiquetas.includes(etiquetaId))
         .map((c) => ({
           ...c,
           nombreCompleto: nombreCompleto(c),
           objetivosActivos: getObjetivosDeCliente(c.id).filter(esActivo).length,
           ultimaInteraccion: getInteraccionesDeCliente(c.id)[0]?.fecha,
         })),
-    [proyectoId]
+    [proyectoId, etiquetaId]
   );
 
   const columns = useMemo<MRT_ColumnDef<Fila>[]>(
@@ -84,6 +88,19 @@ export default function ClientesPage() {
         id: "telefono",
         header: t("clientes.col.telefono"),
         accessorFn: (c) => telefonoPrincipal(c) ?? "—",
+      },
+      {
+        id: "etiquetas",
+        header: t("clientes.col.etiquetas"),
+        accessorFn: (c) => c.etiquetas.map((id) => getEtiqueta(id)?.nombre).join(", "),
+        Cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.etiquetas.map((id) => {
+              const e = getEtiqueta(id);
+              return e ? <EtiquetaBadge key={id} etiqueta={e} /> : null;
+            })}
+          </div>
+        ),
       },
       {
         id: "visibilidad",
@@ -139,6 +156,12 @@ export default function ClientesPage() {
         actions={
           <>
             <ADefinir nota={t("clientes.obj.cargar.inputNota")} />
+            <Button variant="outline" asChild>
+              <Link href="/clientes/etiquetas">
+                <Tags />
+                {t("clientes.administrarEtiquetas")}
+              </Link>
+            </Button>
             <Button variant="outline">
               <Upload />
               {t("clientes.importar")}
@@ -162,6 +185,20 @@ export default function ClientesPage() {
             {proyectos.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.nombre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm font-medium">{t("clientes.filtroEtiqueta")}</span>
+        <Select value={etiquetaId} onValueChange={setEtiquetaId}>
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">{t("clientes.todasEtiquetas")}</SelectItem>
+            {etiquetasCatalogo.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.nombre}
               </SelectItem>
             ))}
           </SelectContent>

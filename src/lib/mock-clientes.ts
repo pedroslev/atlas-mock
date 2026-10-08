@@ -24,6 +24,8 @@ export type Cliente = {
   // Clientes globales del tenant: se ven en todos los proyectos salvo en los
   // que se les sacó la visibilidad (pedido de producto 2026-10-05).
   ocultoEn: string[];
+  // Ids del catálogo de etiquetas (no texto libre). No cambian la visibilidad.
+  etiquetas: string[];
   formasContacto: FormaContacto[];
   infoAdicional: Record<string, string>;
   creado: string;
@@ -134,6 +136,7 @@ export const clientes: Cliente[] = [
     nroDoc: "28.456.789",
     idExterno: "CRM-100234",
     ocultoEn: [],
+    etiquetas: ["et-tarjeta", "et-vip"],
     formasContacto: [
       tel("+54 9 11 5523-4410", "Celular", true),
       tel("+54 11 4788-2210", "Laboral"),
@@ -153,6 +156,7 @@ export const clientes: Cliente[] = [
     nroDoc: "31.902.115",
     idExterno: "CRM-100871",
     ocultoEn: [],
+    etiquetas: ["et-prestamos", "et-promesa-incumplida"],
     formasContacto: [
       tel("+54 9 11 6012-7788", "Celular", true),
       tel("+54 9 11 4400-1122", "Celular", false, "invalido"),
@@ -171,6 +175,7 @@ export const clientes: Cliente[] = [
     nroDoc: "35.220.674",
     idExterno: "CRM-101005",
     ocultoEn: [],
+    etiquetas: ["et-tarjeta"],
     formasContacto: [tel("+54 9 351 555-0192", "Celular", true), mail("lu.gomez@mail.com")],
     infoAdicional: deuda("Tarjeta Mastercard", "5412-****-8890", "$ 58.740", "8", "2026-09-27", "Córdoba Centro"),
     creado: "2026-09-01T08:00:00",
@@ -185,6 +190,7 @@ export const clientes: Cliente[] = [
     nroDoc: "22.118.903",
     idExterno: "CRM-099120",
     ocultoEn: ["proj-3"],
+    etiquetas: ["et-prestamos", "et-mora90"],
     formasContacto: [
       tel("+54 9 11 3344-9900", "Celular", true, "noContactar"),
       mail("rsosa@empresa.com.ar", true),
@@ -202,6 +208,7 @@ export const clientes: Cliente[] = [
     nroDoc: "40.551.238",
     idExterno: "CRM-101188",
     ocultoEn: [],
+    etiquetas: ["et-tarjeta"],
     formasContacto: [tel("+54 9 261 444-7781", "Celular", true), wa("+54 9 261 444-7781")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-7765", "$ 23.100", "5", "2026-09-30", "Mendoza"),
     creado: "2026-10-03T07:05:00",
@@ -216,6 +223,7 @@ export const clientes: Cliente[] = [
     nroDoc: "20-27884512-3",
     idExterno: "CRM-097754",
     ocultoEn: [],
+    etiquetas: ["et-empresa", "et-mora30"],
     formasContacto: [tel("+54 11 4312-5500", "Laboral", true), mail("pagos@acostayasoc.com.ar", true)],
     infoAdicional: deuda("Cuenta corriente", "CC-55120", "$ 890.450", "41", "2026-08-25", "Microcentro"),
     creado: "2026-02-14T09:30:00",
@@ -230,6 +238,7 @@ export const clientes: Cliente[] = [
     nroDoc: "37.664.020",
     idExterno: "CRM-100990",
     ocultoEn: [],
+    etiquetas: ["et-tarjeta", "et-mora30"],
     formasContacto: [tel("+54 9 11 2290-1144", "Celular", true), wa("+54 9 11 2290-1144"), mail("sofi.ramirez@mail.com")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-0012", "$ 131.870", "19", "2026-09-16", "Flores"),
     creado: "2026-07-22T12:00:00",
@@ -244,6 +253,7 @@ export const clientes: Cliente[] = [
     nroDoc: "29.003.481",
     idExterno: "CRM-098431",
     ocultoEn: [],
+    etiquetas: ["et-prestamos", "et-mora90"],
     formasContacto: [tel("+54 9 341 600-2233", "Celular", true)],
     infoAdicional: deuda("Préstamo personal", "PP-701233", "$ 275.000", "90", "2026-07-06", "Rosario"),
     creado: "2026-04-01T09:00:00",
@@ -257,6 +267,7 @@ export const clientes: Cliente[] = [
     tipoDoc: "DNI",
     nroDoc: "42.118.657",
     ocultoEn: ["proj-1"],
+    etiquetas: ["et-vip"],
     formasContacto: [tel("+54 9 11 7788-1200", "Celular", true), wa("+54 9 11 7788-1200"), mail("vale.medina@mail.com")],
     infoAdicional: { Plan: "Fibra 300", Antigüedad: "3 años", Segmento: "Residencial" },
     creado: "2026-08-11T15:20:00",
@@ -270,6 +281,7 @@ export const clientes: Cliente[] = [
     tipoDoc: "DNI",
     nroDoc: "33.775.902",
     ocultoEn: ["proj-1", "proj-3"],
+    etiquetas: [],
     formasContacto: [tel("+54 9 221 400-5566", "Celular", true)],
     infoAdicional: { Plan: "Móvil 20GB", Antigüedad: "8 meses", Segmento: "Residencial" },
     creado: "2026-09-15T10:00:00",
@@ -427,6 +439,35 @@ export function getNotasDeCliente(clienteId: string) {
   return notasClientes
     .filter((n) => n.clienteId === clienteId)
     .sort((a, b) => Number(!!b.fijada) - Number(!!a.fijada) || b.fecha.localeCompare(a.fecha));
+}
+
+// Catálogo de etiquetas, administrado en Olimpo (nombre + color). El color usa
+// las variantes de Badge para quedar dentro de los tokens del design system.
+export type ColorEtiqueta = "info" | "success" | "warning" | "destructive" | "neutral" | "secondary";
+
+export type Etiqueta = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  color: ColorEtiqueta;
+};
+
+export const etiquetasCatalogo: Etiqueta[] = [
+  { id: "et-vip", nombre: "VIP", descripcion: "Clientes de alto valor: atención preferencial", color: "secondary" },
+  { id: "et-tarjeta", nombre: "Cartera Tarjetas", color: "info" },
+  { id: "et-prestamos", nombre: "Cartera Préstamos", color: "info" },
+  { id: "et-mora30", nombre: "Mora +30", color: "warning" },
+  { id: "et-mora90", nombre: "Mora +90", color: "destructive" },
+  { id: "et-promesa-incumplida", nombre: "Promesa incumplida", color: "warning" },
+  { id: "et-empresa", nombre: "Empresa", descripcion: "Cliente persona jurídica", color: "neutral" },
+];
+
+export function getEtiqueta(id: string) {
+  return etiquetasCatalogo.find((e) => e.id === id);
+}
+
+export function clientesConEtiqueta(etiquetaId: string) {
+  return clientes.filter((c) => c.etiquetas.includes(etiquetaId)).length;
 }
 
 export function visibleEn(c: Cliente, proyectoId: string) {
