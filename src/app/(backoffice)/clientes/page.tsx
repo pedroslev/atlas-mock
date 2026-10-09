@@ -11,25 +11,17 @@ import {
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
-import { proyectos, getProyecto } from "@/lib/mock-data";
+import { getProyecto } from "@/lib/mock-data";
 import {
   clientes,
-  etiquetasCatalogo,
   getEtiqueta,
   nombreCompleto,
   telefonoPrincipal,
-  visibleEn,
   type Cliente,
 } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
+import { ImportarWizard } from "./importar-wizard";
 
 // El listado muestra solo datos básicos y etiquetas (feedback de producto
 // 2026-10-09): nada derivado de interacciones ni de objetivos de contacto.
@@ -37,18 +29,13 @@ type Fila = Cliente & { nombreCompleto: string };
 
 export default function ClientesPage() {
   const t = useT();
-  const [proyectoId, setProyectoId] = useState<string>("todos");
-  const [etiquetaId, setEtiquetaId] = useState<string>("todas");
+  const [importarOpen, setImportarOpen] = useState(false);
 
-  // Clientes globales: un cliente se ve en un proyecto salvo que se le haya
-  // sacado la visibilidad ahí.
+  // Sin filtros propios arriba (feedback 2026-10-09): la búsqueda y los
+  // filtros por columna de la tabla alcanzan.
   const filas = useMemo<Fila[]>(
-    () =>
-      clientes
-        .filter((c) => proyectoId === "todos" || visibleEn(c, proyectoId))
-        .filter((c) => etiquetaId === "todas" || c.etiquetas.includes(etiquetaId))
-        .map((c) => ({ ...c, nombreCompleto: nombreCompleto(c) })),
-    [proyectoId, etiquetaId]
+    () => clientes.map((c) => ({ ...c, nombreCompleto: nombreCompleto(c) })),
+    []
   );
 
   const columns = useMemo<MRT_ColumnDef<Fila>[]>(
@@ -127,7 +114,7 @@ export default function ClientesPage() {
                 {t("clientes.administrarEtiquetas")}
               </Link>
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setImportarOpen(true)}>
               <Upload />
               {t("clientes.importar")}
             </Button>
@@ -139,36 +126,6 @@ export default function ClientesPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium">{t("clientes.proyecto")}</span>
-        <Select value={proyectoId} onValueChange={setProyectoId}>
-          <SelectTrigger className="w-60">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">{t("clientes.todosProyectos")}</SelectItem>
-            {proyectos.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <span className="text-sm font-medium">{t("clientes.filtroEtiqueta")}</span>
-        <Select value={etiquetaId} onValueChange={setEtiquetaId}>
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">{t("clientes.todasEtiquetas")}</SelectItem>
-            {etiquetasCatalogo.map((e) => (
-              <SelectItem key={e.id} value={e.id}>
-                {e.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       <MitrolTable
         columns={columns}
@@ -192,6 +149,8 @@ export default function ClientesPage() {
           ),
         }}
       />
+
+      <ImportarWizard open={importarOpen} onOpenChange={setImportarOpen} />
     </div>
   );
 }

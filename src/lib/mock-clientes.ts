@@ -470,6 +470,60 @@ export function clientesConEtiqueta(etiquetaId: string) {
   return clientes.filter((c) => c.etiquetas.includes(etiquetaId)).length;
 }
 
+// ── Importación de clientes (wizard, propuesta 2026-10-09) ──────────────────
+// Los campos adicionales nacen de las importaciones: la primera vez que llega
+// una columna se define cómo se llama en el sistema y qué validaciones tiene.
+// Cada campo recuerda de qué columnas vino, así la próxima importación lo
+// asocia solo — eso reemplaza a las "plantillas de importación".
+export type TipoCampo = "texto" | "numero" | "moneda" | "fecha" | "lista" | "booleano";
+
+export type CampoAdicional = {
+  id: string;
+  nombre: string;
+  tipo: TipoCampo;
+  obligatorio: boolean;
+  columnasConocidas: string[];
+};
+
+export const camposAdicionalesSistema: CampoAdicional[] = [
+  { id: "campo-producto", nombre: "Producto", tipo: "lista", obligatorio: false, columnasConocidas: ["PRODUCTO"] },
+  { id: "campo-cuenta", nombre: "Nro. de cuenta", tipo: "texto", obligatorio: false, columnasConocidas: ["NRO_CUENTA"] },
+  { id: "campo-deuda", nombre: "Deuda", tipo: "moneda", obligatorio: true, columnasConocidas: ["SALDO_DEUDA", "DEUDA"] },
+  { id: "campo-mora", nombre: "Días de mora", tipo: "numero", obligatorio: false, columnasConocidas: ["DIAS_MORA"] },
+  { id: "campo-vto", nombre: "Vencimiento", tipo: "fecha", obligatorio: false, columnasConocidas: ["FECHA_VTO"] },
+  { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", obligatorio: false, columnasConocidas: ["SUCURSAL"] },
+];
+
+// Archivo de ejemplo que "sube" el usuario en el wizard.
+export const csvEjemplo = {
+  nombreArchivo: "clientes_banco_sur_2026-10-09.csv",
+  totalFilas: 1240,
+  columnas: [
+    "NOMBRE",
+    "APELLIDO",
+    "TIPO_DOC",
+    "DNI",
+    "COD_CLIENTE",
+    "TEL_CEL",
+    "TEL_LABORAL",
+    "EMAIL",
+    "Nro Socio",
+    "PRODUCTO",
+    "SALDO_DEUDA",
+    "DIAS_MORA",
+    "FECHA_VTO",
+    "SUCURSAL",
+    "SEGMENTO",
+    "ACEPTA_WHATSAPP",
+  ],
+  filas: [
+    ["María Laura", "Fernández", "DNI", "28456789", "CRM-100234", "1155234410", "1147882210", "mlfernandez@mail.com", "S-00412", "Tarjeta Visa", "184320.50", "12", "23/09/2026", "Palermo", "Premium", "SI"],
+    ["Jorge", "Pereyra", "DNI", "31902115", "CRM-100871", "1160127788", "", "", "S-01877", "Préstamo personal", "412900", "35", "31/08/2026", "Caballito", "Clásico", "NO"],
+    ["Lucía", "Gómez", "DNI", "35220674", "CRM-101005", "3515550192", "", "lu.gomez@mail.com", "S-02210", "Tarjeta Mastercard", "58740", "8", "27/09/2026", "Córdoba Centro", "Clásico", "SI"],
+    ["Martín", "Acosta", "CUIT", "20278845123", "CRM-097754", "", "1143125500", "pagos@acostayasoc.com.ar", "", "Cuenta corriente", "890450", "41", "25/08/2026", "Microcentro", "Empresas", "NO"],
+  ],
+};
+
 export function visibleEn(c: Cliente, proyectoId: string) {
   return !c.ocultoEn.includes(proyectoId);
 }
