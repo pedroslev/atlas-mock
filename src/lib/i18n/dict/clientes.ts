@@ -16,8 +16,6 @@ export const clientes: NamespaceDict = {
     "col.identificacion": "Identificación",
     "col.telefono": "Teléfono principal",
     "col.visibilidad": "Visibilidad",
-    "col.objetivosActivos": "Objetivos activos",
-    "col.ultimaInteraccion": "Última interacción",
     visibleTodos: "Visible en todos los proyectos",
     todosMenos: "Oculto en",
     verFicha: "Ver ficha",

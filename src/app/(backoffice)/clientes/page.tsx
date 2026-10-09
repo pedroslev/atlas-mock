@@ -22,12 +22,8 @@ import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { proyectos, getProyecto } from "@/lib/mock-data";
 import {
   clientes,
-  esActivo,
   etiquetasCatalogo,
-  formatFecha,
   getEtiqueta,
-  getInteraccionesDeCliente,
-  getObjetivosDeCliente,
   nombreCompleto,
   telefonoPrincipal,
   visibleEn,
@@ -35,11 +31,9 @@ import {
 } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
-type Fila = Cliente & {
-  nombreCompleto: string;
-  objetivosActivos: number;
-  ultimaInteraccion?: string;
-};
+// El listado muestra solo datos básicos y etiquetas (feedback de producto
+// 2026-10-09): nada derivado de interacciones ni de objetivos de contacto.
+type Fila = Cliente & { nombreCompleto: string };
 
 export default function ClientesPage() {
   const t = useT();
@@ -53,12 +47,7 @@ export default function ClientesPage() {
       clientes
         .filter((c) => proyectoId === "todos" || visibleEn(c, proyectoId))
         .filter((c) => etiquetaId === "todas" || c.etiquetas.includes(etiquetaId))
-        .map((c) => ({
-          ...c,
-          nombreCompleto: nombreCompleto(c),
-          objetivosActivos: getObjetivosDeCliente(c.id).filter(esActivo).length,
-          ultimaInteraccion: getInteraccionesDeCliente(c.id)[0]?.fecha,
-        })),
+        .map((c) => ({ ...c, nombreCompleto: nombreCompleto(c) })),
     [proyectoId, etiquetaId]
   );
 
@@ -119,30 +108,6 @@ export default function ClientesPage() {
               ))}
             </div>
           ),
-      },
-      {
-        accessorKey: "objetivosActivos",
-        header: t("clientes.col.objetivosActivos"),
-        Cell: ({ cell }) => {
-          const n = cell.getValue<number>();
-          return n > 0 ? (
-            <Badge variant="warning">{n}</Badge>
-          ) : (
-            <span className="text-muted-foreground">0</span>
-          );
-        },
-      },
-      {
-        accessorKey: "ultimaInteraccion",
-        header: t("clientes.col.ultimaInteraccion"),
-        Cell: ({ cell }) => {
-          const v = cell.getValue<string | undefined>();
-          return (
-            <span className="text-muted-foreground">
-              {v ? formatFecha(v, true) : "—"}
-            </span>
-          );
-        },
       },
     ],
     [t]
