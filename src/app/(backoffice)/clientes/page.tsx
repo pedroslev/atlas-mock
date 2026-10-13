@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { Plus, Tags, Upload } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,7 +21,6 @@ import {
   type Cliente,
 } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
-import { ImportarWizard } from "./importar-wizard";
 
 // El listado muestra solo datos básicos y etiquetas (feedback de producto
 // 2026-10-09): nada derivado de interacciones ni de objetivos de contacto.
@@ -29,8 +28,6 @@ type Fila = Cliente & { nombreCompleto: string };
 
 export default function ClientesPage() {
   const t = useT();
-  const [importarOpen, setImportarOpen] = useState(false);
-
   // Sin filtros propios arriba (feedback 2026-10-09): la búsqueda y los
   // filtros por columna de la tabla alcanzan.
   const filas = useMemo<Fila[]>(
@@ -114,9 +111,11 @@ export default function ClientesPage() {
                 {t("clientes.administrarEtiquetas")}
               </Link>
             </Button>
-            <Button variant="outline" onClick={() => setImportarOpen(true)}>
-              <Upload />
-              {t("clientes.importar")}
+            <Button variant="outline" asChild>
+              <Link href="/clientes/importar">
+                <Upload />
+                {t("clientes.importar")}
+              </Link>
             </Button>
             <Button>
               <Plus />
@@ -149,8 +148,6 @@ export default function ClientesPage() {
           ),
         }}
       />
-
-      <ImportarWizard open={importarOpen} onOpenChange={setImportarOpen} />
     </div>
   );
 }
