@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import {
   ArrowRight,
   Check,
   CircleAlert,
   FileSpreadsheet,
+  FileText,
+  FileX,
   Plus,
+  RefreshCw,
   Sparkles,
   Trash2,
+  TriangleAlert,
   Upload,
   Wand2,
 } from "lucide-react";
@@ -54,10 +58,91 @@ import { useT } from "@/lib/i18n";
 // Todos los desplegables tienen buscador y las opciones ya usadas se ven en
 // gris sin desaparecer. Las etiquetas se pueden asignar por regla según el
 // valor de un campo.
+//
+// Paso "Archivo" (2026-10-13): formatos, encabezado, separadores y hoja
+// tomados de la US T4-3268 "Como administrador quiero importar tareas
+// asociando manualmente" (Confluence MITCT); se suma XLS y la codificación.
 
 const PASOS = ["archivo", "basicos", "contacto", "adicionales", "opciones", "revision"] as const;
 type Paso = (typeof PASOS)[number];
 
+// ── Archivo ──────────────────────────────────────────────────────────────
+type Formato = "csv" | "txt" | "xlsx" | "xls" | "invalido";
+type Codificacion = "utf8" | "latin1" | "win1252";
+type ConfigArchivo = {
+  formato: Formato;
+  header: boolean;
+  sepCampos: string;
+  sepTexto: string;
+  codificacion: Codificacion;
+  hoja: string;
+};
+type Archivo = {
+  nombre: string;
+  columnas: string[];
+  filas: string[][];
+  problema: "separador" | "hojaVacia" | null;
+  mojibake: boolean;
+};
+
+const FORMATOS_PRUEBA: Formato[] = ["csv", "txt", "xlsx", "xls", "invalido"];
+const ES_TEXTO = (f: Formato) => f === "csv" || f === "txt";
+const ES_EXCEL = (f: Formato) => f === "xlsx" || f === "xls";
+const CODIFICACION_DETECTADA: Codificacion = "utf8";
+const HOJAS = ["Clientes", "Resumen", "Instrucciones"];
+const SEPARADORES_RAPIDOS = [";", ",", "|", "\\t"];
+
+const CONFIG_INICIAL: ConfigArchivo = {
+  formato: "csv",
+  header: true,
+  sepCampos: ";",
+  sepTexto: "",
+  codificacion: CODIFICACION_DETECTADA,
+  hoja: HOJAS[0],
+};
+
+// Simula leer un UTF-8 con otra codificación: así se ven los acentos rotos.
+const MOJIBAKE: Record<string, string> = {
+  "á": "Ã¡", "é": "Ã©", "í": "Ã­", "ó": "Ã³", "ú": "Ãº", "ñ": "Ã±", "Ñ": "Ã‘", "É": "Ã‰", "Ó": "Ã“",
+};
+const romper = (v: string) => v.replace(/[áéíóúñÑÉÓ]/g, (c) => MOJIBAKE[c] ?? c);
+
+function construirArchivo(c: ConfigArchivo): Archivo {
+  const ext = c.formato === "invalido" ? "pdf" : c.formato;
+  const nombre = `clientes_banco_sur_2026-10-13.${ext}`;
+  if (c.formato === "invalido") return { nombre, columnas: [], filas: [], problema: null, mojibake: false };
+  if (ES_EXCEL(c.formato) && c.hoja !== HOJAS[0]) {
+    return { nombre, columnas: [], filas: [], problema: "hojaVacia", mojibake: false };
+  }
+  const base = csvEjemplo.columnas;
+  let columnas: string[];
+  let filas: string[][];
+  let problema: Archivo["problema"] = null;
+  if (ES_TEXTO(c.formato) && c.sepCampos !== ";") {
+    // El archivo viene separado por ";": con otro separador queda una sola columna.
+    const linea = (r: string[]) => [r.join(";")];
+    columnas = c.header ? [base.join(";")] : ["Columna 1"];
+    filas = c.header ? csvEjemplo.filas.map(linea) : [base, ...csvEjemplo.filas].map(linea);
+    problema = "separador";
+  } else {
+    columnas = c.header ? base : base.map((_, i) => `Columna ${i + 1}`);
+    filas = c.header ? csvEjemplo.filas : [base, ...csvEjemplo.filas];
+  }
+  const mojibake = ES_TEXTO(c.formato) && c.codificacion !== CODIFICACION_DETECTADA;
+  if (mojibake) filas = filas.map((r) => r.map(romper));
+  return { nombre, columnas, filas, problema, mojibake };
+}
+
+const ArchivoCtx = createContext<Archivo>(construirArchivo(CONFIG_INICIAL));
+const useArchivo = () => useContext(ArchivoCtx);
+
+function muestras(a: Archivo, columna: string) {
+  const i = a.columnas.indexOf(columna);
+  if (i < 0) return [];
+  return a.filas.map((f) => f[i]).filter(Boolean);
+}
+
+// ── Mapeo ────────────────────────────────────────────────────────────────
 const BASICOS = [
   { key: "nombre", obligatorio: true, sugeridas: ["NOMBRE"] },
   { key: "apellido", obligatorio: false, sugeridas: ["APELLIDO"] },
@@ -132,13 +217,8 @@ const SIN_VALOR: Operador[] = ["vacio", "noVacio", "esSi", "esNo"];
 const TIPOS: TipoCampo[] = ["texto", "numero", "moneda", "fecha", "lista", "booleano"];
 const NADA = "__ninguna__";
 
-function muestras(columna: string) {
-  const i = csvEjemplo.columnas.indexOf(columna);
-  return csvEjemplo.filas.map((f) => f[i]).filter(Boolean);
-}
-
-function adivinarTipo(columna: string): TipoCampo {
-  const vs = muestras(columna);
+function adivinarTipo(a: Archivo, columna: string): TipoCampo {
+  const vs = muestras(a, columna);
   if (vs.length === 0) return "texto";
   if (vs.every((v) => /^\d{2}\/\d{2}\/\d{4}$/.test(v))) return "fecha";
   if (vs.every((v) => /^(si|no|s|n|true|false)$/i.test(v))) return "booleano";
@@ -161,7 +241,7 @@ function prettify(columna: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function configInicial(columna: string): ConfigAdicional {
+function configInicial(a: Archivo, columna: string): ConfigAdicional {
   const existente = camposAdicionalesSistema.find((c) => c.columnasConocidas.includes(columna));
   if (existente) {
     return {
@@ -177,35 +257,39 @@ function configInicial(columna: string): ConfigAdicional {
     incluir: true,
     destino: "nuevo",
     nombre: prettify(columna),
-    tipo: adivinarTipo(columna),
+    tipo: adivinarTipo(a, columna),
     obligatorio: false,
     formatoFecha: "DD/MM/AAAA",
     siExiste: "reemplazar",
   };
 }
 
-function sugerirBasicos(): Record<BasicoKey, string> {
+// Las sugerencias salen del nombre de la columna: sin encabezado no hay.
+function sugerirBasicos(a: Archivo): Record<BasicoKey, string> {
   const r = {} as Record<BasicoKey, string>;
   for (const b of BASICOS) {
-    r[b.key] = b.sugeridas.find((s) => csvEjemplo.columnas.includes(s)) ?? "";
+    r[b.key] = b.sugeridas.find((s) => a.columnas.includes(s)) ?? "";
   }
   return r;
 }
 
-function sugerirContactos(): MapeoContacto[] {
+function sugerirContactos(a: Archivo): MapeoContacto[] {
   const out: MapeoContacto[] = [];
-  const col = (c: string) => csvEjemplo.columnas.includes(c);
+  const col = (c: string) => a.columnas.includes(c);
   if (col("TEL_CEL")) out.push({ id: "m1", columna: "TEL_CEL", tipo: "telefono", etiqueta: "Celular", principal: true });
   if (col("TEL_LABORAL")) out.push({ id: "m2", columna: "TEL_LABORAL", tipo: "telefono", etiqueta: "Laboral", principal: false });
   if (col("EMAIL")) out.push({ id: "m3", columna: "EMAIL", tipo: "email", etiqueta: "Personal", principal: false });
+  if (out.length === 0) out.push({ id: "m1", columna: "", tipo: "telefono", etiqueta: "", principal: true });
   return out;
 }
 
-function reglasIniciales(): ReglaEtiqueta[] {
-  return [
-    { id: "r1", columna: "DIAS_MORA", operador: "mayor", valor: "30", valor2: "", etiquetas: ["et-mora30"] },
-    { id: "r2", columna: "SEGMENTO", operador: "igual", valor: "Premium", valor2: "", etiquetas: ["et-vip"] },
-  ];
+function reglasIniciales(a: Archivo): ReglaEtiqueta[] {
+  const out: ReglaEtiqueta[] = [];
+  if (a.columnas.includes("DIAS_MORA"))
+    out.push({ id: "r1", columna: "DIAS_MORA", operador: "mayor", valor: "30", valor2: "", etiquetas: ["et-mora30"] });
+  if (a.columnas.includes("SEGMENTO"))
+    out.push({ id: "r2", columna: "SEGMENTO", operador: "igual", valor: "Premium", valor2: "", etiquetas: ["et-vip"] });
+  return out;
 }
 
 function parseFecha(v: string) {
@@ -263,18 +347,35 @@ export function ImportarWizard({
   const t = useT();
   const [paso, setPaso] = useState<Paso>("archivo");
   const [cargado, setCargado] = useState(false);
-  const [basicos, setBasicos] = useState<Record<BasicoKey, string>>(sugerirBasicos);
+  const [config, setConfig] = useState<ConfigArchivo>(CONFIG_INICIAL);
+  const archivo = construirArchivo(config);
+  const [basicos, setBasicos] = useState<Record<BasicoKey, string>>(() => sugerirBasicos(archivo));
   const [clave, setClave] = useState<"idExterno" | "nroDoc">("idExterno");
-  const [contactos, setContactos] = useState<MapeoContacto[]>(sugerirContactos);
+  const [contactos, setContactos] = useState<MapeoContacto[]>(() => sugerirContactos(archivo));
   const [adicionales, setAdicionales] = useState<Record<string, ConfigAdicional>>({});
   const [vacios, setVacios] = useState<CampoVacio[]>([]);
   const [ocultoEn, setOcultoEn] = useState<string[]>([]);
   const [etiquetas, setEtiquetas] = useState<string[]>([]);
-  const [reglas, setReglas] = useState<ReglaEtiqueta[]>(reglasIniciales);
+  const [reglas, setReglas] = useState<ReglaEtiqueta[]>(() => reglasIniciales(archivo));
   const [errores, setErrores] = useState("saltear");
   const [importado, setImportado] = useState(false);
 
   const idx = PASOS.indexOf(paso);
+
+  // Cambiar encabezado, separador, hoja o formato cambia las columnas: se
+  // rehacen las sugerencias de mapeo con los nombres nuevos.
+  const cambiarConfig = (cambios: Partial<ConfigArchivo>) => {
+    const nueva = { ...config, ...cambios };
+    setConfig(nueva);
+    const afectaColumnas = ["formato", "header", "sepCampos", "hoja"].some((k) => k in cambios);
+    if (afectaColumnas) {
+      const a = construirArchivo(nueva);
+      setBasicos(sugerirBasicos(a));
+      setContactos(sugerirContactos(a));
+      setAdicionales({});
+      setReglas(reglasIniciales(a));
+    }
+  };
 
   // Dónde se usa cada columna, para mostrarla en gris en los desplegables.
   const usos = new Map<string, string>();
@@ -284,8 +385,8 @@ export function ImportarWizard({
   for (const c of contactos) {
     if (c.columna) usos.set(c.columna, t("clientes.imp.usoContacto", { etiqueta: c.etiqueta || t(`clientes.imp.forma.${c.tipo}`) }));
   }
-  const restantes = csvEjemplo.columnas.filter((c) => !usos.has(c));
-  const cfg = (col: string) => adicionales[col] ?? configInicial(col);
+  const restantes = archivo.columnas.filter((c) => !usos.has(c));
+  const cfg = (col: string) => adicionales[col] ?? configInicial(archivo, col);
   const setCfg = (col: string, cambios: Partial<ConfigAdicional>) =>
     setAdicionales((a) => ({ ...a, [col]: { ...cfg(col), ...cambios } }));
 
@@ -299,9 +400,14 @@ export function ImportarWizard({
     return { nombre: a.nombre, tipo: a.tipo };
   };
 
+  const archivoOk =
+    cargado &&
+    config.formato !== "invalido" &&
+    !archivo.problema &&
+    (!ES_TEXTO(config.formato) || config.sepCampos.trim() !== "");
   const faltanBasicos = BASICOS.filter((b) => b.obligatorio && !basicos[b.key]);
   const puedeAvanzar =
-    (paso === "archivo" && cargado) ||
+    (paso === "archivo" && archivoOk) ||
     (paso === "basicos" && faltanBasicos.length === 0) ||
     (paso === "contacto" && contactos.some((c) => c.columna)) ||
     (paso === "adicionales" &&
@@ -310,16 +416,18 @@ export function ImportarWizard({
     paso === "opciones";
 
   const reset = () => {
+    const a = construirArchivo(CONFIG_INICIAL);
     setPaso("archivo");
     setCargado(false);
-    setBasicos(sugerirBasicos());
+    setConfig(CONFIG_INICIAL);
+    setBasicos(sugerirBasicos(a));
     setClave("idExterno");
-    setContactos(sugerirContactos());
+    setContactos(sugerirContactos(a));
     setAdicionales({});
     setVacios([]);
     setOcultoEn([]);
     setEtiquetas([]);
-    setReglas(reglasIniciales());
+    setReglas(reglasIniciales(a));
     setErrores("saltear");
     setImportado(false);
   };
@@ -329,88 +437,102 @@ export function ImportarWizard({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : cerrar())}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-4xl">
-        <DialogHeader className="border-b p-5 pb-4">
-          <DialogTitle>{t("clientes.imp.titulo")}</DialogTitle>
-          <DialogDescription>{t("clientes.imp.descripcion")}</DialogDescription>
-          <Stepper actual={idx} />
-        </DialogHeader>
+    <ArchivoCtx.Provider value={archivo}>
+      <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : cerrar())}>
+        <DialogContent className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-4xl">
+          <DialogHeader className="border-b p-5 pb-4">
+            <DialogTitle>{t("clientes.imp.titulo")}</DialogTitle>
+            <DialogDescription>{t("clientes.imp.descripcion")}</DialogDescription>
+            <Stepper actual={idx} />
+          </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          {importado ? (
-            <Resultado />
-          ) : (
-            <>
-              {paso === "archivo" && <PasoArchivo cargado={cargado} onCargar={() => setCargado(true)} />}
-              {paso === "basicos" && (
-                <PasoBasicos basicos={basicos} setBasicos={setBasicos} clave={clave} setClave={setClave} usos={usos} />
-              )}
-              {paso === "contacto" && <PasoContacto contactos={contactos} setContactos={setContactos} usos={usos} />}
-              {paso === "adicionales" && (
-                <PasoAdicionales restantes={restantes} cfg={cfg} setCfg={setCfg} vacios={vacios} setVacios={setVacios} />
-              )}
-              {paso === "opciones" && (
-                <PasoOpciones
-                  ocultoEn={ocultoEn}
-                  setOcultoEn={setOcultoEn}
-                  etiquetas={etiquetas}
-                  setEtiquetas={setEtiquetas}
-                  reglas={reglas}
-                  setReglas={setReglas}
-                  infoColumna={infoColumna}
-                  columnasImportadas={csvEjemplo.columnas.filter((c) => usos.has(c) || cfg(c).incluir)}
-                  errores={errores}
-                  setErrores={setErrores}
-                />
-              )}
-              {paso === "revision" && (
-                <PasoRevision
-                  restantes={restantes}
-                  cfg={cfg}
-                  vacios={vacios}
-                  basicos={basicos}
-                  contactos={contactos}
-                  reglas={reglas}
-                  infoColumna={infoColumna}
-                />
-              )}
-            </>
-          )}
-        </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">
+            {importado ? (
+              <Resultado />
+            ) : (
+              <>
+                {paso === "archivo" && (
+                  <PasoArchivo
+                    cargado={cargado}
+                    config={config}
+                    onCargar={(formato) => {
+                      cambiarConfig({ formato, hoja: HOJAS[0] });
+                      setCargado(true);
+                    }}
+                    onCambiar={() => setCargado(false)}
+                    onConfig={cambiarConfig}
+                  />
+                )}
+                {paso === "basicos" && (
+                  <PasoBasicos basicos={basicos} setBasicos={setBasicos} clave={clave} setClave={setClave} usos={usos} />
+                )}
+                {paso === "contacto" && <PasoContacto contactos={contactos} setContactos={setContactos} usos={usos} />}
+                {paso === "adicionales" && (
+                  <PasoAdicionales restantes={restantes} cfg={cfg} setCfg={setCfg} vacios={vacios} setVacios={setVacios} />
+                )}
+                {paso === "opciones" && (
+                  <PasoOpciones
+                    ocultoEn={ocultoEn}
+                    setOcultoEn={setOcultoEn}
+                    etiquetas={etiquetas}
+                    setEtiquetas={setEtiquetas}
+                    reglas={reglas}
+                    setReglas={setReglas}
+                    infoColumna={infoColumna}
+                    columnasImportadas={archivo.columnas.filter((c) => usos.has(c) || cfg(c).incluir)}
+                    errores={errores}
+                    setErrores={setErrores}
+                  />
+                )}
+                {paso === "revision" && (
+                  <PasoRevision
+                    config={config}
+                    restantes={restantes}
+                    cfg={cfg}
+                    vacios={vacios}
+                    basicos={basicos}
+                    contactos={contactos}
+                    reglas={reglas}
+                    infoColumna={infoColumna}
+                  />
+                )}
+              </>
+            )}
+          </div>
 
-        <DialogFooter className="m-0 flex-row items-center justify-between gap-2 border-t p-4 sm:justify-between">
-          {importado ? (
-            <>
-              <span />
-              <Button onClick={cerrar}>{t("clientes.imp.cerrar")}</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" disabled={idx === 0} onClick={() => setPaso(PASOS[idx - 1])}>
-                {t("clientes.imp.anterior")}
-              </Button>
-              <div className="flex items-center gap-3">
-                {paso === "basicos" && faltanBasicos.length > 0 && (
-                  <span className="text-xs text-destructive">{t("clientes.imp.faltanObligatorios")}</span>
-                )}
-                {paso === "revision" ? (
-                  <Button onClick={() => setImportado(true)}>
-                    <Upload />
-                    {t("clientes.imp.importarN", { n: (1215).toLocaleString("es-AR") })}
-                  </Button>
-                ) : (
-                  <Button disabled={!puedeAvanzar} onClick={() => setPaso(PASOS[idx + 1])}>
-                    {t("clientes.imp.siguiente")}
-                    <ArrowRight />
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="m-0 flex-row items-center justify-between gap-2 border-t p-4 sm:justify-between">
+            {importado ? (
+              <>
+                <span />
+                <Button onClick={cerrar}>{t("clientes.imp.cerrar")}</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" disabled={idx === 0} onClick={() => setPaso(PASOS[idx - 1])}>
+                  {t("clientes.imp.anterior")}
+                </Button>
+                <div className="flex items-center gap-3">
+                  {paso === "basicos" && faltanBasicos.length > 0 && (
+                    <span className="text-xs text-destructive">{t("clientes.imp.faltanObligatorios")}</span>
+                  )}
+                  {paso === "revision" ? (
+                    <Button onClick={() => setImportado(true)}>
+                      <Upload />
+                      {t("clientes.imp.importarN", { n: (1215).toLocaleString("es-AR") })}
+                    </Button>
+                  ) : (
+                    <Button disabled={!puedeAvanzar} onClick={() => setPaso(PASOS[idx + 1])}>
+                      {t("clientes.imp.siguiente")}
+                      <ArrowRight />
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </ArchivoCtx.Provider>
   );
 }
 
@@ -459,9 +581,10 @@ function ColumnaSelect({
   ariaLabel?: string;
 }) {
   const t = useT();
+  const archivo = useArchivo();
   const opciones: ComboOption[] = [
     ...(permitirVacio ? [{ value: NADA, label: t("clientes.imp.noImportar") }] : []),
-    ...csvEjemplo.columnas.map((c) => {
+    ...archivo.columnas.map((c) => {
       const uso = c !== value ? usos.get(c) : undefined;
       return {
         value: c,
@@ -484,69 +607,241 @@ function ColumnaSelect({
 }
 
 function Muestra({ columna }: { columna: string }) {
-  const vs = columna ? muestras(columna).slice(0, 2) : [];
+  const archivo = useArchivo();
+  const vs = columna ? muestras(archivo, columna).slice(0, 2) : [];
   if (vs.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
   return <span className="truncate text-xs text-muted-foreground">{vs.join(" · ")}</span>;
 }
 
 // ── Paso 1 ────────────────────────────────────────────────────────────────
-function PasoArchivo({ cargado, onCargar }: { cargado: boolean; onCargar: () => void }) {
+function PasoArchivo({
+  cargado,
+  config,
+  onCargar,
+  onCambiar,
+  onConfig,
+}: {
+  cargado: boolean;
+  config: ConfigArchivo;
+  onCargar: (f: Formato) => void;
+  onCambiar: () => void;
+  onConfig: (c: Partial<ConfigArchivo>) => void;
+}) {
   const t = useT();
+  const archivo = useArchivo();
+  const [simular, setSimular] = useState<Formato>("csv");
+
   if (!cargado) {
     return (
-      <button
-        type="button"
-        onClick={onCargar}
-        className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm text-muted-foreground hover:border-primary hover:bg-accent/40"
-      >
-        <Upload className="size-6" />
-        <span className="font-medium text-foreground">{t("clientes.imp.soltar")}</span>
-        <span className="text-xs">{t("clientes.imp.formatos")}</span>
-      </button>
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={() => onCargar(simular)}
+          className="flex h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm text-muted-foreground hover:border-primary hover:bg-accent/40"
+        >
+          <Upload className="size-6" />
+          <span className="font-medium text-foreground">{t("clientes.imp.soltar")}</span>
+          <span className="text-xs">{t("clientes.imp.formatos")}</span>
+        </button>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{t("clientes.imp.simular")}</span>
+          {FORMATOS_PRUEBA.map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={simular === f}
+              onClick={() => setSimular(f)}
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 font-medium",
+                simular === f ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"
+              )}
+            >
+              {t(`clientes.imp.fmt.${f}`)}
+            </button>
+          ))}
+        </div>
+      </div>
     );
   }
+
+  const invalido = config.formato === "invalido";
+  const Icono = invalido ? FileX : ES_EXCEL(config.formato) ? FileSpreadsheet : FileText;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3 rounded-lg border p-3">
-        <FileSpreadsheet className="size-5 text-success" />
-        <div className="flex flex-col">
-          <span className="font-medium">{csvEjemplo.nombreArchivo}</span>
-          <span className="text-xs text-muted-foreground">
-            {t("clientes.imp.resumenArchivo", {
-              filas: csvEjemplo.totalFilas.toLocaleString("es-AR"),
-              columnas: csvEjemplo.columnas.length,
-            })}
-          </span>
+    <div className="flex flex-col gap-5">
+      <div className={cn("flex items-center gap-3 rounded-lg border p-3", invalido && "border-destructive/50 bg-destructive/5")}>
+        <Icono className={cn("size-5", invalido ? "text-destructive" : "text-success")} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate font-medium">{archivo.nombre}</span>
+          {invalido ? (
+            <span className="text-xs text-destructive">{t("clientes.imp.formatoInvalido")}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {t("clientes.imp.resumenArchivo", {
+                filas: csvEjemplo.totalFilas.toLocaleString("es-AR"),
+                columnas: archivo.columnas.length,
+              })}
+            </span>
+          )}
         </div>
+        {!invalido && (
+          <Badge variant="success" className="gap-1">
+            <Check />
+            {t("clientes.imp.archivoValido")}
+          </Badge>
+        )}
+        <Button variant="outline" size="sm" onClick={onCambiar}>
+          <RefreshCw />
+          {t("clientes.imp.cambiarArchivo")}
+        </Button>
       </div>
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium">{t("clientes.imp.vistaPrevia")}</span>
-        <div className="overflow-x-auto rounded-lg ring-1 ring-foreground/10">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {csvEjemplo.columnas.map((c) => (
-                  <TableHead key={c} className="font-mono text-xs whitespace-nowrap">
-                    {c}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {csvEjemplo.filas.slice(0, 3).map((f, i) => (
-                <TableRow key={i}>
-                  {f.map((v, j) => (
-                    <TableCell key={j} className="text-xs whitespace-nowrap">
-                      {v || <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+
+      {!invalido && (
+        <>
+          <div className="grid gap-4 rounded-lg bg-muted/50 p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="flex items-start gap-2 text-sm sm:col-span-2 lg:col-span-4">
+              <Checkbox className="mt-0.5" checked={config.header} onCheckedChange={() => onConfig({ header: !config.header })} />
+              <span className="flex flex-col">
+                <span className="font-medium">{t("clientes.imp.header")}</span>
+                <span className="text-xs text-muted-foreground">{t("clientes.imp.headerDesc")}</span>
+              </span>
+            </label>
+
+            {ES_TEXTO(config.formato) && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="imp-sep-campos">
+                    {t("clientes.imp.sepCampos")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="imp-sep-campos"
+                    className={cn("w-24 font-mono", !config.sepCampos.trim() && "border-destructive")}
+                    value={config.sepCampos}
+                    maxLength={3}
+                    onChange={(e) => onConfig({ sepCampos: e.target.value })}
+                  />
+                  {!config.sepCampos.trim() ? (
+                    <span className="text-xs text-destructive">{t("clientes.imp.requerido")}</span>
+                  ) : (
+                    <div className="flex gap-1">
+                      {SEPARADORES_RAPIDOS.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => onConfig({ sepCampos: s })}
+                          className="rounded border px-1.5 font-mono text-xs text-muted-foreground hover:bg-background"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="imp-sep-texto">{t("clientes.imp.sepTexto")}</Label>
+                  <Input
+                    id="imp-sep-texto"
+                    className="w-24 font-mono"
+                    placeholder={`Ej. " o '`}
+                    value={config.sepTexto}
+                    maxLength={1}
+                    onChange={(e) => onConfig({ sepTexto: e.target.value })}
+                  />
+                  <span className="text-xs text-muted-foreground">{t("clientes.imp.opcional")}</span>
+                </div>
+                <div className="flex flex-col gap-1.5 sm:col-span-2">
+                  <Label htmlFor="imp-codif">{t("clientes.imp.codificacion")}</Label>
+                  <ComboSelect
+                    id="imp-codif"
+                    value={config.codificacion}
+                    onChange={(v) => onConfig({ codificacion: v as Codificacion })}
+                    options={(["utf8", "latin1", "win1252"] as Codificacion[]).map((c) => ({
+                      value: c,
+                      label: t(`clientes.imp.cod.${c}`),
+                      hint: c === CODIFICACION_DETECTADA ? t("clientes.imp.detectada") : undefined,
+                    }))}
+                  />
+                  {config.codificacion === CODIFICACION_DETECTADA ? (
+                    <span className="flex items-center gap-1 text-xs text-success">
+                      <Sparkles className="size-3" />
+                      {t("clientes.imp.codDetectadaOk", { cod: t(`clientes.imp.cod.${CODIFICACION_DETECTADA}`) })}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <TriangleAlert className="size-3 text-warning" />
+                      {t("clientes.imp.codDistinta", { cod: t(`clientes.imp.cod.${CODIFICACION_DETECTADA}`) })}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+
+            {ES_EXCEL(config.formato) && (
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <Label htmlFor="imp-hoja">{t("clientes.imp.hoja")}</Label>
+                <ComboSelect
+                  id="imp-hoja"
+                  value={config.hoja}
+                  onChange={(v) => onConfig({ hoja: v })}
+                  options={HOJAS.map((h, i) => ({
+                    value: h,
+                    label: h,
+                    hint: i === 0 ? t("clientes.imp.hojaFilas", { n: csvEjemplo.totalFilas.toLocaleString("es-AR") }) : t("clientes.imp.hojaVaciaHint"),
+                  }))}
+                />
+              </div>
+            )}
+          </div>
+
+          {archivo.problema === "separador" && (
+            <Aviso>{t("clientes.imp.problemaSeparador", { sep: config.sepCampos })}</Aviso>
+          )}
+          {archivo.problema === "hojaVacia" && <Aviso>{t("clientes.imp.problemaHoja", { hoja: config.hoja })}</Aviso>}
+
+          {archivo.columnas.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium">
+                {t("clientes.imp.vistaPrevia", { n: Math.min(10, archivo.filas.length) })}
+              </span>
+              <div className="overflow-x-auto rounded-lg ring-1 ring-foreground/10">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {archivo.columnas.map((c) => (
+                        <TableHead key={c} className="font-mono text-xs whitespace-nowrap">
+                          {c}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivo.filas.slice(0, 10).map((f, i) => (
+                      <TableRow key={i}>
+                        {f.map((v, j) => (
+                          <TableCell key={j} className="text-xs whitespace-nowrap">
+                            {v || <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {!config.header && <span className="text-xs text-muted-foreground">{t("clientes.imp.sinHeaderNota")}</span>}
+            </div>
+          )}
+        </>
+      )}
     </div>
+  );
+}
+
+function Aviso({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-2 rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 text-sm">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
+      {children}
+    </p>
   );
 }
 
@@ -843,8 +1138,9 @@ function FilaAdicional({
   onChange: (x: Partial<ConfigAdicional>) => void;
 }) {
   const t = useT();
+  const archivo = useArchivo();
   const existente = camposAdicionalesSistema.find((x) => x.id === c.destino);
-  const distintos = Array.from(new Set(muestras(columna)));
+  const distintos = Array.from(new Set(muestras(archivo, columna)));
 
   const opcionesDestino: ComboOption[] = [
     { value: "nuevo", label: t("clientes.imp.crearNuevo") },
@@ -894,7 +1190,7 @@ function FilaAdicional({
                   onChange(
                     e
                       ? { destino: v, nombre: e.nombre, tipo: e.tipo, obligatorio: e.obligatorio }
-                      : { destino: "nuevo", nombre: prettify(columna), tipo: adivinarTipo(columna) }
+                      : { destino: "nuevo", nombre: prettify(columna), tipo: adivinarTipo(archivo, columna) }
                   );
                 }}
               />
@@ -953,7 +1249,10 @@ function FilaAdicional({
                     ariaLabel={t("clientes.imp.formatoFecha")}
                     value={c.formatoFecha ?? "DD/MM/AAAA"}
                     onChange={(v) => onChange({ formatoFecha: v })}
-                    options={["DD/MM/AAAA", "AAAA-MM-DD", "MM/DD/AAAA"].map((f) => ({ value: f, label: f }))}
+                    options={["DD/MM/AAAA", "DD/MM/AA", "AAAA/MM/DD", "AA/MM/DD", "MM/DD/AAAA", "MM/DD/AA"].map((f) => ({
+                      value: f,
+                      label: f,
+                    }))}
                   />
                 </div>
               )}
@@ -1123,6 +1422,7 @@ function ReglasEtiquetas({
   columnasImportadas: string[];
 }) {
   const t = useT();
+  const archivo = useArchivo();
   const [recordar, setRecordar] = useState(true);
   const upd = (id: string, c: Partial<ReglaEtiqueta>) =>
     setReglas((rs) => rs.map((r) => (r.id === id ? { ...r, ...c } : r)));
@@ -1159,10 +1459,9 @@ function ReglasEtiquetas({
         const fam = familia(info.tipo);
         const ops = OPERADORES[fam];
         const operador = ops.includes(r.operador) ? r.operador : ops[0];
-        const valores = r.columna ? Array.from(new Set(muestras(r.columna))) : [];
-        const coinciden = r.columna
-          ? csvEjemplo.filas.filter((f) => cumple({ ...r, operador }, info.tipo, f[csvEjemplo.columnas.indexOf(r.columna)])).length
-          : 0;
+        const valores = r.columna ? Array.from(new Set(muestras(archivo, r.columna))) : [];
+        const i = archivo.columnas.indexOf(r.columna);
+        const coinciden = r.columna ? archivo.filas.filter((f) => cumple({ ...r, operador }, info.tipo, f[i])).length : 0;
         const tipoInput = fam === "numero" ? "number" : fam === "fecha" ? "date" : "text";
 
         return (
@@ -1237,14 +1536,12 @@ function ReglasEtiquetas({
               <span className="text-sm font-medium">{t("clientes.imp.auto.entonces")}</span>
               <EtiquetasPicker
                 value={r.etiquetas}
-                onChange={(fn) =>
-                  upd(r.id, { etiquetas: typeof fn === "function" ? fn(r.etiquetas) : fn })
-                }
+                onChange={(fn) => upd(r.id, { etiquetas: typeof fn === "function" ? fn(r.etiquetas) : fn })}
               />
             </div>
             {r.columna && (
               <span className="text-xs text-muted-foreground">
-                {t("clientes.imp.auto.coincide", { n: coinciden, total: csvEjemplo.filas.length })}
+                {t("clientes.imp.auto.coincide", { n: coinciden, total: archivo.filas.length })}
               </span>
             )}
           </div>
@@ -1273,6 +1570,7 @@ function ReglasEtiquetas({
 
 // ── Paso 6 ────────────────────────────────────────────────────────────────
 function PasoRevision({
+  config,
   restantes,
   cfg,
   vacios,
@@ -1281,6 +1579,7 @@ function PasoRevision({
   reglas,
   infoColumna,
 }: {
+  config: ConfigArchivo;
   restantes: string[];
   cfg: (c: string) => ConfigAdicional;
   vacios: CampoVacio[];
@@ -1290,6 +1589,7 @@ function PasoRevision({
   infoColumna: (c: string) => { nombre: string; tipo: TipoCampo };
 }) {
   const t = useT();
+  const archivo = useArchivo();
   const incluidos = restantes.filter((c) => cfg(c).incluir);
   const nuevos = incluidos.filter((c) => cfg(c).destino === "nuevo");
   const existentes = incluidos.filter((c) => cfg(c).destino !== "nuevo");
@@ -1308,8 +1608,30 @@ function PasoRevision({
     { label: t("clientes.imp.stat.errores"), valor: "25", tono: "text-destructive" },
   ];
 
+  const detalleArchivo = [
+    t(`clientes.imp.fmt.${config.formato}`),
+    config.header ? t("clientes.imp.conHeader") : t("clientes.imp.sinHeader"),
+    ...(ES_TEXTO(config.formato)
+      ? [
+          t("clientes.imp.resumenSep", { sep: config.sepCampos }),
+          ...(config.sepTexto ? [t("clientes.imp.resumenSepTexto", { sep: config.sepTexto })] : []),
+          t(`clientes.imp.cod.${config.codificacion}`),
+        ]
+      : [t("clientes.imp.resumenHoja", { hoja: config.hoja })]),
+  ];
+
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <FileText className="size-4" />
+        <span className="font-medium text-foreground">{archivo.nombre}</span>
+        {detalleArchivo.map((d) => (
+          <Badge key={d} variant="outline">
+            {d}
+          </Badge>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="flex flex-col gap-1 rounded-lg border p-3">
@@ -1371,8 +1693,8 @@ function PasoRevision({
               return (
                 <li key={r.id} className="flex flex-wrap items-center gap-2 text-sm">
                   <span>
-                    {t("clientes.imp.auto.si")} <b>{infoColumna(r.columna).nombre}</b> {t(`clientes.imp.op.${operador}`).toLowerCase()}{" "}
-                    {!SIN_VALOR.includes(operador) && <b>{r.valor}</b>}
+                    {t("clientes.imp.auto.si")} <b>{infoColumna(r.columna).nombre}</b>{" "}
+                    {t(`clientes.imp.op.${operador}`).toLowerCase()} {!SIN_VALOR.includes(operador) && <b>{r.valor}</b>}
                     {operador === "entre" && (
                       <>
                         {" "}
