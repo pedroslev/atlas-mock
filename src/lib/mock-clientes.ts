@@ -25,10 +25,18 @@ export type Cliente = {
   etiquetas: string[];
   formasContacto: FormaContacto[];
   infoAdicional: Record<string, string>;
+  // Trazabilidad (pedido de producto 2026-10-13): quién y por dónde se dio
+  // de alta y se actualizó por última vez. El "lote" de carga no va acá: se
+  // maneja en los objetivos de contacto.
   creado: string;
+  creadoPor: string;
+  creadoVia: ViaCarga;
   actualizado: string;
   actualizadoPor: string;
+  actualizadoVia: ViaCarga;
 };
+
+export type ViaCarga = "importacion" | "olimpo" | "hermes" | "ivr" | "api" | "automatico";
 
 export type Interaccion = {
   id: string;
@@ -141,8 +149,11 @@ export const clientes: Cliente[] = [
     ],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-2231", "$ 184.320", "12", "2026-09-23", "Palermo"),
     creado: "2026-06-02T09:14:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
     actualizado: "2026-10-05T07:02:00",
-    actualizadoPor: "Input CRM 05/10",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-2",
@@ -159,8 +170,11 @@ export const clientes: Cliente[] = [
     ],
     infoAdicional: deuda("Préstamo personal", "PP-778812", "$ 412.900", "35", "2026-08-31", "Caballito"),
     creado: "2026-05-18T11:40:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
     actualizado: "2026-10-04T18:20:00",
-    actualizadoPor: "Input CRM 04/10",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-3",
@@ -173,8 +187,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 351 555-0192", "Celular", true), mail("lu.gomez@mail.com")],
     infoAdicional: deuda("Tarjeta Mastercard", "5412-****-8890", "$ 58.740", "8", "2026-09-27", "Córdoba Centro"),
     creado: "2026-09-01T08:00:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
     actualizado: "2026-10-05T07:02:00",
-    actualizadoPor: "Input CRM 05/10",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-4",
@@ -190,8 +207,11 @@ export const clientes: Cliente[] = [
     ],
     infoAdicional: deuda("Préstamo prendario", "PR-112093", "$ 1.230.000", "62", "2026-08-04", "Belgrano"),
     creado: "2026-03-10T10:00:00",
+    creadoPor: "Martín Díaz",
+    creadoVia: "olimpo",
     actualizado: "2026-09-28T16:45:00",
-    actualizadoPor: "Agente: Juan Pérez",
+    actualizadoPor: "Juan Pérez",
+    actualizadoVia: "hermes",
   },
   {
     id: "cli-5",
@@ -204,8 +224,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 261 444-7781", "Celular", true), wa("+54 9 261 444-7781")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-7765", "$ 23.100", "5", "2026-09-30", "Mendoza"),
     creado: "2026-10-03T07:05:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
     actualizado: "2026-10-05T07:02:00",
-    actualizadoPor: "Input CRM 05/10",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-6",
@@ -218,8 +241,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 11 4312-5500", "Laboral", true), mail("pagos@acostayasoc.com.ar", true)],
     infoAdicional: deuda("Cuenta corriente", "CC-55120", "$ 890.450", "41", "2026-08-25", "Microcentro"),
     creado: "2026-02-14T09:30:00",
+    creadoPor: "Integración CRM",
+    creadoVia: "api",
     actualizado: "2026-10-01T10:10:00",
-    actualizadoPor: "Input CRM 01/10",
+    actualizadoPor: "Integración CRM",
+    actualizadoVia: "api",
   },
   {
     id: "cli-7",
@@ -232,8 +258,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 11 2290-1144", "Celular", true), wa("+54 9 11 2290-1144"), mail("sofi.ramirez@mail.com")],
     infoAdicional: deuda("Tarjeta Visa", "4509-****-0012", "$ 131.870", "19", "2026-09-16", "Flores"),
     creado: "2026-07-22T12:00:00",
+    creadoPor: "Juan Pérez",
+    creadoVia: "hermes",
     actualizado: "2026-10-05T07:02:00",
-    actualizadoPor: "Input CRM 05/10",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-8",
@@ -246,8 +275,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 341 600-2233", "Celular", true)],
     infoAdicional: deuda("Préstamo personal", "PP-701233", "$ 275.000", "90", "2026-07-06", "Rosario"),
     creado: "2026-04-01T09:00:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
     actualizado: "2026-09-20T09:00:00",
-    actualizadoPor: "Input CRM 20/09",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
   },
   {
     id: "cli-9",
@@ -259,8 +291,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 11 7788-1200", "Celular", true), wa("+54 9 11 7788-1200"), mail("vale.medina@mail.com")],
     infoAdicional: { Plan: "Fibra 300", Antigüedad: "3 años", Segmento: "Residencial" },
     creado: "2026-08-11T15:20:00",
+    creadoPor: "IVR Atención",
+    creadoVia: "ivr",
     actualizado: "2026-10-02T11:30:00",
-    actualizadoPor: "Agente: Laura Gómez",
+    actualizadoPor: "Laura Gómez",
+    actualizadoVia: "hermes",
   },
   {
     id: "cli-10",
@@ -272,8 +307,11 @@ export const clientes: Cliente[] = [
     formasContacto: [tel("+54 9 221 400-5566", "Celular", true)],
     infoAdicional: { Plan: "Móvil 20GB", Antigüedad: "8 meses", Segmento: "Residencial" },
     creado: "2026-09-15T10:00:00",
+    creadoPor: "WhatsApp entrante",
+    creadoVia: "automatico",
     actualizado: "2026-09-15T10:00:00",
-    actualizadoPor: "Interacción entrante",
+    actualizadoPor: "WhatsApp entrante",
+    actualizadoVia: "automatico",
   },
 ];
 

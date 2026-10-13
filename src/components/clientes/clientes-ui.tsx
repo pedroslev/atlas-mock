@@ -13,7 +13,9 @@ import type {
   EstadoObjetivo,
   Etiqueta,
   OrigenObjetivo,
+  ViaCarga,
 } from "@/lib/mock-clientes";
+import { formatFecha } from "@/lib/mock-clientes";
 
 const CANAL_ICON = {
   llamada: Phone,
@@ -80,6 +82,26 @@ export function EtiquetaBadge({
       {etiqueta.nombre}
       {children}
     </Badge>
+  );
+}
+
+// Por dónde entró o se modificó un cliente: importación, Olimpo (usuario),
+// Hermes (agente), IVR, API o alta automática.
+export function ViaBadge({ via }: { via: ViaCarga }) {
+  const t = useT();
+  return <Badge variant="outline">{t(`clientes.via.${via}`)}</Badge>;
+}
+
+// Celda "fecha + quién + por dónde" para alta y última actualización.
+export function TrazaCelda({ fecha, quien, via }: { fecha: string; quien: string; via: ViaCarga }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="whitespace-nowrap">{formatFecha(fecha, true)}</span>
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <ViaBadge via={via} />
+        <span className="truncate">{quien}</span>
+      </span>
+    </div>
   );
 }
 

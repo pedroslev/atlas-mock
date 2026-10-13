@@ -148,10 +148,22 @@ function DatosBasicos({ cliente }: { cliente: Cliente }) {
       <CardHeader>
         <CardTitle>{t("clientes.ficha.datosBasicos")}</CardTitle>
         <CardDescription>
-          {t("clientes.ficha.trazabilidad", {
-            fecha: formatFecha(cliente.actualizado, true),
-            quien: cliente.actualizadoPor,
-          })}
+          <span className="flex flex-col gap-0.5">
+            <span>
+              {t("clientes.ficha.alta", {
+                fecha: formatFecha(cliente.creado, true),
+                quien: cliente.creadoPor,
+                via: t(`clientes.via.${cliente.creadoVia}`),
+              })}
+            </span>
+            <span>
+              {t("clientes.ficha.trazabilidad", {
+                fecha: formatFecha(cliente.actualizado, true),
+                quien: cliente.actualizadoPor,
+                via: t(`clientes.via.${cliente.actualizadoVia}`),
+              })}
+            </span>
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">

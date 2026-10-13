@@ -10,7 +10,7 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
+import { ADefinir, EtiquetaBadge, TrazaCelda } from "@/components/clientes/clientes-ui";
 import {
   clientes,
   getEtiqueta,
@@ -77,6 +77,24 @@ export default function ClientesPage() {
               return e ? <EtiquetaBadge key={id} etiqueta={e} /> : null;
             })}
           </div>
+        ),
+      },
+      {
+        accessorKey: "creado",
+        header: t("clientes.col.alta"),
+        Cell: ({ row }) => (
+          <TrazaCelda fecha={row.original.creado} quien={row.original.creadoPor} via={row.original.creadoVia} />
+        ),
+      },
+      {
+        accessorKey: "actualizado",
+        header: t("clientes.col.actualizacion"),
+        Cell: ({ row }) => (
+          <TrazaCelda
+            fecha={row.original.actualizado}
+            quien={row.original.actualizadoPor}
+            via={row.original.actualizadoVia}
+          />
         ),
       },
     ],
