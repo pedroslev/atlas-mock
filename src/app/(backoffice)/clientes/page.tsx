@@ -10,9 +10,7 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
-import { getProyecto } from "@/lib/mock-data";
 import {
   clientes,
   getEtiqueta,
@@ -58,6 +56,12 @@ export default function ClientesPage() {
         ),
       },
       {
+        id: "idExterno",
+        header: t("clientes.col.idExterno"),
+        accessorFn: (c) => c.idExterno ?? "—",
+        Cell: ({ cell }) => <span className="font-mono text-xs">{cell.getValue<string>()}</span>,
+      },
+      {
         id: "telefono",
         header: t("clientes.col.telefono"),
         accessorFn: (c) => telefonoPrincipal(c) ?? "—",
@@ -74,24 +78,6 @@ export default function ClientesPage() {
             })}
           </div>
         ),
-      },
-      {
-        id: "visibilidad",
-        header: t("clientes.col.visibilidad"),
-        accessorFn: (c) => c.ocultoEn.length,
-        Cell: ({ row }) =>
-          row.original.ocultoEn.length === 0 ? (
-            <span className="text-muted-foreground">{t("clientes.visibleTodos")}</span>
-          ) : (
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="text-xs text-muted-foreground">{t("clientes.todosMenos")}</span>
-              {row.original.ocultoEn.map((pid) => (
-                <Badge key={pid} variant="neutral">
-                  {getProyecto(pid)?.nombre}
-                </Badge>
-              ))}
-            </div>
-          ),
       },
     ],
     [t]

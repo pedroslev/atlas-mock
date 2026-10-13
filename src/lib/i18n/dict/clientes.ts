@@ -7,15 +7,13 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 export const clientes: NamespaceDict = {
   es: {
     descripcion:
-      "Base de clientes del tenant. Cada cliente se carga una vez y después solo se actualiza; por defecto se ve en todos los proyectos, salvo en los que se le saque la visibilidad.",
+      "Base de clientes del tenant. Cada cliente se carga una vez y después solo se actualiza.",
     nuevo: "Nuevo cliente",
     importar: "Importar clientes",
     "col.cliente": "Cliente",
     "col.identificacion": "Identificación",
+    "col.idExterno": "ID externo",
     "col.telefono": "Teléfono principal",
-    "col.visibilidad": "Visibilidad",
-    visibleTodos: "Visible en todos los proyectos",
-    todosMenos: "Oculto en",
     verFicha: "Ver ficha",
 
     aDefinir: "A definir",
@@ -27,11 +25,6 @@ export const clientes: NamespaceDict = {
     "ficha.tipoDoc": "Tipo de identificación",
     "ficha.nroDoc": "Número",
     "ficha.idExterno": "ID externo",
-    "ficha.visibilidad": "Visibilidad por proyecto",
-    "ficha.visibilidadDesc": "El cliente es del tenant y se ve en todos los proyectos. Apagá los proyectos en los que no tiene que verse (por ejemplo, un BPO con mandantes separados).",
-    "ficha.visibilidadDefault": "¿Un cliente nuevo arranca visible en todos los proyectos o solo en el del input que lo creó? Para BPOs puede convenir lo segundo.",
-    "ficha.visibleEnN": "Visible en {n} de {total} proyectos",
-    "ficha.ocultoEnProyecto": "Oculto: los agentes y supervisores de este proyecto no lo ven",
     "ficha.agregarCampo": "Agregar campo",
     "ficha.formasContacto": "Formas de contacto",
     "ficha.formasContactoDesc": "Por estos datos se reconoce al cliente cuando llama o escribe.",
@@ -47,7 +40,7 @@ export const clientes: NamespaceDict = {
     "col.etiquetas": "Etiquetas",
     administrarEtiquetas: "Administrar etiquetas",
     "ficha.etiquetas": "Etiquetas",
-    "ficha.etiquetasDesc": "Marcas para filtrar y segmentar. No cambian en qué proyectos se ve el cliente.",
+    "ficha.etiquetasDesc": "Marcas para filtrar y segmentar.",
     "ficha.agregarEtiqueta": "Agregar etiqueta",
     "ficha.quitarEtiqueta": "Quitar etiqueta {nombre}",
     "ficha.buscarEtiqueta": "Buscar etiqueta…",
@@ -94,6 +87,8 @@ export const clientes: NamespaceDict = {
     "imp.op.esNo": "Es No",
 
     "imp.titulo": "Importar clientes",
+    "imp.pasos": "Pasos de la importación",
+    "imp.pasoBloqueado": "Completá los pasos anteriores para llegar acá",
     "imp.cancelar": "Cancelar",
     "imp.volverClientes": "Volver a clientes",
     "imp.otraImportacion": "Importar otro archivo",
@@ -257,7 +252,6 @@ export const clientes: NamespaceDict = {
     "et.color.destructive": "Rojo",
     "et.color.neutral": "Gris",
     "et.color.secondary": "Violeta",
-    "et.noVisibilidad": "Las etiquetas nunca cambian la visibilidad de un cliente: un error al etiquetar no puede exponer datos a otro proyecto.",
 
     "canal.llamada": "Llamada",
     "canal.whatsapp": "WhatsApp",

@@ -398,14 +398,20 @@ export function ImportarClientes() {
     !archivo.problema &&
     (!ES_TEXTO(config.formato) || config.sepCampos.trim() !== "");
   const faltanBasicos = BASICOS.filter((b) => b.obligatorio && !basicos[b.key]);
-  const puedeAvanzar =
-    (paso === "archivo" && archivoOk) ||
-    (paso === "basicos" && faltanBasicos.length === 0) ||
-    (paso === "contacto" && contactos.some((c) => c.columna)) ||
-    (paso === "adicionales" &&
+  // Si un paso está completo (habilita avanzar desde ahí).
+  const pasoOk = (p: Paso) =>
+    (p === "archivo" && archivoOk) ||
+    (p === "basicos" && faltanBasicos.length === 0) ||
+    (p === "contacto" && contactos.some((c) => c.columna)) ||
+    (p === "adicionales" &&
       restantes.every((c) => !cfg(c).incluir || cfg(c).nombre.trim()) &&
       vacios.every((v) => v.nombre.trim())) ||
-    paso === "opciones";
+    p === "opciones";
+  const puedeAvanzar = pasoOk(paso);
+  // Hasta qué paso se puede saltar con el indicador de arriba: hasta el
+  // primero que todavía no está completo.
+  const primeroIncompleto = PASOS.findIndex((p) => p !== "revision" && !pasoOk(p));
+  const maxAlcanzable = primeroIncompleto === -1 ? PASOS.length - 1 : primeroIncompleto;
 
   const reset = () => {
     const a = construirArchivo(CONFIG_INICIAL);
@@ -465,7 +471,11 @@ export function ImportarClientes() {
           }
         />
 
-        <Stepper actual={importado ? PASOS.length : idx} />
+        <Stepper
+          actual={importado ? PASOS.length : idx}
+          maxAlcanzable={importado ? -1 : maxAlcanzable}
+          onIr={(i) => setPaso(PASOS[i])}
+        />
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
           <Card className="min-w-0">
@@ -549,30 +559,58 @@ export function ImportarClientes() {
   );
 }
 
-function Stepper({ actual }: { actual: number }) {
+// Indicador de pasos clickeable (pedido de producto 2026-10-13): se puede ir
+// a cualquier paso ya visitado o alcanzable; los que requieren completar uno
+// anterior quedan deshabilitados.
+function Stepper({
+  actual,
+  maxAlcanzable,
+  onIr,
+}: {
+  actual: number;
+  maxAlcanzable: number;
+  onIr: (i: number) => void;
+}) {
   const t = useT();
   return (
-    <ol className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-      {PASOS.map((p, i) => (
-        <li key={p} className="flex items-center gap-2">
-          <span
-            className={cn(
-              "flex size-5 items-center justify-center rounded-full text-[11px] font-semibold",
-              i < actual && "bg-primary text-primary-foreground",
-              i === actual && "bg-primary text-primary-foreground ring-4 ring-primary/20",
-              i > actual && "bg-muted text-muted-foreground"
-            )}
-            aria-current={i === actual ? "step" : undefined}
-          >
-            {i < actual ? <Check className="size-3" /> : i + 1}
-          </span>
-          <span className={cn("text-xs", i === actual ? "font-medium text-foreground" : "text-muted-foreground")}>
-            {t(`clientes.imp.paso.${p}`)}
-          </span>
-          {i < PASOS.length - 1 && <span aria-hidden className="h-px w-4 bg-border" />}
-        </li>
-      ))}
-    </ol>
+    <nav aria-label={t("clientes.imp.pasos")}>
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {PASOS.map((p, i) => {
+          const habilitado = i <= maxAlcanzable && i !== actual;
+          return (
+            <li key={p} className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={!habilitado}
+                onClick={() => onIr(i)}
+                aria-current={i === actual ? "step" : undefined}
+                title={!habilitado && i > actual ? t("clientes.imp.pasoBloqueado") : undefined}
+                className={cn(
+                  "flex items-center gap-2 rounded-full py-1 pr-2.5 pl-1 transition-colors",
+                  habilitado && "hover:bg-muted",
+                  !habilitado && i !== actual && "cursor-not-allowed opacity-60"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-5 items-center justify-center rounded-full text-[11px] font-semibold",
+                    i < actual && "bg-primary text-primary-foreground",
+                    i === actual && "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                    i > actual && "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {i < actual ? <Check className="size-3" /> : i + 1}
+                </span>
+                <span className={cn("text-xs", i === actual ? "font-medium text-foreground" : "text-muted-foreground")}>
+                  {t(`clientes.imp.paso.${p}`)}
+                </span>
+              </button>
+              {i < PASOS.length - 1 && <span aria-hidden className="h-px w-4 bg-border" />}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 

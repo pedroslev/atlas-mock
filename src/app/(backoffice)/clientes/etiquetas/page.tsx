@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Info, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -79,11 +79,6 @@ export default function EtiquetasPage() {
           </Button>
         }
       />
-
-      <p className="flex items-start gap-2 rounded-lg bg-accent px-4 py-3 text-sm text-accent-foreground">
-        <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-        {t("clientes.et.noVisibilidad")}
-      </p>
 
       <MitrolTable
         columns={columns}

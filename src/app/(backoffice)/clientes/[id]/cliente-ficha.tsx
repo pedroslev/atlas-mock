@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -28,7 +27,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
-import { proyectos } from "@/lib/mock-data";
 import {
   etiquetasCatalogo,
   formatFecha,
@@ -53,10 +51,9 @@ export function ClienteFicha({ cliente }: { cliente: Cliente }) {
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="flex min-w-0 flex-col gap-6">
         <DatosBasicos cliente={cliente} />
-        <Visibilidad cliente={cliente} />
+        <Etiquetas cliente={cliente} />
       </div>
       <div className="flex min-w-0 flex-col gap-6">
-        <Etiquetas cliente={cliente} />
         <FormasContacto formas={cliente.formasContacto} />
         <InfoAdicional cliente={cliente} />
       </div>
@@ -64,8 +61,7 @@ export function ClienteFicha({ cliente }: { cliente: Cliente }) {
   );
 }
 
-// Etiquetas del catálogo (no texto libre). No cambian la visibilidad —
-// decisión de producto 2026-10-08.
+// Etiquetas del catálogo (no texto libre) — decisión de producto 2026-10-08.
 function Etiquetas({ cliente }: { cliente: Cliente }) {
   const t = useT();
   const [ids, setIds] = useState<string[]>(cliente.etiquetas);
@@ -218,59 +214,6 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
                     <Badge variant="destructive">{t("clientes.ficha.noContactar")}</Badge>
                   )}
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Clientes globales: por defecto se ven en todos los proyectos y se puede
-// sacar la visibilidad en los que no corresponda (ej. BPO con mandantes).
-function Visibilidad({ cliente }: { cliente: Cliente }) {
-  const t = useT();
-  const [ocultoEn, setOcultoEn] = useState<string[]>(cliente.ocultoEn);
-  const visibles = proyectos.length - ocultoEn.length;
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
-          <CardTitle>{t("clientes.ficha.visibilidad")}</CardTitle>
-          <CardDescription>{t("clientes.ficha.visibilidadDesc")}</CardDescription>
-        </div>
-        <ADefinir nota={t("clientes.ficha.visibilidadDefault")} />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <span className="text-sm text-muted-foreground">
-          {ocultoEn.length === 0
-            ? t("clientes.visibleTodos")
-            : t("clientes.ficha.visibleEnN", { n: visibles, total: proyectos.length })}
-        </span>
-        <ul className="flex flex-col divide-y rounded-lg border">
-          {proyectos.map((p) => {
-            const visible = !ocultoEn.includes(p.id);
-            return (
-              <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <label htmlFor={`vis-${p.id}`} className="flex flex-col">
-                  <span className={visible ? "text-sm font-medium" : "text-sm text-muted-foreground"}>
-                    {p.nombre}
-                  </span>
-                  {!visible && (
-                    <span className="text-xs text-muted-foreground">
-                      {t("clientes.ficha.ocultoEnProyecto")}
-                    </span>
-                  )}
-                </label>
-                <Switch
-                  id={`vis-${p.id}`}
-                  checked={visible}
-                  onCheckedChange={(on) =>
-                    setOcultoEn((ids) => (on ? ids.filter((id) => id !== p.id) : [...ids, p.id]))
-                  }
-                />
               </li>
             );
           })}
