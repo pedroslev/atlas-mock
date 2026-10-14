@@ -70,16 +70,26 @@ export function OrigenBadge({ origen }: { origen: OrigenObjetivo }) {
   );
 }
 
+// Las etiquetas se ven siempre en MAYÚSCULA. El color es libre (hex): el fondo
+// es una versión suave del color y el texto una más oscura, para que se lea.
 export function EtiquetaBadge({
   etiqueta,
   children,
 }: {
-  etiqueta: Etiqueta;
+  etiqueta: Pick<Etiqueta, "nombre" | "color" | "descripcion">;
   children?: React.ReactNode;
 }) {
   return (
-    <Badge variant={etiqueta.color} title={etiqueta.descripcion} className="gap-1">
-      {etiqueta.nombre}
+    <Badge
+      variant="outline"
+      title={etiqueta.descripcion}
+      className="gap-1 border-transparent"
+      style={{
+        backgroundColor: `color-mix(in oklab, ${etiqueta.color} 16%, transparent)`,
+        color: `color-mix(in oklab, ${etiqueta.color}, black 30%)`,
+      }}
+    >
+      {etiqueta.nombre.toLocaleUpperCase("es-AR")}
       {children}
     </Badge>
   );

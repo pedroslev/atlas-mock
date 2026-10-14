@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Plus, Tags, Upload } from "lucide-react";
+import { Tags, Upload } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -10,40 +10,35 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { ADefinir, EtiquetaBadge, TrazaCelda } from "@/components/clientes/clientes-ui";
-import {
-  clientes,
-  getEtiqueta,
-  nombreCompleto,
-  telefonoPrincipal,
-  type Cliente,
-} from "@/lib/mock-clientes";
+import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
+import { clientes, getEtiqueta, telefonoPrincipal, type Cliente } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
 // El listado muestra solo datos básicos y etiquetas (feedback de producto
-// 2026-10-09): nada derivado de interacciones ni de objetivos de contacto.
-type Fila = Cliente & { nombreCompleto: string };
-
+// 2026-10-09 y 2026-10-14): nombre y apellido separados, sin alta/última
+// actualización (quedan en la ficha) y sin alta manual: por ahora los
+// clientes entran solo por importación masiva.
 export default function ClientesPage() {
   const t = useT();
-  // Sin filtros propios arriba (feedback 2026-10-09): la búsqueda y los
-  // filtros por columna de la tabla alcanzan.
-  const filas = useMemo<Fila[]>(
-    () => clientes.map((c) => ({ ...c, nombreCompleto: nombreCompleto(c) })),
-    []
-  );
+  const filas = useMemo<Cliente[]>(() => clientes, []);
 
-  const columns = useMemo<MRT_ColumnDef<Fila>[]>(
+  const columns = useMemo<MRT_ColumnDef<Cliente>[]>(
     () => [
       {
-        accessorKey: "nombreCompleto",
-        header: t("clientes.col.cliente"),
+        accessorKey: "nombre",
+        header: t("clientes.col.nombre"),
         Cell: ({ row }) => (
-          <Link
-            href={`/clientes/${row.original.id}`}
-            className="font-medium hover:underline"
-          >
-            {row.original.nombreCompleto}
+          <Link href={`/clientes/${row.original.id}`} className="font-medium hover:underline">
+            {row.original.nombre}
+          </Link>
+        ),
+      },
+      {
+        accessorKey: "apellido",
+        header: t("clientes.col.apellido"),
+        Cell: ({ row }) => (
+          <Link href={`/clientes/${row.original.id}`} className="font-medium hover:underline">
+            {row.original.apellido}
           </Link>
         ),
       },
@@ -51,9 +46,7 @@ export default function ClientesPage() {
         id: "identificacion",
         header: t("clientes.col.identificacion"),
         accessorFn: (c) => `${c.tipoDoc} ${c.nroDoc}`,
-        Cell: ({ cell }) => (
-          <span className="text-muted-foreground">{cell.getValue<string>()}</span>
-        ),
+        Cell: ({ cell }) => <span className="text-muted-foreground">{cell.getValue<string>()}</span>,
       },
       {
         id: "idExterno",
@@ -79,24 +72,6 @@ export default function ClientesPage() {
           </div>
         ),
       },
-      {
-        accessorKey: "creado",
-        header: t("clientes.col.alta"),
-        Cell: ({ row }) => (
-          <TrazaCelda fecha={row.original.creado} quien={row.original.creadoPor} via={row.original.creadoVia} />
-        ),
-      },
-      {
-        accessorKey: "actualizado",
-        header: t("clientes.col.actualizacion"),
-        Cell: ({ row }) => (
-          <TrazaCelda
-            fecha={row.original.actualizado}
-            quien={row.original.actualizadoPor}
-            via={row.original.actualizadoVia}
-          />
-        ),
-      },
     ],
     [t]
   );
@@ -115,20 +90,15 @@ export default function ClientesPage() {
                 {t("clientes.administrarEtiquetas")}
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button asChild>
               <Link href="/clientes/importar">
                 <Upload />
                 {t("clientes.importar")}
               </Link>
             </Button>
-            <Button>
-              <Plus />
-              {t("clientes.nuevo")}
-            </Button>
           </>
         }
       />
-
 
       <MitrolTable
         columns={columns}
@@ -138,15 +108,8 @@ export default function ClientesPage() {
           renderRowActions: ({ row }) => (
             <RowActions
               actions={[
-                {
-                  label: t("clientes.verFicha"),
-                  href: `/clientes/${row.original.id}`,
-                },
-                {
-                  label: t("common.acciones.eliminar"),
-                  destructive: true,
-                  separatorBefore: true,
-                },
+                { label: t("clientes.verFicha"), href: `/clientes/${row.original.id}` },
+                { label: t("common.acciones.eliminar"), destructive: true, separatorBefore: true },
               ]}
             />
           ),

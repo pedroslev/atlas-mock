@@ -1,24 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Star, AtSign, Phone, MessageCircle, Globe, X } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Star, AtSign, Phone, MessageCircle, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -26,13 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
+import { ADefinir, EtiquetaBadge, ViaBadge } from "@/components/clientes/clientes-ui";
 import {
-  etiquetasCatalogo,
   formatFecha,
   getEtiqueta,
+  nombreCompleto,
   type Cliente,
   type FormaContacto,
+  type ViaCarga,
 } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
@@ -43,17 +28,15 @@ const FORMA_ICON: Record<FormaContacto["tipo"], typeof Phone> = {
   red: Globe,
 };
 
-// Pantalla de edición del cliente: solo sus datos. El historial de
-// interacciones y los objetivos de contacto no van acá (feedback de producto
-// 2026-10-05).
+// Ficha del cliente, solo lectura (feedback de producto 2026-10-14): arriba
+// quién es (identificación, etiquetas, alta y última actualización); abajo
+// cómo contactarlo y la información adicional. El historial y los objetivos
+// de contacto no van acá.
 export function ClienteFicha({ cliente }: { cliente: Cliente }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="flex min-w-0 flex-col gap-6">
-        <DatosBasicos cliente={cliente} />
-        <Etiquetas cliente={cliente} />
-      </div>
-      <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex flex-col gap-6">
+      <Resumen cliente={cliente} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <FormasContacto formas={cliente.formasContacto} />
         <InfoAdicional cliente={cliente} />
       </div>
@@ -61,119 +44,75 @@ export function ClienteFicha({ cliente }: { cliente: Cliente }) {
   );
 }
 
-// Etiquetas del catálogo (no texto libre) — decisión de producto 2026-10-08.
-function Etiquetas({ cliente }: { cliente: Cliente }) {
-  const t = useT();
-  const [ids, setIds] = useState<string[]>(cliente.etiquetas);
-  const [open, setOpen] = useState(false);
-  const disponibles = etiquetasCatalogo.filter((e) => !ids.includes(e.id));
-
+function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div className="flex flex-col gap-1.5">
-          <CardTitle>{t("clientes.ficha.etiquetas")}</CardTitle>
-          <CardDescription>{t("clientes.ficha.etiquetasDesc")}</CardDescription>
-        </div>
-        <ADefinir nota={t("clientes.ficha.etiquetasQuien")} />
-      </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-2">
-        {ids.length === 0 && (
-          <span className="text-sm text-muted-foreground">{t("clientes.ficha.sinEtiquetas")}</span>
-        )}
-        {ids.map((id) => {
-          const e = getEtiqueta(id);
-          if (!e) return null;
-          return (
-            <EtiquetaBadge key={id} etiqueta={e}>
-              <button
-                type="button"
-                aria-label={t("clientes.ficha.quitarEtiqueta", { nombre: e.nombre })}
-                className="-mr-1 rounded-full opacity-70 hover:opacity-100"
-                onClick={() => setIds((xs) => xs.filter((x) => x !== id))}
-              >
-                <X />
-              </button>
-            </EtiquetaBadge>
-          );
-        })}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" disabled={disponibles.length === 0}>
-              <Plus />
-              {t("clientes.ficha.agregarEtiqueta")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-0" align="start">
-            <Command>
-              <CommandInput placeholder={t("clientes.ficha.buscarEtiqueta")} />
-              <CommandList>
-                <CommandEmpty>—</CommandEmpty>
-                <CommandGroup>
-                  {disponibles.map((e) => (
-                    <CommandItem
-                      key={e.id}
-                      value={e.nombre}
-                      onSelect={() => {
-                        setIds((xs) => [...xs, e.id]);
-                        setOpen(false);
-                      }}
-                    >
-                      <EtiquetaBadge etiqueta={e} />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Campo({ id, label, value }: { id: string; label: string; value?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} defaultValue={value ?? ""} />
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="truncate text-sm font-medium">{children}</dd>
     </div>
   );
 }
 
-function DatosBasicos({ cliente }: { cliente: Cliente }) {
+function Traza({ label, fecha, quien, via }: { label: string; fecha: string; quien: string; via: ViaCarga }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium">{formatFecha(fecha, true)}</span>
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <ViaBadge via={via} />
+        <span className="truncate">{quien}</span>
+      </span>
+    </div>
+  );
+}
+
+function Resumen({ cliente }: { cliente: Cliente }) {
   const t = useT();
+  const iniciales = `${cliente.nombre[0] ?? ""}${cliente.apellido[0] ?? ""}`;
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{t("clientes.ficha.datosBasicos")}</CardTitle>
-        <CardDescription>
-          <span className="flex flex-col gap-0.5">
-            <span>
-              {t("clientes.ficha.alta", {
-                fecha: formatFecha(cliente.creado, true),
-                quien: cliente.creadoPor,
-                via: t(`clientes.via.${cliente.creadoVia}`),
-              })}
-            </span>
-            <span>
-              {t("clientes.ficha.trazabilidad", {
-                fecha: formatFecha(cliente.actualizado, true),
-                quien: cliente.actualizadoPor,
-                via: t(`clientes.via.${cliente.actualizadoVia}`),
-              })}
-            </span>
-          </span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <Campo id="nombre" label={t("clientes.ficha.nombre")} value={cliente.nombre} />
-        <Campo id="apellido" label={t("clientes.ficha.apellido")} value={cliente.apellido} />
-        <Campo id="tipoDoc" label={t("clientes.ficha.tipoDoc")} value={cliente.tipoDoc} />
-        <Campo id="nroDoc" label={t("clientes.ficha.nroDoc")} value={cliente.nroDoc} />
-        <div className="sm:col-span-2">
-          <Campo id="idExterno" label={t("clientes.ficha.idExterno")} value={cliente.idExterno} />
+      <CardContent className="flex flex-col gap-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="size-12">
+              <AvatarFallback className="text-base font-semibold">{iniciales}</AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <span className="truncate text-lg font-semibold">{nombreCompleto(cliente)}</span>
+              <div className="flex flex-wrap gap-1">
+                {cliente.etiquetas.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">{t("clientes.ficha.sinEtiquetas")}</span>
+                ) : (
+                  cliente.etiquetas.map((id) => {
+                    const e = getEtiqueta(id);
+                    return e ? <EtiquetaBadge key={id} etiqueta={e} /> : null;
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <Traza
+              label={t("clientes.col.alta")}
+              fecha={cliente.creado}
+              quien={cliente.creadoPor}
+              via={cliente.creadoVia}
+            />
+            <Traza
+              label={t("clientes.col.actualizacion")}
+              fecha={cliente.actualizado}
+              quien={cliente.actualizadoPor}
+              via={cliente.actualizadoVia}
+            />
+          </div>
         </div>
+        <dl className="grid gap-4 border-t pt-4 sm:grid-cols-3">
+          <Dato label={t("clientes.ficha.tipoDoc")}>{cliente.tipoDoc}</Dato>
+          <Dato label={t("clientes.ficha.nroDoc")}>{cliente.nroDoc}</Dato>
+          <Dato label={t("clientes.ficha.idExterno")}>
+            <span className="font-mono">{cliente.idExterno ?? "—"}</span>
+          </Dato>
+        </dl>
       </CardContent>
     </Card>
   );
@@ -183,15 +122,9 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
   const t = useT();
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div>
-          <CardTitle>{t("clientes.ficha.formasContacto")}</CardTitle>
-          <CardDescription>{t("clientes.ficha.formasContactoDesc")}</CardDescription>
-        </div>
-        <Button variant="outline" size="sm">
-          <Plus />
-          {t("clientes.ficha.agregarForma")}
-        </Button>
+      <CardHeader>
+        <CardTitle>{t("clientes.ficha.formasContacto")}</CardTitle>
+        <CardDescription>{t("clientes.ficha.formasContactoDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="flex flex-col divide-y">
@@ -203,9 +136,7 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span
                     className={
-                      f.estado === "invalido"
-                        ? "truncate text-muted-foreground line-through"
-                        : "truncate font-medium"
+                      f.estado === "invalido" ? "truncate text-muted-foreground line-through" : "truncate font-medium"
                     }
                   >
                     {f.valor}
@@ -219,9 +150,7 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
                       {t("clientes.ficha.principal")}
                     </Badge>
                   )}
-                  {f.estado === "invalido" && (
-                    <Badge variant="neutral">{t("clientes.ficha.invalido")}</Badge>
-                  )}
+                  {f.estado === "invalido" && <Badge variant="neutral">{t("clientes.ficha.invalido")}</Badge>}
                   {f.estado === "noContactar" && (
                     <Badge variant="destructive">{t("clientes.ficha.noContactar")}</Badge>
                   )}
@@ -237,6 +166,7 @@ function FormasContacto({ formas }: { formas: FormaContacto[] }) {
 
 function InfoAdicional({ cliente }: { cliente: Cliente }) {
   const t = useT();
+  const entradas = Object.entries(cliente.infoAdicional);
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -246,16 +176,18 @@ function InfoAdicional({ cliente }: { cliente: Cliente }) {
         </div>
         <ADefinir nota={t("clientes.ficha.infoAdicionalPisa")} />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Object.entries(cliente.infoAdicional).map(([campo, valor]) => (
-            <Campo key={campo} id={`info-${campo}`} label={campo} value={valor} />
-          ))}
-        </div>
-        <Button variant="outline" size="sm" className="self-start">
-          <Plus />
-          {t("clientes.ficha.agregarCampo")}
-        </Button>
+      <CardContent>
+        {entradas.length === 0 ? (
+          <span className="text-sm text-muted-foreground">—</span>
+        ) : (
+          <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            {entradas.map(([campo, valor]) => (
+              <Dato key={campo} label={campo}>
+                {valor || "—"}
+              </Dato>
+            ))}
+          </dl>
+        )}
       </CardContent>
     </Card>
   );

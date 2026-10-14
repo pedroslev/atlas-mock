@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
-import { clientes, getCliente, nombreCompleto } from "@/lib/mock-clientes";
+import { clientes, getCliente } from "@/lib/mock-clientes";
 import { ClienteFicha } from "./cliente-ficha";
 
 export function generateStaticParams() {
   return clientes.map((c) => ({ id: c.id }));
 }
 
+// Ficha del cliente: solo lectura (feedback de producto 2026-10-14).
 export default async function ClientePage({
   params,
 }: {
@@ -20,21 +20,7 @@ export default async function ClientePage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={nombreCompleto(cliente)}
-        description={
-          <T
-            k="clientes.ficha.descripcion"
-            vars={{ doc: `${cliente.tipoDoc} ${cliente.nroDoc}` }}
-          />
-        }
-        backHref="/clientes"
-        actions={
-          <Button>
-            <T k="common.acciones.guardar" />
-          </Button>
-        }
-      />
+      <PageHeader title={<T k="clientes.ficha.titulo" />} backHref="/clientes" />
       <ClienteFicha cliente={cliente} />
     </div>
   );

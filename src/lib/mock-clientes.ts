@@ -466,26 +466,55 @@ export function getNotasDeCliente(clienteId: string) {
     .sort((a, b) => Number(!!b.fijada) - Number(!!a.fijada) || b.fecha.localeCompare(a.fecha));
 }
 
-// Catálogo de etiquetas, administrado en Olimpo (nombre + color). El color usa
-// las variantes de Badge para quedar dentro de los tokens del design system.
-export type ColorEtiqueta = "info" | "success" | "warning" | "destructive" | "neutral" | "secondary";
+// Catálogo de etiquetas, administrado en Olimpo (propuesta 2026-10-08,
+// ajustes 2026-10-14): nombre siempre en MAYÚSCULA y único sin importar
+// mayúsculas/minúsculas; color de una paleta ampliada o libre (picker); prompt
+// opcional para que la IA asigne la etiqueta sola durante la conversación.
+export type ColorEtiqueta = string; // hex, ej. "#0074B5"
+
+export const PALETA_ETIQUETAS: { nombre: string; hex: string }[] = [
+  { nombre: "Azul", hex: "#0074B5" },
+  { nombre: "Celeste", hex: "#17A2B8" },
+  { nombre: "Verde", hex: "#28A745" },
+  { nombre: "Lima", hex: "#7CB342" },
+  { nombre: "Amarillo", hex: "#E0A800" },
+  { nombre: "Naranja", hex: "#F57C00" },
+  { nombre: "Rojo", hex: "#D7373F" },
+  { nombre: "Rosa", hex: "#D81B60" },
+  { nombre: "Violeta", hex: "#807CDB" },
+  { nombre: "Púrpura", hex: "#7B1FA2" },
+  { nombre: "Marrón", hex: "#8D6E63" },
+  { nombre: "Gris", hex: "#6A6A6A" },
+];
 
 export type Etiqueta = {
   id: string;
   nombre: string;
   descripcion?: string;
+  prompt?: string;
   color: ColorEtiqueta;
 };
 
 export const etiquetasCatalogo: Etiqueta[] = [
-  { id: "et-vip", nombre: "VIP", descripcion: "Clientes de alto valor: atención preferencial", color: "secondary" },
-  { id: "et-tarjeta", nombre: "Cartera Tarjetas", color: "info" },
-  { id: "et-prestamos", nombre: "Cartera Préstamos", color: "info" },
-  { id: "et-mora30", nombre: "Mora +30", color: "warning" },
-  { id: "et-mora90", nombre: "Mora +90", color: "destructive" },
-  { id: "et-promesa-incumplida", nombre: "Promesa incumplida", color: "warning" },
-  { id: "et-empresa", nombre: "Empresa", descripcion: "Cliente persona jurídica", color: "neutral" },
+  { id: "et-vip", nombre: "VIP", descripcion: "Clientes de alto valor: atención preferencial", color: "#807CDB", prompt: "Poné esta etiqueta si el cliente menciona que tiene más de un producto con nosotros o pide hablar con un supervisor." },
+  { id: "et-tarjeta", nombre: "CARTERA TARJETAS", color: "#0074B5" },
+  { id: "et-prestamos", nombre: "CARTERA PRÉSTAMOS", color: "#17A2B8" },
+  { id: "et-mora30", nombre: "MORA +30", color: "#E0A800" },
+  { id: "et-mora90", nombre: "MORA +90", color: "#D7373F" },
+  { id: "et-promesa-incumplida", nombre: "PROMESA INCUMPLIDA", color: "#F57C00", prompt: "Poné esta etiqueta si el cliente reconoce que no cumplió una promesa de pago anterior." },
+  { id: "et-empresa", nombre: "EMPRESA", descripcion: "Cliente persona jurídica", color: "#6A6A6A" },
+  { id: "et-baja", nombre: "QUIERE DAR DE BAJA", color: "#D81B60", prompt: "Poné esta etiqueta si el cliente dice que quiere dar de baja un servicio o cerrar la cuenta." },
+  { id: "et-reclamo", nombre: "RECLAMO ABIERTO", color: "#7B1FA2" },
+  { id: "et-refi", nombre: "REFINANCIADO", color: "#28A745" },
+  { id: "et-nuevo", nombre: "CLIENTE NUEVO", color: "#7CB342" },
+  { id: "et-sucursal", nombre: "ATENCIÓN EN SUCURSAL", color: "#8D6E63" },
 ];
+
+/** Busca una etiqueta por nombre sin importar mayúsculas/minúsculas. */
+export function etiquetaPorNombre(nombre: string, excluirId?: string) {
+  const n = nombre.trim().toLocaleUpperCase("es-AR");
+  return etiquetasCatalogo.find((e) => e.id !== excluirId && e.nombre.toLocaleUpperCase("es-AR") === n);
+}
 
 export function getEtiqueta(id: string) {
   return etiquetasCatalogo.find((e) => e.id === id);

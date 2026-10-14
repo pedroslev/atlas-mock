@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -9,42 +9,20 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { etiquetasCatalogo, type Etiqueta } from "@/lib/mock-clientes";
+import { EtiquetaDialog } from "@/components/clientes/etiqueta-dialog";
 import { EtiquetaBadge } from "@/components/clientes/clientes-ui";
-import { cn } from "@/lib/utils";
-import {
-  clientesConEtiqueta,
-  etiquetasCatalogo,
-  type ColorEtiqueta,
-  type Etiqueta,
-} from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
-const COLORES: ColorEtiqueta[] = ["info", "success", "warning", "destructive", "neutral", "secondary"];
-
-type Fila = Etiqueta & { clientes: number };
-
-// Catálogo de etiquetas de clientes (propuesta 2026-10-08). Se administra
-// acá para que no convivan variantes de texto libre.
+// Catálogo de etiquetas de clientes (propuesta 2026-10-08, ajustes
+// 2026-10-14): sin columna de cantidad de clientes, con prompt para IA.
 export default function EtiquetasPage() {
   const t = useT();
   const [etiquetas, setEtiquetas] = useState<Etiqueta[]>(etiquetasCatalogo);
   const [editando, setEditando] = useState<Etiqueta | "nueva" | null>(null);
 
-  const filas = useMemo<Fila[]>(
-    () => etiquetas.map((e) => ({ ...e, clientes: clientesConEtiqueta(e.id) })),
-    [etiquetas]
-  );
-
-  const columns = useMemo<MRT_ColumnDef<Fila>[]>(
+  const columns = useMemo<MRT_ColumnDef<Etiqueta>[]>(
     () => [
       {
         accessorKey: "nombre",
@@ -54,13 +32,21 @@ export default function EtiquetasPage() {
       {
         accessorKey: "descripcion",
         header: t("clientes.et.col.descripcion"),
-        Cell: ({ cell }) => (
-          <span className="text-muted-foreground">{cell.getValue<string>() ?? "—"}</span>
-        ),
+        Cell: ({ cell }) => <span className="text-muted-foreground">{cell.getValue<string>() ?? "—"}</span>,
       },
       {
-        accessorKey: "clientes",
-        header: t("clientes.et.col.clientes"),
+        id: "prompt",
+        header: t("clientes.et.col.prompt"),
+        accessorFn: (e) => (e.prompt ? t("clientes.et.conPrompt") : t("clientes.et.sinPrompt")),
+        Cell: ({ row }) =>
+          row.original.prompt ? (
+            <Badge variant="info" className="gap-1" title={row.original.prompt}>
+              <Sparkles />
+              {t("clientes.et.conPrompt")}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
       },
     ],
     [t]
@@ -70,7 +56,6 @@ export default function EtiquetasPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t("clientes.et.titulo")}
-        description={t("clientes.et.descripcion")}
         backHref="/clientes"
         actions={
           <Button onClick={() => setEditando("nueva")}>
@@ -82,7 +67,7 @@ export default function EtiquetasPage() {
 
       <MitrolTable
         columns={columns}
-        data={filas}
+        data={etiquetas}
         options={{
           enableRowActions: true,
           renderRowActions: ({ row }) => (
@@ -93,10 +78,7 @@ export default function EtiquetasPage() {
                   label: t("common.acciones.eliminar"),
                   destructive: true,
                   separatorBefore: true,
-                  confirmDescription: t("clientes.et.eliminarConfirm", {
-                    nombre: row.original.nombre,
-                    n: row.original.clientes,
-                  }),
+                  confirmDescription: t("clientes.et.eliminarConfirm", { nombre: row.original.nombre }),
                   onSelect: () => setEtiquetas((es) => es.filter((e) => e.id !== row.original.id)),
                 },
               ]}
@@ -108,108 +90,13 @@ export default function EtiquetasPage() {
       <EtiquetaDialog
         key={editando === "nueva" ? "nueva" : editando?.id ?? "cerrado"}
         etiqueta={editando}
+        existentes={etiquetas}
         onClose={() => setEditando(null)}
         onSave={(e) => {
-          setEtiquetas((es) =>
-            es.some((x) => x.id === e.id) ? es.map((x) => (x.id === e.id ? e : x)) : [...es, e]
-          );
+          setEtiquetas((es) => (es.some((x) => x.id === e.id) ? es.map((x) => (x.id === e.id ? e : x)) : [...es, e]));
           setEditando(null);
         }}
       />
     </div>
-  );
-}
-
-function EtiquetaDialog({
-  etiqueta,
-  onClose,
-  onSave,
-}: {
-  etiqueta: Etiqueta | "nueva" | null;
-  onClose: () => void;
-  onSave: (e: Etiqueta) => void;
-}) {
-  const t = useT();
-  const base: Etiqueta =
-    etiqueta && etiqueta !== "nueva"
-      ? etiqueta
-      : { id: "", nombre: "", color: "info" };
-  const [nombre, setNombre] = useState(base.nombre);
-  const [descripcion, setDescripcion] = useState(base.descripcion ?? "");
-  const [color, setColor] = useState<ColorEtiqueta>(base.color);
-
-  return (
-    <Dialog open={etiqueta !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {etiqueta === "nueva" ? t("clientes.et.nueva") : t("common.acciones.editar")}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="et-nombre">{t("clientes.et.nombre")}</Label>
-            <Input
-              id="et-nombre"
-              value={nombre}
-              placeholder={t("clientes.et.placeholderNombre")}
-              onChange={(e) => setNombre(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="et-desc">{t("clientes.et.col.descripcion")}</Label>
-            <Input
-              id="et-desc"
-              value={descripcion}
-              placeholder={t("common.comunes.opcional")}
-              onChange={(e) => setDescripcion(e.target.value)}
-            />
-          </div>
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">{t("clientes.et.color")}</legend>
-            <div className="flex flex-wrap gap-2">
-              {COLORES.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-pressed={color === c}
-                  onClick={() => setColor(c)}
-                  className={cn(
-                    "rounded-full p-0.5 ring-offset-2",
-                    color === c && "ring-2 ring-primary"
-                  )}
-                >
-                  <EtiquetaBadge etiqueta={{ id: c, nombre: t(`clientes.et.color.${c}`), color: c }} />
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          {nombre.trim() && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <EtiquetaBadge etiqueta={{ ...base, nombre: nombre.trim(), color }} />
-            </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            {t("common.acciones.cancelar")}
-          </Button>
-          <Button
-            disabled={!nombre.trim()}
-            onClick={() =>
-              onSave({
-                ...base,
-                id: base.id || `et-${Date.now()}`,
-                nombre: nombre.trim(),
-                descripcion: descripcion.trim() || undefined,
-                color,
-              })
-            }
-          >
-            {t("common.acciones.guardar")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
