@@ -483,7 +483,9 @@ export function ImportarClientes() {
 
   return (
     <ArchivoCtx.Provider value={archivo}>
-      <div className="flex flex-col gap-6">
+      {/* En pantallas anchas la página no scrollea: ocupa el alto disponible
+          y cada panel (wizard y tabla de campos) tiene su propio scroll. */}
+      <div className="flex flex-col gap-4 xl:min-h-0 xl:flex-1">
         {/* Encabezado + pasos fijos arriba (siempre visibles). */}
         <div className="sticky top-0 z-20 -mx-4 bg-background px-4 sm:-mx-6 sm:px-6">
           <PageHeader
@@ -507,8 +509,8 @@ export function ImportarClientes() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-          <Card className="min-w-0">
+        <div className="grid gap-6 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+          <Card className="min-w-0 xl:min-h-0 xl:overflow-y-auto">
             <CardContent className="flex flex-col gap-6">
               {importado ? (
                 <Resultado onOtra={reset} />
@@ -583,7 +585,7 @@ export function ImportarClientes() {
             </CardContent>
           </Card>
 
-          <aside className="min-w-0 self-start xl:sticky xl:top-44">
+          <aside className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
             <ResumenCampos
               cargado={cargado && archivoOk}
               basicos={basicos}
@@ -2242,7 +2244,7 @@ function ResumenCampos({
   const asociados = grupos.flatMap((g) => g.filas).filter((f) => f.asociado).length;
 
   return (
-    <Card>
+    <Card className="xl:min-h-0 xl:flex-1">
       <CardHeader>
         <CardTitle>{t("clientes.imp.res.titulo")}</CardTitle>
         <CardDescription>
@@ -2250,13 +2252,17 @@ function ResumenCampos({
         </CardDescription>
       </CardHeader>
       {cargado && (
-        <CardContent className="max-h-[calc(100vh-22rem)] overflow-y-auto">
-          <Table>
+        <CardContent className="max-h-[60vh] overflow-y-auto pt-0 xl:max-h-none xl:min-h-0 xl:flex-1">
+          {/* Tabla sin el contenedor con scroll horizontal de <Table>, para que
+              la cabecera quede fija mientras se scrollea el panel. */}
+          <table className="w-full caption-bottom text-sm">
             <TableHeader>
-              <TableRow>
-                <TableHead>{t("clientes.imp.res.campo")}</TableHead>
-                <TableHead>{t("clientes.imp.res.origen")}</TableHead>
-                <TableHead>{t("clientes.imp.res.ejemplo")}</TableHead>
+              <TableRow className="hover:bg-transparent">
+                {[t("clientes.imp.res.campo"), t("clientes.imp.res.origen"), t("clientes.imp.res.ejemplo")].map((h) => (
+                  <TableHead key={h} className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)]">
+                    {h}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -2264,7 +2270,7 @@ function ResumenCampos({
                 <GrupoFilas key={g.titulo} titulo={g.titulo} filas={g.filas} />
               ))}
             </TableBody>
-          </Table>
+          </table>
         </CardContent>
       )}
     </Card>
