@@ -10,7 +10,7 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
+import { EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { clientes, getEtiqueta, telefonoPrincipal, type Cliente } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
@@ -83,7 +83,6 @@ export default function ClientesPage() {
         description={t("clientes.descripcion")}
         actions={
           <>
-            <ADefinir nota={t("clientes.obj.cargar.inputNota")} />
             <Button variant="outline" asChild>
               <Link href="/clientes/etiquetas">
                 <Tags />

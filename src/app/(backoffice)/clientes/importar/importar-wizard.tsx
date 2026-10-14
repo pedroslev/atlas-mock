@@ -227,6 +227,8 @@ type Validaciones = {
   valorSi?: string;
   /** Lista de opciones: carácter que separa varias opciones dentro de una celda. */
   sepOpciones?: string;
+  /** Si se valida el campo (obligatorio, mínimo/máximo, largo). Apagado por defecto. */
+  validar?: boolean;
 };
 
 type SiExiste = "reemplazar" | "siVacio" | "noTocar";
@@ -681,7 +683,7 @@ function Stepper({
 
 // Desplegable de columnas del archivo: las ya usadas en otro lado quedan en
 // gris con la aclaración de dónde se usan, pero se pueden elegir igual.
-// (Forma de mostrarlo "en uso": pendiente de elegir, checklist #19.)
+// Se marcan con "En uso" y el detalle en un tooltip (checklist #19, opción C).
 function ColumnaSelect({
   value,
   onChange,
@@ -708,7 +710,7 @@ function ColumnaSelect({
         label: <span className="font-mono text-xs">{c}</span>,
         searchText: c,
         muted: !!uso,
-        hint: uso ? t("clientes.imp.usadaEn", { donde: uso }) : undefined,
+        uso: uso ? t("clientes.imp.usadaEn", { donde: uso }) : undefined,
       };
     }),
   ];
@@ -1172,13 +1174,14 @@ function PasoAdicionales({
 }) {
   const t = useT();
   // Qué campo existente ya tomó cada columna o campo vacío (para marcarlo).
-  const destinoUsado = new Map<string, string>();
+  const destinoUsado = new Map<string, { por: string; texto: string }>();
   for (const col of restantes) {
     const c = cfg(col);
-    if (c.incluir && c.destino !== "nuevo") destinoUsado.set(c.destino, col);
+    if (c.incluir && c.destino !== "nuevo")
+      destinoUsado.set(c.destino, { por: col, texto: t("clientes.imp.usadoPor", { columna: col }) });
   }
   for (const v of vacios) {
-    if (v.destino !== "nuevo") destinoUsado.set(v.destino, v.id);
+    if (v.destino !== "nuevo") destinoUsado.set(v.destino, { por: v.id, texto: t("clientes.imp.usadoPorVacio") });
   }
   const updVacio = (id: string, c: Partial<CampoVacio>) =>
     setVacios((xs) => xs.map((x) => (x.id === id ? { ...x, ...c } : x)));
@@ -1299,7 +1302,7 @@ function TipoSelect({
 }
 
 // "Se guarda en": campo nuevo o uno existente. Los existentes que ya tomó
-// otra columna se marcan (forma de marcarlo pendiente, checklist #19).
+// otra columna se marcan con "En uso" + tooltip (checklist #19, opción C).
 function DestinoSelect({
   value,
   propio,
@@ -1308,7 +1311,7 @@ function DestinoSelect({
 }: {
   value: string;
   propio: string;
-  destinoUsado: Map<string, string>;
+  destinoUsado: Map<string, { por: string; texto: string }>;
   onChange: (v: string) => void;
 }) {
   const t = useT();
@@ -1316,20 +1319,22 @@ function DestinoSelect({
     { value: "nuevo", label: t("clientes.imp.crearNuevo") },
     ...camposAdicionalesSistema.map((e) => {
       const otra = destinoUsado.get(e.id);
-      const usado = !!otra && otra !== propio;
+      const usado = !!otra && otra.por !== propio;
       return {
         value: e.id,
         label: e.nombre,
         group: t("clientes.imp.camposExistentes"),
         muted: usado,
-        hint: usado ? t("clientes.imp.enUso") : undefined,
+        uso: usado ? otra.texto : undefined,
       };
     }),
   ];
   return <ComboSelect ariaLabel={t("clientes.imp.destino")} value={value} options={opciones} onChange={onChange} />;
 }
 
-// Validaciones según el tipo. Todo apagado por defecto.
+// Configuración del campo según el tipo (moneda, formato de fecha, opciones,
+// valor "Sí") y, aparte, el check "Validar este campo" que habilita las
+// validaciones (apagado por defecto — pedido de producto 2026-10-14).
 function ValidacionesEditor({
   tipo,
   v,
@@ -1342,110 +1347,127 @@ function ValidacionesEditor({
   valoresDetectados?: string[];
 }) {
   const t = useT();
+  const opcionesLista = Array.from(
+    new Set(
+      valoresDetectados.flatMap((d) => (v.sepOpciones ? d.split(v.sepOpciones).map((x) => x.trim()).filter(Boolean) : [d]))
+    )
+  );
+  const configuracion =
+    tipo === "moneda" || tipo === "fecha" || tipo === "lista" || (tipo === "booleano" && valoresDetectados.length > 0);
+
   return (
-    <div className="flex flex-wrap items-end gap-x-5 gap-y-3 rounded-md bg-muted/50 p-3">
-      <span className="w-full text-xs font-medium text-muted-foreground">{t("clientes.imp.validaciones")}</span>
-      <label className="flex h-8 items-center gap-2 text-sm">
-        <Checkbox checked={v.obligatorio} onCheckedChange={() => onChange({ obligatorio: !v.obligatorio })} />
-        {t("clientes.imp.obligatorio")}
-      </label>
-      {tipo === "moneda" && (
-        <div className="flex w-64 flex-col gap-1">
-          <Label className="text-xs">{t("clientes.imp.moneda")}</Label>
-          <ComboSelect
-            size="sm"
-            ariaLabel={t("clientes.imp.moneda")}
-            value={v.moneda ?? "ARS"}
-            onChange={(x) => onChange({ moneda: x })}
-            options={opcionesMoneda(t("clientes.imp.monedasFrecuentes"), t("clientes.imp.monedasTodas"))}
-          />
-        </div>
-      )}
-      {(tipo === "numero" || tipo === "moneda") && (
-        <>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">{t("clientes.imp.minimo")}</Label>
-            <Input className="h-8 w-28" type="number" value={v.min ?? ""} onChange={(e) => onChange({ min: e.target.value })} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">{t("clientes.imp.maximo")}</Label>
-            <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
-          </div>
-        </>
-      )}
-      {tipo === "texto" && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">{t("clientes.imp.largoMax")}</Label>
-          <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
-        </div>
-      )}
-      {tipo === "fecha" && (
-        <div className="flex w-44 flex-col gap-1">
-          <Label className="text-xs">{t("clientes.imp.formatoFecha")}</Label>
-          <ComboSelect
-            size="sm"
-            ariaLabel={t("clientes.imp.formatoFecha")}
-            value={v.formatoFecha ?? "DD/MM/AAAA"}
-            onChange={(x) => onChange({ formatoFecha: x })}
-            options={["DD/MM/AAAA", "DD/MM/AA", "AAAA/MM/DD", "AA/MM/DD", "MM/DD/AAAA", "MM/DD/AA"].map((f) => ({
-              value: f,
-              label: f,
-            }))}
-          />
-        </div>
-      )}
-      {tipo === "lista" && (
-        <>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">{t("clientes.imp.sepOpciones")}</Label>
-            <Input
-              className="h-8 w-24 font-mono"
-              maxLength={3}
-              placeholder="|"
-              aria-label={t("clientes.imp.sepOpciones")}
-              value={v.sepOpciones ?? ""}
-              onChange={(e) => onChange({ sepOpciones: e.target.value })}
-            />
-          </div>
-          {valoresDetectados.length > 0 && (
+    <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
+      {configuracion && (
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+          {tipo === "moneda" && (
+            <div className="flex w-64 flex-col gap-1">
+              <Label className="text-xs">{t("clientes.imp.moneda")}</Label>
+              <ComboSelect
+                size="sm"
+                ariaLabel={t("clientes.imp.moneda")}
+                value={v.moneda ?? "ARS"}
+                onChange={(x) => onChange({ moneda: x })}
+                options={opcionesMoneda(t("clientes.imp.monedasFrecuentes"), t("clientes.imp.monedasTodas"))}
+              />
+            </div>
+          )}
+          {tipo === "fecha" && (
+            <div className="flex w-44 flex-col gap-1">
+              <Label className="text-xs">{t("clientes.imp.formatoFecha")}</Label>
+              <ComboSelect
+                size="sm"
+                ariaLabel={t("clientes.imp.formatoFecha")}
+                value={v.formatoFecha ?? "DD/MM/AAAA"}
+                onChange={(x) => onChange({ formatoFecha: x })}
+                options={["DD/MM/AAAA", "DD/MM/AA", "AAAA/MM/DD", "AA/MM/DD", "MM/DD/AAAA", "MM/DD/AA"].map((f) => ({
+                  value: f,
+                  label: f,
+                }))}
+              />
+            </div>
+          )}
+          {tipo === "lista" && (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs">{t("clientes.imp.sepOpciones")}</Label>
+                <Input
+                  className="h-8 w-24 font-mono"
+                  maxLength={3}
+                  placeholder="|"
+                  aria-label={t("clientes.imp.sepOpciones")}
+                  value={v.sepOpciones ?? ""}
+                  onChange={(e) => onChange({ sepOpciones: e.target.value })}
+                />
+              </div>
+              {opcionesLista.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs">{t("clientes.imp.opcionesDetectadas")}</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {opcionesLista.map((d) => (
+                      <Badge key={d} variant="outline">
+                        {d}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <span className="w-full text-xs text-muted-foreground">{t("clientes.imp.sepOpcionesDesc")}</span>
+            </>
+          )}
+          {tipo === "booleano" && valoresDetectados.length > 0 && (
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">{t("clientes.imp.opcionesDetectadas")}</Label>
-              <div className="flex flex-wrap gap-1">
-                {Array.from(
-                  new Set(
-                    valoresDetectados.flatMap((d) =>
-                      v.sepOpciones ? d.split(v.sepOpciones).map((x) => x.trim()).filter(Boolean) : [d]
-                    )
-                  )
-                ).map((d) => (
-                  <Badge key={d} variant="outline">
-                    {d}
-                  </Badge>
-                ))}
+              <Label className="text-xs">{t("clientes.imp.valorSi")}</Label>
+              <div className="flex items-center gap-2">
+                <div className="w-32">
+                  <ComboSelect
+                    size="sm"
+                    ariaLabel={t("clientes.imp.valorSi")}
+                    value={v.valorSi ?? ""}
+                    placeholder={t("clientes.imp.elegirValor")}
+                    onChange={(x) => onChange({ valorSi: x })}
+                    options={valoresDetectados.map((d) => ({ value: d, label: d }))}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">{t("clientes.imp.restoNo")}</span>
               </div>
             </div>
           )}
-          <span className="w-full text-xs text-muted-foreground">{t("clientes.imp.sepOpcionesDesc")}</span>
-        </>
-      )}
-      {tipo === "booleano" && valoresDetectados.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">{t("clientes.imp.valorSi")}</Label>
-          <div className="flex items-center gap-2">
-            <div className="w-32">
-              <ComboSelect
-                size="sm"
-                ariaLabel={t("clientes.imp.valorSi")}
-                value={v.valorSi ?? ""}
-                placeholder={t("clientes.imp.elegirValor")}
-                onChange={(x) => onChange({ valorSi: x })}
-                options={valoresDetectados.map((d) => ({ value: d, label: d }))}
-              />
-            </div>
-            <span className="text-xs text-muted-foreground">{t("clientes.imp.restoNo")}</span>
-          </div>
         </div>
       )}
+
+      <div className={cn("flex flex-wrap items-end gap-x-5 gap-y-3", configuracion && "border-t pt-3")}>
+          <label className="flex h-8 w-full items-center gap-2 text-sm font-medium">
+            <Checkbox checked={!!v.validar} onCheckedChange={() => onChange({ validar: !v.validar })} />
+            {t("clientes.imp.validar")}
+          </label>
+          {v.validar && (
+            <>
+              <label className="flex h-8 items-center gap-2 text-sm">
+                <Checkbox checked={v.obligatorio} onCheckedChange={() => onChange({ obligatorio: !v.obligatorio })} />
+                {t("clientes.imp.obligatorio")}
+              </label>
+              {(tipo === "numero" || tipo === "moneda") && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs">{t("clientes.imp.minimo")}</Label>
+                    <Input className="h-8 w-28" type="number" value={v.min ?? ""} onChange={(e) => onChange({ min: e.target.value })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs">{t("clientes.imp.maximo")}</Label>
+                    <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
+                  </div>
+                </>
+              )}
+              {tipo === "texto" && (
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs">{t("clientes.imp.largoMax")}</Label>
+                  <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
+                </div>
+              )}
+              <ADefinir nota={t("clientes.imp.obligatorioNota")} />
+            </>
+          )}
+        </div>
     </div>
   );
 }
@@ -1459,7 +1481,7 @@ function FilaAdicional({
 }: {
   columna: string;
   c: ConfigAdicional;
-  destinoUsado: Map<string, string>;
+  destinoUsado: Map<string, { por: string; texto: string }>;
   repetido: boolean;
   onChange: (x: Partial<ConfigAdicional>) => void;
 }) {
@@ -1794,7 +1816,6 @@ function ReglasEtiquetas({
           </span>
           <p className="text-xs text-muted-foreground">{t("clientes.imp.auto.desc")}</p>
         </div>
-        <ADefinir nota={t("clientes.imp.auto.notaDinamica")} />
       </div>
 
       {reglas.map((r) => {

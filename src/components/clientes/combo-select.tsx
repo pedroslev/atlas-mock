@@ -3,6 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -27,8 +29,10 @@ export type ComboOption = {
   searchText?: string;
   /** Ya usada en otro lado: se ve en gris pero se puede elegir igual. */
   muted?: boolean;
-  /** Aclaración a la derecha (ej. "Usada en: Nombre"). */
+  /** Aclaración a la derecha. */
   hint?: string;
+  /** Ya usada en otro lado: se muestra "En uso" y el detalle en un tooltip. */
+  uso?: string;
   group?: string;
 };
 
@@ -112,6 +116,16 @@ export function ComboSelect({
                         <Check className={cn("size-4", o.value === value ? "opacity-100" : "opacity-0")} />
                         <span className="min-w-0 flex-1 truncate">{o.label}</span>
                         {o.hint && <span className="shrink-0 text-xs text-muted-foreground">{o.hint}</span>}
+                        {o.uso && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="neutral" className="shrink-0 cursor-help">
+                                {t("clientes.imp.enUso")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{o.uso}</TooltipContent>
+                          </Tooltip>
+                        )}
                       </CommandItem>
                     ))}
                 </CommandGroup>
