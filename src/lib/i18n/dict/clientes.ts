@@ -95,6 +95,10 @@ export const clientes: NamespaceDict = {
     "imp.op.esNo": "Es No",
 
     "imp.titulo": "Importar clientes",
+    "imp.cancelarTitulo": "¿Cancelar la importación?",
+    "imp.cancelarDesc": "Vas a perder el archivo cargado y todo lo que configuraste en los pasos. No se importa ningún cliente.",
+    "imp.seguirImportando": "Seguir importando",
+    "imp.descartarSalir": "Descartar y salir",
     "imp.vistaCeldas": "Así se separa cada celda",
     "imp.unaOpcion": "1 opción",
     "imp.nOpciones": "{n} opciones",

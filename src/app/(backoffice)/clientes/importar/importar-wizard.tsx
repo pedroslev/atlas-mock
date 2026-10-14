@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Check,
@@ -25,6 +26,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -508,14 +520,7 @@ export function ImportarClientes() {
           <PageHeader
             title={t("clientes.imp.titulo")}
             description={t("clientes.imp.descripcion")}
-            backHref="/clientes"
-            actions={
-              !importado && (
-                <Button variant="outline" asChild>
-                  <Link href="/clientes">{t("clientes.imp.cancelar")}</Link>
-                </Button>
-              )
-            }
+            actions={!importado && <CancelarImportacion hayCambios={cargado} />}
           />
           <div className="border-b py-3">
             <Stepper
@@ -643,6 +648,41 @@ export function ImportarClientes() {
         )}
       </div>
     </ArchivoCtx.Provider>
+  );
+}
+
+// "Cancelar" con confirmación (pedido de producto 2026-10-14): si ya hay un
+// archivo cargado, avisa que se pierde lo configurado antes de salir. Sin
+// archivo, sale directo. (El "Volver" del encabezado se quitó para que no haya
+// una salida sin confirmación.)
+function CancelarImportacion({ hayCambios }: { hayCambios: boolean }) {
+  const t = useT();
+  const router = useRouter();
+  if (!hayCambios) {
+    return (
+      <Button variant="outline" asChild>
+        <Link href="/clientes">{t("clientes.imp.cancelar")}</Link>
+      </Button>
+    );
+  }
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">{t("clientes.imp.cancelar")}</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("clientes.imp.cancelarTitulo")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("clientes.imp.cancelarDesc")}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("clientes.imp.seguirImportando")}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={() => router.push("/clientes")}>
+            {t("clientes.imp.descartarSalir")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
