@@ -156,8 +156,50 @@ const BASICOS = [
 type BasicoKey = (typeof BASICOS)[number]["key"];
 const basicosVacios = (): Record<BasicoKey, string> => ({ nombre: "", apellido: "", tipoDoc: "", nroDoc: "", idExterno: "" });
 
-const TIPOS_DOC = ["DNI", "CUIT", "CUIL", "Pasaporte", "LE", "LC"];
-const MONEDAS = ["ARS", "USD", "EUR", "BRL", "CLP", "UYU", "MXN", "COP", "PEN"];
+// Tipos de documento usados en LATAM, por país (para "Valor fijo").
+const TIPOS_DOC_LATAM: { pais: string; tipos: string[] }[] = [
+  { pais: "Argentina", tipos: ["DNI", "CUIT", "CUIL", "CDI", "LE", "LC"] },
+  { pais: "Bolivia", tipos: ["CI", "NIT"] },
+  { pais: "Brasil", tipos: ["CPF", "CNPJ", "RG"] },
+  { pais: "Chile", tipos: ["RUN", "RUT"] },
+  { pais: "Colombia", tipos: ["CC", "CE", "NIT", "TI", "PPT"] },
+  { pais: "Costa Rica", tipos: ["Cédula de identidad", "DIMEX", "Cédula jurídica"] },
+  { pais: "Cuba", tipos: ["CI"] },
+  { pais: "Ecuador", tipos: ["Cédula", "RUC"] },
+  { pais: "El Salvador", tipos: ["DUI", "NIT"] },
+  { pais: "Guatemala", tipos: ["DPI", "NIT"] },
+  { pais: "Honduras", tipos: ["DNI", "RTN"] },
+  { pais: "México", tipos: ["CURP", "RFC", "INE"] },
+  { pais: "Nicaragua", tipos: ["Cédula", "RUC"] },
+  { pais: "Panamá", tipos: ["Cédula", "RUC"] },
+  { pais: "Paraguay", tipos: ["CI", "RUC"] },
+  { pais: "Perú", tipos: ["DNI", "RUC", "CE"] },
+  { pais: "República Dominicana", tipos: ["Cédula", "RNC"] },
+  { pais: "Uruguay", tipos: ["CI", "RUT"] },
+  { pais: "Venezuela", tipos: ["CI", "RIF"] },
+  { pais: "Otros", tipos: ["Pasaporte"] },
+];
+const TIPO_DOC_DEFAULT = "Argentina|DNI";
+const tipoDocTexto = (v: string) => {
+  const [pais, tipo] = v.split("|");
+  return pais === "Otros" ? tipo : `${tipo} (${pais})`;
+};
+
+// Monedas: el estándar ISO 4217 que ya trae el navegador (Intl), con el
+// nombre en español. No hace falta un servicio externo para listarlas.
+const MONEDAS_FRECUENTES = ["ARS", "USD", "EUR", "BRL", "CLP", "UYU", "PYG", "BOB", "PEN", "COP", "MXN"];
+function opcionesMoneda(grupoFrecuentes: string, grupoTodas: string): ComboOption[] {
+  const todas = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("currency") : MONEDAS_FRECUENTES;
+  const nombres = new Intl.DisplayNames(["es-AR"], { type: "currency" });
+  const opcion = (codigo: string, group: string): ComboOption => {
+    const nombre = nombres.of(codigo) ?? codigo;
+    return { value: codigo, label: `${codigo} — ${nombre}`, searchText: `${codigo} ${nombre}`, group };
+  };
+  return [
+    ...MONEDAS_FRECUENTES.map((c) => opcion(c, grupoFrecuentes)),
+    ...todas.filter((c) => !MONEDAS_FRECUENTES.includes(c)).map((c) => opcion(c, grupoTodas)),
+  ];
+}
 
 type TipoForma = "telefono" | "whatsapp" | "email";
 type MapeoContacto = {
@@ -183,6 +225,8 @@ type Validaciones = {
   moneda?: string;
   formatoFecha?: string;
   valorSi?: string;
+  /** Lista de opciones: carácter que separa varias opciones dentro de una celda. */
+  sepOpciones?: string;
 };
 
 type SiExiste = "reemplazar" | "siVacio" | "noTocar";
@@ -243,6 +287,7 @@ function adivinarTipo(a: Archivo, columna: string): TipoCampo {
   if (vs.every((v) => /^\d{2}\/\d{2}\/\d{4}$/.test(v))) return "fecha";
   if (vs.every((v) => /^(si|no|s|n|true|false)$/i.test(v))) return "booleano";
   if (vs.every((v) => /^-?\d+([.,]\d+)?$/.test(v))) return "numero";
+  if (vs.some((v) => v.includes("|"))) return "lista";
   if (new Set(vs).size < vs.length) return "lista";
   return "texto";
 }
@@ -268,6 +313,7 @@ function configInicial(a: Archivo, columna: string): ConfigAdicional {
     formatoFecha: "DD/MM/AAAA",
     moneda: "ARS",
     valorSi: tipo === "booleano" ? muestras(a, columna).find((v) => /^(si|s|true)$/i.test(v)) : undefined,
+    sepOpciones: tipo === "lista" && muestras(a, columna).some((v) => v.includes("|")) ? "|" : "",
     siExiste: "reemplazar",
   };
 }
@@ -945,7 +991,7 @@ function PasoBasicos({
                 <ModoToggle
                   fijo={tipoDocFijo !== null}
                   onChange={(fijo) => {
-                    setTipoDocFijo(fijo ? TIPOS_DOC[0] : null);
+                    setTipoDocFijo(fijo ? TIPO_DOC_DEFAULT : null);
                     if (fijo) setBasicos((x) => ({ ...x, tipoDoc: "" }));
                   }}
                 />
@@ -955,7 +1001,9 @@ function PasoBasicos({
                   id={`b-${b.key}`}
                   value={tipoDocFijo}
                   onChange={setTipoDocFijo}
-                  options={TIPOS_DOC.map((d) => ({ value: d, label: d }))}
+                  options={TIPOS_DOC_LATAM.flatMap((g) =>
+                    g.tipos.map((tipo) => ({ value: `${g.pais}|${tipo}`, label: tipo, searchText: `${tipo} ${g.pais}`, group: g.pais }))
+                  )}
                 />
               ) : (
                 <ColumnaSelect
@@ -1302,14 +1350,14 @@ function ValidacionesEditor({
         {t("clientes.imp.obligatorio")}
       </label>
       {tipo === "moneda" && (
-        <div className="flex w-32 flex-col gap-1">
+        <div className="flex w-64 flex-col gap-1">
           <Label className="text-xs">{t("clientes.imp.moneda")}</Label>
           <ComboSelect
             size="sm"
             ariaLabel={t("clientes.imp.moneda")}
             value={v.moneda ?? "ARS"}
             onChange={(x) => onChange({ moneda: x })}
-            options={MONEDAS.map((m) => ({ value: m, label: m }))}
+            options={opcionesMoneda(t("clientes.imp.monedasFrecuentes"), t("clientes.imp.monedasTodas"))}
           />
         </div>
       )}
@@ -1346,17 +1394,39 @@ function ValidacionesEditor({
           />
         </div>
       )}
-      {tipo === "lista" && valoresDetectados.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">{t("clientes.imp.opcionesDetectadas")}</Label>
-          <div className="flex flex-wrap gap-1">
-            {valoresDetectados.map((d) => (
-              <Badge key={d} variant="outline">
-                {d}
-              </Badge>
-            ))}
+      {tipo === "lista" && (
+        <>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">{t("clientes.imp.sepOpciones")}</Label>
+            <Input
+              className="h-8 w-24 font-mono"
+              maxLength={3}
+              placeholder="|"
+              aria-label={t("clientes.imp.sepOpciones")}
+              value={v.sepOpciones ?? ""}
+              onChange={(e) => onChange({ sepOpciones: e.target.value })}
+            />
           </div>
-        </div>
+          {valoresDetectados.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">{t("clientes.imp.opcionesDetectadas")}</Label>
+              <div className="flex flex-wrap gap-1">
+                {Array.from(
+                  new Set(
+                    valoresDetectados.flatMap((d) =>
+                      v.sepOpciones ? d.split(v.sepOpciones).map((x) => x.trim()).filter(Boolean) : [d]
+                    )
+                  )
+                ).map((d) => (
+                  <Badge key={d} variant="outline">
+                    {d}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          <span className="w-full text-xs text-muted-foreground">{t("clientes.imp.sepOpcionesDesc")}</span>
+        </>
       )}
       {tipo === "booleano" && valoresDetectados.length > 0 && (
         <div className="flex flex-col gap-1">
@@ -2100,8 +2170,8 @@ function ResumenCampos({
         if (b.key === "tipoDoc" && tipoDocFijo) {
           return {
             campo: t(`clientes.imp.basico.${b.key}`),
-            origen: t("clientes.imp.res.valorFijo", { v: tipoDocFijo }),
-            ejemplo: tipoDocFijo,
+            origen: t("clientes.imp.res.valorFijo", { v: tipoDocTexto(tipoDocFijo) }),
+            ejemplo: tipoDocTexto(tipoDocFijo),
             asociado: true,
           };
         }

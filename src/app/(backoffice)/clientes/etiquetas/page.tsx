@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -9,14 +9,14 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { etiquetasCatalogo, type Etiqueta } from "@/lib/mock-clientes";
 import { EtiquetaDialog } from "@/components/clientes/etiqueta-dialog";
 import { EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { useT } from "@/lib/i18n";
 
 // Catálogo de etiquetas de clientes (propuesta 2026-10-08, ajustes
-// 2026-10-14): sin columna de cantidad de clientes, con prompt para IA.
+// 2026-10-14): sin columnas de cantidad de clientes ni de prompt (el
+// prompt se ve y edita en el diálogo).
 export default function EtiquetasPage() {
   const t = useT();
   const [etiquetas, setEtiquetas] = useState<Etiqueta[]>(etiquetasCatalogo);
@@ -33,20 +33,6 @@ export default function EtiquetasPage() {
         accessorKey: "descripcion",
         header: t("clientes.et.col.descripcion"),
         Cell: ({ cell }) => <span className="text-muted-foreground">{cell.getValue<string>() ?? "—"}</span>,
-      },
-      {
-        id: "prompt",
-        header: t("clientes.et.col.prompt"),
-        accessorFn: (e) => (e.prompt ? t("clientes.et.conPrompt") : t("clientes.et.sinPrompt")),
-        Cell: ({ row }) =>
-          row.original.prompt ? (
-            <Badge variant="info" className="gap-1" title={row.original.prompt}>
-              <Sparkles />
-              {t("clientes.et.conPrompt")}
-            </Badge>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          ),
       },
     ],
     [t]

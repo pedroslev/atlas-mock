@@ -569,12 +569,13 @@ export const csvEjemplo = {
     "SUCURSAL",
     "SEGMENTO",
     "ACEPTA_WHATSAPP",
+    "CANALES_PREF",
   ],
   filas: [
-    ["María Laura", "Fernández", "DNI", "28456789", "CRM-100234", "1155234410", "1147882210", "mlfernandez@mail.com", "S-00412", "Tarjeta Visa", "184320.50", "12", "23/09/2026", "Palermo", "Premium", "SI"],
-    ["Jorge", "Pereyra", "DNI", "31902115", "CRM-100871", "1160127788", "", "", "S-01877", "Préstamo personal", "412900", "35", "31/08/2026", "Caballito", "Clásico", "NO"],
-    ["Lucía", "Gómez", "DNI", "35220674", "CRM-101005", "3515550192", "", "lu.gomez@mail.com", "S-02210", "Tarjeta Mastercard", "58740", "8", "27/09/2026", "Córdoba Centro", "Clásico", "SI"],
-    ["Martín", "Acosta", "CUIT", "20278845123", "CRM-097754", "", "1143125500", "pagos@acostayasoc.com.ar", "", "Cuenta corriente", "890450", "41", "25/08/2026", "Microcentro", "Empresas", "NO"],
+    ["María Laura", "Fernández", "DNI", "28456789", "CRM-100234", "1155234410", "1147882210", "mlfernandez@mail.com", "S-00412", "Tarjeta Visa", "184320.50", "12", "23/09/2026", "Palermo", "Premium", "SI", "WhatsApp|Llamada"],
+    ["Jorge", "Pereyra", "DNI", "31902115", "CRM-100871", "1160127788", "", "", "S-01877", "Préstamo personal", "412900", "35", "31/08/2026", "Caballito", "Clásico", "NO", "Llamada"],
+    ["Lucía", "Gómez", "DNI", "35220674", "CRM-101005", "3515550192", "", "lu.gomez@mail.com", "S-02210", "Tarjeta Mastercard", "58740", "8", "27/09/2026", "Córdoba Centro", "Clásico", "SI", "Email|WhatsApp"],
+    ["Martín", "Acosta", "CUIT", "20278845123", "CRM-097754", "", "1143125500", "pagos@acostayasoc.com.ar", "", "Cuenta corriente", "890450", "41", "25/08/2026", "Microcentro", "Empresas", "NO", "Llamada|Email"],
   ],
 };
 

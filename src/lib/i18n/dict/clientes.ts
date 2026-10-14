@@ -97,6 +97,10 @@ export const clientes: NamespaceDict = {
     "imp.op.esNo": "Es No",
 
     "imp.titulo": "Importar clientes",
+    "imp.sepOpciones": "Separador de opciones en la celda",
+    "imp.sepOpcionesDesc": "Si una celda trae varias opciones (por ejemplo \"WhatsApp|Llamada\"), indicá el carácter que las separa. Dejalo vacío si cada celda trae una sola opción. No puede ser el mismo separador de campos del archivo.",
+    "imp.monedasFrecuentes": "Frecuentes",
+    "imp.monedasTodas": "Todas (ISO 4217)",
     "imp.auto.seRecuerdan": "Las reglas se recuerdan para las próximas importaciones. Si cambiás el mapeo, esta importación pisa la configuración anterior.",
     "imp.auto.soloEtiqueta": "Esta columna no se importa: se usa solo para etiquetar.",
     "imp.auto.noSeImportan": "No se importan",
