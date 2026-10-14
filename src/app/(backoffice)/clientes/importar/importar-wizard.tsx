@@ -261,7 +261,9 @@ type Operador =
   | "antes"
   | "despues"
   | "esSi"
-  | "esNo";
+  | "esNo"
+  | "incluye"
+  | "noIncluye";
 
 type ReglaEtiqueta = {
   id: string;
@@ -272,7 +274,8 @@ type ReglaEtiqueta = {
   etiquetas: string[];
 };
 
-const OPERADORES: Record<"texto" | "numero" | "fecha" | "booleano", Operador[]> = {
+const OPERADORES: Record<"texto" | "numero" | "fecha" | "booleano" | "lista", Operador[]> = {
+  lista: ["incluye", "noIncluye", "vacio", "noVacio"],
   texto: ["igual", "distinto", "contiene", "vacio", "noVacio"],
   numero: ["igual", "mayor", "mayorIgual", "menor", "menorIgual", "entre", "vacio"],
   fecha: ["antes", "despues", "entre", "vacio"],
@@ -295,6 +298,7 @@ function adivinarTipo(a: Archivo, columna: string): TipoCampo {
 }
 
 function familia(tipo: TipoCampo): keyof typeof OPERADORES {
+  if (tipo === "lista") return "lista";
   if (tipo === "numero" || tipo === "moneda") return "numero";
   if (tipo === "fecha") return "fecha";
   if (tipo === "booleano") return "booleano";
@@ -320,12 +324,19 @@ function configInicial(a: Archivo, columna: string): ConfigAdicional {
   };
 }
 
+/** Separa una celda en sus opciones (si no hay separador, es una sola opción). */
+function opcionesDeCelda(valor: string, sep?: string) {
+  const v = valor?.trim() ?? "";
+  if (!v) return [];
+  return sep ? v.split(sep).map((x) => x.trim()).filter(Boolean) : [v];
+}
+
 function parseFecha(v: string) {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
   return m ? new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime() : NaN;
 }
 
-function cumple(regla: ReglaEtiqueta, tipo: TipoCampo, valor: string, valorSi?: string) {
+function cumple(regla: ReglaEtiqueta, tipo: TipoCampo, valor: string, valorSi?: string, sep?: string) {
   const fam = familia(tipo);
   const v = valor?.trim() ?? "";
   const esSi = valorSi ? v.toLowerCase() === valorSi.toLowerCase() : /^(si|s|true)$/i.test(v);
@@ -338,6 +349,10 @@ function cumple(regla: ReglaEtiqueta, tipo: TipoCampo, valor: string, valorSi?: 
       return esSi;
     case "esNo":
       return !esSi;
+    case "incluye":
+      return opcionesDeCelda(v, sep).some((o) => o.toLowerCase() === regla.valor.toLowerCase());
+    case "noIncluye":
+      return !opcionesDeCelda(v, sep).some((o) => o.toLowerCase() === regla.valor.toLowerCase());
     case "contiene":
       return v.toLowerCase().includes(regla.valor.toLowerCase());
     case "igual":
@@ -436,13 +451,15 @@ export function ImportarClientes() {
   );
 
   // Tipo y nombre "en el sistema" de cualquier columna (para las reglas).
-  const infoColumna = (col: string): { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string } => {
+  const infoColumna = (
+    col: string
+  ): { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string; sep?: string } => {
     const b = BASICOS.find((x) => basicos[x.key] === col);
     if (b) return { nombre: t(`clientes.imp.basico.${b.key}`), tipo: "texto", importa: true };
     const c = contactos.find((x) => x.columna === col);
     if (c) return { nombre: c.descripcion || t(`clientes.imp.forma.${c.tipo}`), tipo: "texto", importa: true };
     const a = cfg(col);
-    return { nombre: a.nombre, tipo: a.tipo, importa: a.incluir, valorSi: a.valorSi };
+    return { nombre: a.nombre, tipo: a.tipo, importa: a.incluir, valorSi: a.valorSi, sep: a.sepOpciones };
   };
 
   const archivoOk =
@@ -643,11 +660,12 @@ function Stepper({
   const t = useT();
   return (
     <nav aria-label={t("clientes.imp.pasos")}>
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      {/* Justificado: los pasos ocupan todo el ancho y las líneas se estiran. */}
+      <ol className="flex w-full items-center">
         {PASOS.map((p, i) => {
           const habilitado = i <= maxAlcanzable && i !== actual;
           return (
-            <li key={p} className="flex items-center gap-2">
+            <li key={p} className="flex flex-1 items-center last:flex-none">
               <button
                 type="button"
                 disabled={!habilitado}
@@ -670,11 +688,18 @@ function Stepper({
                 >
                   {i < actual ? <Check className="size-3" /> : i + 1}
                 </span>
-                <span className={cn("text-xs", i === actual ? "font-medium text-foreground" : "text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "text-xs whitespace-nowrap",
+                    i === actual ? "font-medium text-foreground" : "hidden text-muted-foreground md:inline"
+                  )}
+                >
                   {t(`clientes.imp.paso.${p}`)}
                 </span>
               </button>
-              {i < PASOS.length - 1 && <span aria-hidden className="h-px w-4 bg-border" />}
+              {i < PASOS.length - 1 && (
+                <span aria-hidden className={cn("mx-2 h-px flex-1", i < actual ? "bg-primary" : "bg-border")} />
+              )}
             </li>
           );
         })}
@@ -1349,13 +1374,10 @@ function ValidacionesEditor({
   valoresDetectados?: string[];
 }) {
   const t = useT();
-  const opcionesLista = Array.from(
-    new Set(
-      valoresDetectados.flatMap((d) => (v.sepOpciones ? d.split(v.sepOpciones).map((x) => x.trim()).filter(Boolean) : [d]))
-    )
-  );
   const configuracion =
     tipo === "moneda" || tipo === "fecha" || tipo === "lista" || (tipo === "booleano" && valoresDetectados.length > 0);
+  // Lista de opciones: cómo queda separada cada celda (no el total del archivo).
+  const celdas = tipo === "lista" ? valoresDetectados.slice(0, 4) : [];
 
   return (
     <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
@@ -1401,16 +1423,28 @@ function ValidacionesEditor({
                   onChange={(e) => onChange({ sepOpciones: e.target.value })}
                 />
               </div>
-              {opcionesLista.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <Label className="text-xs">{t("clientes.imp.opcionesDetectadas")}</Label>
-                  <div className="flex flex-wrap gap-1">
-                    {opcionesLista.map((d) => (
-                      <Badge key={d} variant="outline">
-                        {d}
-                      </Badge>
-                    ))}
-                  </div>
+              {celdas.length > 0 && (
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <Label className="text-xs">{t("clientes.imp.vistaCeldas")}</Label>
+                  <ul className="flex flex-col gap-1">
+                    {celdas.map((celda, i) => {
+                      const ops = opcionesDeCelda(celda, v.sepOpciones);
+                      return (
+                        <li key={i} className="flex flex-wrap items-center gap-1.5 text-xs">
+                          <span className="font-mono text-muted-foreground">{celda}</span>
+                          <ArrowRight className="size-3 text-muted-foreground" aria-hidden />
+                          {ops.map((o) => (
+                            <Badge key={o} variant="outline">
+                              {o}
+                            </Badge>
+                          ))}
+                          <span className="text-muted-foreground">
+                            {ops.length === 1 ? t("clientes.imp.unaOpcion") : t("clientes.imp.nOpciones", { n: ops.length })}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               )}
               <span className="w-full text-xs text-muted-foreground">{t("clientes.imp.sepOpcionesDesc")}</span>
@@ -1491,6 +1525,7 @@ function FilaAdicional({
   const archivo = useArchivo();
   const existente = camposAdicionalesSistema.find((x) => x.id === c.destino);
   const distintos = Array.from(new Set(muestras(archivo, columna)));
+  const celdasMuestra = muestras(archivo, columna);
 
   return (
     <div className={cn("flex flex-col gap-3 rounded-lg border p-3", !c.incluir && "opacity-60")}>
@@ -1550,7 +1585,12 @@ function FilaAdicional({
           {existente ? (
             <p className="text-xs text-muted-foreground">{t("clientes.imp.validacionesExistente")}</p>
           ) : (
-            <ValidacionesEditor tipo={c.tipo} v={c} onChange={onChange} valoresDetectados={distintos} />
+            <ValidacionesEditor
+              tipo={c.tipo}
+              v={c}
+              onChange={onChange}
+              valoresDetectados={c.tipo === "lista" ? celdasMuestra : distintos}
+            />
           )}
 
           <div className="flex flex-wrap items-center gap-2">
@@ -1600,7 +1640,7 @@ function PasoOpciones({
   setEtiquetas: React.Dispatch<React.SetStateAction<string[]>>;
   reglas: ReglaEtiqueta[];
   setReglas: React.Dispatch<React.SetStateAction<ReglaEtiqueta[]>>;
-  infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string };
+  infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string; sep?: string };
   errores: string;
   setErrores: (v: string) => void;
 }) {
@@ -1785,7 +1825,7 @@ function ReglasEtiquetas({
   catalogo: Etiqueta[];
   reglas: ReglaEtiqueta[];
   setReglas: React.Dispatch<React.SetStateAction<ReglaEtiqueta[]>>;
-  infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string };
+  infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string; sep?: string };
 }) {
   const t = useT();
   const archivo = useArchivo();
@@ -1825,10 +1865,13 @@ function ReglasEtiquetas({
         const fam = familia(info.tipo);
         const ops = OPERADORES[fam];
         const operador = ops.includes(r.operador) ? r.operador : ops[0];
-        const valores = r.columna ? Array.from(new Set(muestras(archivo, r.columna))) : [];
+        const sep = "sep" in info ? info.sep : undefined;
+        const valores = r.columna
+          ? Array.from(new Set(muestras(archivo, r.columna).flatMap((v) => opcionesDeCelda(v, sep))))
+          : [];
         const i = archivo.columnas.indexOf(r.columna);
         const coinciden = r.columna
-          ? archivo.filas.filter((f) => cumple({ ...r, operador }, info.tipo, f[i], "valorSi" in info ? info.valorSi : undefined)).length
+          ? archivo.filas.filter((f) => cumple({ ...r, operador }, info.tipo, f[i], "valorSi" in info ? info.valorSi : undefined, sep)).length
           : 0;
         const tipoInput = fam === "numero" ? "number" : fam === "fecha" ? "date" : "text";
 
@@ -1858,7 +1901,7 @@ function ReglasEtiquetas({
                 />
               </div>
               {!SIN_VALOR.includes(operador) &&
-                (info.tipo === "lista" && (operador === "igual" || operador === "distinto") ? (
+                (info.tipo === "lista" && (operador === "incluye" || operador === "noIncluye") ? (
                   <div className="w-48">
                     <ComboSelect
                       ariaLabel={t("clientes.imp.auto.valor")}
