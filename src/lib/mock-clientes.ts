@@ -346,17 +346,16 @@ export type CampoAdicional = {
   id: string;
   nombre: string;
   tipo: TipoCampo;
-  obligatorio: boolean;
   columnasConocidas: string[];
 };
 
 export const camposAdicionalesSistema: CampoAdicional[] = [
-  { id: "campo-producto", nombre: "Producto", tipo: "lista", obligatorio: false, columnasConocidas: ["PRODUCTO"] },
-  { id: "campo-cuenta", nombre: "Nro. de cuenta", tipo: "texto", obligatorio: false, columnasConocidas: ["NRO_CUENTA"] },
-  { id: "campo-deuda", nombre: "Deuda", tipo: "moneda", obligatorio: true, columnasConocidas: ["SALDO_DEUDA", "DEUDA"] },
-  { id: "campo-mora", nombre: "Días de mora", tipo: "numero", obligatorio: false, columnasConocidas: ["DIAS_MORA"] },
-  { id: "campo-vto", nombre: "Vencimiento", tipo: "fecha", obligatorio: false, columnasConocidas: ["FECHA_VTO"] },
-  { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", obligatorio: false, columnasConocidas: ["SUCURSAL"] },
+  { id: "campo-producto", nombre: "Producto", tipo: "lista", columnasConocidas: ["PRODUCTO"] },
+  { id: "campo-cuenta", nombre: "Nro. de cuenta", tipo: "texto", columnasConocidas: ["NRO_CUENTA"] },
+  { id: "campo-deuda", nombre: "Deuda", tipo: "moneda", columnasConocidas: ["SALDO_DEUDA", "DEUDA"] },
+  { id: "campo-mora", nombre: "Días de mora", tipo: "numero", columnasConocidas: ["DIAS_MORA"] },
+  { id: "campo-vto", nombre: "Vencimiento", tipo: "fecha", columnasConocidas: ["FECHA_VTO"] },
+  { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", columnasConocidas: ["SUCURSAL"] },
 ];
 
 // Archivo de ejemplo que "sube" el usuario en el wizard.

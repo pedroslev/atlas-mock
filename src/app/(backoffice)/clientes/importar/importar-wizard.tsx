@@ -54,7 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ADefinir, EtiquetaBadge } from "@/components/clientes/clientes-ui";
+import { EtiquetaBadge } from "@/components/clientes/clientes-ui";
 import { ComboSelect, type ComboOption } from "@/components/clientes/combo-select";
 import { EtiquetaDialog } from "@/components/clientes/etiqueta-dialog";
 import { PageHeader } from "@/components/layout/page-header";
@@ -231,7 +231,6 @@ const contactoVacio = (principal: boolean): MapeoContacto => ({
 
 // Validaciones de un campo de información adicional. Todo desactivado por defecto.
 type Validaciones = {
-  obligatorio: boolean;
   min?: string;
   max?: string;
   moneda?: string;
@@ -239,11 +238,17 @@ type Validaciones = {
   valorSi?: string;
   /** Lista de opciones: carácter que separa varias opciones dentro de una celda. */
   sepOpciones?: string;
-  /** Si se valida el campo (obligatorio, mínimo/máximo, largo). Apagado por defecto. */
+  /** Si se valida el campo (mínimo/máximo, largo). Apagado por defecto. La
+   *  obligatoriedad no va acá: se define por campaña y aplica al agente cuando
+   *  abre la ficha del cliente (decisión de producto 2026-10-15). */
   validar?: boolean;
 };
 
 type SiExiste = "reemplazar" | "siVacio" | "noTocar";
+
+// Totales de ejemplo de la importación (mock).
+const TOTALES = { filas: 1240, nuevos: 85, actualizar: 1130, errores: 25, advertencias: 40 };
+const n = (x: number) => x.toLocaleString("es-AR");
 
 // Qué hacer con los datos (paso Opciones, pedido de producto 2026-10-15).
 // Reemplaza al selector "si el cliente ya tiene este dato" de cada campo.
@@ -252,21 +257,18 @@ type Politicas = {
   siExiste: SiExiste;
   celdaVacia: "noBorrar" | "borrar";
   contactoDuplicado: "conservar" | "actualizar" | "rechazar";
-  errores: "saltear" | "cancelar";
 };
 const POLITICAS_INICIALES: Politicas = {
   duplicadoArchivo: "ultima",
   siExiste: "reemplazar",
   celdaVacia: "noBorrar",
   contactoDuplicado: "actualizar",
-  errores: "saltear",
 };
 const OPCIONES_POLITICA: { [K in keyof Politicas]: Politicas[K][] } = {
   duplicadoArchivo: ["ultima", "primera", "rechazar"],
   siExiste: ["reemplazar", "siVacio", "noTocar"],
   celdaVacia: ["noBorrar", "borrar"],
   contactoDuplicado: ["conservar", "actualizar", "rechazar"],
-  errores: ["saltear", "cancelar"],
 };
 type ConfigAdicional = Validaciones & {
   incluir: boolean;
@@ -350,7 +352,6 @@ function configInicial(a: Archivo, columna: string): ConfigAdicional {
     destino: "nuevo",
     nombre: columna,
     tipo,
-    obligatorio: false,
     formatoFecha: "DD/MM/AAAA",
     moneda: "ARS",
     valorSi: tipo === "booleano" ? muestras(a, columna).find((v) => /^(si|s|true)$/i.test(v)) : undefined,
@@ -656,10 +657,19 @@ export function ImportarClientes() {
             <div className="flex items-center gap-3">
               {mensajeBloqueo && <span className="text-xs text-destructive">{mensajeBloqueo}</span>}
               {paso === "revision" ? (
-                <Button onClick={() => setImportado(true)}>
-                  <Upload />
-                  {t("clientes.imp.importarN", { n: (1215).toLocaleString("es-AR") })}
-                </Button>
+                <>
+                  <span className="text-xs text-muted-foreground">
+                    {t("clientes.imp.resumenBarra", {
+                      nuevos: n(TOTALES.nuevos),
+                      actualizar: n(TOTALES.actualizar),
+                      errores: n(TOTALES.errores),
+                    })}
+                  </span>
+                  <Button onClick={() => setImportado(true)}>
+                    <Upload />
+                    {t("clientes.imp.importarValidos")}
+                  </Button>
+                </>
               ) : (
                 <Button disabled={!puedeAvanzar} onClick={() => setPaso(PASOS[idx + 1])}>
                   {t("clientes.imp.siguiente")}
@@ -1312,7 +1322,7 @@ function PasoAdicionales({
                     destinoUsado={destinoUsado}
                     onChange={(destino) => {
                       const e = camposAdicionalesSistema.find((x) => x.id === destino);
-                      updVacio(v.id, e ? { destino, nombre: e.nombre, tipo: e.tipo, obligatorio: e.obligatorio } : { destino: "nuevo", nombre: "" });
+                      updVacio(v.id, e ? { destino, nombre: e.nombre, tipo: e.tipo } : { destino: "nuevo", nombre: "" });
                     }}
                   />
                 </div>
@@ -1356,14 +1366,13 @@ function PasoAdicionales({
             onClick={() =>
               setVacios((xs) => [
                 ...xs,
-                { id: `v-${Date.now()}`, destino: "nuevo", nombre: "", tipo: "texto", obligatorio: false, moneda: "ARS", formatoFecha: "DD/MM/AAAA" },
+                { id: `v-${Date.now()}`, destino: "nuevo", nombre: "", tipo: "texto", moneda: "ARS", formatoFecha: "DD/MM/AAAA" },
               ])
             }
           >
             <Plus />
             {t("clientes.imp.agregarVacio")}
           </Button>
-          <ADefinir nota={t("clientes.imp.vacioNotaGestion")} />
         </div>
       </div>
     </div>
@@ -1535,16 +1544,14 @@ function ValidacionesEditor({
       )}
 
       <div className={cn("flex flex-wrap items-end gap-x-5 gap-y-3", configuracion && "border-t pt-3")}>
+          {(tipo === "texto" || tipo === "numero" || tipo === "moneda") && (
           <label className="flex h-8 w-full items-center gap-2 text-sm font-medium">
             <Checkbox checked={!!v.validar} onCheckedChange={() => onChange({ validar: !v.validar })} />
             {t("clientes.imp.validar")}
           </label>
-          {v.validar && (
+          )}
+          {v.validar && (tipo === "texto" || tipo === "numero" || tipo === "moneda") && (
             <>
-              <label className="flex h-8 items-center gap-2 text-sm">
-                <Checkbox checked={v.obligatorio} onCheckedChange={() => onChange({ obligatorio: !v.obligatorio })} />
-                {t("clientes.imp.obligatorio")}
-              </label>
               {(tipo === "numero" || tipo === "moneda") && (
                 <>
                   <div className="flex flex-col gap-1">
@@ -1563,7 +1570,6 @@ function ValidacionesEditor({
                   <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
                 </div>
               )}
-              <ADefinir nota={t("clientes.imp.obligatorioNota")} />
             </>
           )}
         </div>
@@ -1622,7 +1628,7 @@ function FilaAdicional({
                   const e = camposAdicionalesSistema.find((x) => x.id === v);
                   onChange(
                     e
-                      ? { destino: v, nombre: e.nombre, tipo: e.tipo, obligatorio: e.obligatorio }
+                      ? { destino: v, nombre: e.nombre, tipo: e.tipo }
                       : { destino: "nuevo", nombre: columna, tipo: adivinarTipo(archivo, columna) }
                   );
                 }}
@@ -1757,7 +1763,6 @@ function PasoOpciones({
           {politica("siExiste")}
           {politica("celdaVacia")}
           {politica("contactoDuplicado")}
-          {politica("errores")}
         </div>
       </div>
 
@@ -2082,17 +2087,25 @@ function PasoRevision({
           ? t("clientes.imp.telPrincipal")
           : clave.replace(/^col:/, "");
 
-  const errores = [
-    { fila: 14, columna: basicos.nroDoc || "DNI", problema: t("clientes.imp.err.faltaDoc") },
-    { fila: 233, columna: "SALDO_DEUDA", problema: t("clientes.imp.err.noNumero", { valor: "N/D" }) },
-    { fila: 870, columna: "EMAIL", problema: t("clientes.imp.err.mailInvalido") },
+  // Ejemplos con la clasificación acordada (2026-10-15): error = la fila no
+  // se importa; advertencia = el cliente se importa sin ese dato.
+  const colClave = clave.startsWith("col:") ? clave.slice(4) : clave === "idExterno" ? basicos.idExterno : clave === "nroDoc" ? basicos.nroDoc : "";
+  const errores: { fila: number; columna: string; problema: string; tipo: "error" | "advertencia" }[] = [
+    { fila: 14, columna: basicos.nombre || "NOMBRE", problema: t("clientes.imp.err.faltaNombre"), tipo: "error" },
+    ...(colClave ? [{ fila: 57, columna: colClave, problema: t("clientes.imp.err.faltaClave"), tipo: "error" as const }] : []),
+    { fila: 318, columna: colClave || "—", problema: t("clientes.imp.err.ambiguo"), tipo: "error" },
+    { fila: 412, columna: "—", problema: t("clientes.imp.err.sinContacto"), tipo: "error" },
+    { fila: 233, columna: "SALDO_DEUDA", problema: t("clientes.imp.err.noNumero", { valor: "N/D" }), tipo: "advertencia" },
+    { fila: 870, columna: "EMAIL", problema: t("clientes.imp.err.mailInvalido"), tipo: "advertencia" },
+    { fila: 991, columna: "FECHA_VTO", problema: t("clientes.imp.err.fechaInvalida", { valor: "31/02/2026" }), tipo: "advertencia" },
   ];
 
   const stats = [
-    { label: t("clientes.imp.stat.filas"), valor: "1.240", tono: "" },
-    { label: t("clientes.imp.stat.nuevos"), valor: "85", tono: "text-info" },
-    { label: t("clientes.imp.stat.actualizados"), valor: "1.130", tono: "text-success" },
-    { label: t("clientes.imp.stat.errores"), valor: "25", tono: "text-destructive" },
+    { label: t("clientes.imp.stat.filas"), valor: n(TOTALES.filas), tono: "" },
+    { label: t("clientes.imp.stat.nuevos"), valor: n(TOTALES.nuevos), tono: "text-info" },
+    { label: t("clientes.imp.stat.actualizar"), valor: n(TOTALES.actualizar), tono: "text-success" },
+    { label: t("clientes.imp.stat.errores"), valor: n(TOTALES.errores), tono: "text-destructive" },
+    { label: t("clientes.imp.stat.advertencias"), valor: n(TOTALES.advertencias), tono: "text-warning" },
   ];
 
   const detalleArchivo = [
@@ -2119,7 +2132,7 @@ function PasoRevision({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {stats.map((s) => (
           <div key={s.label} className="flex flex-col gap-1 rounded-lg border p-3">
             <span className={cn("text-2xl font-semibold tabular-nums", s.tono)}>{s.valor}</span>
@@ -2156,7 +2169,7 @@ function PasoRevision({
                   <span className="text-xs text-muted-foreground">
                     {t(`clientes.imp.tipoCampo.${cfg(c).tipo}`)}
                     {cfg(c).tipo === "moneda" ? ` (${cfg(c).moneda})` : ""}
-                    {cfg(c).obligatorio ? ` · ${t("clientes.imp.obligatorio").toLowerCase()}` : ""} ·{" "}
+                    {" · "}
                     {t("clientes.imp.desdeColumna", { columna: c })}
                   </span>
                 </li>
@@ -2222,6 +2235,7 @@ function PasoRevision({
                 <TableHead>{t("clientes.imp.err.fila")}</TableHead>
                 <TableHead>{t("clientes.imp.columna")}</TableHead>
                 <TableHead>{t("clientes.imp.err.problema")}</TableHead>
+                <TableHead>{t("clientes.imp.err.tipo")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -2230,6 +2244,11 @@ function PasoRevision({
                   <TableCell className="tabular-nums">{e.fila}</TableCell>
                   <TableCell className="font-mono text-xs">{e.columna}</TableCell>
                   <TableCell>{e.problema}</TableCell>
+                  <TableCell>
+                    <Badge variant={e.tipo === "error" ? "destructive" : "warning"}>
+                      {t(`clientes.imp.err.tipo.${e.tipo}`)}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
