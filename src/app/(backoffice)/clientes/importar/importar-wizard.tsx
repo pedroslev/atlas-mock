@@ -247,6 +247,8 @@ type Validaciones = {
   valorSi?: string;
   /** Lista de opciones: carácter que separa varias opciones dentro de una celda. */
   sepOpciones?: string;
+  /** Lista de opciones de un campo sin dato en el archivo: opciones permitidas. */
+  opciones?: string[];
   /** Si se valida el campo (mínimo/máximo, largo). Apagado por defecto. La
    *  obligatoriedad no va acá: se define por campaña y aplica al agente cuando
    *  abre la ficha del cliente (decisión de producto 2026-10-15). */
@@ -362,9 +364,10 @@ function configInicial(a: Archivo, columna: string): ConfigAdicional {
   // mayúsculas/minúsculas), se asocia solo a ese campo.
   const existente = camposAdicionalesSistema.find((e) => normalizar(e.nombre) === normalizar(columna));
   return {
-    // Apagadas por defecto (pedido de producto 2026-10-15): el usuario elige
-    // cuáles importar, o las enciende todas con el interruptor general.
-    incluir: false,
+    // Apagadas por defecto, salvo las que se asociaron solas a un campo
+    // existente (pedido de producto 2026-10-15). El resto se enciende a mano
+    // o con el interruptor general.
+    incluir: !!existente,
     destino: existente ? existente.id : "nuevo",
     nombre: existente ? existente.nombre : columna,
     tipo: existente ? existente.tipo : tipo,
@@ -1416,7 +1419,7 @@ function PasoAdicionales({
               {existente ? (
                 <p className="text-xs text-muted-foreground">{t("clientes.imp.validacionesExistente")}</p>
               ) : (
-                <ValidacionesEditor tipo={v.tipo} v={v} onChange={(x) => updVacio(v.id, x)} />
+                <ValidacionesEditor tipo={v.tipo} v={v} sinArchivo onChange={(x) => updVacio(v.id, x)} />
               )}
             </div>
           );
@@ -1496,16 +1499,74 @@ function DestinoSelect({
 // Configuración del campo según el tipo (moneda, formato de fecha, opciones,
 // valor "Sí") y, aparte, el check "Validar este campo" que habilita las
 // validaciones (apagado por defecto — pedido de producto 2026-10-14).
+// Opciones permitidas de una lista que no viene en el archivo (campos sin
+// dato): se cargan a mano y son las que va a poder elegir el agente.
+function OpcionesPermitidas({ opciones, onChange }: { opciones: string[]; onChange: (o: string[]) => void }) {
+  const t = useT();
+  const [nueva, setNueva] = useState("");
+  const repetida = opciones.some((o) => o.toLowerCase() === nueva.trim().toLowerCase());
+  const agregar = () => {
+    if (!nueva.trim() || repetida) return;
+    onChange([...opciones, nueva.trim()]);
+    setNueva("");
+  };
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <Label className="text-xs">{t("clientes.imp.opcionesPermitidas")}</Label>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {opciones.length === 0 && <span className="text-xs text-muted-foreground">{t("clientes.imp.sinOpciones")}</span>}
+        {opciones.map((o) => (
+          <Badge key={o} variant="outline" className="gap-1 pr-1">
+            {o}
+            <button
+              type="button"
+              aria-label={t("clientes.imp.quitarOpcion", { opcion: o })}
+              className="rounded-full px-0.5 text-muted-foreground hover:text-foreground"
+              onClick={() => onChange(opciones.filter((x) => x !== o))}
+            >
+              ×
+            </button>
+          </Badge>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <Input
+          className="h-8 w-56"
+          value={nueva}
+          aria-invalid={repetida}
+          placeholder={t("clientes.imp.nuevaOpcionPlaceholder")}
+          aria-label={t("clientes.imp.agregarOpcion")}
+          onChange={(e) => setNueva(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              agregar();
+            }
+          }}
+        />
+        <Button variant="outline" size="sm" disabled={!nueva.trim() || repetida} onClick={agregar}>
+          <Plus />
+          {t("clientes.imp.agregarOpcion")}
+        </Button>
+        {repetida && <span className="text-xs text-destructive">{t("clientes.imp.opcionRepetida")}</span>}
+      </div>
+    </div>
+  );
+}
+
 function ValidacionesEditor({
   tipo,
   v,
   onChange,
   valoresDetectados = [],
+  sinArchivo = false,
 }: {
   tipo: TipoCampo;
   v: Validaciones;
   onChange: (x: Partial<Validaciones>) => void;
   valoresDetectados?: string[];
+  /** Campo sin dato en el archivo: no hay columna de donde detectar nada. */
+  sinArchivo?: boolean;
 }) {
   const t = useT();
   const configuracion =
@@ -1541,7 +1602,10 @@ function ValidacionesEditor({
               />
             </div>
           )}
-          {tipo === "lista" && (
+          {tipo === "lista" && sinArchivo && (
+            <OpcionesPermitidas opciones={v.opciones ?? []} onChange={(opciones) => onChange({ opciones })} />
+          )}
+          {tipo === "lista" && !sinArchivo && (
             <>
               <div className="flex flex-col gap-1">
                 <Label className="text-xs">{t("clientes.imp.sepOpciones")}</Label>
@@ -1636,18 +1700,18 @@ function ValidacionesEditor({
                 <>
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">{t("clientes.imp.minimo")}</Label>
-                    <Input className="h-8 w-28" type="number" value={v.min ?? ""} onChange={(e) => onChange({ min: e.target.value })} />
+                    <Input className="h-8 w-28" type="number" placeholder={t("clientes.imp.sinValidar")} value={v.min ?? ""} onChange={(e) => onChange({ min: e.target.value })} />
                   </div>
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">{t("clientes.imp.maximo")}</Label>
-                    <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
+                    <Input className="h-8 w-28" type="number" placeholder={t("clientes.imp.sinValidar")} value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
                   </div>
                 </>
               )}
               {tipo === "texto" && (
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs">{t("clientes.imp.largoMax")}</Label>
-                  <Input className="h-8 w-28" type="number" value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
+                  <Input className="h-8 w-28" type="number" placeholder={t("clientes.imp.sinValidar")} value={v.max ?? ""} onChange={(e) => onChange({ max: e.target.value })} />
                 </div>
               )}
             </>
