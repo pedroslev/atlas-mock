@@ -78,7 +78,7 @@ import { useT } from "@/lib/i18n";
 //   pasan solas a información adicional con el nombre de su encabezado.
 // - Pasos y navegación fijos arriba/abajo; los pasos son clickeables.
 
-const PASOS = ["archivo", "basicos", "contacto", "adicionales", "opciones", "revision"] as const;
+const PASOS = ["archivo", "basicos", "contacto", "adicionales", "etiquetas", "opciones", "revision"] as const;
 type Paso = (typeof PASOS)[number];
 
 // ── Archivo ──────────────────────────────────────────────────────────────
@@ -511,6 +511,7 @@ export function ImportarClientes() {
       repetidos.size === 0 &&
       restantes.every((c) => !cfg(c).incluir || cfg(c).nombre.trim()) &&
       vacios.every((v) => v.nombre.trim())) ||
+    p === "etiquetas" ||
     (p === "opciones" && clave !== "");
   const puedeAvanzar = pasoOk(paso);
   const primeroIncompleto = PASOS.findIndex((p) => p !== "revision" && !pasoOk(p));
@@ -593,12 +594,8 @@ export function ImportarClientes() {
                       repetidos={repetidos}
                     />
                   )}
-                  {paso === "opciones" && (
-                    <PasoOpciones
-                      basicos={basicos}
-                      contactos={contactos}
-                      clave={clave}
-                      setClave={setClave}
+                  {paso === "etiquetas" && (
+                    <PasoEtiquetas
                       catalogo={catalogo}
                       setCatalogo={setCatalogo}
                       etiquetas={etiquetas}
@@ -606,6 +603,14 @@ export function ImportarClientes() {
                       reglas={reglas}
                       setReglas={setReglas}
                       infoColumna={infoColumna}
+                    />
+                  )}
+                  {paso === "opciones" && (
+                    <PasoOpciones
+                      basicos={basicos}
+                      contactos={contactos}
+                      clave={clave}
+                      setClave={setClave}
                       politicas={politicas}
                       setPoliticas={setPoliticas}
                     />
@@ -1668,12 +1673,11 @@ function FilaAdicional({
   );
 }
 
-// ── Paso 5: Opciones ──────────────────────────────────────────────────────
-function PasoOpciones({
-  basicos,
-  contactos,
-  clave,
-  setClave,
+// ── Paso 5: Etiquetas ─────────────────────────────────────────────────────
+// Etiquetas fijas para todo el archivo + reglas de etiquetado al importar
+// (paso propio desde 2026-10-15). Las etiquetas SE SUMAN a las que el cliente
+// ya tenía: sacarlas es tarea del segmentador de clientes.
+function PasoEtiquetas({
   catalogo,
   setCatalogo,
   etiquetas,
@@ -1681,13 +1685,7 @@ function PasoOpciones({
   reglas,
   setReglas,
   infoColumna,
-  politicas,
-  setPoliticas,
 }: {
-  basicos: Record<BasicoKey, string>;
-  contactos: MapeoContacto[];
-  clave: string;
-  setClave: (v: string) => void;
   catalogo: Etiqueta[];
   setCatalogo: React.Dispatch<React.SetStateAction<Etiqueta[]>>;
   etiquetas: string[];
@@ -1695,12 +1693,61 @@ function PasoOpciones({
   reglas: ReglaEtiqueta[];
   setReglas: React.Dispatch<React.SetStateAction<ReglaEtiqueta[]>>;
   infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string; sep?: string };
+}) {
+  const t = useT();
+  const [nuevaEtiqueta, setNuevaEtiqueta] = useState(false);
+  return (
+    <div className="flex flex-col gap-8">
+      <p className="text-sm text-muted-foreground">{t("clientes.imp.etiquetasPasoDesc")}</p>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium">{t("clientes.imp.etiquetas")}</span>
+          <Button variant="ghost" size="sm" onClick={() => setNuevaEtiqueta(true)}>
+            <Plus />
+            {t("clientes.et.nueva")}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("clientes.imp.etiquetasDesc")}</p>
+        <EtiquetasPicker catalogo={catalogo} value={etiquetas} onChange={setEtiquetas} />
+      </div>
+
+      <ReglasEtiquetas catalogo={catalogo} reglas={reglas} setReglas={setReglas} infoColumna={infoColumna} />
+
+      <EtiquetaDialog
+        key={nuevaEtiqueta ? "abierto" : "cerrado"}
+        etiqueta={nuevaEtiqueta ? "nueva" : null}
+        existentes={catalogo}
+        onClose={() => setNuevaEtiqueta(false)}
+        onSave={(e) => {
+          setCatalogo((cs) => [...cs, e]);
+          setEtiquetas((xs) => [...xs, e.id]);
+          setNuevaEtiqueta(false);
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Paso 6: Opciones ──────────────────────────────────────────────────────
+// Cómo reconocer a un cliente existente y qué hacer con los datos.
+function PasoOpciones({
+  basicos,
+  contactos,
+  clave,
+  setClave,
+  politicas,
+  setPoliticas,
+}: {
+  basicos: Record<BasicoKey, string>;
+  contactos: MapeoContacto[];
+  clave: string;
+  setClave: (v: string) => void;
   politicas: Politicas;
   setPoliticas: React.Dispatch<React.SetStateAction<Politicas>>;
 }) {
   const t = useT();
   const archivo = useArchivo();
-  const [nuevaEtiqueta, setNuevaEtiqueta] = useState(false);
   const politica = <K extends keyof Politicas>(k: K) => (
     <div key={k} className="flex flex-col gap-1.5">
       <Label htmlFor={`pol-${k}`}>{t(`clientes.imp.pol.${k}`)}</Label>
@@ -1765,34 +1812,6 @@ function PasoOpciones({
           {politica("contactoDuplicado")}
         </div>
       </div>
-
-      <div className="flex flex-col gap-2 border-t pt-6">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium">{t("clientes.imp.etiquetas")}</span>
-            <Button variant="ghost" size="sm" onClick={() => setNuevaEtiqueta(true)}>
-              <Plus />
-              {t("clientes.et.nueva")}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">{t("clientes.imp.etiquetasDesc")}</p>
-          <EtiquetasPicker catalogo={catalogo} value={etiquetas} onChange={setEtiquetas} />
-        </div>
-      </div>
-
-      <ReglasEtiquetas catalogo={catalogo} reglas={reglas} setReglas={setReglas} infoColumna={infoColumna} />
-
-      <EtiquetaDialog
-        key={nuevaEtiqueta ? "abierto" : "cerrado"}
-        etiqueta={nuevaEtiqueta ? "nueva" : null}
-        existentes={catalogo}
-        onClose={() => setNuevaEtiqueta(false)}
-        onSave={(e) => {
-          setCatalogo((cs) => [...cs, e]);
-          setEtiquetas((xs) => [...xs, e.id]);
-          setNuevaEtiqueta(false);
-        }}
-      />
     </div>
   );
 }
@@ -2042,7 +2061,7 @@ function ReglasEtiquetas({
   );
 }
 
-// ── Paso 6: Revisión ──────────────────────────────────────────────────────
+// ── Paso 7: Revisión ──────────────────────────────────────────────────────
 function PasoRevision({
   politicas,
   config,

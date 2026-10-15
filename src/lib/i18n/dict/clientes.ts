@@ -95,6 +95,8 @@ export const clientes: NamespaceDict = {
     "imp.op.esNo": "Es No",
 
     "imp.titulo": "Importar clientes",
+    "imp.paso.etiquetas": "Etiquetas",
+    "imp.etiquetasPasoDesc": "Etiquetas para los clientes de este archivo: algunas fijas para todos y otras según el valor de una columna. Se suman a las que el cliente ya tenga; para sacarlas se usa el segmentador de clientes. Este paso es opcional.",
     "imp.err.fechaInvalida": "\"{valor}\" no es una fecha válida (se importa sin ese dato)",
     "imp.err.sinContacto": "No tiene ningún contacto válido",
     "imp.err.ambiguo": "Coincide con más de un cliente existente",
