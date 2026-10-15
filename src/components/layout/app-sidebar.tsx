@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -15,7 +16,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
-import { navItems } from "@/lib/nav";
+import { configuracionItems, configuracionNav, navItems } from "@/lib/nav";
+import { puedeClaves } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
 
 export function AppSidebar() {
@@ -71,6 +73,28 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      {/* Configuración va al pie, separada de las secciones operativas: es
+          del tenant entero y se toca poco. Solo aparece si el usuario puede
+          ver alguno de sus ítems. */}
+      {configuracionItems.some((item) => puedeClaves(item.permiso)) && (
+        <SidebarFooter className="border-t">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith(configuracionNav.href)}
+                tooltip={t(configuracionNav.labelKey)}
+                data-testid="nav-configuracion"
+              >
+                <Link href={configuracionNav.href}>
+                  <configuracionNav.icon />
+                  <span>{t(configuracionNav.labelKey)}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

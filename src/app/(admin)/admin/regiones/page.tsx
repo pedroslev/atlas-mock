@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import { useT } from "@/lib/i18n";
 // solo-lectura.
 export default function RegionesPage() {
   const t = useT();
+  const router = useRouter();
   const columns = useMemo<MRT_ColumnDef<Region>[]>(
     () => [
       {
@@ -80,7 +82,18 @@ export default function RegionesPage() {
           </Button>
         }
       />
-      <MitrolTable columns={columns} data={regions} />
+      <MitrolTable
+        columns={columns}
+        data={regions}
+        options={{
+          // Clickear la fila abre el detalle de la región, donde se
+          // administran las claves de los proveedores de IA del cluster.
+          muiTableBodyRowProps: ({ row }) => ({
+            onClick: () => router.push(`/admin/regiones/${row.original.id}`),
+            sx: { cursor: "pointer" },
+          }),
+        }}
+      />
     </div>
   );
 }

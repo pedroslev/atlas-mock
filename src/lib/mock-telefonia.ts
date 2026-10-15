@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { createMockStore } from "@/lib/mock-store";
 
 // Datos mock de Telefonía — administración de carriers de Kamailio desde Zeus.
 // Ver documentacion/decisiones/telefonia/ADR-TELEFONIA-002 ("Administración de
@@ -251,51 +252,6 @@ export const carrierRates: CarrierRate[] = [
 // las mismas tablas. Acá se comparte vía localStorage + evento, mismo patrón
 // que ya usa `use-locale.ts`: así, tomar un número desde Cuentas se ve
 // reflejado en Zeus sin recargar.
-
-/**
- * Crea un store de mock compartido entre pantallas, listo para
- * `useSyncExternalStore`.
- *
- * El cache contra el string crudo no es opcional: `useSyncExternalStore` exige
- * que `read()` devuelva la MISMA referencia si nada cambió, y un `JSON.parse` a
- * secas crea un array nuevo en cada llamada y dispara un loop infinito.
- */
-function createMockStore<T>(key: string, seed: T) {
-  const evento = `${key}-change`;
-  let rawCache: string | null = null;
-  let parsedCache: T = seed;
-
-  const read = (): T => {
-    if (typeof window === "undefined") return seed;
-    const stored = window.localStorage.getItem(key);
-    if (!stored) return seed;
-    if (stored === rawCache) return parsedCache;
-    try {
-      parsedCache = JSON.parse(stored) as T;
-      rawCache = stored;
-      return parsedCache;
-    } catch {
-      return seed;
-    }
-  };
-
-  const write = (next: T) => {
-    window.localStorage.setItem(key, JSON.stringify(next));
-    window.dispatchEvent(new Event(evento));
-  };
-
-  // "storage" cubre otra pestaña; el evento propio cubre esta misma.
-  const subscribe = (callback: () => void) => {
-    window.addEventListener(evento, callback);
-    window.addEventListener("storage", callback);
-    return () => {
-      window.removeEventListener(evento, callback);
-      window.removeEventListener("storage", callback);
-    };
-  };
-
-  return { read, write, subscribe, serverSnapshot: () => seed };
-}
 
 const numbersStore = createMockStore("atlas-phone-numbers", phoneNumbers);
 
