@@ -162,7 +162,7 @@ const BASICOS = [
   { key: "nombre", obligatorio: true },
   { key: "apellido", obligatorio: false },
   { key: "tipoDoc", obligatorio: false },
-  { key: "nroDoc", obligatorio: true },
+  { key: "nroDoc", obligatorio: false },
   { key: "idExterno", obligatorio: false },
 ] as const;
 type BasicoKey = (typeof BASICOS)[number]["key"];
@@ -244,12 +244,35 @@ type Validaciones = {
 };
 
 type SiExiste = "reemplazar" | "siVacio" | "noTocar";
+
+// Qué hacer con los datos (paso Opciones, pedido de producto 2026-10-15).
+// Reemplaza al selector "si el cliente ya tiene este dato" de cada campo.
+type Politicas = {
+  duplicadoArchivo: "ultima" | "primera" | "rechazar";
+  siExiste: SiExiste;
+  celdaVacia: "noBorrar" | "borrar";
+  contactoDuplicado: "conservar" | "actualizar" | "rechazar";
+  errores: "saltear" | "cancelar";
+};
+const POLITICAS_INICIALES: Politicas = {
+  duplicadoArchivo: "ultima",
+  siExiste: "reemplazar",
+  celdaVacia: "noBorrar",
+  contactoDuplicado: "actualizar",
+  errores: "saltear",
+};
+const OPCIONES_POLITICA: { [K in keyof Politicas]: Politicas[K][] } = {
+  duplicadoArchivo: ["ultima", "primera", "rechazar"],
+  siExiste: ["reemplazar", "siVacio", "noTocar"],
+  celdaVacia: ["noBorrar", "borrar"],
+  contactoDuplicado: ["conservar", "actualizar", "rechazar"],
+  errores: ["saltear", "cancelar"],
+};
 type ConfigAdicional = Validaciones & {
   incluir: boolean;
   destino: string; // "nuevo" o id de un campo existente
   nombre: string;
   tipo: TipoCampo;
-  siExiste: SiExiste;
 };
 
 type CampoVacio = Validaciones & {
@@ -332,7 +355,6 @@ function configInicial(a: Archivo, columna: string): ConfigAdicional {
     moneda: "ARS",
     valorSi: tipo === "booleano" ? muestras(a, columna).find((v) => /^(si|s|true)$/i.test(v)) : undefined,
     sepOpciones: tipo === "lista" && muestras(a, columna).some((v) => v.includes("|")) ? "|" : "",
-    siExiste: "reemplazar",
   };
 }
 
@@ -410,7 +432,7 @@ export function ImportarClientes() {
   const [catalogo, setCatalogo] = useState<Etiqueta[]>(etiquetasCatalogo);
   const [etiquetas, setEtiquetas] = useState<string[]>([]);
   const [reglas, setReglas] = useState<ReglaEtiqueta[]>([]);
-  const [errores, setErrores] = useState("saltear");
+  const [politicas, setPoliticas] = useState<Politicas>(POLITICAS_INICIALES);
   const [importado, setImportado] = useState(false);
 
   const idx = PASOS.indexOf(paso);
@@ -499,7 +521,7 @@ export function ImportarClientes() {
     setConfig(CONFIG_INICIAL);
     reiniciarMapeo();
     setEtiquetas([]);
-    setErrores("saltear");
+    setPoliticas(POLITICAS_INICIALES);
     setImportado(false);
   };
 
@@ -583,12 +605,13 @@ export function ImportarClientes() {
                       reglas={reglas}
                       setReglas={setReglas}
                       infoColumna={infoColumna}
-                      errores={errores}
-                      setErrores={setErrores}
+                      politicas={politicas}
+                      setPoliticas={setPoliticas}
                     />
                   )}
                   {paso === "revision" && (
                     <PasoRevision
+                      politicas={politicas}
                       config={config}
                       restantes={restantes}
                       cfg={cfg}
@@ -1633,21 +1656,6 @@ function FilaAdicional({
             />
           )}
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Label className="text-xs text-muted-foreground">{t("clientes.imp.siExiste")}</Label>
-            <div className="w-60">
-              <ComboSelect
-                size="sm"
-                ariaLabel={t("clientes.imp.siExiste")}
-                value={c.siExiste}
-                onChange={(v) => onChange({ siExiste: v as SiExiste })}
-                options={(["reemplazar", "siVacio", "noTocar"] as SiExiste[]).map((s) => ({
-                  value: s,
-                  label: t(`clientes.imp.siExiste.${s}`),
-                }))}
-              />
-            </div>
-          </div>
         </>
       )}
     </div>
@@ -1667,8 +1675,8 @@ function PasoOpciones({
   reglas,
   setReglas,
   infoColumna,
-  errores,
-  setErrores,
+  politicas,
+  setPoliticas,
 }: {
   basicos: Record<BasicoKey, string>;
   contactos: MapeoContacto[];
@@ -1681,12 +1689,24 @@ function PasoOpciones({
   reglas: ReglaEtiqueta[];
   setReglas: React.Dispatch<React.SetStateAction<ReglaEtiqueta[]>>;
   infoColumna: (c: string) => { nombre: string; tipo: TipoCampo; importa: boolean; valorSi?: string; sep?: string };
-  errores: string;
-  setErrores: (v: string) => void;
+  politicas: Politicas;
+  setPoliticas: React.Dispatch<React.SetStateAction<Politicas>>;
 }) {
   const t = useT();
   const archivo = useArchivo();
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState(false);
+  const politica = <K extends keyof Politicas>(k: K) => (
+    <div key={k} className="flex flex-col gap-1.5">
+      <Label htmlFor={`pol-${k}`}>{t(`clientes.imp.pol.${k}`)}</Label>
+      <ComboSelect
+        id={`pol-${k}`}
+        value={politicas[k]}
+        onChange={(v) => setPoliticas((p) => ({ ...p, [k]: v as Politicas[K] }))}
+        options={OPCIONES_POLITICA[k].map((o) => ({ value: o, label: t(`clientes.imp.pol.${k}.${o}`) }))}
+      />
+      <span className="text-xs text-muted-foreground">{t(`clientes.imp.pol.${k}.desc`)}</span>
+    </div>
+  );
 
   // Cómo reconocer a un cliente que ya existe: un solo campo, a elegir entre
   // los datos que lo identifican y cualquier otra columna del archivo.
@@ -1727,7 +1747,21 @@ function PasoOpciones({
         </div>
       </div>
 
-      <div className="grid gap-6 border-t pt-6 md:grid-cols-2">
+      <div className="flex flex-col gap-4 border-t pt-6">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium">{t("clientes.imp.pol.titulo")}</span>
+          <p className="text-xs text-muted-foreground">{t("clientes.imp.pol.desc")}</p>
+        </div>
+        <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+          {politica("duplicadoArchivo")}
+          {politica("siExiste")}
+          {politica("celdaVacia")}
+          {politica("contactoDuplicado")}
+          {politica("errores")}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t pt-6">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium">{t("clientes.imp.etiquetas")}</span>
@@ -1738,21 +1772,6 @@ function PasoOpciones({
           </div>
           <p className="text-xs text-muted-foreground">{t("clientes.imp.etiquetasDesc")}</p>
           <EtiquetasPicker catalogo={catalogo} value={etiquetas} onChange={setEtiquetas} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium">{t("clientes.imp.errores")}</span>
-            <ADefinir nota={t("clientes.imp.erroresNota")} />
-          </div>
-          <ComboSelect
-            ariaLabel={t("clientes.imp.errores")}
-            value={errores}
-            onChange={setErrores}
-            options={[
-              { value: "saltear", label: t("clientes.imp.errores.saltear") },
-              { value: "cancelar", label: t("clientes.imp.errores.cancelar") },
-            ]}
-          />
         </div>
       </div>
 
@@ -2020,6 +2039,7 @@ function ReglasEtiquetas({
 
 // ── Paso 6: Revisión ──────────────────────────────────────────────────────
 function PasoRevision({
+  politicas,
   config,
   restantes,
   cfg,
@@ -2032,6 +2052,7 @@ function PasoRevision({
   reglas,
   infoColumna,
 }: {
+  politicas: Politicas;
   config: ConfigArchivo;
   restantes: string[];
   cfg: (c: string) => ConfigAdicional;
@@ -2112,6 +2133,11 @@ function PasoRevision({
           <span className="text-sm font-medium">{t("clientes.imp.resumenMapeo")}</span>
           <ul className="flex flex-col gap-1.5 text-sm">
             <li>{t("clientes.imp.resumenClave", { clave: claveTexto })}</li>
+            {(Object.keys(politicas) as (keyof Politicas)[]).map((k) => (
+              <li key={k} className="text-muted-foreground">
+                {t(`clientes.imp.pol.${k}`)}: <span className="text-foreground">{t(`clientes.imp.pol.${k}.${politicas[k]}`)}</span>
+              </li>
+            ))}
             <li>{t("clientes.imp.resumenBasicos", { n: basicosAsociados })}</li>
             <li>{t("clientes.imp.resumenContactos", { n: contactos.filter((c) => c.columna).length })}</li>
             <li>{t("clientes.imp.resumenExistentes", { n: existentes.length })}</li>
