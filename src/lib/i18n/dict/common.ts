@@ -15,6 +15,7 @@ export const common: NamespaceDict = {
     "nav.usuarios": "Usuarios",
     "nav.gruposRoles": "Grupos y roles",
     "nav.estadosAuxiliares": "Estados auxiliares",
+    "nav.clientes": "Clientes",
     "nav.configuracion": "Configuración",
     "nav.clavesApi": "Claves de acceso API",
 
@@ -151,6 +152,7 @@ export const common: NamespaceDict = {
     "nav.usuarios": "Usuários",
     "nav.gruposRoles": "Grupos e funções",
     "nav.estadosAuxiliares": "Estados auxiliares",
+    "nav.clientes": "Clientes",
     "nav.configuracion": "Configurações",
     "nav.clavesApi": "Chaves de acesso API",
 

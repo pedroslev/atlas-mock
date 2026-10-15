@@ -1,0 +1,459 @@
+// Clientes — mock de la propuesta conceptual en
+// relevamiento/clientes-y-contactaciones/insight.md (2026-10-05 en adelante).
+// Nada de esto está decidido: es insumo para la sesión con el Chief Innovation
+// Architect. Los nombres de los tipos son del mock, no un modelo de datos.
+// Los objetivos de contacto y la estrategia de salida de campañas quedaron en
+// la branch feature/campanias-objetivos-estrategia.
+
+export type FormaContacto = {
+  tipo: "telefono" | "email" | "whatsapp" | "red";
+  valor: string;
+  etiqueta: string;
+  principal?: boolean;
+  estado: "valido" | "invalido" | "noContactar";
+};
+
+export type Cliente = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  tipoDoc: "DNI" | "CUIT" | "Pasaporte";
+  nroDoc: string;
+  idExterno?: string;
+  // Ids del catálogo de etiquetas (no texto libre).
+  etiquetas: string[];
+  formasContacto: FormaContacto[];
+  infoAdicional: Record<string, string>;
+  // Trazabilidad (pedido de producto 2026-10-13): quién y por dónde se dio
+  // de alta y se actualizó por última vez. El "lote" de carga no va acá: se
+  // maneja en los objetivos de contacto.
+  creado: string;
+  creadoPor: string;
+  creadoVia: ViaCarga;
+  actualizado: string;
+  actualizadoPor: string;
+  actualizadoVia: ViaCarga;
+};
+
+export type ViaCarga = "importacion" | "olimpo" | "hermes" | "ivr" | "api" | "automatico";
+
+const tel = (valor: string, etiqueta = "Celular", principal = false, estado: FormaContacto["estado"] = "valido"): FormaContacto => ({
+  tipo: "telefono",
+  valor,
+  etiqueta,
+  principal,
+  estado,
+});
+const mail = (valor: string, principal = false): FormaContacto => ({
+  tipo: "email",
+  valor,
+  etiqueta: "Personal",
+  principal,
+  estado: "valido",
+});
+const wa = (valor: string): FormaContacto => ({
+  tipo: "whatsapp",
+  valor,
+  etiqueta: "WhatsApp",
+  estado: "valido",
+});
+
+const deuda = (producto: string, cuenta: string, monto: string, mora: string, venc: string, suc: string) => ({
+  Producto: producto,
+  "Nro. de cuenta": cuenta,
+  Deuda: monto,
+  "Días de mora": mora,
+  Vencimiento: venc,
+  Sucursal: suc,
+});
+
+export const clientes: Cliente[] = [
+  {
+    id: "cli-1",
+    nombre: "María Laura",
+    apellido: "Fernández",
+    tipoDoc: "DNI",
+    nroDoc: "28.456.789",
+    idExterno: "CRM-100234",
+    etiquetas: ["et-tarjeta", "et-vip"],
+    formasContacto: [
+      tel("+54 9 11 5523-4410", "Celular", true),
+      tel("+54 11 4788-2210", "Laboral"),
+      wa("+54 9 11 5523-4410"),
+      mail("mlfernandez@mail.com"),
+    ],
+    infoAdicional: deuda("Tarjeta Visa", "4509-****-2231", "$ 184.320", "12", "2026-09-23", "Palermo"),
+    creado: "2026-06-02T09:14:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
+    actualizado: "2026-10-05T07:02:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-2",
+    nombre: "Jorge",
+    apellido: "Pereyra",
+    tipoDoc: "DNI",
+    nroDoc: "31.902.115",
+    idExterno: "CRM-100871",
+    etiquetas: ["et-prestamos", "et-promesa-incumplida"],
+    formasContacto: [
+      tel("+54 9 11 6012-7788", "Celular", true),
+      tel("+54 9 11 4400-1122", "Celular", false, "invalido"),
+      wa("+54 9 11 6012-7788"),
+    ],
+    infoAdicional: deuda("Préstamo personal", "PP-778812", "$ 412.900", "35", "2026-08-31", "Caballito"),
+    creado: "2026-05-18T11:40:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
+    actualizado: "2026-10-04T18:20:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-3",
+    nombre: "Lucía",
+    apellido: "Gómez",
+    tipoDoc: "DNI",
+    nroDoc: "35.220.674",
+    idExterno: "CRM-101005",
+    etiquetas: ["et-tarjeta"],
+    formasContacto: [tel("+54 9 351 555-0192", "Celular", true), mail("lu.gomez@mail.com")],
+    infoAdicional: deuda("Tarjeta Mastercard", "5412-****-8890", "$ 58.740", "8", "2026-09-27", "Córdoba Centro"),
+    creado: "2026-09-01T08:00:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
+    actualizado: "2026-10-05T07:02:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-4",
+    nombre: "Ricardo",
+    apellido: "Sosa",
+    tipoDoc: "DNI",
+    nroDoc: "22.118.903",
+    idExterno: "CRM-099120",
+    etiquetas: ["et-prestamos", "et-mora90"],
+    formasContacto: [
+      tel("+54 9 11 3344-9900", "Celular", true, "noContactar"),
+      mail("rsosa@empresa.com.ar", true),
+    ],
+    infoAdicional: deuda("Préstamo prendario", "PR-112093", "$ 1.230.000", "62", "2026-08-04", "Belgrano"),
+    creado: "2026-03-10T10:00:00",
+    creadoPor: "Martín Díaz",
+    creadoVia: "olimpo",
+    actualizado: "2026-09-28T16:45:00",
+    actualizadoPor: "Juan Pérez",
+    actualizadoVia: "hermes",
+  },
+  {
+    id: "cli-5",
+    nombre: "Ana",
+    apellido: "Torres",
+    tipoDoc: "DNI",
+    nroDoc: "40.551.238",
+    idExterno: "CRM-101188",
+    etiquetas: ["et-tarjeta"],
+    formasContacto: [tel("+54 9 261 444-7781", "Celular", true), wa("+54 9 261 444-7781")],
+    infoAdicional: deuda("Tarjeta Visa", "4509-****-7765", "$ 23.100", "5", "2026-09-30", "Mendoza"),
+    creado: "2026-10-03T07:05:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
+    actualizado: "2026-10-05T07:02:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-6",
+    nombre: "Martín",
+    apellido: "Acosta",
+    tipoDoc: "CUIT",
+    nroDoc: "20-27884512-3",
+    idExterno: "CRM-097754",
+    etiquetas: ["et-empresa", "et-mora30"],
+    formasContacto: [tel("+54 11 4312-5500", "Laboral", true), mail("pagos@acostayasoc.com.ar", true)],
+    infoAdicional: deuda("Cuenta corriente", "CC-55120", "$ 890.450", "41", "2026-08-25", "Microcentro"),
+    creado: "2026-02-14T09:30:00",
+    creadoPor: "Integración CRM",
+    creadoVia: "api",
+    actualizado: "2026-10-01T10:10:00",
+    actualizadoPor: "Integración CRM",
+    actualizadoVia: "api",
+  },
+  {
+    id: "cli-7",
+    nombre: "Sofía",
+    apellido: "Ramírez",
+    tipoDoc: "DNI",
+    nroDoc: "37.664.020",
+    idExterno: "CRM-100990",
+    etiquetas: ["et-tarjeta", "et-mora30"],
+    formasContacto: [tel("+54 9 11 2290-1144", "Celular", true), wa("+54 9 11 2290-1144"), mail("sofi.ramirez@mail.com")],
+    infoAdicional: deuda("Tarjeta Visa", "4509-****-0012", "$ 131.870", "19", "2026-09-16", "Flores"),
+    creado: "2026-07-22T12:00:00",
+    creadoPor: "Juan Pérez",
+    creadoVia: "hermes",
+    actualizado: "2026-10-05T07:02:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-8",
+    nombre: "Diego",
+    apellido: "Herrera",
+    tipoDoc: "DNI",
+    nroDoc: "29.003.481",
+    idExterno: "CRM-098431",
+    etiquetas: ["et-prestamos", "et-mora90"],
+    formasContacto: [tel("+54 9 341 600-2233", "Celular", true)],
+    infoAdicional: deuda("Préstamo personal", "PP-701233", "$ 275.000", "90", "2026-07-06", "Rosario"),
+    creado: "2026-04-01T09:00:00",
+    creadoPor: "Carla Ruiz",
+    creadoVia: "importacion",
+    actualizado: "2026-09-20T09:00:00",
+    actualizadoPor: "Carla Ruiz",
+    actualizadoVia: "importacion",
+  },
+  {
+    id: "cli-9",
+    nombre: "Valentina",
+    apellido: "Medina",
+    tipoDoc: "DNI",
+    nroDoc: "42.118.657",
+    etiquetas: ["et-vip"],
+    formasContacto: [tel("+54 9 11 7788-1200", "Celular", true), wa("+54 9 11 7788-1200"), mail("vale.medina@mail.com")],
+    infoAdicional: { Plan: "Fibra 300", Antigüedad: "3 años", Segmento: "Residencial" },
+    creado: "2026-08-11T15:20:00",
+    creadoPor: "IVR Atención",
+    creadoVia: "ivr",
+    actualizado: "2026-10-02T11:30:00",
+    actualizadoPor: "Laura Gómez",
+    actualizadoVia: "hermes",
+  },
+  {
+    id: "cli-10",
+    nombre: "Pablo",
+    apellido: "Castro",
+    tipoDoc: "DNI",
+    nroDoc: "33.775.902",
+    etiquetas: [],
+    formasContacto: [tel("+54 9 221 400-5566", "Celular", true)],
+    infoAdicional: { Plan: "Móvil 20GB", Antigüedad: "8 meses", Segmento: "Residencial" },
+    creado: "2026-09-15T10:00:00",
+    creadoPor: "WhatsApp entrante",
+    creadoVia: "automatico",
+    actualizado: "2026-09-15T10:00:00",
+    actualizadoPor: "WhatsApp entrante",
+    actualizadoVia: "automatico",
+  },
+];
+
+// Notas del cliente: quedan en el cliente (no en una interacción puntual) para
+// que el próximo agente las vea. Se cargan y se ven desde Hermes (el pad), no
+// desde la ficha de Olimpo — decisión de producto 2026-10-08. Datos listos
+// para cuando se mockee el pad.
+export type NotaCliente = {
+  id: string;
+  clienteId: string;
+  texto: string;
+  autor: string;
+  desde: "Hermes" | "Olimpo";
+  fecha: string;
+  fijada?: boolean;
+};
+
+export const notasClientes: NotaCliente[] = [
+  { id: "nota-1", clienteId: "cli-1", texto: "Prefiere que la contacten por WhatsApp; en horario laboral no atiende llamadas.", autor: "Juan Pérez", desde: "Hermes", fecha: "2026-09-22T11:10:00", fijada: true },
+  { id: "nota-2", clienteId: "cli-1", texto: "Consultó por el resumen de septiembre en Atención; quedó conforme.", autor: "Laura Gómez", desde: "Hermes", fecha: "2026-10-03T16:48:00" },
+  { id: "nota-3", clienteId: "cli-4", texto: "Pidió no ser llamado al celular. Solo contacto por mail, a pedido del titular.", autor: "Sup. Carla Ruiz", desde: "Olimpo", fecha: "2026-09-28T16:50:00", fijada: true },
+  { id: "nota-4", clienteId: "cli-6", texto: "Atiende el contador, Sr. Roldán. Pedir por él.", autor: "Ana Martínez", desde: "Hermes", fecha: "2026-10-01T14:35:00" },
+];
+
+export function getNotasDeCliente(clienteId: string) {
+  return notasClientes
+    .filter((n) => n.clienteId === clienteId)
+    .sort((a, b) => Number(!!b.fijada) - Number(!!a.fijada) || b.fecha.localeCompare(a.fecha));
+}
+
+// Catálogo de etiquetas, administrado en Olimpo (propuesta 2026-10-08,
+// ajustes 2026-10-14): nombre siempre en MAYÚSCULA y único sin importar
+// mayúsculas/minúsculas; color de una paleta ampliada o libre (picker); prompt
+// opcional para que la IA asigne la etiqueta sola durante la conversación.
+export type ColorEtiqueta = string; // hex, ej. "#0074B5"
+
+export const PALETA_ETIQUETAS: { nombre: string; hex: string }[] = [
+  { nombre: "Azul", hex: "#0074B5" },
+  { nombre: "Celeste", hex: "#17A2B8" },
+  { nombre: "Verde", hex: "#28A745" },
+  { nombre: "Lima", hex: "#7CB342" },
+  { nombre: "Amarillo", hex: "#E0A800" },
+  { nombre: "Naranja", hex: "#F57C00" },
+  { nombre: "Rojo", hex: "#D7373F" },
+  { nombre: "Rosa", hex: "#D81B60" },
+  { nombre: "Violeta", hex: "#807CDB" },
+  { nombre: "Púrpura", hex: "#7B1FA2" },
+  { nombre: "Marrón", hex: "#8D6E63" },
+  { nombre: "Gris", hex: "#6A6A6A" },
+];
+
+export type Etiqueta = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  prompt?: string;
+  color: ColorEtiqueta;
+};
+
+export const etiquetasCatalogo: Etiqueta[] = [
+  { id: "et-vip", nombre: "VIP", descripcion: "Clientes de alto valor: atención preferencial", color: "#807CDB", prompt: "Poné esta etiqueta si el cliente menciona que tiene más de un producto con nosotros o pide hablar con un supervisor." },
+  { id: "et-tarjeta", nombre: "CARTERA TARJETAS", color: "#0074B5" },
+  { id: "et-prestamos", nombre: "CARTERA PRÉSTAMOS", color: "#17A2B8" },
+  { id: "et-mora30", nombre: "MORA +30", color: "#E0A800" },
+  { id: "et-mora90", nombre: "MORA +90", color: "#D7373F" },
+  { id: "et-promesa-incumplida", nombre: "PROMESA INCUMPLIDA", color: "#F57C00", prompt: "Poné esta etiqueta si el cliente reconoce que no cumplió una promesa de pago anterior." },
+  { id: "et-empresa", nombre: "EMPRESA", descripcion: "Cliente persona jurídica", color: "#6A6A6A" },
+  { id: "et-baja", nombre: "QUIERE DAR DE BAJA", color: "#D81B60", prompt: "Poné esta etiqueta si el cliente dice que quiere dar de baja un servicio o cerrar la cuenta." },
+  { id: "et-reclamo", nombre: "RECLAMO ABIERTO", color: "#7B1FA2" },
+  { id: "et-refi", nombre: "REFINANCIADO", color: "#28A745" },
+  { id: "et-nuevo", nombre: "CLIENTE NUEVO", color: "#7CB342" },
+  { id: "et-sucursal", nombre: "ATENCIÓN EN SUCURSAL", color: "#8D6E63" },
+];
+
+/** Busca una etiqueta por nombre sin importar mayúsculas/minúsculas. */
+export function etiquetaPorNombre(nombre: string, excluirId?: string) {
+  const n = nombre.trim().toLocaleUpperCase("es-AR");
+  return etiquetasCatalogo.find((e) => e.id !== excluirId && e.nombre.toLocaleUpperCase("es-AR") === n);
+}
+
+export function getEtiqueta(id: string) {
+  return etiquetasCatalogo.find((e) => e.id === id);
+}
+
+export function clientesConEtiqueta(etiquetaId: string) {
+  return clientes.filter((c) => c.etiquetas.includes(etiquetaId)).length;
+}
+
+// ── Importación de clientes (wizard, propuesta 2026-10-09) ──────────────────
+// Los campos adicionales nacen de las importaciones: la primera vez que llega
+// una columna se define cómo se llama en el sistema y qué validaciones tiene.
+// Cada campo recuerda de qué columnas vino, así la próxima importación lo
+// asocia solo — eso reemplaza a las "plantillas de importación".
+export type TipoCampo = "texto" | "numero" | "moneda" | "fecha" | "lista" | "booleano";
+
+export type CampoAdicional = {
+  id: string;
+  nombre: string;
+  tipo: TipoCampo;
+  columnasConocidas: string[];
+};
+
+export const camposAdicionalesSistema: CampoAdicional[] = [
+  { id: "campo-producto", nombre: "Producto", tipo: "lista", columnasConocidas: ["PRODUCTO"] },
+  { id: "campo-cuenta", nombre: "Nro. de cuenta", tipo: "texto", columnasConocidas: ["NRO_CUENTA"] },
+  { id: "campo-deuda", nombre: "Deuda", tipo: "moneda", columnasConocidas: ["SALDO_DEUDA", "DEUDA"] },
+  { id: "campo-mora", nombre: "Días de mora", tipo: "numero", columnasConocidas: ["DIAS_MORA"] },
+  { id: "campo-vto", nombre: "Vencimiento", tipo: "fecha", columnasConocidas: ["FECHA_VTO"] },
+  { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", columnasConocidas: ["SUCURSAL"] },
+];
+
+// Campos del cliente sobre los que cada grupo de trabajo define si los ve y
+// los modifica en Hermes (solapa "Ficha del cliente" del grupo, 2026-10-15).
+// La obligatoriedad por campaña quedó en pausa (se sacó la solapa).
+export type CampoCliente = {
+  id: string;
+  grupo: "basicos" | "contacto" | "adicional" | "etiquetas";
+  nombre: string;
+  tipo: TipoCampo | "telefono" | "email" | "redes" | "etiquetas";
+};
+
+export const camposCliente: CampoCliente[] = [
+  { id: "nombre", grupo: "basicos", nombre: "Nombre", tipo: "texto" },
+  { id: "apellido", grupo: "basicos", nombre: "Apellido", tipo: "texto" },
+  { id: "tipoDoc", grupo: "basicos", nombre: "Tipo de identificación", tipo: "lista" },
+  { id: "nroDoc", grupo: "basicos", nombre: "Número de identificación", tipo: "texto" },
+  { id: "idExterno", grupo: "basicos", nombre: "ID externo", tipo: "texto" },
+  { id: "telefono", grupo: "contacto", nombre: "Teléfono", tipo: "telefono" },
+  { id: "email", grupo: "contacto", nombre: "Email", tipo: "email" },
+  { id: "redes", grupo: "contacto", nombre: "Redes sociales", tipo: "redes" },
+  ...camposAdicionalesSistema.map((c) => ({ id: c.id, grupo: "adicional" as const, nombre: c.nombre, tipo: c.tipo })),
+  { id: "etiquetas", grupo: "etiquetas", nombre: "Etiquetas del cliente", tipo: "etiquetas" },
+];
+
+
+// Qué puede ver y modificar cada grupo de trabajo en la ficha del cliente
+// (solapa "Ficha del cliente" del grupo, 2026-10-15), incluidas las
+// etiquetas. Lo que no está acá se puede ver y modificar.
+export type PermisoCampo = { ver: boolean; modificar: boolean };
+export const fichaPorGrupo: Record<string, Record<string, PermisoCampo>> = {
+  "wg-cobranzas": {
+    nroDoc: { ver: true, modificar: false },
+    idExterno: { ver: true, modificar: false },
+    "campo-deuda": { ver: true, modificar: false },
+  },
+  "wg-atencion": {
+    idExterno: { ver: false, modificar: false },
+    "campo-deuda": { ver: false, modificar: false },
+    "campo-mora": { ver: false, modificar: false },
+    "campo-cuenta": { ver: true, modificar: false },
+    etiquetas: { ver: true, modificar: false },
+  },
+};
+export function permisoCampo(grupoId: string, campoId: string): PermisoCampo {
+  return fichaPorGrupo[grupoId]?.[campoId] ?? { ver: true, modificar: true };
+}
+
+// Archivo de ejemplo que "sube" el usuario en el wizard.
+export const csvEjemplo = {
+  nombreArchivo: "clientes_banco_sur_2026-10-09.csv",
+  totalFilas: 1240,
+  columnas: [
+    "NOMBRE",
+    "APELLIDO",
+    "TIPO_DOC",
+    "DNI",
+    "COD_CLIENTE",
+    "TEL_CEL",
+    "TEL_LABORAL",
+    "EMAIL",
+    "Nro Socio",
+    "PRODUCTO",
+    "SALDO_DEUDA",
+    "DIAS_MORA",
+    "FECHA_VTO",
+    "SUCURSAL",
+    "SEGMENTO",
+    "ACEPTA_WHATSAPP",
+    "CANALES_PREF",
+  ],
+  filas: [
+    ["María Laura", "Fernández", "DNI", "28456789", "CRM-100234", "1155234410", "1147882210", "mlfernandez@mail.com", "S-00412", "Tarjeta Visa", "184320.50", "12", "23/09/2026", "Palermo", "Premium", "SI", "WhatsApp|Llamada"],
+    ["Jorge", "Pereyra", "DNI", "31902115", "CRM-100871", "1160127788", "", "", "S-01877", "Préstamo personal", "412900", "35", "31/08/2026", "Caballito", "Clásico", "NO", "Llamada"],
+    ["Lucía", "Gómez", "DNI", "35220674", "CRM-101005", "3515550192", "", "lu.gomez@mail.com", "S-02210", "Tarjeta Mastercard", "58740", "8", "27/09/2026", "Córdoba Centro", "Clásico", "SI", "Email|WhatsApp"],
+    ["Martín", "Acosta", "CUIT", "20278845123", "CRM-097754", "", "1143125500", "pagos@acostayasoc.com.ar", "", "Cuenta corriente", "890450", "41", "25/08/2026", "Microcentro", "Empresas", "NO", "Llamada|Email"],
+  ],
+};
+
+export function getCliente(id: string) {
+  return clientes.find((c) => c.id === id);
+}
+
+export function nombreCompleto(c: Cliente) {
+  return `${c.nombre} ${c.apellido}`;
+}
+
+export function telefonoPrincipal(c: Cliente) {
+  return (
+    c.formasContacto.find((f) => f.tipo === "telefono" && f.principal) ??
+    c.formasContacto.find((f) => f.tipo === "telefono")
+  )?.valor;
+}
+
+export function formatFecha(iso: string, conHora = false) {
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
+  const fecha = d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  if (!conHora) return fecha;
+  const hora = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  return `${fecha} ${hora}`;
+}

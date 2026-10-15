@@ -705,6 +705,8 @@ export const estadosAuxiliares: EstadoAuxiliar[] = [
 export const modulosPermisos = [
   "Proyectos",
   "Campañas",
+  // Clientes (propuesta 2026-10-14): mismos permisos que el resto.
+  "Clientes",
   "Cuentas",
   "Clasificaciones",
   "Marcas",
@@ -724,6 +726,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     estadosAuxiliares: ["aux-almuerzo", "aux-capacitacion"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura", "escritura", "eliminacion"] },
+      { modulo: "Clientes", acciones: ["lectura", "escritura", "eliminacion"] },
       { modulo: "Cuentas", acciones: ["lectura"] },
       { modulo: "Clasificaciones", acciones: ["lectura", "escritura"] },
     ],
@@ -759,6 +762,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     estadosAuxiliares: ["aux-almuerzo"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura"] },
+      { modulo: "Clientes", acciones: ["lectura"] },
       { modulo: "Cuentas", acciones: ["lectura"] },
       { modulo: "Clasificaciones", acciones: ["lectura"] },
     ],
@@ -794,6 +798,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     estadosAuxiliares: ["aux-almuerzo", "aux-reunion"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura", "escritura"] },
+      { modulo: "Clientes", acciones: ["lectura", "escritura"] },
       { modulo: "Cuentas", acciones: ["lectura"] },
       { modulo: "Marcas", acciones: ["lectura"] },
     ],

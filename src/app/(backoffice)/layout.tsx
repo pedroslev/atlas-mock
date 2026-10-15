@@ -18,7 +18,9 @@ export default function BackofficeLayout({
         <AppHeader />
         <div className="flex min-h-0 flex-1">
           <AppSidebar />
-          <SidebarInset>
+          {/* min-w-0: sin esto una tabla ancha (ej. Objetivos de contacto)
+              agranda el inset más allá de la pantalla en vez de scrollear. */}
+          <SidebarInset className="min-w-0">
             <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
               {children}
             </main>
