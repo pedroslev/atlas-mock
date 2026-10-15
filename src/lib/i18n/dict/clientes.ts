@@ -275,7 +275,7 @@ export const clientes: NamespaceDict = {
     "imp.noImportar": "No importar",
     "imp.obligatorio": "Obligatorio",
     "imp.columna": "Columna del archivo",
-    "imp.basicosDesc": "Elegí de qué columna del archivo sale cada dato básico. Las sugerencias se hicieron por el nombre de la columna.",
+    "imp.basicosDesc": "Elegí de qué columna del archivo sale cada dato básico.",
     "imp.basico.nombre": "Nombre",
     "imp.basico.apellido": "Apellido",
     "imp.basico.tipoDoc": "Tipo de identificación",

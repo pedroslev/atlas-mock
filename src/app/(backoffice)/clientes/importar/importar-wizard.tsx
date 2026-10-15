@@ -1569,10 +1569,18 @@ function ValidacionesEditor({
   sinArchivo?: boolean;
 }) {
   const t = useT();
+  // Sin archivo (campos sin dato) no hay formato que leer ni valores de los
+  // que elegir el "Sí": solo moneda y opciones de lista.
   const configuracion =
-    tipo === "moneda" || tipo === "fecha" || tipo === "lista" || (tipo === "booleano" && valoresDetectados.length > 0);
+    tipo === "moneda" ||
+    (tipo === "fecha" && !sinArchivo) ||
+    tipo === "lista" ||
+    (tipo === "booleano" && valoresDetectados.length > 0);
+  const validable = tipo === "texto" || tipo === "numero" || tipo === "moneda";
   // Lista de opciones: cómo queda separada cada celda (no el total del archivo).
   const celdas = tipo === "lista" ? valoresDetectados : [];
+
+  if (!configuracion && !validable) return null;
 
   return (
     <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
@@ -1590,7 +1598,7 @@ function ValidacionesEditor({
               />
             </div>
           )}
-          {tipo === "fecha" && (
+          {tipo === "fecha" && !sinArchivo && (
             <div className="flex w-44 flex-col gap-1">
               <Label className="text-xs">{t("clientes.imp.formatoFecha")}</Label>
               <ComboSelect
