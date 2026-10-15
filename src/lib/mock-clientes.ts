@@ -358,39 +358,33 @@ export const camposAdicionalesSistema: CampoAdicional[] = [
   { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", columnasConocidas: ["SUCURSAL"] },
 ];
 
-// Campos del cliente que una campaña puede marcar como obligatorios para el
-// agente (solapa "Clientes" de la campaña, 2026-10-15). La obligatoriedad no
-// va en la importación: aplica cuando el agente abre la ficha del cliente.
+// Campos del cliente sobre los que cada grupo de trabajo define si los ve y
+// los modifica en Hermes (solapa "Ficha del cliente" del grupo, 2026-10-15).
+// La obligatoriedad por campaña quedó en pausa (se sacó la solapa).
 export type CampoCliente = {
   id: string;
-  grupo: "basicos" | "contacto" | "adicional";
+  grupo: "basicos" | "contacto" | "adicional" | "etiquetas";
   nombre: string;
-  tipo: TipoCampo | "telefono" | "email";
-  /** Siempre obligatorio (no se puede apagar). */
-  fijo?: boolean;
+  tipo: TipoCampo | "telefono" | "email" | "redes" | "etiquetas";
 };
 
 export const camposCliente: CampoCliente[] = [
-  { id: "nombre", grupo: "basicos", nombre: "Nombre", tipo: "texto", fijo: true },
+  { id: "nombre", grupo: "basicos", nombre: "Nombre", tipo: "texto" },
   { id: "apellido", grupo: "basicos", nombre: "Apellido", tipo: "texto" },
   { id: "tipoDoc", grupo: "basicos", nombre: "Tipo de identificación", tipo: "lista" },
   { id: "nroDoc", grupo: "basicos", nombre: "Número de identificación", tipo: "texto" },
   { id: "idExterno", grupo: "basicos", nombre: "ID externo", tipo: "texto" },
   { id: "telefono", grupo: "contacto", nombre: "Teléfono", tipo: "telefono" },
   { id: "email", grupo: "contacto", nombre: "Email", tipo: "email" },
+  { id: "redes", grupo: "contacto", nombre: "Redes sociales", tipo: "redes" },
   ...camposAdicionalesSistema.map((c) => ({ id: c.id, grupo: "adicional" as const, nombre: c.nombre, tipo: c.tipo })),
+  { id: "etiquetas", grupo: "etiquetas", nombre: "Etiquetas del cliente", tipo: "etiquetas" },
 ];
 
-/** Campos obligatorios para el agente, por campaña (datos de ejemplo). */
-export const obligatoriosPorCampania: Record<string, string[]> = {
-  "camp-1": ["nroDoc", "telefono", "campo-deuda", "campo-vto"],
-  "camp-2": ["nroDoc", "telefono", "campo-deuda"],
-  "camp-4": ["telefono", "email"],
-};
 
 // Qué puede ver y modificar cada grupo de trabajo en la ficha del cliente
-// (solapa "Ficha del cliente" del grupo, 2026-10-15). La obligatoriedad va
-// aparte, por campaña. Lo que no está acá se puede ver y modificar.
+// (solapa "Ficha del cliente" del grupo, 2026-10-15), incluidas las
+// etiquetas. Lo que no está acá se puede ver y modificar.
 export type PermisoCampo = { ver: boolean; modificar: boolean };
 export const fichaPorGrupo: Record<string, Record<string, PermisoCampo>> = {
   "wg-cobranzas": {
@@ -403,6 +397,7 @@ export const fichaPorGrupo: Record<string, Record<string, PermisoCampo>> = {
     "campo-deuda": { ver: false, modificar: false },
     "campo-mora": { ver: false, modificar: false },
     "campo-cuenta": { ver: true, modificar: false },
+    etiquetas: { ver: true, modificar: false },
   },
 };
 export function permisoCampo(grupoId: string, campoId: string): PermisoCampo {

@@ -12,7 +12,6 @@ import {
   FileX,
   Plus,
   RefreshCw,
-  Sparkles,
   Tags,
   Trash2,
   TriangleAlert,
@@ -159,7 +158,7 @@ function muestras(a: Archivo, columna: string) {
 
 // ── Mapeo ────────────────────────────────────────────────────────────────
 const BASICOS = [
-  { key: "nombre", obligatorio: true },
+  { key: "nombre", obligatorio: false },
   { key: "apellido", obligatorio: false },
   { key: "tipoDoc", obligatorio: false },
   { key: "nroDoc", obligatorio: false },
@@ -213,7 +212,17 @@ function opcionesMoneda(grupoFrecuentes: string, grupoTodas: string): ComboOptio
   ];
 }
 
-type TipoForma = "telefono" | "whatsapp" | "email";
+type TipoForma =
+  | "telefono"
+  | "whatsapp"
+  | "email"
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "x"
+  | "telegram"
+  | "linkedin";
+const TIPOS_FORMA: TipoForma[] = ["telefono", "whatsapp", "email", "instagram", "facebook", "tiktok", "x", "telegram", "linkedin"];
 type MapeoContacto = {
   id: string;
   columna: string;
@@ -256,19 +265,19 @@ type Politicas = {
   duplicadoArchivo: "ultima" | "primera" | "rechazar";
   siExiste: SiExiste;
   celdaVacia: "noBorrar" | "borrar";
-  contactoDuplicado: "conservar" | "actualizar" | "rechazar";
+  contactos: "sumarActualizar" | "sumarConservar" | "sobrescribir";
 };
 const POLITICAS_INICIALES: Politicas = {
   duplicadoArchivo: "ultima",
   siExiste: "reemplazar",
   celdaVacia: "noBorrar",
-  contactoDuplicado: "actualizar",
+  contactos: "sumarActualizar",
 };
 const OPCIONES_POLITICA: { [K in keyof Politicas]: Politicas[K][] } = {
   duplicadoArchivo: ["ultima", "primera", "rechazar"],
   siExiste: ["reemplazar", "siVacio", "noTocar"],
   celdaVacia: ["noBorrar", "borrar"],
-  contactoDuplicado: ["conservar", "actualizar", "rechazar"],
+  contactos: ["sumarActualizar", "sumarConservar", "sobrescribir"],
 };
 type ConfigAdicional = Validaciones & {
   incluir: boolean;
@@ -322,6 +331,7 @@ const SIN_VALOR: Operador[] = ["vacio", "noVacio", "esSi", "esNo"];
 
 const TIPOS: TipoCampo[] = ["texto", "numero", "moneda", "fecha", "lista", "booleano"];
 const NADA = "__ninguna__";
+const SIN_SEP = "__sin_separador__";
 
 function adivinarTipo(a: Archivo, columna: string): TipoCampo {
   const vs = muestras(a, columna);
@@ -329,7 +339,7 @@ function adivinarTipo(a: Archivo, columna: string): TipoCampo {
   if (vs.every((v) => /^\d{2}\/\d{2}\/\d{4}$/.test(v))) return "fecha";
   if (vs.every((v) => /^(si|no|s|n|true|false)$/i.test(v))) return "booleano";
   if (vs.every((v) => /^-?\d+([.,]\d+)?$/.test(v))) return "numero";
-  if (vs.some((v) => v.includes("|"))) return "lista";
+  if (vs.some((v) => /[|;]/.test(v))) return "lista";
   if (new Set(vs).size < vs.length) return "lista";
   return "texto";
 }
@@ -347,16 +357,48 @@ function familia(tipo: TipoCampo): keyof typeof OPERADORES {
 // validaciones apagadas.
 function configInicial(a: Archivo, columna: string): ConfigAdicional {
   const tipo = adivinarTipo(a, columna);
+  const celdas = muestras(a, columna);
+  // Si ya existe un campo con el mismo nombre que la columna (sin distinguir
+  // mayúsculas/minúsculas), se asocia solo a ese campo.
+  const existente = camposAdicionalesSistema.find((e) => normalizar(e.nombre) === normalizar(columna));
   return {
-    incluir: true,
-    destino: "nuevo",
-    nombre: columna,
-    tipo,
+    // Apagadas por defecto (pedido de producto 2026-10-15): el usuario elige
+    // cuáles importar, o las enciende todas con el interruptor general.
+    incluir: false,
+    destino: existente ? existente.id : "nuevo",
+    nombre: existente ? existente.nombre : columna,
+    tipo: existente ? existente.tipo : tipo,
     formatoFecha: "DD/MM/AAAA",
     moneda: "ARS",
-    valorSi: tipo === "booleano" ? muestras(a, columna).find((v) => /^(si|s|true)$/i.test(v)) : undefined,
-    sepOpciones: tipo === "lista" && muestras(a, columna).some((v) => v.includes("|")) ? "|" : "",
+    valorSi: tipo === "booleano" ? celdas.find((v) => /^(si|s|true)$/i.test(v)) : undefined,
+    sepOpciones: tipo === "lista" ? (separadoresDetectados(celdas)[0] ?? "") : "",
   };
+}
+
+// Formatos de fecha del archivo: los habituales + los de ISO 8601.
+const FORMATOS_FECHA: { valor: string; iso?: boolean }[] = [
+  { valor: "DD/MM/AAAA" },
+  { valor: "DD/MM/AA" },
+  { valor: "DD-MM-AAAA" },
+  { valor: "DD.MM.AAAA" },
+  { valor: "MM/DD/AAAA" },
+  { valor: "MM/DD/AA" },
+  { valor: "AAAA/MM/DD" },
+  { valor: "AA/MM/DD" },
+  { valor: "AAAA-MM-DD", iso: true },
+  { valor: "AAAAMMDD", iso: true },
+  { valor: "AAAA-MM-DDThh:mm", iso: true },
+  { valor: "AAAA-MM-DDThh:mm:ss", iso: true },
+  { valor: "AAAA-MM-DDThh:mm:ssZ", iso: true },
+  { valor: "AAAA-MM-DDThh:mm:ss±hh:mm", iso: true },
+  { valor: "AAAA-Www-D", iso: true },
+  { valor: "AAAA-DDD", iso: true },
+];
+
+const SEPARADORES_OPCIONES = ["|", ";", ",", "/", "-", "+", "&"];
+/** Caracteres que podrían separar opciones dentro de las celdas (los que aparecen). */
+function separadoresDetectados(celdas: string[]) {
+  return SEPARADORES_OPCIONES.filter((sep) => celdas.some((c) => c.includes(sep)));
 }
 
 /** Separa una celda en sus opciones (si no hay separador, es una sola opción). */
@@ -776,7 +818,7 @@ function Stepper({
                 </span>
               </button>
               {i < PASOS.length - 1 && (
-                <span aria-hidden className={cn("mx-2 h-px flex-1", i < actual ? "bg-primary" : "bg-border")} />
+                <span aria-hidden className={cn("mx-2 h-px min-w-6 flex-1", i < actual ? "bg-primary" : "bg-border")} />
               )}
             </li>
           );
@@ -1205,7 +1247,7 @@ function PasoContacto({
                 ariaLabel={t("clientes.imp.tipoContacto")}
                 value={c.tipo}
                 onChange={(v) => upd(c.id, { tipo: v as TipoForma })}
-                options={(["telefono", "whatsapp", "email"] as TipoForma[]).map((x) => ({
+                options={TIPOS_FORMA.map((x) => ({
                   value: x,
                   label: t(`clientes.imp.forma.${x}`),
                 }))}
@@ -1294,6 +1336,21 @@ function PasoAdicionales({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-muted-foreground">{t("clientes.imp.adicionalesDesc")}</p>
+
+      {restantes.length > 0 && (
+        <label className="flex items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2.5 text-sm font-medium">
+          <span>
+            {t("clientes.imp.importarTodas")}{" "}
+            <span className="font-normal text-muted-foreground">
+              {t("clientes.imp.nDeM", { n: restantes.filter((c) => cfg(c).incluir).length, m: restantes.length })}
+            </span>
+          </span>
+          <Switch
+            checked={restantes.every((c) => cfg(c).incluir)}
+            onCheckedChange={(on) => restantes.forEach((c) => setCfg(c, { incluir: on }))}
+          />
+        </label>
+      )}
 
       <div className="flex flex-col gap-3">
         {restantes.length === 0 && <span className="text-sm text-muted-foreground">{t("clientes.imp.sinRestantes")}</span>}
@@ -1454,7 +1511,7 @@ function ValidacionesEditor({
   const configuracion =
     tipo === "moneda" || tipo === "fecha" || tipo === "lista" || (tipo === "booleano" && valoresDetectados.length > 0);
   // Lista de opciones: cómo queda separada cada celda (no el total del archivo).
-  const celdas = tipo === "lista" ? valoresDetectados.slice(0, 4) : [];
+  const celdas = tipo === "lista" ? valoresDetectados : [];
 
   return (
     <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
@@ -1480,10 +1537,7 @@ function ValidacionesEditor({
                 ariaLabel={t("clientes.imp.formatoFecha")}
                 value={v.formatoFecha ?? "DD/MM/AAAA"}
                 onChange={(x) => onChange({ formatoFecha: x })}
-                options={["DD/MM/AAAA", "DD/MM/AA", "AAAA/MM/DD", "AA/MM/DD", "MM/DD/AAAA", "MM/DD/AA"].map((f) => ({
-                  value: f,
-                  label: f,
-                }))}
+                options={FORMATOS_FECHA.map((f) => ({ value: f.valor, label: f.valor, hint: f.iso ? "ISO 8601" : undefined }))}
               />
             </div>
           )}
@@ -1491,20 +1545,36 @@ function ValidacionesEditor({
             <>
               <div className="flex flex-col gap-1">
                 <Label className="text-xs">{t("clientes.imp.sepOpciones")}</Label>
-                <Input
-                  className="h-8 w-24 font-mono"
-                  maxLength={3}
-                  placeholder="|"
-                  aria-label={t("clientes.imp.sepOpciones")}
-                  value={v.sepOpciones ?? ""}
-                  onChange={(e) => onChange({ sepOpciones: e.target.value })}
-                />
+                <div className="w-56">
+                  <ComboSelect
+                    size="sm"
+                    ariaLabel={t("clientes.imp.sepOpciones")}
+                    value={v.sepOpciones || SIN_SEP}
+                    onChange={(x) => onChange({ sepOpciones: x === SIN_SEP ? "" : x })}
+                    options={[
+                      { value: SIN_SEP, label: t("clientes.imp.sinSeparador") },
+                      ...separadoresDetectados(celdas).map((sep) => ({
+                        value: sep,
+                        label: <span className="font-mono">{sep}</span>,
+                        searchText: sep,
+                        hint: t("clientes.imp.enNCeldas", { n: celdas.filter((c) => c.includes(sep)).length }),
+                        group: t("clientes.imp.sepDetectados"),
+                      })),
+                      ...SEPARADORES_OPCIONES.filter((sep) => !separadoresDetectados(celdas).includes(sep)).map((sep) => ({
+                        value: sep,
+                        label: <span className="font-mono">{sep}</span>,
+                        searchText: sep,
+                        group: t("clientes.imp.sepOtros"),
+                      })),
+                    ]}
+                  />
+                </div>
               </div>
               {celdas.length > 0 && (
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <Label className="text-xs">{t("clientes.imp.vistaCeldas")}</Label>
                   <ul className="flex flex-col gap-1">
-                    {celdas.map((celda, i) => {
+                    {celdas.slice(0, 4).map((celda, i) => {
                       const ops = opcionesDeCelda(celda, v.sepOpciones);
                       return (
                         <li key={i} className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -1531,14 +1601,18 @@ function ValidacionesEditor({
             <div className="flex flex-col gap-1">
               <Label className="text-xs">{t("clientes.imp.valorSi")}</Label>
               <div className="flex items-center gap-2">
-                <div className="w-32">
+                <div className="w-48">
                   <ComboSelect
                     size="sm"
                     ariaLabel={t("clientes.imp.valorSi")}
                     value={v.valorSi ?? ""}
                     placeholder={t("clientes.imp.elegirValor")}
                     onChange={(x) => onChange({ valorSi: x })}
-                    options={valoresDetectados.map((d) => ({ value: d, label: d }))}
+                    options={Array.from(new Set(valoresDetectados)).map((d) => ({
+                      value: d,
+                      label: d,
+                      hint: t("clientes.imp.enNCeldas", { n: valoresDetectados.filter((x) => x === d).length }),
+                    }))}
                   />
                 </div>
                 <span className="text-xs text-muted-foreground">{t("clientes.imp.restoNo")}</span>
@@ -1548,6 +1622,7 @@ function ValidacionesEditor({
         </div>
       )}
 
+      {(tipo === "texto" || tipo === "numero" || tipo === "moneda") && (
       <div className={cn("flex flex-wrap items-end gap-x-5 gap-y-3", configuracion && "border-t pt-3")}>
           {(tipo === "texto" || tipo === "numero" || tipo === "moneda") && (
           <label className="flex h-8 w-full items-center gap-2 text-sm font-medium">
@@ -1578,6 +1653,7 @@ function ValidacionesEditor({
             </>
           )}
         </div>
+      )}
     </div>
   );
 }
@@ -1663,7 +1739,7 @@ function FilaAdicional({
               tipo={c.tipo}
               v={c}
               onChange={onChange}
-              valoresDetectados={c.tipo === "lista" ? celdasMuestra : distintos}
+              valoresDetectados={c.tipo === "lista" || c.tipo === "booleano" ? celdasMuestra : distintos}
             />
           )}
 
@@ -1763,7 +1839,9 @@ function PasoOpciones({
 
   // Cómo reconocer a un cliente que ya existe: un solo campo, a elegir entre
   // los datos que lo identifican y cualquier otra columna del archivo.
-  const telPrincipal = contactos.find((c) => c.principal && c.columna && c.tipo !== "email");
+  const telPrincipal = contactos.find(
+    (c) => c.principal && c.columna && (c.tipo === "telefono" || c.tipo === "whatsapp")
+  );
   const opcionesClave: ComboOption[] = [
     ...(basicos.nroDoc
       ? [{ value: "nroDoc", label: t("clientes.imp.basico.nroDoc"), hint: basicos.nroDoc, group: t("clientes.imp.claveGrupoDatos") }]
@@ -1809,7 +1887,7 @@ function PasoOpciones({
           {politica("duplicadoArchivo")}
           {politica("siExiste")}
           {politica("celdaVacia")}
-          {politica("contactoDuplicado")}
+          {politica("contactos")}
         </div>
       </div>
     </div>
@@ -2110,7 +2188,6 @@ function PasoRevision({
   // se importa; advertencia = el cliente se importa sin ese dato.
   const colClave = clave.startsWith("col:") ? clave.slice(4) : clave === "idExterno" ? basicos.idExterno : clave === "nroDoc" ? basicos.nroDoc : "";
   const errores: { fila: number; columna: string; problema: string; tipo: "error" | "advertencia" }[] = [
-    { fila: 14, columna: basicos.nombre || "NOMBRE", problema: t("clientes.imp.err.faltaNombre"), tipo: "error" },
     ...(colClave ? [{ fila: 57, columna: colClave, problema: t("clientes.imp.err.faltaClave"), tipo: "error" as const }] : []),
     { fila: 318, columna: colClave || "—", problema: t("clientes.imp.err.ambiguo"), tipo: "error" },
     { fila: 412, columna: "—", problema: t("clientes.imp.err.sinContacto"), tipo: "error" },
@@ -2278,10 +2355,7 @@ function PasoRevision({
         </Button>
       </div>
 
-      <p className="flex items-start gap-2 rounded-lg bg-accent px-4 py-3 text-sm text-accent-foreground">
-        <Sparkles className="mt-0.5 size-4 shrink-0" />
-        {t("clientes.imp.proximaVez")}
-      </p>
+
     </div>
   );
 }

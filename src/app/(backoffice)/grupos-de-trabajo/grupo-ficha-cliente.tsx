@@ -22,12 +22,12 @@ import {
 import { camposCliente, permisoCampo, type CampoCliente, type PermisoCampo } from "@/lib/mock-clientes";
 import { useT } from "@/lib/i18n";
 
-const GRUPOS: CampoCliente["grupo"][] = ["basicos", "contacto", "adicional"];
+const GRUPOS: CampoCliente["grupo"][] = ["basicos", "contacto", "adicional", "etiquetas"];
 
 // Solapa "Ficha del cliente" del grupo de trabajo (pedido de producto
 // 2026-10-15): qué campos del cliente pueden VER y MODIFICAR los agentes de
-// este grupo en Hermes. Si no lo ve, no lo puede modificar. La obligatoriedad
-// no va acá: se define por campaña (solapa "Clientes" de la campaña).
+// este grupo en Hermes, incluidas las etiquetas. Si no lo ve, no lo puede
+// modificar.
 export function GrupoFichaClienteTab({ grupoId }: { grupoId: string }) {
   const t = useT();
   const [permisos, setPermisos] = useState<Record<string, PermisoCampo>>(() =>

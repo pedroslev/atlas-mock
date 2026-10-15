@@ -61,7 +61,6 @@ import {
   ConfigOperativaTab,
   UrlsExternasTab,
 } from "../campania-parametros";
-import { ClientesTab } from "../campania-clientes";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -102,7 +101,6 @@ export function CampaniaEditor({
           {t("campanias.tab.urlInteraccion")}
         </TabsTrigger>
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
-        <TabsTrigger value="clientes">{t("common.nav.clientes")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="grid gap-6 lg:grid-cols-2">
@@ -229,12 +227,6 @@ export function CampaniaEditor({
 
       <TabsContent value="usuarios">
         <UsuariosTab initialUsuarioIds={campania.usuariosAsignados} />
-      </TabsContent>
-
-      {/* Campos del cliente obligatorios para el agente en esta campaña
-          (propuesta 2026-10-15, relevamiento/clientes-y-contactaciones). */}
-      <TabsContent value="clientes">
-        <ClientesTab campaniaId={campania.id} usuarioIds={campania.usuariosAsignados} />
       </TabsContent>
     </Tabs>
   );
