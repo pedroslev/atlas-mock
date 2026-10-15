@@ -234,7 +234,7 @@ export function CampaniaEditor({
       {/* Campos del cliente obligatorios para el agente en esta campaña
           (propuesta 2026-10-15, relevamiento/clientes-y-contactaciones). */}
       <TabsContent value="clientes">
-        <ClientesTab campaniaId={campania.id} />
+        <ClientesTab campaniaId={campania.id} usuarioIds={campania.usuariosAsignados} />
       </TabsContent>
     </Tabs>
   );

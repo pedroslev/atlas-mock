@@ -16,6 +16,7 @@ import type { Agente, GrupoTrabajo } from "@/lib/mock-data";
 import { GrupoMiembros } from "./grupo-miembros";
 import { GrupoPermisos } from "./grupo-permisos";
 import { GrupoConfigHermesTab } from "../grupo-config-hermes";
+import { GrupoFichaClienteTab } from "../grupo-ficha-cliente";
 
 // Solapas del detalle de grupo. Componente cliente porque la solapa
 // "Config. Hermes" solo tiene sentido si el grupo tiene acceso a Hermes (ver
@@ -33,7 +34,7 @@ export function GrupoDetalleTabs({
   const [tab, setTab] = useState("general");
 
   useEffect(() => {
-    if (!accesoHermes && tab === "config-hermes") setTab("general");
+    if (!accesoHermes && (tab === "config-hermes" || tab === "ficha-cliente")) setTab("general");
   }, [accesoHermes, tab]);
 
   return (
@@ -48,6 +49,11 @@ export function GrupoDetalleTabs({
         {accesoHermes && (
           <TabsTrigger value="config-hermes">
             <T k="grupos.tab.configHermes" />
+          </TabsTrigger>
+        )}
+        {accesoHermes && (
+          <TabsTrigger value="ficha-cliente">
+            <T k="clientes.grupo.tab" />
           </TabsTrigger>
         )}
       </TabsList>
@@ -94,6 +100,13 @@ export function GrupoDetalleTabs({
             initialShortcutButtons={grupo.shortcutButtons}
             initialGrabacion={grupo.recordingSettings}
           />
+        </TabsContent>
+      )}
+
+      {/* Qué ve y modifica el grupo en la ficha del cliente (2026-10-15). */}
+      {accesoHermes && (
+        <TabsContent value="ficha-cliente">
+          <GrupoFichaClienteTab grupoId={grupo.id} />
         </TabsContent>
       )}
     </Tabs>

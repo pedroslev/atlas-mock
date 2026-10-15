@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Search } from "lucide-react";
+import { Lock, Search, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -21,7 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ADefinir } from "@/components/clientes/clientes-ui";
-import { camposCliente, obligatoriosPorCampania, type CampoCliente } from "@/lib/mock-clientes";
+import { camposCliente, obligatoriosPorCampania, permisoCampo, type CampoCliente } from "@/lib/mock-clientes";
+import { getGruposDeUsuario } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 
 const GRUPOS: CampoCliente["grupo"][] = ["basicos", "contacto", "adicional"];
@@ -29,8 +30,15 @@ const GRUPOS: CampoCliente["grupo"][] = ["basicos", "contacto", "adicional"];
 // Solapa "Clientes" de la campaña (pedido de producto 2026-10-15): qué campos
 // del cliente son obligatorios para el agente en esta campaña. Aplica cuando
 // el agente abre la ficha del cliente; no afecta a la importación.
-export function ClientesTab({ campaniaId }: { campaniaId: string }) {
+// Qué ve y modifica cada agente se define en su grupo de trabajo: si un campo
+// obligatorio no lo puede modificar algún grupo de la campaña, se avisa acá.
+export function ClientesTab({ campaniaId, usuarioIds }: { campaniaId: string; usuarioIds: string[] }) {
   const t = useT();
+  const gruposCampania = Array.from(
+    new Map(usuarioIds.flatMap((u) => getGruposDeUsuario(u)).map((g) => [g.id, g])).values()
+  );
+  const sinPermiso = (campoId: string) =>
+    gruposCampania.filter((g) => !permisoCampo(g.id, campoId).modificar).map((g) => g.nombre);
   const [obligatorios, setObligatorios] = useState<string[]>(() => obligatoriosPorCampania[campaniaId] ?? []);
   const [q, setQ] = useState("");
 
@@ -67,7 +75,7 @@ export function ClientesTab({ campaniaId }: { campaniaId: string }) {
               <TableRow>
                 <TableHead>{t("clientes.camp.col.campo")}</TableHead>
                 <TableHead>{t("clientes.camp.col.tipo")}</TableHead>
-                <TableHead className="w-48 text-right">{t("clientes.camp.col.obligatorio")}</TableHead>
+                <TableHead className="text-right">{t("clientes.camp.col.obligatorio")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,6 +88,7 @@ export function ClientesTab({ campaniaId }: { campaniaId: string }) {
                     titulo={t(`clientes.camp.grupo.${g}`)}
                     filas={filas}
                     obligatorios={obligatorios}
+                    sinPermiso={sinPermiso}
                     onToggle={(id, on) =>
                       setObligatorios((xs) => (on ? [...xs, id] : xs.filter((x) => x !== id)))
                     }
@@ -99,11 +108,13 @@ function GrupoCampos({
   titulo,
   filas,
   obligatorios,
+  sinPermiso,
   onToggle,
 }: {
   titulo: string;
   filas: CampoCliente[];
   obligatorios: string[];
+  sinPermiso: (campoId: string) => string[];
   onToggle: (id: string, on: boolean) => void;
 }) {
   const t = useT();
@@ -116,6 +127,7 @@ function GrupoCampos({
       </TableRow>
       {filas.map((c) => {
         const on = !!c.fijo || obligatorios.includes(c.id);
+        const conflicto = on ? sinPermiso(c.id) : [];
         return (
           <TableRow key={c.id}>
             <TableCell className="font-medium">
@@ -126,6 +138,12 @@ function GrupoCampos({
             </TableCell>
             <TableCell>
               <div className="flex items-center justify-end gap-2">
+                {conflicto.length > 0 && (
+                  <Badge variant="warning" className="gap-1" title={t("clientes.camp.conflictoDesc")}>
+                    <TriangleAlert />
+                    {t("clientes.camp.conflicto", { grupos: conflicto.join(", ") })}
+                  </Badge>
+                )}
                 {c.fijo && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Lock className="size-3" aria-hidden />

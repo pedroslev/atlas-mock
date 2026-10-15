@@ -388,6 +388,28 @@ export const obligatoriosPorCampania: Record<string, string[]> = {
   "camp-4": ["telefono", "email"],
 };
 
+// Qué puede ver y modificar cada grupo de trabajo en la ficha del cliente
+// (solapa "Ficha del cliente" del grupo, 2026-10-15). La obligatoriedad va
+// aparte, por campaña. Lo que no está acá se puede ver y modificar.
+export type PermisoCampo = { ver: boolean; modificar: boolean };
+export const fichaPorGrupo: Record<string, Record<string, PermisoCampo>> = {
+  "wg-cobranzas": {
+    nroDoc: { ver: true, modificar: false },
+    idExterno: { ver: true, modificar: false },
+    "campo-deuda": { ver: true, modificar: false },
+  },
+  "wg-atencion": {
+    idExterno: { ver: false, modificar: false },
+    "campo-deuda": { ver: false, modificar: false },
+    "campo-mora": { ver: false, modificar: false },
+    "campo-cuenta": { ver: true, modificar: false },
+  },
+};
+export function permisoCampo(grupoId: string, campoId: string): PermisoCampo {
+  if (campoId === "nombre") return { ver: true, modificar: fichaPorGrupo[grupoId]?.nombre?.modificar ?? true };
+  return fichaPorGrupo[grupoId]?.[campoId] ?? { ver: true, modificar: true };
+}
+
 // Archivo de ejemplo que "sube" el usuario en el wizard.
 export const csvEjemplo = {
   nombreArchivo: "clientes_banco_sur_2026-10-09.csv",
