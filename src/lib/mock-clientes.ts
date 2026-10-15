@@ -358,6 +358,36 @@ export const camposAdicionalesSistema: CampoAdicional[] = [
   { id: "campo-sucursal", nombre: "Sucursal", tipo: "texto", columnasConocidas: ["SUCURSAL"] },
 ];
 
+// Campos del cliente que una campaña puede marcar como obligatorios para el
+// agente (solapa "Clientes" de la campaña, 2026-10-15). La obligatoriedad no
+// va en la importación: aplica cuando el agente abre la ficha del cliente.
+export type CampoCliente = {
+  id: string;
+  grupo: "basicos" | "contacto" | "adicional";
+  nombre: string;
+  tipo: TipoCampo | "telefono" | "email";
+  /** Siempre obligatorio (no se puede apagar). */
+  fijo?: boolean;
+};
+
+export const camposCliente: CampoCliente[] = [
+  { id: "nombre", grupo: "basicos", nombre: "Nombre", tipo: "texto", fijo: true },
+  { id: "apellido", grupo: "basicos", nombre: "Apellido", tipo: "texto" },
+  { id: "tipoDoc", grupo: "basicos", nombre: "Tipo de identificación", tipo: "lista" },
+  { id: "nroDoc", grupo: "basicos", nombre: "Número de identificación", tipo: "texto" },
+  { id: "idExterno", grupo: "basicos", nombre: "ID externo", tipo: "texto" },
+  { id: "telefono", grupo: "contacto", nombre: "Teléfono", tipo: "telefono" },
+  { id: "email", grupo: "contacto", nombre: "Email", tipo: "email" },
+  ...camposAdicionalesSistema.map((c) => ({ id: c.id, grupo: "adicional" as const, nombre: c.nombre, tipo: c.tipo })),
+];
+
+/** Campos obligatorios para el agente, por campaña (datos de ejemplo). */
+export const obligatoriosPorCampania: Record<string, string[]> = {
+  "camp-1": ["nroDoc", "telefono", "campo-deuda", "campo-vto"],
+  "camp-2": ["nroDoc", "telefono", "campo-deuda"],
+  "camp-4": ["telefono", "email"],
+};
+
 // Archivo de ejemplo que "sube" el usuario en el wizard.
 export const csvEjemplo = {
   nombreArchivo: "clientes_banco_sur_2026-10-09.csv",
