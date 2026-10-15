@@ -60,6 +60,10 @@ export const tour: NamespaceDict = {
     "orientacion.listasExclusion.descripcion":
       'Los contactos a los que no se debe llamar, ya sea porque lo pidieron o porque están en un registro oficial de "no llamar".',
 
+    "orientacion.clientes.titulo": "Clientes",
+    "orientacion.clientes.descripcion":
+      "La base de clientes: cada cliente se carga una vez, por importación de archivos, y después solo se actualiza. Aquí también administras sus etiquetas.",
+
     "orientacion.agentes.titulo": "Usuarios",
     "orientacion.agentes.descripcion": "Las personas que van a operar la plataforma.",
 
@@ -131,6 +135,10 @@ export const tour: NamespaceDict = {
     "orientacion.listasExclusion.titulo": "Exclusion lists",
     "orientacion.listasExclusion.descripcion":
       "Contacts who shouldn't be called, either because they asked not to be or because they're on an official do-not-call registry.",
+
+    "orientacion.clientes.titulo": "Customers",
+    "orientacion.clientes.descripcion":
+      "Your customer base: each customer is loaded once, by importing files, and then only updated. You also manage their tags here.",
 
     "orientacion.agentes.titulo": "Users",
     "orientacion.agentes.descripcion": "The people who will operate the platform.",
@@ -204,6 +212,10 @@ export const tour: NamespaceDict = {
     "orientacion.listasExclusion.descripcion":
       'Contatos que não devem ser chamados, seja porque pediram, seja porque estão em um registro oficial de "não perturbe".',
 
+    "orientacion.clientes.titulo": "Clientes",
+    "orientacion.clientes.descripcion":
+      "A base de clientes: cada cliente é carregado uma vez, importando arquivos, e depois só é atualizado. Aqui você também administra as etiquetas.",
+
     "orientacion.agentes.titulo": "Usuários",
     "orientacion.agentes.descripcion": "As pessoas que vão operar a plataforma.",
 
@@ -275,6 +287,10 @@ export const tour: NamespaceDict = {
     "orientacion.listasExclusion.titulo": "Llistes d'exclusió",
     "orientacion.listasExclusion.descripcion":
       "Els contactes als quals no s'ha de trucar, ja sigui perquè ho han demanat o perquè són en un registre oficial de \"no truqueu\".",
+
+    "orientacion.clientes.titulo": "Clients",
+    "orientacion.clientes.descripcion":
+      "La base de clients: cada client es carrega una vegada, important fitxers, i després només s'actualitza. Aquí també administres les seves etiquetes.",
 
     "orientacion.agentes.titulo": "Usuaris",
     "orientacion.agentes.descripcion": "Les persones que operaran la plataforma.",

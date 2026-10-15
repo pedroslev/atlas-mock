@@ -401,7 +401,6 @@ export const fichaPorGrupo: Record<string, Record<string, PermisoCampo>> = {
   },
 };
 export function permisoCampo(grupoId: string, campoId: string): PermisoCampo {
-  if (campoId === "nombre") return { ver: true, modificar: fichaPorGrupo[grupoId]?.nombre?.modificar ?? true };
   return fichaPorGrupo[grupoId]?.[campoId] ?? { ver: true, modificar: true };
 }
 

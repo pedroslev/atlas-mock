@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
   Card,
@@ -52,7 +50,6 @@ export function GrupoFichaClienteTab({ grupoId }: { grupoId: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("clientes.camp.col.campo")}</TableHead>
-                <TableHead>{t("clientes.camp.col.tipo")}</TableHead>
                 <TableHead className="w-28 text-center">{t("clientes.grupo.ver")}</TableHead>
                 <TableHead className="w-28 text-center">{t("clientes.grupo.modificar")}</TableHead>
               </TableRow>
@@ -83,7 +80,7 @@ function Grupo({
   return (
     <>
       <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={4} className="bg-muted/50 py-1.5 text-xs font-semibold text-muted-foreground">
+        <TableCell colSpan={3} className="bg-muted/50 py-1.5 text-xs font-semibold text-muted-foreground">
           {t(`clientes.camp.grupo.${grupo}`)}
         </TableCell>
       </TableRow>
@@ -91,20 +88,14 @@ function Grupo({
         .filter((c) => c.grupo === grupo)
         .map((c) => {
           const p = permisos[c.id];
-          const siempreVisible = c.id === "nombre";
           return (
             <TableRow key={c.id}>
               <TableCell className="font-medium">{c.nombre}</TableCell>
               <TableCell>
-                <Badge variant="outline">{t(`clientes.camp.tipo.${c.tipo}`)}</Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center justify-center gap-1.5">
-                  {siempreVisible && <Lock className="size-3 text-muted-foreground" aria-hidden />}
+                <div className="flex justify-center">
                   <Switch
                     aria-label={`${t("clientes.grupo.ver")}: ${c.nombre}`}
                     checked={p.ver}
-                    disabled={siempreVisible}
                     onCheckedChange={(v) => onChange(c.id, { ver: v })}
                   />
                 </div>

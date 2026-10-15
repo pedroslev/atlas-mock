@@ -127,7 +127,7 @@ export const clientes: NamespaceDict = {
     "grupo.descripcion": "Qué datos del cliente pueden ver y modificar los agentes de este grupo, incluidas las etiquetas. Si no lo pueden ver, tampoco lo pueden modificar.",
     "grupo.ver": "Ver",
     "grupo.modificar": "Modificar",
-    "grupo.nota": "El nombre siempre se ve. La información adicional se arma con los campos que se fueron creando en las importaciones.",
+    "grupo.nota": "La información adicional se arma con los campos que se fueron creando en las importaciones.",
     "camp.col.campo": "Campo",
     "camp.col.tipo": "Tipo",
     "camp.grupo.basicos": "Datos básicos",

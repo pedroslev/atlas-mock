@@ -35,6 +35,7 @@ export const orientationSteps: TourStepDef[] = [
   { id: "marcadores", element: '[data-tour="nav-marcadores"]', side: "right", align: "start" },
   { id: "feriados", element: '[data-tour="nav-feriados"]', side: "right", align: "start" },
   { id: "listasExclusion", element: '[data-tour="nav-listas-de-exclusion"]', side: "right", align: "start" },
+  { id: "clientes", element: '[data-tour="nav-clientes"]', side: "right", align: "start" },
   { id: "agentes", element: '[data-tour="nav-agentes"]', side: "right", align: "start" },
   { id: "gruposTrabajo", element: '[data-tour="nav-grupos-de-trabajo"]', side: "right", align: "start" },
   { id: "estadosAuxiliares", element: '[data-tour="nav-estados-auxiliares"]', side: "right", align: "start" },
