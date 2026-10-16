@@ -103,6 +103,15 @@ export type FilaCola = {
   numeroCliente: string;
   canal: CanalMock;
   esperaSeg: number;
+  /** Llamada interna a otro agente: numeroCliente lleva el nombre del agente. */
+  interno?: boolean;
+  /** Llamada interna saliente que todavía no atendió el otro agente. */
+  sonando?: boolean;
+  /** Momento en que la llamada interna quedó en espera sin estar activa
+   *  (la puso en Hold una entrante con atención forzada). */
+  retenidaDesde?: number;
+  /** Momento en que arrancó — para la duración que queda en el historial. */
+  iniciadaEn?: number;
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
@@ -315,9 +324,13 @@ export type HistorialAgenteEntrada = {
   nombreCliente?: string;
   duracion: string;
   tipificacion: string;
+  /** Llamada interna: numeroCliente lleva el nombre del otro agente y no hay
+   *  tipificación. */
+  interno?: boolean;
 };
 
 export const historialAgenteMock: HistorialAgenteEntrada[] = [
+  { id: "ha-0", fecha: "18/08/2026", hora: "14:05", canal: "llamada", numeroCliente: "Lucas Ferreyra", duracion: "1:12", tipificacion: "—", interno: true },
   { id: "ha-1", fecha: "18/08/2026", hora: "13:52", canal: "llamada", numeroCliente: "4498812", nombreCliente: "Elena Rivas", duracion: "3:34", tipificacion: "Reclamo resuelto" },
   { id: "ha-2", fecha: "18/08/2026", hora: "13:35", canal: "whatsapp", numeroCliente: "8871023", nombreCliente: "Nicolás Aguirre", duracion: "6:12", tipificacion: "Consulta resuelta" },
   { id: "ha-3", fecha: "18/08/2026", hora: "13:18", canal: "whatsapp", numeroCliente: "5512980", duracion: "4:02", tipificacion: "Deriva a Logística" },
@@ -348,6 +361,56 @@ export const estadoAgenteMock = {
   nombre: "Marina Acosta",
   cronometro: "04:12",
 };
+
+// --- Directorio de llamadas internas (modal "Nueva interacción" → Interno) --
+// Propuesta opción A (documentacion: relevamiento-legacy/llamadas-internas/
+// propuesta-llamadas-internas): el agente ve a los agentes CONECTADOS que le habilita su grupo
+// de trabajo (mismo grupo, mismas campañas, mismos proyectos — las reglas se
+// suman), cada uno con su estado actual. Solo se puede llamar a los que están
+// en Disponible. Los desconectados no vienen en la lista.
+export type EstadoDirectorio = {
+  nombre: string;
+  dotClass: string;
+  llamable: boolean;
+};
+
+export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
+  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
+  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
+  // Propuesta del PO, a confirmar con Pedro: estado propio para distinguir
+  // una llamada interna de una llamada productiva.
+  "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false },
+  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
+  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },
+  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false },
+  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false },
+};
+
+export type AgenteDirectorio = {
+  id: string;
+  nombre: string;
+  estadoId: keyof typeof ESTADOS_DIRECTORIO;
+};
+
+export const agentesDirectorioMock: AgenteDirectorio[] = [
+  { id: "ad-1", nombre: "Lucas Ferreyra", estadoId: "disponible" },
+  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-interaccion" },
+  { id: "ad-3", nombre: "Julián Pereyra", estadoId: "disponible" },
+  { id: "ad-4", nombre: "Carla Domínguez", estadoId: "acw" },
+  { id: "ad-5", nombre: "Tomás Giménez", estadoId: "almuerzo" },
+  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible" },
+  { id: "ad-7", nombre: "Martín Sosa", estadoId: "no-disponible" },
+  { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
+  { id: "ad-9", nombre: "Paula Herrera", estadoId: "en-llamada-interna" },
+];
+
+// Estado que muestra el propio agente mientras está en una llamada interna.
+// No se elige a mano (no está en estadosAgenteDisponibles): lo pone el
+// sistema mientras dura la llamada.
+export const estadoLlamadaInterna = { nombre: "En llamada interna", dotClass: "bg-primary" };
+
+// Quién llama cuando se simula una llamada interna entrante.
+export const agenteLlamadaEntrante: AgenteDirectorio = agentesDirectorioMock[2];
 
 export function formatEspera(seg: number) {
   const m = Math.floor(seg / 60);

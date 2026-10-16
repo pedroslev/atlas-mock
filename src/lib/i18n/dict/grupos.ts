@@ -88,6 +88,28 @@ export const grupos: NamespaceDict = {
     "shortcuts.titulo": "Accesos rápidos",
     "shortcuts.desc":
       "Botones de acceso rápido en el menú del PAD para los usuarios de este grupo. Cada uno abre su URL embebida dentro de Hermes o en una pestaña nueva.",
+    // Directorio de llamadas internas — propuesta opción A (documentacion:
+    // relevamiento-legacy/llamadas-internas/propuesta-llamadas-internas). Las reglas se suman;
+    // ninguna tildada = los usuarios del grupo no pueden hacer llamadas internas.
+    "directorio.titulo": "Llamadas internas",
+    "directorio.desc":
+      "Llamadas entre agentes desde el PAD, sin cliente en línea: a quién pueden llamar los usuarios de este grupo y si se graban.",
+    "directorio.permitir": "Permitir llamadas internas",
+    "directorio.deshabilitadas":
+      "Los usuarios de este grupo no pueden hacer llamadas internas: no ven el directorio en el PAD.",
+    "directorio.aQuien": "¿A quién pueden llamar?",
+    "directorio.noReciproco":
+      "Las opciones se suman: se ven los agentes conectados que cumplan al menos una. Definen a quién pueden llamar los usuarios de este grupo, no quién los puede llamar a ellos: eso depende del grupo del que llama.",
+    "directorio.mismasCampaniasIncluida":
+      "Incluida en \"Agentes de los mismos proyectos\": quien comparte una campaña comparte su proyecto.",
+    "directorio.grabar": "Grabar las llamadas internas",
+    "directorio.grabarAudio": "Se graba el audio de la llamada.",
+    "directorio.mismoGrupo": "Agentes del mismo grupo de trabajo",
+    "directorio.mismasCampanias": "Agentes de las mismas campañas",
+    "directorio.mismasCampaniasAyuda": "Comparten al menos una campaña asignada.",
+    "directorio.mismosProyectos": "Agentes de los mismos proyectos",
+    "directorio.mismosProyectosAyuda": "Asignados a campañas de los mismos proyectos.",
+    "directorio.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden hacer llamadas internas.",
     "shortcuts.agregar": "Agregar acceso rápido",
     "shortcuts.eliminar": "Eliminar acceso rápido",
     "shortcuts.sin": "Todavía no hay accesos rápidos configurados para este grupo.",

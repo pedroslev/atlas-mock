@@ -6,16 +6,27 @@ import { CenterColumn } from "@/components/pad-mock/center-column";
 import { ContextColumn } from "@/components/pad-mock/context-column";
 import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
+import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
+import { formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
+  agenteLlamadaEntrante,
   campaniasSalientesMock,
   clienteMock,
+  estadoLlamadaInterna,
+  historialAgenteMock,
   historialPorCliente,
   tipificaciones,
+  type AgenteDirectorio,
   type CampaniaSaliente,
   type CuentaSaliente,
   type FilaCola,
+  type HistorialAgenteEntrada,
 } from "@/lib/pad-mock/data";
+
+// Cuánto "suena" una llamada interna saliente antes de que el otro agente
+// atienda — en el mock siempre atiende.
+const RING_INTERNO_MS = 3000;
 
 // Brief §2 — layout de tres columnas: menú izquierdo (con la cola integrada,
 // ver LeftNav), centro (nunca colapsa) y contexto (colapsa a íconos, ancho
@@ -38,6 +49,10 @@ export function PadMockShell() {
   const [holdStartedAt, setHoldStartedAt] = useState<number | null>(null);
   const [accesoAbiertoId, setAccesoAbiertoId] = useState<string | null>(null);
   const nuevaFilaRef = useRef(1);
+  // Llamada interna entrante sonando (aviso abajo a la derecha).
+  const [entrante, setEntrante] = useState<AgenteDirectorio | null>(null);
+  // Historial del agente: las llamadas internas que terminan se suman arriba.
+  const [historial, setHistorial] = useState<HistorialAgenteEntrada[]>(historialAgenteMock);
 
   // Estado del agente (Disponible/No disponible/Ausente/Aux) — vive ACÁ
   // porque tanto el selector del menú (LeftNav) como la franja de estado de
@@ -61,13 +76,23 @@ export function PadMockShell() {
     campaniasSalientesMock[0]?.cuentas[0]?.id
   );
 
-  const seleccionarInteraccion = useCallback((id: string) => {
+  // Al volver a una llamada interna que quedó retenida por una atención
+  // forzada, sigue en espera (con su tiempo) hasta que el agente la retome.
+  const seleccionarInteraccion = useCallback((id: string, retenidaDesde?: number) => {
     setInteraccionActivaId(id);
     setModo("interaccion");
-    setEnEspera(false);
-    setHoldStartedAt(null);
+    setEnEspera(retenidaDesde !== undefined);
+    setHoldStartedAt(retenidaDesde ?? null);
     setAccesoAbiertoId(null);
+    if (retenidaDesde !== undefined) {
+      setCola((cur) => cur.map((f) => (f.id === id ? { ...f, retenidaDesde: undefined } : f)));
+    }
   }, []);
+
+  const seleccionarFila = useCallback(
+    (id: string) => seleccionarInteraccion(id, cola.find((f) => f.id === id)?.retenidaDesde),
+    [cola, seleccionarInteraccion]
+  );
 
   // "Contactar" (desde el modal del "+" o desde InicioPanel) — a
   // pedido: ahora sí crea una fila real en la cola y la deja activa. El
@@ -91,17 +116,89 @@ export function PadMockShell() {
     [seleccionarInteraccion]
   );
 
+  // Llamada interna desde el directorio (modal "Nueva interacción" → Interno):
+  // entra a la cola como una interacción más, sin campaña ni cuenta. Suena
+  // hasta que el otro agente atiende (en el mock, siempre a los 3 segundos).
+  const iniciarLlamadaInterna = useCallback(
+    (agente: AgenteDirectorio) => {
+      const id = `q-interna-${nuevaFilaRef.current++}`;
+      setCola((cur) => [
+        ...cur,
+        { id, numeroCliente: agente.nombre, canal: "llamada", esperaSeg: 0, interno: true, sonando: true },
+      ]);
+      seleccionarInteraccion(id);
+      window.setTimeout(() => {
+        setCola((cur) =>
+          cur.map((f) => (f.id === id ? { ...f, sonando: false, iniciadaEn: Date.now() } : f))
+        );
+      }, RING_INTERNO_MS);
+    },
+    [seleccionarInteraccion]
+  );
+
+  const atenderEntrante = useCallback(() => {
+    if (!entrante) return;
+    const id = `q-interna-${nuevaFilaRef.current++}`;
+    setCola((cur) => [
+      ...cur,
+      { id, numeroCliente: entrante.nombre, canal: "llamada", esperaSeg: 0, interno: true, iniciadaEn: Date.now() },
+    ]);
+    setEntrante(null);
+    seleccionarInteraccion(id);
+  }, [entrante, seleccionarInteraccion]);
+
+  // El otro agente rechaza la llamada interna saliente: sin aviso, el que
+  // llama vuelve a la pantalla de inicio (definición del PO).
+  const rechazarSaliente = useCallback((id: string) => {
+    setCola((cur) => cur.filter((f) => f.id !== id));
+    setInteraccionActivaId(null);
+    setEnEspera(false);
+    setHoldStartedAt(null);
+    setModo("inicio");
+  }, []);
+
+  // Entra una llamada de cliente con atención forzada durante la llamada
+  // interna activa: la interna queda en espera y la del cliente pasa al frente.
+  const simularAtencionForzada = useCallback(() => {
+    const internaId = interaccionActivaId;
+    const retenidaDesde = enEspera && holdStartedAt !== null ? holdStartedAt : Date.now();
+    setCola((cur) => cur.map((f) => (f.id === internaId ? { ...f, retenidaDesde } : f)));
+    const campania = campaniasSalientesMock[0];
+    const id = `q-forzada-${nuevaFilaRef.current++}`;
+    setCola((cur) => [
+      ...cur,
+      { id, numeroCliente: clienteMock.telefono, canal: campania.cuentas[0].canal, esperaSeg: 0 },
+    ]);
+    seleccionarInteraccion(id);
+  }, [interaccionActivaId, enEspera, holdStartedAt, seleccionarInteraccion]);
+
   // "Cerrar interacción" (segundo paso del botón, ver call-controls.tsx —
   // solo se llega acá con tipificación ya cargada): saca la fila de la
   // cola y, si era la activa, pasa a la próxima que quede o vuelve a
   // InicioPanel si no queda ninguna.
   const cerrarInteraccion = useCallback(
     (id: string) => {
+      const fila = cola.find((f) => f.id === id);
+      // Llamada interna atendida: queda en el historial del agente.
+      if (fila?.interno && fila.iniciadaEn) {
+        const inicio = new Date(fila.iniciadaEn);
+        const entrada: HistorialAgenteEntrada = {
+          id: `ha-${id}`,
+          fecha: inicio.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }),
+          hora: inicio.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }),
+          canal: "llamada",
+          numeroCliente: fila.numeroCliente,
+          duracion: formatDuration(Math.max(0, Math.floor((Date.now() - fila.iniciadaEn) / 1000))),
+          tipificacion: "—",
+          interno: true,
+        };
+        setHistorial((cur) => [entrada, ...cur]);
+      }
       setCola((cur) => cur.filter((f) => f.id !== id));
       if (interaccionActivaId !== id) return;
       const siguiente = cola.find((f) => f.id !== id);
       if (siguiente) {
-        seleccionarInteraccion(siguiente.id);
+        seleccionarInteraccion(siguiente.id, siguiente.retenidaDesde);
       } else {
         setInteraccionActivaId(null);
         setEnEspera(false);
@@ -144,11 +241,11 @@ export function PadMockShell() {
       const idx = Number(e.key) - 1;
       if (Number.isNaN(idx) || idx < 0 || idx >= cola.length) return;
       e.preventDefault();
-      seleccionarInteraccion(cola[idx].id);
+      seleccionarFila(cola[idx].id);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cola, seleccionarInteraccion]);
+  }, [cola, seleccionarFila]);
 
   const hayInteraccionActiva = interaccionActivaId !== null;
   const accesoActivo = accesosRapidosMock.find((a) => a.id === accesoAbiertoId);
@@ -156,6 +253,10 @@ export function PadMockShell() {
   // simplemente no hay ninguna interacción activa (mismo criterio que
   // left-nav.tsx para marcar el botón "Inicio" como activo).
   const mostrarInicio = modo === "inicio" || !hayInteraccionActiva;
+  const filaActiva = cola.find((f) => f.id === interaccionActivaId);
+  // Mientras hay una llamada interna conectada y al frente, el agente figura
+  // "En llamada interna" (propuesta del PO, a confirmar con Pedro).
+  const enLlamadaInterna = !!filaActiva?.interno && !filaActiva.sonando;
 
   return (
     <div className="flex h-full min-h-0 flex-1">
@@ -164,8 +265,9 @@ export function PadMockShell() {
         onModo={cambiarModo}
         cola={cola}
         interaccionActivaId={interaccionActivaId}
-        onSeleccionarInteraccion={seleccionarInteraccion}
+        onSeleccionarInteraccion={seleccionarFila}
         onIniciarInteraccion={iniciarInteraccion}
+        onLlamarInterno={iniciarLlamadaInterna}
         accesoActivoId={accesoAbiertoId}
         onAbrirAcceso={setAccesoAbiertoId}
         enEspera={enEspera}
@@ -175,6 +277,7 @@ export function PadMockShell() {
         onEstadoAgenteChange={cambiarEstadoAgente}
         ultimaCampaniaId={ultimaCampaniaId}
         ultimaCuentaId={ultimaCuentaId}
+        estadoSistema={enLlamadaInterna ? estadoLlamadaInterna : undefined}
       />
 
       {accesoActivo ? (
@@ -187,6 +290,9 @@ export function PadMockShell() {
           campaniaIdInicial={ultimaCampaniaId}
           cuentaIdInicial={ultimaCuentaId}
           onContactar={iniciarInteraccion}
+          onLlamarInterno={iniciarLlamadaInterna}
+          onSimularEntrante={() => setEntrante(agenteLlamadaEntrante)}
+          historial={historial}
         />
       ) : (
         <>
@@ -197,15 +303,33 @@ export function PadMockShell() {
             holdStartedAt={holdStartedAt}
             onToggleEspera={toggleEspera}
             onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
+            interno={filaActiva?.interno}
+            sonando={filaActiva?.sonando}
+            nombreInterno={filaActiva?.interno ? filaActiva.numeroCliente : undefined}
+            onSimularForzada={filaActiva?.interno ? simularAtencionForzada : undefined}
+            onSimularRechazo={
+              filaActiva?.sonando ? () => rechazarSaliente(filaActiva.id) : undefined
+            }
           />
-          <ContextColumn
-            key={`contexto-${interaccionActivaId}`}
-            colapsada={contextoColapsada}
-            onToggle={() => setContextoColapsada((v) => !v)}
-            cliente={clienteMock}
-            historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
-          />
+          {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
+          {!filaActiva?.interno && (
+            <ContextColumn
+              key={`contexto-${interaccionActivaId}`}
+              colapsada={contextoColapsada}
+              onToggle={() => setContextoColapsada((v) => !v)}
+              cliente={clienteMock}
+              historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
+            />
+          )}
         </>
+      )}
+
+      {entrante && (
+        <LlamadaInternaEntrante
+          agente={entrante}
+          onAtender={atenderEntrante}
+          onRechazar={() => setEntrante(null)}
+        />
       )}
     </div>
   );
