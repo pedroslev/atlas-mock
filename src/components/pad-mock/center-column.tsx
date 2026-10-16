@@ -51,6 +51,7 @@ export function CenterColumn({
   sonando = false,
   nombreInterno,
   onSimularForzada,
+  onSimularRechazo,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -62,6 +63,7 @@ export function CenterColumn({
   /** Nombre del otro agente en una llamada interna. */
   nombreInterno?: string;
   onSimularForzada?: () => void;
+  onSimularRechazo?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -203,6 +205,7 @@ export function CenterColumn({
             sonando={sonando}
             nombreInterno={nombreInterno}
             onSimularForzada={onSimularForzada}
+            onSimularRechazo={onSimularRechazo}
           />
         </TabsContent>
         {paginas

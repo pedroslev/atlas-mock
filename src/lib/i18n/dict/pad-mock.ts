@@ -112,6 +112,7 @@ export const padMock: NamespaceDict = {
     "llamadaInterna.enCursoCon": "En llamada interna con {nombre}",
     "llamadaInterna.retenida": "En espera por una llamada con atención forzada.",
     "llamadaInterna.simularForzada": "Simular entrante con atención forzada",
+    "llamadaInterna.simularRechazo": "Simular que el otro agente rechaza",
 
     // QuickAccessOverlay
     "quickAccess.cerrar": "Cerrar",

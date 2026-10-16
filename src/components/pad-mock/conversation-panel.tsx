@@ -3,7 +3,6 @@
 import { Phone, PhoneOutgoing } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { OpenQuestion } from "@/components/pad-mock/open-question";
 
 // A pedido, se retiraron para esta fase: el chat como canal (redactor,
 // plantillas, hilo de mensajes), la franja de Copiloto y la transcripción
@@ -17,8 +16,8 @@ import { OpenQuestion } from "@/components/pad-mock/open-question";
 // curso" para que se vea también en el cuerpo del panel, no solo arriba.
 //
 // Llamada interna: muestra con quién es la llamada (o "Llamando a…" mientras
-// el otro agente no atiende) y el simulador de una entrante con atención
-// forzada, que la pone en espera.
+// el otro agente no atiende) y los simuladores de rechazo y de una entrante
+// con atención forzada, que la pone en espera.
 export function ConversationPanel({
   tiempo,
   enEspera,
@@ -26,6 +25,7 @@ export function ConversationPanel({
   sonando = false,
   nombreInterno,
   onSimularForzada,
+  onSimularRechazo,
 }: {
   tiempo: string;
   enEspera: boolean;
@@ -33,6 +33,7 @@ export function ConversationPanel({
   sonando?: boolean;
   nombreInterno?: string;
   onSimularForzada?: () => void;
+  onSimularRechazo?: () => void;
 }) {
   const t = useT();
   if (interno) {
@@ -42,10 +43,15 @@ export function ConversationPanel({
           <>
             <PhoneOutgoing className="size-6 animate-pulse" />
             <p className="text-sm">{t("padMock.llamadaInterna.llamando", { nombre: nombreInterno ?? "" })}</p>
-            <OpenQuestion className="mt-2 max-w-sm text-left">
-              Si el otro agente rechaza o no atiende, ¿se le muestra al que llama que lo rechazaron, o
-              solo que la llamada terminó? (Teams no distingue un rechazo de una llamada no atendida.)
-            </OpenQuestion>
+            {onSimularRechazo && (
+              <button
+                type="button"
+                onClick={onSimularRechazo}
+                className="mt-4 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                {t("padMock.llamadaInterna.simularRechazo")}
+              </button>
+            )}
           </>
         ) : (
           <>

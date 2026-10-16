@@ -147,6 +147,16 @@ export function PadMockShell() {
     seleccionarInteraccion(id);
   }, [entrante, seleccionarInteraccion]);
 
+  // El otro agente rechaza la llamada interna saliente: sin aviso, el que
+  // llama vuelve a la pantalla de inicio (definición del PO).
+  const rechazarSaliente = useCallback((id: string) => {
+    setCola((cur) => cur.filter((f) => f.id !== id));
+    setInteraccionActivaId(null);
+    setEnEspera(false);
+    setHoldStartedAt(null);
+    setModo("inicio");
+  }, []);
+
   // Entra una llamada de cliente con atención forzada durante la llamada
   // interna activa: la interna queda en espera y la del cliente pasa al frente.
   const simularAtencionForzada = useCallback(() => {
@@ -297,6 +307,9 @@ export function PadMockShell() {
             sonando={filaActiva?.sonando}
             nombreInterno={filaActiva?.interno ? filaActiva.numeroCliente : undefined}
             onSimularForzada={filaActiva?.interno ? simularAtencionForzada : undefined}
+            onSimularRechazo={
+              filaActiva?.sonando ? () => rechazarSaliente(filaActiva.id) : undefined
+            }
           />
           {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
           {!filaActiva?.interno && (
