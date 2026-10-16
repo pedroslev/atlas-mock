@@ -224,6 +224,12 @@ export type Cuenta = {
   provisioningLock: number;
 };
 
+export type Efecto =
+  | "Seguir intentando"
+  | "Dejar este medio"
+  | "Dejar de contactar"
+  | "Sin efecto";
+
 export type Clasificacion = {
   id: string;
   idExt?: string;
@@ -231,18 +237,18 @@ export type Clasificacion = {
   descripcion?: string; // reservado IA
   tipo: "Exitoso" | "No exitoso" | "No efectivo" | "Neutro";
   parentId?: string;
-  callingTime?: number; // tiempo de rellamada, minutos
+  // Qué significa el resultado para el contacto, igual en todos los canales
+  // y campañas (propuesta 2026-10-16, reemplaza a calling_time — a validar
+  // con Pedro). Cuándo y por qué canal se sigue lo decide la estrategia de
+  // salida de cada campaña, por efecto.
+  efecto: Efecto;
   prompt?: string; // reservado IA
-  // Clasificación de SISTEMA: la pone Atlas sola cuando la llamada no llega a
-  // un agente (no contesta, ocupado, número inexistente…), a partir de la
-  // causa de corte de la red. Vienen en todos los tenants, no se borran ni
-  // se renombran; el tenant sólo ajusta el tiempo de rellamada por defecto.
-  // Qué causas de red caen en cada una lo define Atlas (relevamiento
-  // criterios de recontacto, 2026-10-16) — el tenant no lo ve.
-  sistema?: {
-    explicacion: string;
-    invalidaTelefono?: boolean;
-  };
+  // Clasificación de SISTEMA: la pone Atlas sola cuando la interacción no
+  // llega a un agente (no contesta, ocupado, número inexistente…), a partir
+  // de la causa que informa la red o el proveedor. Vienen en todos los
+  // tenants y no se modifican. Qué causas caen en cada una lo define Atlas
+  // (relevamiento criterios de recontacto, 2026-10-16) — el tenant no lo ve.
+  sistema?: { explicacion: string };
 };
 
 export type ClasificacionGrupo = {
@@ -581,28 +587,27 @@ export const cuentas: Cuenta[] = [
   },
 ];
 
-// Tipificaciones de sistema (propuesta 2026-10-16, a validar con Pedro). Sin
-// callingTime = no se reintenta.
+// Tipificaciones de sistema (propuesta 2026-10-16, a validar con Pedro).
 const clasificacionesSistema: Clasificacion[] = [
   {
     id: "sys-no-contesta",
+    efecto: "Seguir intentando",
     nombre: "No contesta",
     tipo: "No efectivo",
-    callingTime: 120,
     sistema: { explicacion: "El teléfono sonó y nadie atendió." },
   },
   {
     id: "sys-ocupado",
+    efecto: "Seguir intentando",
     nombre: "Ocupado",
     tipo: "No efectivo",
-    callingTime: 15,
     sistema: { explicacion: "El teléfono estaba ocupado en otra llamada." },
   },
   {
     id: "sys-apagado",
+    efecto: "Seguir intentando",
     nombre: "Apagado o fuera de cobertura",
     tipo: "No efectivo",
-    callingTime: 240,
     sistema: {
       explicacion:
         "El teléfono está apagado, sin señal o no se pudo llegar a él por un momento.",
@@ -610,15 +615,16 @@ const clasificacionesSistema: Clasificacion[] = [
   },
   {
     id: "sys-contestador",
+    efecto: "Seguir intentando",
     nombre: "Contestador automático",
     tipo: "No efectivo",
-    callingTime: 180,
     sistema: {
       explicacion: "Atendió un contestador o un buzón de voz, no una persona.",
     },
   },
   {
     id: "sys-rechazada",
+    efecto: "Seguir intentando",
     nombre: "Rechazada",
     tipo: "No efectivo",
     sistema: {
@@ -628,76 +634,89 @@ const clasificacionesSistema: Clasificacion[] = [
   },
   {
     id: "sys-inexistente",
+    efecto: "Dejar este medio",
     nombre: "Número inexistente",
     tipo: "No efectivo",
     sistema: {
       explicacion: "El número no existe o está mal formado.",
-      invalidaTelefono: true,
     },
   },
   {
     id: "sys-cambiado",
+    efecto: "Dejar este medio",
     nombre: "Número cambiado",
     tipo: "No efectivo",
     sistema: {
       explicacion: "El número ya no está en uso y fue reemplazado por otro.",
-      invalidaTelefono: true,
     },
   },
   {
     id: "sys-no-acepta",
+    efecto: "Dejar este medio",
     nombre: "No acepta llamadas",
     tipo: "No efectivo",
     sistema: {
       explicacion: "El teléfono tiene bloqueadas las llamadas entrantes.",
-      invalidaTelefono: true,
     },
   },
   {
     id: "sys-fax",
+    efecto: "Dejar este medio",
     nombre: "Fax o módem",
     tipo: "No efectivo",
     sistema: {
       explicacion: "Del otro lado atendió un fax o un módem, no un teléfono.",
-      invalidaTelefono: true,
     },
   },
 ];
 
 export const clasificaciones: Clasificacion[] = [
   ...clasificacionesSistema,
-  { id: "clas-cobranzas", nombre: "Cobranzas", tipo: "Neutro" },
+  {
+    id: "clas-cobranzas",
+    nombre: "Cobranzas",
+    tipo: "Neutro",
+    efecto: "Sin efecto",
+  },
   {
     id: "clas-c-pago",
     nombre: "Compromiso de pago",
     tipo: "Exitoso",
+    efecto: "Dejar de contactar",
     parentId: "clas-cobranzas",
-    callingTime: 4320,
   },
   {
     id: "clas-c-nopago",
     nombre: "No puede pagar",
     tipo: "No exitoso",
+    efecto: "Seguir intentando",
     parentId: "clas-cobranzas",
-    callingTime: 1440,
   },
   {
     id: "clas-c-rechazo",
     nombre: "Rechaza contacto",
     tipo: "No exitoso",
+    efecto: "Dejar de contactar",
     parentId: "clas-cobranzas",
   },
-  { id: "clas-atencion", nombre: "Atención al cliente", tipo: "Neutro" },
+  {
+    id: "clas-atencion",
+    nombre: "Atención al cliente",
+    tipo: "Neutro",
+    efecto: "Sin efecto",
+  },
   {
     id: "clas-a-resuelto",
     nombre: "Resuelto en el momento",
     tipo: "Exitoso",
+    efecto: "Dejar de contactar",
     parentId: "clas-atencion",
   },
   {
     id: "clas-a-escalado",
     nombre: "Escalado a nivel 2",
     tipo: "Neutro",
+    efecto: "Sin efecto",
     parentId: "clas-atencion",
   },
 ];

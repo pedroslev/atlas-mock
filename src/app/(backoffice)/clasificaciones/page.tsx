@@ -37,8 +37,10 @@ import {
 } from "@/lib/mock-data";
 import {
   ClasificacionDialog,
+  EFECTOS,
   TIPOS,
-  formatMinutos,
+  efectoClave,
+  efectoVariant,
   tipoClave,
 } from "./clasificacion-dialog";
 
@@ -109,6 +111,24 @@ export default function ClasificacionesPage() {
     [t]
   );
 
+  const columnaEfecto = useMemo<MRT_ColumnDef<Clasificacion>>(
+    () => ({
+      accessorKey: "efecto",
+      header: t("clasificaciones.col.efecto"),
+      filterVariant: "select",
+      filterSelectOptions: EFECTOS.map((efecto) => ({
+        value: efecto,
+        label: t(`clasificaciones.efecto.${efectoClave(efecto)}`),
+      })),
+      Cell: ({ row }) => (
+        <Badge variant={efectoVariant[row.original.efecto]}>
+          {t(`clasificaciones.efecto.${efectoClave(row.original.efecto)}`)}
+        </Badge>
+      ),
+    }),
+    [t]
+  );
+
   const columnasPool = useMemo<MRT_ColumnDef<Clasificacion>[]>(
     () => [
       {
@@ -139,8 +159,9 @@ export default function ClasificacionesPage() {
           </Badge>
         ),
       },
+      columnaEfecto,
     ],
-    [t]
+    [t, columnaEfecto]
   );
 
   const columnasSistema = useMemo<MRT_ColumnDef<Clasificacion>[]>(
@@ -165,30 +186,9 @@ export default function ClasificacionesPage() {
           </span>
         ),
       },
-      {
-        id: "porDefecto",
-        header: t("clasificaciones.col.porDefecto"),
-        accessorFn: (c) => c.callingTime ?? -1,
-        Cell: ({ row }) => {
-          const c = row.original;
-          return (
-            <span className="flex flex-wrap items-center gap-1.5">
-              {c.callingTime
-                ? t("clasificaciones.porDefecto.rellamar", {
-                    tiempo: formatMinutos(c.callingTime),
-                  })
-                : t("clasificaciones.porDefecto.noReintentar")}
-              {c.sistema?.invalidaTelefono && (
-                <Badge variant="destructive">
-                  {t("clasificaciones.porDefecto.invalida")}
-                </Badge>
-              )}
-            </span>
-          );
-        },
-      },
+      columnaEfecto,
     ],
-    [t]
+    [t, columnaEfecto]
   );
 
   function guardarClasificacion(clasificacion: Clasificacion) {
@@ -346,27 +346,8 @@ export default function ClasificacionesPage() {
           <p className="text-sm text-muted-foreground">
             {t("clasificaciones.sistema.intro")}
           </p>
-          <MitrolTable
-            columns={columnasSistema}
-            data={deSistema}
-            options={{
-              enableRowActions: true,
-              // Sólo editar (el tiempo de rellamada): no se borran.
-              renderRowActions: ({ row }) => (
-                <RowActions
-                  actions={[
-                    {
-                      label: t("common.acciones.editar"),
-                      onSelect: () => {
-                        setEditing(row.original);
-                        setDialogOpen(true);
-                      },
-                    },
-                  ]}
-                />
-              ),
-            }}
-          />
+          {/* Sólo consulta: no tienen nada editable. */}
+          <MitrolTable columns={columnasSistema} data={deSistema} />
         </TabsContent>
       </Tabs>
 
