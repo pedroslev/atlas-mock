@@ -91,9 +91,23 @@ export const grupos: NamespaceDict = {
     // Directorio de llamadas internas — propuesta opción A (documentacion:
     // relevamiento-legacy/llamadas-internas/propuesta-llamadas-internas). Las reglas se suman;
     // ninguna tildada = los usuarios del grupo no pueden hacer llamadas internas.
-    "directorio.titulo": "Directorio de llamadas internas",
+    "directorio.titulo": "Llamadas internas",
     "directorio.desc":
-      "Definí a qué agentes pueden llamar los usuarios de este grupo desde el PAD. Las opciones se suman: se ven los agentes conectados que cumplan al menos una.",
+      "Llamadas entre agentes desde el PAD, sin cliente en línea: a quién pueden llamar los usuarios de este grupo y si se graban.",
+    "directorio.permitir": "Permitir llamadas internas",
+    "directorio.deshabilitadas":
+      "Los usuarios de este grupo no pueden hacer llamadas internas: no ven el directorio en el PAD.",
+    "directorio.aQuien": "¿A quién pueden llamar?",
+    "directorio.noReciproco":
+      "Las opciones se suman: se ven los agentes conectados que cumplan al menos una. Definen a quién pueden llamar los usuarios de este grupo, no quién los puede llamar a ellos: eso depende del grupo del que llama.",
+    "directorio.mismasCampaniasIncluida":
+      "Incluida en \"Agentes de los mismos proyectos\": quien comparte una campaña comparte su proyecto.",
+    "directorio.grabar": "Grabar las llamadas internas",
+    "directorio.grabarAudio": "Se graba el audio de la llamada.",
+    "directorio.grabarCruce":
+      "Si los dos agentes son de grupos distintos, la llamada se graba si al menos uno de los dos grupos lo tiene activado.",
+    "directorio.grabarPantalla":
+      "La pantalla se rige por la sección Grabación de este grupo: si graba pantalla, también graba durante las llamadas internas.",
     "directorio.mismoGrupo": "Agentes del mismo grupo de trabajo",
     "directorio.mismasCampanias": "Agentes de las mismas campañas",
     "directorio.mismasCampaniasAyuda": "Comparten al menos una campaña asignada.",

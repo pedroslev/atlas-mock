@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import type {
   RecordingSettingsParams,
   ShortcutButtonEntry,
@@ -64,18 +66,35 @@ export function GrupoConfigHermesTab({
   // de grabaciones en documentacion/relevamiento-legacy/grabaciones/.
   const [grabacion, setGrabacion] = useState<RecordingSettingsParams>(initialGrabacion);
 
-  // Directorio de llamadas internas (propuesta opción A): reglas que se suman.
+  // Llamadas internas (propuesta opción A). Un interruptor general las
+  // habilita para el grupo; apagado, todo el recuadro queda deshabilitado.
+  // Las reglas se suman y por defecto vienen todas activas (definición del PO).
+  const [llamadasInternas, setLlamadasInternas] = useState(true);
   const [directorio, setDirectorio] = useState({
     mismoGrupo: true,
-    mismasCampanias: false,
-    mismosProyectos: false,
+    mismasCampanias: true,
+    mismosProyectos: true,
   });
+  // Quien comparte una campaña comparte también su proyecto: con "mismos
+  // proyectos" tildado, "mismas campañas" ya está incluida y no se puede
+  // destildar sola.
+  const campaniasIncluidas = directorio.mismosProyectos;
   const reglasDirectorio = [
     { key: "mismoGrupo", label: t("grupos.directorio.mismoGrupo"), ayuda: null },
-    { key: "mismasCampanias", label: t("grupos.directorio.mismasCampanias"), ayuda: t("grupos.directorio.mismasCampaniasAyuda") },
+    {
+      key: "mismasCampanias",
+      label: t("grupos.directorio.mismasCampanias"),
+      ayuda: campaniasIncluidas
+        ? t("grupos.directorio.mismasCampaniasIncluida")
+        : t("grupos.directorio.mismasCampaniasAyuda"),
+    },
     { key: "mismosProyectos", label: t("grupos.directorio.mismosProyectos"), ayuda: t("grupos.directorio.mismosProyectosAyuda") },
   ] as const;
   const ningunaRegla = !Object.values(directorio).some(Boolean);
+  // Grabación de las llamadas internas: vive acá y no en "Grabación" porque
+  // una llamada interna no tiene campaña, que es de donde sale el audio de
+  // las demás llamadas.
+  const [grabarInternas, setGrabarInternas] = useState(false);
 
   function actualizar(id: string, patch: Partial<ShortcutButtonEntry>) {
     setShortcuts((cur) => cur.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -119,27 +138,76 @@ export function GrupoConfigHermesTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("grupos.directorio.titulo")}</CardTitle>
-          <CardDescription>{t("grupos.directorio.desc")}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {reglasDirectorio.map((r) => (
-            <div key={r.key} className="flex items-start gap-2.5">
-              <Checkbox
-                id={`dir-${r.key}`}
-                className="mt-0.5"
-                checked={directorio[r.key]}
-                onCheckedChange={(v) => setDirectorio((cur) => ({ ...cur, [r.key]: v === true }))}
-              />
-              <div className="flex flex-col gap-0.5">
-                <Label htmlFor={`dir-${r.key}`}>{r.label}</Label>
-                {r.ayuda && <p className="text-xs text-muted-foreground">{r.ayuda}</p>}
-              </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <CardTitle>{t("grupos.directorio.titulo")}</CardTitle>
+              <CardDescription>{t("grupos.directorio.desc")}</CardDescription>
             </div>
-          ))}
-          {ningunaRegla && (
-            <p className="text-xs text-warning">{t("grupos.directorio.ninguna")}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <Label htmlFor="dir-habilitar" className="text-sm">
+                {t("grupos.directorio.permitir")}
+              </Label>
+              <Switch
+                id="dir-habilitar"
+                checked={llamadasInternas}
+                onCheckedChange={setLlamadasInternas}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          {!llamadasInternas && (
+            <p className="text-xs text-muted-foreground">{t("grupos.directorio.deshabilitadas")}</p>
           )}
+          <fieldset
+            disabled={!llamadasInternas}
+            className={cn("flex flex-col gap-5", !llamadasInternas && "opacity-50")}
+          >
+            <section className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium">{t("grupos.directorio.aQuien")}</h3>
+              {reglasDirectorio.map((r) => {
+                const incluida = r.key === "mismasCampanias" && campaniasIncluidas;
+                return (
+                  <div key={r.key} className="flex items-start gap-2.5">
+                    <Checkbox
+                      id={`dir-${r.key}`}
+                      className="mt-0.5"
+                      checked={directorio[r.key] || incluida}
+                      disabled={!llamadasInternas || incluida}
+                      onCheckedChange={(v) => setDirectorio((cur) => ({ ...cur, [r.key]: v === true }))}
+                    />
+                    <div className="flex flex-col gap-0.5">
+                      <Label htmlFor={`dir-${r.key}`}>{r.label}</Label>
+                      {r.ayuda && <p className="text-xs text-muted-foreground">{r.ayuda}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-muted-foreground">{t("grupos.directorio.noReciproco")}</p>
+              {ningunaRegla && llamadasInternas && (
+                <p className="text-xs text-warning">{t("grupos.directorio.ninguna")}</p>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="dir-grabar" className="text-sm font-medium">
+                  {t("grupos.directorio.grabar")}
+                </Label>
+                <Switch
+                  id="dir-grabar"
+                  checked={grabarInternas}
+                  onCheckedChange={setGrabarInternas}
+                  disabled={!llamadasInternas}
+                />
+              </div>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs text-muted-foreground">
+                <li>{t("grupos.directorio.grabarAudio")}</li>
+                <li>{t("grupos.directorio.grabarCruce")}</li>
+                <li>{t("grupos.directorio.grabarPantalla")}</li>
+              </ul>
+            </section>
+          </fieldset>
         </CardContent>
       </Card>
 
