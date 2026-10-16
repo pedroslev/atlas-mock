@@ -503,20 +503,6 @@ export const cuentas: Cuenta[] = [
     interactionValue: 80,
     provisioning: 500,
     provisioningLock: 3,
-    // Nota: el inicio solo puede tener UNA derivación conectada mientras no
-    // exista un macroestado de decisión (if/switch) — feedback 2026-07-16.
-    workflow: {
-      nodes: [
-        { id: "wf-1-inicio", type: "inicio", position: { x: 80, y: 120 } },
-        {
-          id: "wf-1-camp1",
-          type: "derivacion",
-          position: { x: 380, y: 100 },
-          campaniaId: "camp-1",
-        },
-      ],
-      edges: [{ id: "wf-1-e1", source: "wf-1-inicio", target: "wf-1-camp1" }],
-    },
   },
   {
     id: "acc-2",
@@ -527,18 +513,6 @@ export const cuentas: Cuenta[] = [
     interactionValue: 40,
     provisioning: 200,
     provisioningLock: 2,
-    workflow: {
-      nodes: [
-        { id: "wf-2-inicio", type: "inicio", position: { x: 80, y: 100 } },
-        {
-          id: "wf-2-camp4",
-          type: "derivacion",
-          position: { x: 380, y: 100 },
-          campaniaId: "camp-4",
-        },
-      ],
-      edges: [{ id: "wf-2-e1", source: "wf-2-inicio", target: "wf-2-camp4" }],
-    },
   },
   {
     id: "acc-3",

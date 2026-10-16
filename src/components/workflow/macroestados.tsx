@@ -15,6 +15,8 @@ import {
   Trash2,
   Upload,
   FileAudio,
+  Play as PlayIcono,
+  Pause,
   Plus,
   X,
   Copy,
@@ -110,7 +112,7 @@ function NodoMacroestado({
 
   return (
     <div className="flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10">
-      <Handle type="target" position={Position.Left} className="!bg-secondary" />
+      <Handle type="target" position={Position.Top} className="!bg-secondary" />
       <div className="flex items-center justify-between gap-1">
         <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium">
           {/* El ícono recuerda qué macroestado es aunque el título se haya cambiado. */}
@@ -229,14 +231,64 @@ export type PlayData = Comun & {
   fuente?: "audio" | "tts" | "texto";
   audio?: string; // nombre único con el que quedó guardado el archivo
   audioNombre?: string; // nombre del archivo original, solo para mostrar
+  audioUrl?: string; // de dónde se escucha en el editor (en el mock, un blob local)
   // Barge-in (propuesta-motor-workflows.md §3): si el llamante marca una tecla
   // mientras suena, el audio se corta y el workflow sigue al instante; la tecla
   // marcada la recibe el COLLECT siguiente. Sin tilde, el audio se escucha
   // completo (un aviso legal, por ejemplo). Por defecto, interrumpible.
   interrumpible?: boolean;
   admiteTexto: boolean;
-  onSubirAudio: (archivo: File) => { archivo: string; nombre: string };
+  onSubirAudio: (archivo: File) => { archivo: string; nombre: string; url: string };
 };
+
+// Botón para escuchar el audio cargado sin salir del editor: quien arma el
+// flujo oye qué tiene puesto en vez de tener que buscar el archivo por nombre.
+// Alterna reproducir/pausar y vuelve a "reproducir" cuando el audio termina o
+// cuando cambia el audio del nodo.
+function BotonEscuchar({ id, url }: { id: string; url: string }) {
+  const t = useT();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [sonando, setSonando] = useState(false);
+
+  useEffect(() => {
+    const audio = new Audio(url);
+    audio.onended = () => setSonando(false);
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+      setSonando(false);
+    };
+  }, [url]);
+
+  const alternar = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (sonando) {
+      audio.pause();
+      setSonando(false);
+    } else {
+      // Si falla (formato que el navegador no reproduce) no queda en "sonando".
+      audio.play().then(() => setSonando(true), () => setSonando(false));
+    }
+  };
+
+  const label = t(sonando ? "cuentas.flujo.play.pausar" : "cuentas.flujo.play.escuchar");
+  return (
+    <ActionTooltip label={label}>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        aria-label={label}
+        data-testid={`play-${id}-escuchar`}
+        onClick={alternar}
+      >
+        {sonando ? <Pause /> : <PlayIcono />}
+      </Button>
+    </ActionTooltip>
+  );
+}
 
 export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
   const t = useT();
@@ -295,15 +347,16 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               const archivo = e.target.files?.[0];
               if (archivo) {
                 const subido = data.onSubirAudio(archivo);
-                data.onChange({ audio: subido.archivo, audioNombre: subido.nombre });
+                data.onChange({ audio: subido.archivo, audioNombre: subido.nombre, audioUrl: subido.url });
               }
               e.target.value = "";
             }}
           />
           {data.audioNombre && (
-            <span className="flex items-center gap-1.5 truncate text-sm">
+            <span className="flex items-center gap-1.5 text-sm">
               <FileAudio className="size-4 shrink-0 text-muted-foreground" />
-              {data.audioNombre}
+              <span className="min-w-0 flex-1 truncate">{data.audioNombre}</span>
+              {data.audioUrl && <BotonEscuchar id={id} url={data.audioUrl} />}
             </span>
           )}
           <Button
