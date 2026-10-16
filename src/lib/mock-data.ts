@@ -233,6 +233,16 @@ export type Clasificacion = {
   parentId?: string;
   callingTime?: number; // tiempo de rellamada, minutos
   prompt?: string; // reservado IA
+  // Clasificación de SISTEMA: la pone Atlas sola cuando la llamada no llega a
+  // un agente (no contesta, ocupado, número inexistente…), a partir de la
+  // causa de corte de la red. Vienen en todos los tenants, no se borran ni
+  // se renombran; el tenant sólo ajusta el tiempo de rellamada por defecto.
+  // Qué causas de red caen en cada una lo define Atlas (relevamiento
+  // criterios de recontacto, 2026-10-16) — el tenant no lo ve.
+  sistema?: {
+    explicacion: string;
+    invalidaTelefono?: boolean;
+  };
 };
 
 export type ClasificacionGrupo = {
@@ -571,7 +581,91 @@ export const cuentas: Cuenta[] = [
   },
 ];
 
+// Tipificaciones de sistema (propuesta 2026-10-16, a validar con Pedro). Sin
+// callingTime = no se reintenta.
+const clasificacionesSistema: Clasificacion[] = [
+  {
+    id: "sys-no-contesta",
+    nombre: "No contesta",
+    tipo: "No efectivo",
+    callingTime: 120,
+    sistema: { explicacion: "El teléfono sonó y nadie atendió." },
+  },
+  {
+    id: "sys-ocupado",
+    nombre: "Ocupado",
+    tipo: "No efectivo",
+    callingTime: 15,
+    sistema: { explicacion: "El teléfono estaba ocupado en otra llamada." },
+  },
+  {
+    id: "sys-apagado",
+    nombre: "Apagado o fuera de cobertura",
+    tipo: "No efectivo",
+    callingTime: 240,
+    sistema: {
+      explicacion:
+        "El teléfono está apagado, sin señal o no se pudo llegar a él por un momento.",
+    },
+  },
+  {
+    id: "sys-contestador",
+    nombre: "Contestador automático",
+    tipo: "No efectivo",
+    callingTime: 180,
+    sistema: {
+      explicacion: "Atendió un contestador o un buzón de voz, no una persona.",
+    },
+  },
+  {
+    id: "sys-rechazada",
+    nombre: "Rechazada",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion:
+        "El contacto cortó sin atender o un bloqueador de spam filtró la llamada.",
+    },
+  },
+  {
+    id: "sys-inexistente",
+    nombre: "Número inexistente",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion: "El número no existe o está mal formado.",
+      invalidaTelefono: true,
+    },
+  },
+  {
+    id: "sys-cambiado",
+    nombre: "Número cambiado",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion: "El número ya no está en uso y fue reemplazado por otro.",
+      invalidaTelefono: true,
+    },
+  },
+  {
+    id: "sys-no-acepta",
+    nombre: "No acepta llamadas",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion: "El teléfono tiene bloqueadas las llamadas entrantes.",
+      invalidaTelefono: true,
+    },
+  },
+  {
+    id: "sys-fax",
+    nombre: "Fax o módem",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion: "Del otro lado atendió un fax o un módem, no un teléfono.",
+      invalidaTelefono: true,
+    },
+  },
+];
+
 export const clasificaciones: Clasificacion[] = [
+  ...clasificacionesSistema,
   { id: "clas-cobranzas", nombre: "Cobranzas", tipo: "Neutro" },
   {
     id: "clas-c-pago",

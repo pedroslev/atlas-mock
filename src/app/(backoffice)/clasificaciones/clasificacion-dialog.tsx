@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +48,13 @@ export function tipoClave(tipo: string) {
   return TIPO_CLAVE[tipo] ?? "neutro";
 }
 
+// Minutos → "15 min", "2 h", "3 d" (lo que lee un supervisor, no 4320).
+export function formatMinutos(min: number) {
+  if (min % 1440 === 0) return `${min / 1440} d`;
+  if (min % 60 === 0) return `${min / 60} h`;
+  return `${min} min`;
+}
+
 // Alta/edición de una clasificación como modal (feedback 2026-07-16: formularios
 // chicos no justifican una pantalla entera). La clasificación es una entidad
 // del pool del tenant, reutilizable en varios grupos — acá NO se decide a qué
@@ -90,20 +98,26 @@ export function ClasificacionDialog({
     }
   }
 
+  // Las de sistema sólo dejan tocar el tiempo de rellamada por defecto.
+  const sistema = initial?.sistema;
+
   const padresPosibles = pool.filter(
-    (c) => !c.parentId && c.id !== initial?.id
+    (c) => !c.parentId && c.id !== initial?.id,
   );
 
   function guardar() {
     if (!nombre.trim()) return;
     onSave({
-      id: initial?.id ?? `clas-${nombre.trim().toLowerCase().replace(/\s+/g, "-")}-${pool.length}`,
+      id:
+        initial?.id ??
+        `clas-${nombre.trim().toLowerCase().replace(/\s+/g, "-")}-${pool.length}`,
       nombre: nombre.trim(),
       idExt: idExt.trim() || undefined,
       tipo,
       parentId,
       callingTime: callingTime ? Number(callingTime) : undefined,
       descripcion: descripcion.trim() || undefined,
+      sistema,
     });
     onOpenChange(false);
   }
@@ -118,9 +132,31 @@ export function ClasificacionDialog({
               : t("clasificaciones.nuevaClasificacion")}
           </DialogTitle>
           <DialogDescription>
-            {t("clasificaciones.dialog.descripcion")}
+            {sistema
+              ? t("clasificaciones.sistema.aviso")
+              : t("clasificaciones.dialog.descripcion")}
           </DialogDescription>
         </DialogHeader>
+
+        {sistema && (
+          <div className="flex flex-col gap-1.5 rounded-lg bg-info/10 px-3 py-2.5 text-sm">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Lock className="size-3.5" />
+              {t("clasificaciones.sistema.titulo")}
+            </span>
+            <span>
+              <span className="text-muted-foreground">
+                {t("clasificaciones.sistema.cuando")}:{" "}
+              </span>
+              {sistema.explicacion}
+            </span>
+            {sistema.invalidaTelefono && (
+              <span className="text-destructive">
+                {t("clasificaciones.sistema.invalidaDetalle")}
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -130,25 +166,29 @@ export function ClasificacionDialog({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder={t("clasificaciones.campo.nombrePlaceholder")}
-              autoFocus
+              disabled={!!sistema}
+              autoFocus={!sistema}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="clas-idext">
-              {t("clasificaciones.campo.idExt")}
-            </Label>
-            <Input
-              id="clas-idext"
-              value={idExt}
-              onChange={(e) => setIdExt(e.target.value)}
-              placeholder={t("clasificaciones.campo.idExtPlaceholder")}
-            />
-          </div>
+          {!sistema && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="clas-idext">
+                {t("clasificaciones.campo.idExt")}
+              </Label>
+              <Input
+                id="clas-idext"
+                value={idExt}
+                onChange={(e) => setIdExt(e.target.value)}
+                placeholder={t("clasificaciones.campo.idExtPlaceholder")}
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="clas-tipo">{t("clasificaciones.col.tipo")}</Label>
             <Select
               value={tipo}
               onValueChange={(v) => setTipo(v as Clasificacion["tipo"])}
+              disabled={!!sistema}
             >
               <SelectTrigger id="clas-tipo" className="w-full">
                 <SelectValue />
@@ -172,39 +212,51 @@ export function ClasificacionDialog({
               min={0}
               value={callingTime}
               onChange={(e) => setCallingTime(e.target.value)}
-              placeholder={t("common.comunes.opcional")}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label htmlFor="clas-padre">
-              {t("clasificaciones.campo.padre")}
-            </Label>
-            <EntityCombobox
-              id="clas-padre"
-              items={[
-                { id: SIN_PADRE, nombre: t("clasificaciones.campo.sinPadre") },
-                ...padresPosibles,
-              ]}
-              value={parentId ?? SIN_PADRE}
-              onChange={(v) =>
-                setParentId(v === SIN_PADRE || !v ? undefined : v)
+              placeholder={
+                sistema
+                  ? t("clasificaciones.sistema.sinRellamada")
+                  : t("common.comunes.opcional")
               }
-              searchPlaceholder={t("clasificaciones.campo.buscar")}
-              emptyLabel={t("clasificaciones.campo.sinRaices")}
+              autoFocus={!!sistema}
             />
           </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label htmlFor="clas-descripcion">
-              {t("common.comunes.descripcion")}
-            </Label>
-            <Textarea
-              id="clas-descripcion"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={2}
-              placeholder={t("common.comunes.opcional")}
-            />
-          </div>
+          {!sistema && (
+            <>
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <Label htmlFor="clas-padre">
+                  {t("clasificaciones.campo.padre")}
+                </Label>
+                <EntityCombobox
+                  id="clas-padre"
+                  items={[
+                    {
+                      id: SIN_PADRE,
+                      nombre: t("clasificaciones.campo.sinPadre"),
+                    },
+                    ...padresPosibles,
+                  ]}
+                  value={parentId ?? SIN_PADRE}
+                  onChange={(v) =>
+                    setParentId(v === SIN_PADRE || !v ? undefined : v)
+                  }
+                  searchPlaceholder={t("clasificaciones.campo.buscar")}
+                  emptyLabel={t("clasificaciones.campo.sinRaices")}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <Label htmlFor="clas-descripcion">
+                  {t("common.comunes.descripcion")}
+                </Label>
+                <Textarea
+                  id="clas-descripcion"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  rows={2}
+                  placeholder={t("common.comunes.opcional")}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <DialogFooter>

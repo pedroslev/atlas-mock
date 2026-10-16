@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Lock, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -11,12 +11,7 @@ import {
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useT } from "@/lib/i18n";
 import {
   clasificaciones as clasificacionesIniciales,
@@ -35,7 +31,12 @@ import {
   type Clasificacion,
   type ClasificacionGrupo,
 } from "@/lib/mock-data";
-import { ClasificacionDialog, TIPOS, tipoClave } from "./clasificacion-dialog";
+import {
+  ClasificacionDialog,
+  TIPOS,
+  formatMinutos,
+  tipoClave,
+} from "./clasificacion-dialog";
 
 function nombreSugerido(base: string, existentes: string[]) {
   if (!existentes.includes(base)) return base;
@@ -65,7 +66,8 @@ const tipoBadgeVariant: Record<
 export default function ClasificacionesPage() {
   const t = useT();
   const [items, setItems] = useState<Clasificacion[]>(clasificacionesIniciales);
-  const [grupos, setGrupos] = useState<ClasificacionGrupo[]>(clasificacionGrupos);
+  const [grupos, setGrupos] =
+    useState<ClasificacionGrupo[]>(clasificacionGrupos);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Clasificacion | null>(null);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
@@ -97,7 +99,7 @@ export default function ClasificacionesPage() {
         ),
       },
     ],
-    [t]
+    [t],
   );
 
   const columnasPool = useMemo<MRT_ColumnDef<Clasificacion>[]>(
@@ -130,8 +132,59 @@ export default function ClasificacionesPage() {
           </Badge>
         ),
       },
+      {
+        // Sistema (la pone Atlas sola) vs. agente (la carga el agente al
+        // cerrar la gestión). Conviven en el mismo catálogo para que la
+        // estrategia de salida las trate igual.
+        id: "origen",
+        header: t("clasificaciones.col.origen"),
+        accessorFn: (c) => (c.sistema ? "sistema" : "agente"),
+        filterVariant: "select",
+        filterSelectOptions: [
+          { value: "sistema", label: t("clasificaciones.origen.sistema") },
+          { value: "agente", label: t("clasificaciones.origen.agente") },
+        ],
+        Cell: ({ row }) =>
+          row.original.sistema ? (
+            <ActionTooltip label={t("clasificaciones.origen.sistemaTooltip")}>
+              <Badge variant="info">
+                <Lock />
+                {t("clasificaciones.origen.sistema")}
+              </Badge>
+            </ActionTooltip>
+          ) : (
+            <Badge variant="neutral">
+              {t("clasificaciones.origen.agente")}
+            </Badge>
+          ),
+      },
+      {
+        id: "porDefecto",
+        header: t("clasificaciones.col.porDefecto"),
+        accessorFn: (c) => c.callingTime ?? -1,
+        Cell: ({ row }) => {
+          const c = row.original;
+          if (!c.sistema && !c.callingTime) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+          return (
+            <span className="flex flex-wrap items-center gap-1.5 text-sm">
+              {c.callingTime
+                ? t("clasificaciones.porDefecto.rellamar", {
+                    tiempo: formatMinutos(c.callingTime),
+                  })
+                : t("clasificaciones.porDefecto.noReintentar")}
+              {c.sistema?.invalidaTelefono && (
+                <Badge variant="destructive">
+                  {t("clasificaciones.porDefecto.invalida")}
+                </Badge>
+              )}
+            </span>
+          );
+        },
+      },
     ],
-    [t]
+    [t],
   );
 
   function guardarClasificacion(clasificacion: Clasificacion) {
@@ -149,7 +202,7 @@ export default function ClasificacionesPage() {
       prev.map((g) => ({
         ...g,
         clasificacionIds: g.clasificacionIds.filter((cid) => cid !== id),
-      }))
+      })),
     );
   }
 
@@ -157,8 +210,8 @@ export default function ClasificacionesPage() {
     setGrupoNombre(
       nombreSugerido(
         t("clasificaciones.nuevoGrupo"),
-        grupos.map((g) => g.nombre)
-      )
+        grupos.map((g) => g.nombre),
+      ),
     );
     setGrupoDescripcion("");
     setGrupoDialogOpen(true);
@@ -236,11 +289,11 @@ export default function ClasificacionesPage() {
                       destructive: true,
                       separatorBefore: true,
                       confirmDescription: t(
-                        "clasificaciones.grupo.eliminarConfirm"
+                        "clasificaciones.grupo.eliminarConfirm",
                       ),
                       onSelect: () =>
                         setGrupos((prev) =>
-                          prev.filter((g) => g.id !== row.original.id)
+                          prev.filter((g) => g.id !== row.original.id),
                         ),
                     },
                   ]}
@@ -266,15 +319,21 @@ export default function ClasificacionesPage() {
                         setDialogOpen(true);
                       },
                     },
-                    {
-                      label: t("common.acciones.eliminar"),
-                      destructive: true,
-                      separatorBefore: true,
-                      confirmDescription: t(
-                        "clasificaciones.pool.eliminarConfirm"
-                      ),
-                      onSelect: () => eliminarClasificacion(row.original.id),
-                    },
+                    // Las de sistema no se borran.
+                    ...(row.original.sistema
+                      ? []
+                      : [
+                          {
+                            label: t("common.acciones.eliminar"),
+                            destructive: true,
+                            separatorBefore: true,
+                            confirmDescription: t(
+                              "clasificaciones.pool.eliminarConfirm",
+                            ),
+                            onSelect: () =>
+                              eliminarClasificacion(row.original.id),
+                          },
+                        ]),
                   ]}
                 />
               ),
