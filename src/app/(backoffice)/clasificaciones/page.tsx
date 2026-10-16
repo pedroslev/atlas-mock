@@ -11,7 +11,12 @@ import {
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useT } from "@/lib/i18n";
 import {
   clasificaciones as clasificacionesIniciales,
@@ -66,8 +70,11 @@ const tipoBadgeVariant: Record<
 export default function ClasificacionesPage() {
   const t = useT();
   const [items, setItems] = useState<Clasificacion[]>(clasificacionesIniciales);
-  const [grupos, setGrupos] =
-    useState<ClasificacionGrupo[]>(clasificacionGrupos);
+  // Las de sistema van en su propia solapa: no se agregan a grupos (aplican
+  // solas en todas las campañas), así que no tienen lugar en el catálogo.
+  const pool = items.filter((c) => !c.sistema);
+  const deSistema = items.filter((c) => c.sistema);
+  const [grupos, setGrupos] = useState<ClasificacionGrupo[]>(clasificacionGrupos);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Clasificacion | null>(null);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
@@ -99,7 +106,7 @@ export default function ClasificacionesPage() {
         ),
       },
     ],
-    [t],
+    [t]
   );
 
   const columnasPool = useMemo<MRT_ColumnDef<Clasificacion>[]>(
@@ -132,31 +139,31 @@ export default function ClasificacionesPage() {
           </Badge>
         ),
       },
+    ],
+    [t]
+  );
+
+  const columnasSistema = useMemo<MRT_ColumnDef<Clasificacion>[]>(
+    () => [
       {
-        // Sistema (la pone Atlas sola) vs. agente (la carga el agente al
-        // cerrar la gestión). Conviven en el mismo catálogo para que la
-        // estrategia de salida las trate igual.
-        id: "origen",
-        header: t("clasificaciones.col.origen"),
-        accessorFn: (c) => (c.sistema ? "sistema" : "agente"),
-        filterVariant: "select",
-        filterSelectOptions: [
-          { value: "sistema", label: t("clasificaciones.origen.sistema") },
-          { value: "agente", label: t("clasificaciones.origen.agente") },
-        ],
-        Cell: ({ row }) =>
-          row.original.sistema ? (
-            <ActionTooltip label={t("clasificaciones.origen.sistemaTooltip")}>
-              <Badge variant="info">
-                <Lock />
-                {t("clasificaciones.origen.sistema")}
-              </Badge>
-            </ActionTooltip>
-          ) : (
-            <Badge variant="neutral">
-              {t("clasificaciones.origen.agente")}
-            </Badge>
-          ),
+        accessorKey: "nombre",
+        header: t("clasificaciones.col.clasificacion"),
+        Cell: ({ row }) => (
+          <span className="flex items-center gap-1.5 font-medium">
+            <Lock className="size-3.5 text-muted-foreground" />
+            {row.original.nombre}
+          </span>
+        ),
+      },
+      {
+        id: "cuando",
+        header: t("clasificaciones.sistema.cuando"),
+        accessorFn: (c) => c.sistema?.explicacion ?? "",
+        Cell: ({ cell }) => (
+          <span className="text-muted-foreground">
+            {cell.getValue<string>()}
+          </span>
+        ),
       },
       {
         id: "porDefecto",
@@ -164,11 +171,8 @@ export default function ClasificacionesPage() {
         accessorFn: (c) => c.callingTime ?? -1,
         Cell: ({ row }) => {
           const c = row.original;
-          if (!c.sistema && !c.callingTime) {
-            return <span className="text-muted-foreground">—</span>;
-          }
           return (
-            <span className="flex flex-wrap items-center gap-1.5 text-sm">
+            <span className="flex flex-wrap items-center gap-1.5">
               {c.callingTime
                 ? t("clasificaciones.porDefecto.rellamar", {
                     tiempo: formatMinutos(c.callingTime),
@@ -184,7 +188,7 @@ export default function ClasificacionesPage() {
         },
       },
     ],
-    [t],
+    [t]
   );
 
   function guardarClasificacion(clasificacion: Clasificacion) {
@@ -202,7 +206,7 @@ export default function ClasificacionesPage() {
       prev.map((g) => ({
         ...g,
         clasificacionIds: g.clasificacionIds.filter((cid) => cid !== id),
-      })),
+      }))
     );
   }
 
@@ -210,8 +214,8 @@ export default function ClasificacionesPage() {
     setGrupoNombre(
       nombreSugerido(
         t("clasificaciones.nuevoGrupo"),
-        grupos.map((g) => g.nombre),
-      ),
+        grupos.map((g) => g.nombre)
+      )
     );
     setGrupoDescripcion("");
     setGrupoDialogOpen(true);
@@ -249,6 +253,9 @@ export default function ClasificacionesPage() {
             </TabsTrigger>
             <TabsTrigger value="pool">
               {t("clasificaciones.tab.catalogo")}
+            </TabsTrigger>
+            <TabsTrigger value="sistema">
+              {t("clasificaciones.tab.sistema")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="grupos" className="contents">
@@ -289,11 +296,11 @@ export default function ClasificacionesPage() {
                       destructive: true,
                       separatorBefore: true,
                       confirmDescription: t(
-                        "clasificaciones.grupo.eliminarConfirm",
+                        "clasificaciones.grupo.eliminarConfirm"
                       ),
                       onSelect: () =>
                         setGrupos((prev) =>
-                          prev.filter((g) => g.id !== row.original.id),
+                          prev.filter((g) => g.id !== row.original.id)
                         ),
                     },
                   ]}
@@ -306,7 +313,7 @@ export default function ClasificacionesPage() {
         <TabsContent value="pool">
           <MitrolTable
             columns={columnasPool}
-            data={items}
+            data={pool}
             options={{
               enableRowActions: true,
               renderRowActions: ({ row }) => (
@@ -319,21 +326,42 @@ export default function ClasificacionesPage() {
                         setDialogOpen(true);
                       },
                     },
-                    // Las de sistema no se borran.
-                    ...(row.original.sistema
-                      ? []
-                      : [
-                          {
-                            label: t("common.acciones.eliminar"),
-                            destructive: true,
-                            separatorBefore: true,
-                            confirmDescription: t(
-                              "clasificaciones.pool.eliminarConfirm",
-                            ),
-                            onSelect: () =>
-                              eliminarClasificacion(row.original.id),
-                          },
-                        ]),
+                    {
+                      label: t("common.acciones.eliminar"),
+                      destructive: true,
+                      separatorBefore: true,
+                      confirmDescription: t(
+                        "clasificaciones.pool.eliminarConfirm"
+                      ),
+                      onSelect: () => eliminarClasificacion(row.original.id),
+                    },
+                  ]}
+                />
+              ),
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="sistema" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t("clasificaciones.sistema.intro")}
+          </p>
+          <MitrolTable
+            columns={columnasSistema}
+            data={deSistema}
+            options={{
+              enableRowActions: true,
+              // Sólo editar (el tiempo de rellamada): no se borran.
+              renderRowActions: ({ row }) => (
+                <RowActions
+                  actions={[
+                    {
+                      label: t("common.acciones.editar"),
+                      onSelect: () => {
+                        setEditing(row.original);
+                        setDialogOpen(true);
+                      },
+                    },
                   ]}
                 />
               ),
@@ -346,7 +374,7 @@ export default function ClasificacionesPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initial={editing}
-        pool={items}
+        pool={pool}
         onSave={guardarClasificacion}
       />
 

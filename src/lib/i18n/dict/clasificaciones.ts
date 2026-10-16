@@ -11,6 +11,7 @@ export const clasificaciones: NamespaceDict = {
 
     "tab.grupos": "Grupos",
     "tab.catalogo": "Catálogo",
+    "tab.sistema": "De sistema",
 
     "nuevoGrupo": "Nuevo grupo",
     "nuevaClasificacion": "Nueva clasificación",
@@ -61,15 +62,12 @@ export const clasificaciones: NamespaceDict = {
     "miembros.quitar": "Quitar del grupo",
     "miembros.quitarAria": "Quitar {nombre} del grupo",
 
-    "col.origen": "Origen",
-    "origen.sistema": "Sistema",
-    "origen.agente": "Agente",
-    "origen.sistemaTooltip": "La asigna Atlas sola cuando la llamada no llega a un agente. No se puede borrar.",
     "col.porDefecto": "Qué pasa por defecto",
     "porDefecto.rellamar": "Rellamar en {tiempo}",
     "porDefecto.noReintentar": "No reintentar",
     "porDefecto.invalida": "Invalida el teléfono",
     "sistema.titulo": "Clasificación de sistema",
+    "sistema.intro": "Resultados que Atlas asigna solo cuando la llamada no llega a un agente. Están en todas las campañas sin necesidad de agregarlas a un grupo. No se pueden borrar ni renombrar; podés ajustar su tiempo de rellamada por defecto, y cada campaña puede cambiarlo después en su estrategia de salida.",
     "sistema.aviso": "Atlas la asigna sola cuando la llamada no llega a un agente. No se puede borrar ni cambiar su nombre o tipo: sólo su tiempo de rellamada por defecto, que después cada campaña puede ajustar en su estrategia de salida.",
     "sistema.cuando": "Cuándo se asigna",
     "sistema.invalidaDetalle": "Además marca ese teléfono como inválido en la ficha del cliente, para que ninguna campaña lo vuelva a usar.",
@@ -83,6 +81,7 @@ export const clasificaciones: NamespaceDict = {
 
     "tab.grupos": "Groups",
     "tab.catalogo": "Catalog",
+    "tab.sistema": "System",
 
     "nuevoGrupo": "New group",
     "nuevaClasificacion": "New classification",
@@ -133,15 +132,12 @@ export const clasificaciones: NamespaceDict = {
     "miembros.quitar": "Remove from group",
     "miembros.quitarAria": "Remove {nombre} from the group",
 
-    "col.origen": "Origin",
-    "origen.sistema": "System",
-    "origen.agente": "Agent",
-    "origen.sistemaTooltip": "Atlas assigns it automatically when the call doesn't reach an agent. It can't be deleted.",
     "col.porDefecto": "Default behavior",
     "porDefecto.rellamar": "Call back in {tiempo}",
     "porDefecto.noReintentar": "Don't retry",
     "porDefecto.invalida": "Invalidates the phone",
     "sistema.titulo": "System classification",
+    "sistema.intro": "Outcomes Atlas assigns automatically when the call doesn't reach an agent. They are in every campaign without adding them to a group. They can't be deleted or renamed; you can adjust their default recall time, and each campaign can change it later in its outbound strategy.",
     "sistema.aviso": "Atlas assigns it automatically when the call doesn't reach an agent. Its name and type can't be changed and it can't be deleted: only its default recall time, which each campaign can then adjust in its outbound strategy.",
     "sistema.cuando": "When it's assigned",
     "sistema.invalidaDetalle": "It also marks that phone as invalid in the customer's record, so no campaign uses it again.",
@@ -155,6 +151,7 @@ export const clasificaciones: NamespaceDict = {
 
     "tab.grupos": "Grupos",
     "tab.catalogo": "Catálogo",
+    "tab.sistema": "De sistema",
 
     "nuevoGrupo": "Novo grupo",
     "nuevaClasificacion": "Nova classificação",
@@ -205,15 +202,12 @@ export const clasificaciones: NamespaceDict = {
     "miembros.quitar": "Remover do grupo",
     "miembros.quitarAria": "Remover {nombre} do grupo",
 
-    "col.origen": "Origem",
-    "origen.sistema": "Sistema",
-    "origen.agente": "Agente",
-    "origen.sistemaTooltip": "O Atlas a atribui sozinho quando a chamada não chega a um agente. Não pode ser excluída.",
     "col.porDefecto": "Comportamento padrão",
     "porDefecto.rellamar": "Rechamar em {tiempo}",
     "porDefecto.noReintentar": "Não tentar novamente",
     "porDefecto.invalida": "Invalida o telefone",
     "sistema.titulo": "Classificação de sistema",
+    "sistema.intro": "Resultados que o Atlas atribui sozinho quando a chamada não chega a um agente. Estão em todas as campanhas sem precisar adicioná-las a um grupo. Não podem ser excluídas nem renomeadas; você pode ajustar o tempo de rechamada padrão, e cada campanha pode alterá-lo depois na sua estratégia de saída.",
     "sistema.aviso": "O Atlas a atribui sozinho quando a chamada não chega a um agente. Não é possível excluí-la nem mudar seu nome ou tipo: só o tempo de rechamada padrão, que depois cada campanha pode ajustar na sua estratégia de saída.",
     "sistema.cuando": "Quando é atribuída",
     "sistema.invalidaDetalle": "Além disso, marca esse telefone como inválido na ficha do cliente, para que nenhuma campanha o use de novo.",
@@ -227,6 +221,7 @@ export const clasificaciones: NamespaceDict = {
 
     "tab.grupos": "Grups",
     "tab.catalogo": "Catàleg",
+    "tab.sistema": "De sistema",
 
     "nuevoGrupo": "Grup nou",
     "nuevaClasificacion": "Classificació nova",
@@ -277,15 +272,12 @@ export const clasificaciones: NamespaceDict = {
     "miembros.quitar": "Treu del grup",
     "miembros.quitarAria": "Treu {nombre} del grup",
 
-    "col.origen": "Origen",
-    "origen.sistema": "Sistema",
-    "origen.agente": "Agent",
-    "origen.sistemaTooltip": "L'assigna Atlas sol quan la trucada no arriba a un agent. No es pot esborrar.",
     "col.porDefecto": "Comportament per defecte",
     "porDefecto.rellamar": "Retrucar en {tiempo}",
     "porDefecto.noReintentar": "No reintentar",
     "porDefecto.invalida": "Invalida el telèfon",
     "sistema.titulo": "Classificació de sistema",
+    "sistema.intro": "Resultats que Atlas assigna sol quan la trucada no arriba a un agent. Són a totes les campanyes sense haver d'afegir-les a un grup. No es poden esborrar ni canviar de nom; pots ajustar-ne el temps de retrucada per defecte, i cada campanya el pot canviar després a la seva estratègia de sortida.",
     "sistema.aviso": "Atlas l'assigna sol quan la trucada no arriba a un agent. No es pot esborrar ni canviar-ne el nom o el tipus: només el temps de retrucada per defecte, que després cada campanya pot ajustar a la seva estratègia de sortida.",
     "sistema.cuando": "Quan s'assigna",
     "sistema.invalidaDetalle": "A més, marca aquest telèfon com a invàlid a la fitxa del client, perquè cap campanya el torni a fer servir.",
