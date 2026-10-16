@@ -81,6 +81,7 @@ export function GrupoConfigHermesTab({
   const campaniasIncluidas = directorio.mismosProyectos;
   const reglasDirectorio = [
     { key: "mismoGrupo", label: t("grupos.directorio.mismoGrupo"), ayuda: null },
+    { key: "mismosProyectos", label: t("grupos.directorio.mismosProyectos"), ayuda: t("grupos.directorio.mismosProyectosAyuda") },
     {
       key: "mismasCampanias",
       label: t("grupos.directorio.mismasCampanias"),
@@ -88,7 +89,6 @@ export function GrupoConfigHermesTab({
         ? t("grupos.directorio.mismasCampaniasIncluida")
         : t("grupos.directorio.mismasCampaniasAyuda"),
     },
-    { key: "mismosProyectos", label: t("grupos.directorio.mismosProyectos"), ayuda: t("grupos.directorio.mismosProyectosAyuda") },
   ] as const;
   const ningunaRegla = !Object.values(directorio).some(Boolean);
   // Grabación de las llamadas internas: vive acá y no en "Grabación" porque
@@ -203,8 +203,6 @@ export function GrupoConfigHermesTab({
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs text-muted-foreground">
                 <li>{t("grupos.directorio.grabarAudio")}</li>
-                <li>{t("grupos.directorio.grabarCruce")}</li>
-                <li>{t("grupos.directorio.grabarPantalla")}</li>
               </ul>
             </section>
           </fieldset>

@@ -104,10 +104,6 @@ export const grupos: NamespaceDict = {
       "Incluida en \"Agentes de los mismos proyectos\": quien comparte una campaña comparte su proyecto.",
     "directorio.grabar": "Grabar las llamadas internas",
     "directorio.grabarAudio": "Se graba el audio de la llamada.",
-    "directorio.grabarCruce":
-      "Si los dos agentes son de grupos distintos, la llamada se graba si al menos uno de los dos grupos lo tiene activado.",
-    "directorio.grabarPantalla":
-      "La pantalla se rige por la sección Grabación de este grupo: si graba pantalla, también graba durante las llamadas internas.",
     "directorio.mismoGrupo": "Agentes del mismo grupo de trabajo",
     "directorio.mismasCampanias": "Agentes de las mismas campañas",
     "directorio.mismasCampaniasAyuda": "Comparten al menos una campaña asignada.",
