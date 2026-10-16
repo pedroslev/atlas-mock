@@ -207,15 +207,21 @@ export type Cuenta = {
   id: string;
   nombre: string;
   descripcion?: string;
-  tipo: "Llamada" | "WhatsApp" | "SMS" | "Email";
+  tipo: "Llamada" | "Chat" | "Videollamada" | "WhatsApp" | "SMS" | "Email";
   identificador: string;
   uso?: UsoDeLinea;
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
   workflow?: Workflow;
-  interactionValue: number; // 0-100
+  // Capacidad del asesor: cada uno tiene 100. Voz y videollamada ocupan los 100
+  // (una a la vez) y no lo piden. En chat el tenant define el cupo y el máximo
+  // de simultáneas, y el resto se deriva:
+  //   provisioning     = máximo de interacciones simultáneas de la cuenta por asesor.
+  //   provisioningLock = cupo: % de los 100 que esta cuenta reserva del asesor.
+  //   interactionValue = lo que ocupa cada una = provisioningLock / provisioning.
+  interactionValue: number;
   provisioning: number;
-  provisioningLock: number; // tope, multiplicador
+  provisioningLock: number;
 };
 
 export type Clasificacion = {
@@ -500,9 +506,40 @@ export const cuentas: Cuenta[] = [
     identificador: "1140009911",
     uso: "ambas",
     modoSalida: "misma",
-    interactionValue: 80,
-    provisioning: 500,
-    provisioningLock: 3,
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
+    id: "acc-chat-1",
+    nombre: "Chat Web Soporte",
+    descripcion: "Chat del sitio para atención al cliente",
+    tipo: "Chat",
+    // Sin número de línea: `accounts.account` lleva el nombre, único por tenant.
+    identificador: "Chat Web Soporte",
+    interactionValue: 20,
+    provisioning: 3, // chats simultáneos
+    provisioningLock: 60, // % de la capacidad del asesor
+  },
+  {
+    id: "acc-chat-2",
+    nombre: "Chat App Móvil",
+    descripcion: "Chat dentro de la app para clientes registrados",
+    tipo: "Chat",
+    identificador: "Chat App Móvil",
+    interactionValue: 10,
+    provisioning: 4, // chats simultáneos
+    provisioningLock: 40, // % de la capacidad del asesor
+  },
+  {
+    id: "acc-video-1",
+    nombre: "Videollamada Asesoría",
+    descripcion: "Videollamada con asesores desde el portal del cliente",
+    tipo: "Videollamada",
+    identificador: "Videollamada Asesoría",
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
   },
   {
     id: "acc-2",
@@ -511,8 +548,8 @@ export const cuentas: Cuenta[] = [
     tipo: "WhatsApp",
     identificador: "+54 9 11 5555-2020",
     interactionValue: 40,
-    provisioning: 200,
-    provisioningLock: 2,
+    provisioning: 1,
+    provisioningLock: 40,
   },
   {
     id: "acc-3",
@@ -520,8 +557,8 @@ export const cuentas: Cuenta[] = [
     tipo: "Email",
     identificador: "ventas@bancosur.com",
     interactionValue: 20,
-    provisioning: 100,
-    provisioningLock: 1,
+    provisioning: 1,
+    provisioningLock: 20,
   },
   {
     id: "acc-4",
@@ -529,8 +566,8 @@ export const cuentas: Cuenta[] = [
     tipo: "SMS",
     identificador: "BANCOSUR",
     interactionValue: 10,
-    provisioning: 50,
-    provisioningLock: 1,
+    provisioning: 1,
+    provisioningLock: 10,
   },
 ];
 

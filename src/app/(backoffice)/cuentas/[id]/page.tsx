@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
 import { cuentas, campanias } from "@/lib/mock-data";
-import { CuentaTabs } from "./cuenta-tabs";
+import { CuentaForm } from "@/components/cuentas/cuenta-form";
 
 export function generateStaticParams() {
   return cuentas.map((c) => ({ id: c.id }));
@@ -44,7 +44,7 @@ export default async function EditarCuentaPage({
         }
       />
 
-      <CuentaTabs
+      <CuentaForm
         cuenta={cuenta}
         campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre }))}
       />

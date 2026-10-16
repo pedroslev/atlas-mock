@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Phone, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -11,12 +11,15 @@ import {
 } from "@/components/data-table/mitrol-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TIPOS_CUENTA } from "@/components/cuentas/tipos";
 import { useT } from "@/lib/i18n";
 import { cuentas, type Cuenta } from "@/lib/mock-data";
 
-// Fase 0: el ADM de cuentas solo gestiona cuentas telefónicas — los demás
-// canales quedan fuera de alcance por ahora (feedback 2026-07-16).
-const cuentasTelefonicas = cuentas.filter((c) => c.tipo === "Llamada");
+// El ADM gestiona telefonía SIP, chat y videollamada; WhatsApp, SMS y Email
+// siguen fuera de alcance por ahora.
+const cuentasGestionadas = cuentas.filter((c) =>
+  TIPOS_CUENTA.some((x) => x.value === c.tipo)
+);
 
 export default function CuentasPage() {
   const t = useT();
@@ -25,22 +28,33 @@ export default function CuentasPage() {
       {
         accessorKey: "nombre",
         header: t("common.comunes.nombre"),
-        Cell: ({ row }) => (
-          <Link
-            href={`/cuentas/${row.original.id}`}
-            className="flex w-fit items-center gap-2 font-medium hover:underline"
-          >
-            <Phone className="size-4 text-secondary" />
-            {row.original.nombre}
-          </Link>
-        ),
+        Cell: ({ row }) => {
+          const Icono = TIPOS_CUENTA.find((x) => x.value === row.original.tipo)?.icon;
+          return (
+            <Link
+              href={`/cuentas/${row.original.id}`}
+              className="flex w-fit items-center gap-2 font-medium hover:underline"
+            >
+              {Icono && <Icono className="size-4 text-secondary" />}
+              {row.original.nombre}
+            </Link>
+          );
+        },
+      },
+      {
+        accessorKey: "tipo",
+        header: t("cuentas.campo.tipo"),
+        Cell: ({ row }) => {
+          const tKey = TIPOS_CUENTA.find((x) => x.value === row.original.tipo)?.tKey;
+          return <span className="text-muted-foreground">{tKey ? t(tKey) : row.original.tipo}</span>;
+        },
       },
       {
         accessorKey: "identificador",
         header: t("cuentas.col.linea"),
         Cell: ({ cell }) => (
           <span className="text-muted-foreground">
-            {cell.getValue<string>()}
+            {cell.getValue<string>() || "—"}
           </span>
         ),
       },
@@ -77,7 +91,7 @@ export default function CuentasPage() {
 
       <MitrolTable
         columns={columns}
-        data={cuentasTelefonicas}
+        data={cuentasGestionadas}
         options={{
           enableRowActions: true,
           renderRowActions: ({ row }) => (

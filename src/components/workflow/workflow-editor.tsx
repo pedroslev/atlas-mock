@@ -34,6 +34,7 @@ import {
   GitBranch,
   Maximize2,
   Minimize2,
+  MessageSquare,
   Volume2,
   Keyboard,
   Split,
@@ -70,6 +71,18 @@ import {
 // macroestados.tsx). Cada salida con nombre de un nodo va a un solo destino;
 // para abrir caminos se usan IF y CASE.
 // Estado local únicamente — no hay persistencia real (ver PRODUCT.md).
+
+// Los macroestados son los mismos en todos los canales; lo que cambia es el
+// texto (y las propiedades de cada nodo) según la cuenta. Estas claves eligen
+// el título y la descripción de PLAY y COLLECT cuando la cuenta es de texto.
+const claveTitulo = (type: string, soloTexto: boolean) =>
+  soloTexto && (type === "play" || type === "collect")
+    ? `cuentas.flujo.${type}.texto${type === "play" ? ".titulo" : ""}`
+    : `cuentas.flujo.${type}`;
+const claveDescripcion = (type: string, soloTexto: boolean) =>
+  soloTexto && (type === "play" || type === "collect")
+    ? `cuentas.flujo.${type}.descripcionTexto`
+    : `cuentas.flujo.${type}.descripcion`;
 
 function InicioNode() {
   const t = useT();
@@ -337,7 +350,7 @@ function ConexionQuitable({
   const hayNodoSeleccionado = nodes.some((n) => n.selected);
   const atenuada = hayNodoSeleccionado && !selected && !origen.selected && !destino.selected;
   const nombreDestino =
-    (destino.data.titulo as string | undefined) ?? t(`cuentas.flujo.${destino.type}`);
+    (destino.data.titulo as string | undefined) ?? t(claveTitulo(destino.type ?? "", destino.data.soloTexto === true));
 
   return (
     <>
@@ -452,12 +465,12 @@ let nextId = 1;
 export function WorkflowEditor({
   initialWorkflow,
   campanias,
-  admiteTexto,
+  soloTexto,
 }: {
   initialWorkflow?: Workflow;
   campanias: { id: string; nombre: string }[];
-  // El PLAY con texto solo vale en cuentas de chat.
-  admiteTexto: boolean;
+  // Chat y videollamada: el PLAY solo envía texto.
+  soloTexto: boolean;
 }) {
   const t = useT();
   const [fullscreen, setFullscreen] = useState(false);
@@ -771,7 +784,7 @@ export function WorkflowEditor({
             // Derivación
             campanias,
             // PLAY
-            admiteTexto,
+            soloTexto,
             onSubirAudio: subirAudio,
           },
         },
@@ -936,8 +949,10 @@ export function WorkflowEditor({
               <span className="text-xs font-medium text-muted-foreground">
                 {t("cuentas.flujo.macroestados")}
               </span>
-              {PALETA.map(({ type, icono: Icono }) => (
-                <ActionTooltip key={type} label={t(`cuentas.flujo.${type}.descripcion`)}>
+              {PALETA.map(({ type, icono }) => {
+                const Icono = soloTexto && type === "play" ? MessageSquare : icono;
+                return (
+                <ActionTooltip key={type} label={t(claveDescripcion(type, soloTexto))}>
                   <Button
                     type="button"
                     variant="outline"
@@ -947,10 +962,11 @@ export function WorkflowEditor({
                     onClick={() => addNodo(type)}
                   >
                     <Icono />
-                    {t(`cuentas.flujo.${type}`)}
+                    {t(claveTitulo(type, soloTexto))}
                   </Button>
                 </ActionTooltip>
-              ))}
+                );
+              })}
             </div>
           </Panel>
 
