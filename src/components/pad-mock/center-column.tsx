@@ -7,7 +7,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { paginasExternas, type Tipificacion } from "@/lib/pad-mock/data";
+import { paginasExternas, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 // por ítem — todas comparten este mismo genérico (mismo criterio que
 // left-nav.tsx para accesos rápidos).
 const ICONO_PAGINA_EXTERNA = Link2;
+const SIN_PAGINAS: PaginaExterna[] = [];
 
 // Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — solo
 // "Llamada" por ahora (a pedido, el canal chat se retiró de esta fase). Las
@@ -37,23 +38,36 @@ const ICONO_PAGINA_EXTERNA = Link2;
 // Ctrl/Cmd+Alt+N salta a la solapa N (1 = Llamada, 2… = cada integración) —
 // mismo "número = posición" que Alt+N en la cola, con un modificador extra
 // para no chocar con ese atajo ni con nada del navegador.
+//
+// Llamada interna (interno): sin páginas externas (CRM, tickets, etc.) — no
+// hay cliente sobre el que trabajar.
 export function CenterColumn({
   tipificaciones,
   enEspera,
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
+  interno = false,
+  sonando = false,
+  nombreInterno,
+  onSimularForzada,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   holdStartedAt: number | null;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
+  interno?: boolean;
+  sonando?: boolean;
+  /** Nombre del otro agente en una llamada interna. */
+  nombreInterno?: string;
+  onSimularForzada?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
   const [tab, setTab] = useState("conversacion");
   const [startedAt] = useState(() => Date.now());
+  const paginas = interno ? SIN_PAGINAS : paginasExternas;
   const now = useNow(true);
   const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
   const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
@@ -73,7 +87,7 @@ export function CenterColumn({
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx > paginasExternas.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx > paginas.length) return;
       e.preventDefault();
       // Posición 1 = Llamada/Conversación (siempre una solapa). Del resto,
       // las "pestana" (solo externas) no se seleccionan — abren su link
@@ -82,7 +96,7 @@ export function CenterColumn({
         setTab("conversacion");
         return;
       }
-      const p = paginasExternas[idx - 1];
+      const p = paginas[idx - 1];
       if (!p) return;
       if (p.modo === "pestana") {
         window.open(p.url, "_blank", "noopener,noreferrer");
@@ -92,7 +106,7 @@ export function CenterColumn({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [paginas]);
 
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
@@ -139,18 +153,18 @@ export function CenterColumn({
             className="sticky left-0 z-10 flex-none gap-2 bg-background! py-3 pr-4 pl-7 text-sm"
           >
             <Phone className="size-5" />
-            {t("padMock.centerColumn.llamada")}
+            {interno ? t("padMock.llamadaInterna.titulo") : t("padMock.centerColumn.llamada")}
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",
                 enEspera ? "text-warning" : "text-foreground"
               )}
             >
-              {formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              {sonando ? "—" : formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
-          {paginasExternas.map((p, i) =>
+          {paginas.map((p, i) =>
             p.modo === "pestana" ? (
               // Solo externa ("blank"): no es una solapa seleccionable — un
               // click abre pagina.url directo en pestaña nueva y no queda
@@ -185,9 +199,13 @@ export function CenterColumn({
           <ConversationPanel
             tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             enEspera={enEspera}
+            interno={interno}
+            sonando={sonando}
+            nombreInterno={nombreInterno}
+            onSimularForzada={onSimularForzada}
           />
         </TabsContent>
-        {paginasExternas
+        {paginas
           .filter((p) => p.modo === "embebido")
           .map((p) => (
             <TabsContent key={p.id} value={p.id} className="min-h-0 flex-1 overflow-hidden">
@@ -201,6 +219,8 @@ export function CenterColumn({
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}
         onCerrarInteraccion={onCerrarInteraccion}
+        interno={interno}
+        sonando={sonando}
       />
     </div>
   );

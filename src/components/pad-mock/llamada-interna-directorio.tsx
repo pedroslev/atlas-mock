@@ -22,9 +22,12 @@ import {
 // mostrar el estado vacío en la reunión.
 export function LlamadaInternaDirectorio({
   onLlamar,
+  onSimularEntrante,
   compacto = false,
 }: {
   onLlamar: (agente: AgenteDirectorio) => void;
+  /** Solo para la reunión: dispara el aviso de llamada interna entrante. */
+  onSimularEntrante?: () => void;
   /** Lista más baja para la barra de la pantalla de inicio. */
   compacto?: boolean;
 }) {
@@ -102,11 +105,26 @@ export function LlamadaInternaDirectorio({
         ¿El agente puede iniciar una llamada interna estando en pausa o en ACW, o también tiene que
         estar en Disponible?
       </OpenQuestion>
+      <OpenQuestion>
+        A confirmar con Pedro: estado propio &quot;En llamada interna&quot;, para diferenciarla de una
+        llamada productiva.
+      </OpenQuestion>
 
-      <label className="flex items-center gap-2 self-end text-xs text-muted-foreground">
-        <Switch size="sm" checked={sinReglas} onCheckedChange={setSinReglas} />
-        {t("padMock.llamadaInterna.simularSinReglas")}
-      </label>
+      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+        {onSimularEntrante && (
+          <button
+            type="button"
+            onClick={onSimularEntrante}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {t("padMock.llamadaInterna.simularEntrante")}
+          </button>
+        )}
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Switch size="sm" checked={sinReglas} onCheckedChange={setSinReglas} />
+          {t("padMock.llamadaInterna.simularSinReglas")}
+        </label>
+      </div>
     </div>
   );
 }

@@ -58,6 +58,7 @@ export function LeftNav({
   onEstadoAgenteChange,
   ultimaCampaniaId,
   ultimaCuentaId,
+  estadoSistema,
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
@@ -75,6 +76,7 @@ export function LeftNav({
   onEstadoAgenteChange: (id: string) => void;
   ultimaCampaniaId?: string;
   ultimaCuentaId?: string;
+  estadoSistema?: { nombre: string; dotClass: string };
 }) {
   const t = useT();
   const [colapsado, setColapsado] = useState(false);
@@ -130,6 +132,7 @@ export function LeftNav({
           estadoId={estadoAgenteId}
           onEstadoIdChange={onEstadoAgenteChange}
           cronometro={cronometroEstado}
+          estadoSistema={estadoSistema}
         />
 
         {/* Cola: alto natural, con un tope (max-h) + scroll propio para
@@ -215,6 +218,7 @@ export function LeftNav({
           estadoId={estadoAgenteId}
           onEstadoIdChange={onEstadoAgenteChange}
           cronometro={cronometroEstado}
+          estadoSistema={estadoSistema}
         />
       </div>
 
@@ -245,9 +249,12 @@ export function LeftNav({
           {cola.map((f, i) => {
             const Icon = CANAL_ICON[f.canal];
             const activa = accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
-            const enHold = activa && enEspera && holdStartedAt !== null;
+            // En espera: la activa con Hold, o una llamada interna que quedó
+            // retenida por una entrante con atención forzada.
+            const desdeHold = activa && enEspera ? holdStartedAt : (f.retenidaDesde ?? null);
+            const enHold = desdeHold !== null;
             const tiempo = enHold
-              ? formatDuration(Math.max(0, Math.floor((now - holdStartedAt) / 1000)))
+              ? formatDuration(Math.max(0, Math.floor((now - desdeHold) / 1000)))
               : formatEspera(f.esperaSeg);
             return (
               <button
@@ -267,7 +274,9 @@ export function LeftNav({
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
                   {f.interno && (
-                    <span className="truncate text-[0.65rem] text-muted-foreground">Llamada interna</span>
+                    <span className="truncate text-[0.65rem] text-muted-foreground">
+                      {f.sonando ? "Llamando…" : t("padMock.llamadaInterna.titulo")}
+                    </span>
                   )}
                 </span>
                 <span

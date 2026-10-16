@@ -19,7 +19,6 @@ import {
   campaniasAgenteMock,
   estadoAgenteMock,
   estadosAgenteDisponibles,
-  historialAgenteMock,
   type AgenteDirectorio,
   type CampaniaSaliente,
   type CuentaSaliente,
@@ -48,6 +47,8 @@ export function InicioPanel({
   cuentaIdInicial,
   onContactar,
   onLlamarInterno,
+  onSimularEntrante,
+  historial,
 }: {
   estadoAgenteId: string;
   estadoAgenteDesde: number;
@@ -56,6 +57,9 @@ export function InicioPanel({
   cuentaIdInicial?: string;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
+  onSimularEntrante: () => void;
+  /** Vive en pad-mock-shell.tsx: las llamadas internas que terminan se suman acá. */
+  historial: HistorialAgenteEntrada[];
 }) {
   const t = useT();
   const estado =
@@ -96,16 +100,23 @@ export function InicioPanel({
         id: "cliente",
         header: t("padMock.inicio.colCliente"),
         accessorFn: (h) => h.nombreCliente ?? h.numeroCliente,
-        Cell: ({ row }) => (
-          <div className="flex flex-col">
-            {row.original.nombreCliente && (
-              <span className="text-sm font-medium">{row.original.nombreCliente}</span>
-            )}
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {row.original.numeroCliente}
-            </span>
-          </div>
-        ),
+        Cell: ({ row }) =>
+          row.original.interno ? (
+            // Llamada interna: el otro agente en lugar del cliente.
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{row.original.numeroCliente}</span>
+              <span className="text-xs text-muted-foreground">{t("padMock.llamadaInterna.titulo")}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {row.original.nombreCliente && (
+                <span className="text-sm font-medium">{row.original.nombreCliente}</span>
+              )}
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                {row.original.numeroCliente}
+              </span>
+            </div>
+          ),
       },
       {
         accessorKey: "duracion",
@@ -117,7 +128,12 @@ export function InicioPanel({
       {
         accessorKey: "tipificacion",
         header: t("padMock.inicio.colTipificacion"),
-        Cell: ({ cell }) => <Badge variant="neutral">{cell.getValue<string>()}</Badge>,
+        Cell: ({ row, cell }) =>
+          row.original.interno ? (
+            <span className="text-muted-foreground">—</span>
+          ) : (
+            <Badge variant="neutral">{cell.getValue<string>()}</Badge>
+          ),
       },
     ],
     [t]
@@ -182,7 +198,11 @@ export function InicioPanel({
                   />
                 </TabsContent>
                 <TabsContent value="interno" className="pt-2">
-                  <LlamadaInternaDirectorio compacto onLlamar={onLlamarInterno} />
+                  <LlamadaInternaDirectorio
+                    compacto
+                    onLlamar={onLlamarInterno}
+                    onSimularEntrante={onSimularEntrante}
+                  />
                 </TabsContent>
               </Tabs>
             </div>
@@ -232,7 +252,7 @@ export function InicioPanel({
           </span>
           <MitrolTable
             columns={columnasHistorial}
-            data={historialAgenteMock}
+            data={historial}
             options={{
               enableStickyHeader: false,
               muiTableContainerProps: { sx: {} },

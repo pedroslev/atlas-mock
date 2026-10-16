@@ -31,11 +31,15 @@ export function AgentStatusSelectorMock({
   estadoId,
   onEstadoIdChange,
   cronometro,
+  estadoSistema,
 }: {
   colapsado: boolean;
   estadoId: string;
   onEstadoIdChange: (id: string) => void;
   cronometro: string;
+  /** Estado que pone el sistema (p. ej. "En llamada interna"): se muestra en
+   *  lugar del elegido y no se puede cambiar a mano mientras dura. */
+  estadoSistema?: { nombre: string; dotClass: string };
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -43,6 +47,19 @@ export function AgentStatusSelectorMock({
   const Icon = estado.icon;
   const principales = estadosAgenteDisponibles.filter((e) => e.grupo === "principal");
   const auxiliares = estadosAgenteDisponibles.filter((e) => e.grupo === "auxiliar");
+
+  if (estadoSistema) {
+    return colapsado ? (
+      <span title={estadoSistema.nombre} className="mx-auto flex size-8 items-center justify-center">
+        <span className={cn("size-2.5 rounded-full", estadoSistema.dotClass)} />
+      </span>
+    ) : (
+      <div className="flex w-full items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar px-2 py-1.5">
+        <span className={cn("size-2.5 shrink-0 rounded-full", estadoSistema.dotClass)} aria-hidden />
+        <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">{estadoSistema.nombre}</span>
+      </div>
+    );
+  }
 
   const lista = (
     <Command>

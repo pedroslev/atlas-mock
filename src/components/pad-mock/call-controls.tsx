@@ -172,16 +172,24 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // El estado de Hold (enEspera) NO es local: lo maneja pad-mock-shell.tsx
 // para poder reflejar el mismo tiempo en espera en la fila de la cola del
 // menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
+//
+// Llamada interna (interno): solo espera, silenciar y cortar — sin
+// tipificación, teclado ni marcas. Cortar la cierra de una (no hay
+// tipificación que cargar). Mientras suena (sonando), cortar la cancela.
 export function InteractionControls({
   tipificaciones,
   enEspera,
   onToggleEspera,
   onCerrarInteraccion,
+  interno = false,
+  sonando = false,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
+  interno?: boolean;
+  sonando?: boolean;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -231,6 +239,19 @@ export function InteractionControls({
         return;
       }
       const key = e.key.toLowerCase();
+      if (interno) {
+        if (key === SHORTCUTS.cerrar.toLowerCase()) {
+          e.preventDefault();
+          onCerrarInteraccion();
+        } else if (!sonando && key === SHORTCUTS.espera.toLowerCase()) {
+          e.preventDefault();
+          onToggleEspera();
+        } else if (!sonando && key === SHORTCUTS.silenciar.toLowerCase()) {
+          e.preventDefault();
+          setSilenciado((v) => !v);
+        }
+        return;
+      }
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
           // Ninguno de estos controles aplica una vez cortada.
@@ -271,7 +292,50 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion]);
+  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, interno, sonando]);
+
+  if (interno) {
+    return (
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
+        {enEspera && (
+          <Badge variant="warning" className="shrink-0 gap-1">
+            <Pause className="size-2.5" />
+            {t("padMock.callControls.espera")}
+          </Badge>
+        )}
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <ControlButton
+            icon={enEspera ? Play : Pause}
+            label={enEspera ? t("padMock.callControls.retomar") : t("padMock.callControls.espera")}
+            shortcutKey={SHORTCUTS.espera}
+            isMac={isMac}
+            tone={enEspera ? "active" : "neutral"}
+            pressed={enEspera}
+            disabled={sonando}
+            onClick={onToggleEspera}
+          />
+          <ControlButton
+            icon={silenciado ? MicOff : Mic}
+            label={silenciado ? t("padMock.callControls.reactivar") : t("padMock.callControls.silenciar")}
+            shortcutKey={SHORTCUTS.silenciar}
+            isMac={isMac}
+            tone={silenciado ? "active" : "neutral"}
+            pressed={silenciado}
+            disabled={sonando}
+            onClick={() => setSilenciado((v) => !v)}
+          />
+          <ControlButton
+            icon={PhoneOff}
+            label={t("padMock.callControls.cortar")}
+            shortcutKey={SHORTCUTS.cerrar}
+            isMac={isMac}
+            tone="destructive"
+            onClick={onCerrarInteraccion}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">

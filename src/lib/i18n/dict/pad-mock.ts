@@ -103,6 +103,15 @@ export const padMock: NamespaceDict = {
     "llamadaInterna.sinHabilitados":
       "No tenés agentes habilitados para llamadas internas. Consultá con tu administrador.",
     "llamadaInterna.simularSinReglas": "Simular grupo sin reglas",
+    "llamadaInterna.simularEntrante": "Simular llamada interna entrante",
+    "llamadaInterna.entrante": "Llamada interna entrante",
+    "llamadaInterna.atender": "Atender",
+    "llamadaInterna.rechazar": "Rechazar",
+    "llamadaInterna.titulo": "Llamada interna",
+    "llamadaInterna.llamando": "Llamando a {nombre}…",
+    "llamadaInterna.enCursoCon": "En llamada interna con {nombre}",
+    "llamadaInterna.retenida": "En espera por una llamada con atención forzada.",
+    "llamadaInterna.simularForzada": "Simular entrante con atención forzada",
 
     // QuickAccessOverlay
     "quickAccess.cerrar": "Cerrar",
