@@ -353,7 +353,7 @@ export const estadoAgenteMock = {
 
 // --- Directorio de llamadas internas (modal "Nueva interacción" → Interno) --
 // Propuesta opción A (documentacion: relevamiento-legacy/llamadas-internas/
-// propuesta): el agente ve a los agentes CONECTADOS que le habilita su grupo
+// propuesta-llamadas-internas): el agente ve a los agentes CONECTADOS que le habilita su grupo
 // de trabajo (mismo grupo, mismas campañas, mismos proyectos — las reglas se
 // suman), cada uno con su estado actual. Solo se puede llamar a los que están
 // en Disponible. Los desconectados no vienen en la lista.

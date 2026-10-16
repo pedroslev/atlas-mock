@@ -89,7 +89,7 @@ export const grupos: NamespaceDict = {
     "shortcuts.desc":
       "Botones de acceso rápido en el menú del PAD para los usuarios de este grupo. Cada uno abre su URL embebida dentro de Hermes o en una pestaña nueva.",
     // Directorio de llamadas internas — propuesta opción A (documentacion:
-    // relevamiento-legacy/llamadas-internas/propuesta). Las reglas se suman;
+    // relevamiento-legacy/llamadas-internas/propuesta-llamadas-internas). Las reglas se suman;
     // ninguna tildada = los usuarios del grupo no pueden hacer llamadas internas.
     "directorio.titulo": "Directorio de llamadas internas",
     "directorio.desc":
