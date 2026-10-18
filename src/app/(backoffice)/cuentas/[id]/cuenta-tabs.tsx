@@ -79,6 +79,8 @@ export function CuentaTabs({
             defaultModoSalida={cuenta.modoSalida}
             defaultLinea={cuenta.identificador}
             defaultLineaSalida={cuenta.lineaSalida}
+            defaultPoolAleatorio={cuenta.poolAleatorio}
+            defaultNumerosAleatorios={cuenta.numerosAleatorios}
           />
         </div>
       </TabsContent>
