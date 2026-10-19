@@ -46,13 +46,7 @@ import {
 // value vacío).
 const NINGUNA = "ninguna";
 
-// "Contestador automático" no sale de un código Q.850 (lo detecta el
-// discador), así que no se ofrece para vincular.
-const CONTESTADOR_ID = "sys-contestador";
-const tipificaciones = clasificaciones.filter(
-  (c) => c.sistema && c.id !== CONTESTADOR_ID
-);
-const contestador = clasificaciones.find((c) => c.id === CONTESTADOR_ID);
+const tipificaciones = clasificaciones.filter((c) => c.sistema);
 
 // Solapa "Causas de corte" de Telefonía (propuesta 2026-10-16, a validar con
 // Pedro): qué tipificación de sistema le corresponde a cada código Q.850 que
@@ -165,12 +159,6 @@ export function CausasTab() {
           </span>
         </div>
       ))}
-      <div className="mt-2 flex items-start justify-between gap-2 border-t pt-3">
-        <span className="font-medium">{contestador?.nombre}</span>
-        <span className="text-right text-xs text-muted-foreground">
-          {t("admin.telefonia.causas.contestador")}
-        </span>
-      </div>
     </div>
   );
 

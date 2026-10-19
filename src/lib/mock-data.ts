@@ -614,15 +614,6 @@ const clasificacionesSistema: Clasificacion[] = [
     },
   },
   {
-    id: "sys-contestador",
-    efecto: "Seguir intentando",
-    nombre: "Contestador automático",
-    tipo: "No efectivo",
-    sistema: {
-      explicacion: "Atendió un contestador o un buzón de voz, no una persona.",
-    },
-  },
-  {
     id: "sys-rechazada",
     efecto: "Seguir intentando",
     nombre: "Rechazada",

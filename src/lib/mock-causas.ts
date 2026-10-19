@@ -5,12 +5,9 @@
 // Cada carrier informa por qué terminó una llamada con un código Q.850. Mitrol
 // define desde Zeus qué tipificación de sistema le corresponde a cada código
 // (igual para todos los tenants y, por ahora, para todos los carriers; el
-// tenant no lo ve). Los códigos
-// sin tipificación no afectan al contacto: se descartan o son alertas de
-// operación (problemas de carrier o de configuración).
-//
-// "Contestador automático" no aparece acá: no viene de un código Q.850, lo
-// detecta el discador.
+// tenant no lo ve). Los códigos sin tipificación no afectan al contacto: se
+// descartan o son alertas de operación (problemas de carrier o de
+// configuración).
 
 export type CausaQ850 = {
   codigo: number;
