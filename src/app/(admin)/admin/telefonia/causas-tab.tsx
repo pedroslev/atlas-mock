@@ -1,12 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { RotateCcw } from "lucide-react";
 import {
   MitrolTable,
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
-import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -26,13 +24,10 @@ import {
 } from "@/components/ui/select";
 import { useT } from "@/lib/i18n";
 import { clasificaciones } from "@/lib/mock-data";
-import type { Carrier } from "@/lib/mock-telefonia";
 import {
   causasQ850,
-  excepcionesPorCarrier as excepcionesIniciales,
   mapeoPorDefecto as mapeoInicial,
   type CausaQ850,
-  type ExcepcionesCarrier,
   type MapeoCausas,
 } from "@/lib/mock-causas";
 import {
@@ -40,9 +35,8 @@ import {
   efectoVariant,
 } from "@/app/(backoffice)/clasificaciones/clasificacion-dialog";
 
-// Valores de Select: "todos" = configuración por defecto; "ninguna" = la causa
-// no tiene tipificación (Select no admite value vacío).
-const POR_DEFECTO = "todos";
+// Valor de Select para "la causa no tiene tipificación" (Select no admite
+// value vacío).
 const NINGUNA = "ninguna";
 
 // "Contestador automático" no sale de un código Q.850 (lo detecta el
@@ -55,52 +49,24 @@ const contestador = clasificaciones.find((c) => c.id === CONTESTADOR_ID);
 
 // Solapa "Causas de corte" de Telefonía (propuesta 2026-10-16, a validar con
 // Pedro): qué tipificación de sistema le corresponde a cada código Q.850 que
-// informan los carriers. Es de Mitrol, igual para todos los tenants. Cada
-// carrier puede tener excepciones cuando informa algún código distinto al
-// estándar. Mock: estado local, sin persistencia.
-export function CausasTab({ carriers }: { carriers: Carrier[] }) {
+// informan los carriers. Es de Mitrol, igual para todos los tenants y, por
+// ahora, para todos los carriers (Tomás, 2026-10-19: sin excepciones por
+// carrier). Mock: estado local, sin persistencia.
+export function CausasTab() {
   const t = useT();
   const [mapeo, setMapeo] = useState<MapeoCausas>(mapeoInicial);
-  const [excepciones, setExcepciones] =
-    useState<Record<string, ExcepcionesCarrier>>(excepcionesIniciales);
-  const [alcance, setAlcance] = useState<string>(POR_DEFECTO);
   const [soloVinculadas, setSoloVinculadas] = useState(false);
 
-  const carrier = carriers.find((c) => c.id === alcance);
-  const propias = carrier ? (excepciones[carrier.id] ?? {}) : {};
-
-  /** Tipificación vigente para el código en el alcance elegido. */
   function vigente(codigo: number): string | undefined {
-    if (carrier && codigo in propias) return propias[codigo] ?? undefined;
     return mapeo[codigo];
   }
 
   function asignar(codigo: number, valor: string) {
-    const id = valor === NINGUNA ? null : valor;
-    if (!carrier) {
-      setMapeo((prev) => {
-        const next = { ...prev };
-        if (id) next[codigo] = id;
-        else delete next[codigo];
-        return next;
-      });
-      return;
-    }
-    setExcepciones((prev) => {
-      const actuales = { ...(prev[carrier.id] ?? {}) };
-      // Si coincide con el valor por defecto, no es una excepción.
-      if ((mapeo[codigo] ?? null) === id) delete actuales[codigo];
-      else actuales[codigo] = id;
-      return { ...prev, [carrier.id]: actuales };
-    });
-  }
-
-  function volverAlDefecto(codigo: number) {
-    if (!carrier) return;
-    setExcepciones((prev) => {
-      const actuales = { ...(prev[carrier.id] ?? {}) };
-      delete actuales[codigo];
-      return { ...prev, [carrier.id]: actuales };
+    setMapeo((prev) => {
+      const next = { ...prev };
+      if (valor === NINGUNA) delete next[codigo];
+      else next[codigo] = valor;
+      return next;
     });
   }
 
@@ -134,53 +100,26 @@ export function CausasTab({ carriers }: { carriers: Carrier[] }) {
         id: "tipificacion",
         header: t("admin.telefonia.causas.col.tipificacion"),
         accessorFn: (c) => vigente(c.codigo) ?? "",
-        Cell: ({ row }) => {
-          const codigo = row.original.codigo;
-          const esExcepcion = !!carrier && codigo in propias;
-          return (
-            <div className="flex items-center gap-2">
-              <Select
-                value={vigente(codigo) ?? NINGUNA}
-                onValueChange={(v) => asignar(codigo, v)}
-              >
-                <SelectTrigger className="w-56">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NINGUNA}>
-                    {t("admin.telefonia.causas.sinTipificacion")}
-                  </SelectItem>
-                  {tipificaciones.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {esExcepcion && (
-                <>
-                  <Badge variant="warning">
-                    {t("admin.telefonia.causas.propia", {
-                      carrier: carrier.name,
-                    })}
-                  </Badge>
-                  <ActionTooltip
-                    label={t("admin.telefonia.causas.volverDefecto")}
-                  >
-                    <button
-                      type="button"
-                      aria-label={t("admin.telefonia.causas.volverDefecto")}
-                      onClick={() => volverAlDefecto(codigo)}
-                      className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-                    >
-                      <RotateCcw className="size-3.5" />
-                    </button>
-                  </ActionTooltip>
-                </>
-              )}
-            </div>
-          );
-        },
+        Cell: ({ row }) => (
+          <Select
+            value={vigente(row.original.codigo) ?? NINGUNA}
+            onValueChange={(v) => asignar(row.original.codigo, v)}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NINGUNA}>
+                {t("admin.telefonia.causas.sinTipificacion")}
+              </SelectItem>
+              {tipificaciones.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
       },
       {
         id: "efecto",
@@ -199,12 +138,12 @@ export function CausasTab({ carriers }: { carriers: Carrier[] }) {
         },
       },
     ],
-    // vigente/asignar dependen de estas piezas de estado.
+    // vigente/asignar dependen de `mapeo`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, mapeo, excepciones, alcance]
+    [t, mapeo]
   );
 
-  // Resumen: qué códigos alimentan cada tipificación en el alcance elegido.
+  // Resumen: qué códigos alimentan cada tipificación.
   const resumen = tipificaciones.map((tip) => ({
     tip,
     codigos: causasQ850
@@ -219,27 +158,7 @@ export function CausasTab({ carriers }: { carriers: Carrier[] }) {
           {t("admin.telefonia.causas.descripcion")}
         </p>
 
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="causas-alcance">
-              {t("admin.telefonia.causas.alcance")}
-            </Label>
-            <Select value={alcance} onValueChange={setAlcance}>
-              <SelectTrigger id="causas-alcance" className="w-64">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={POR_DEFECTO}>
-                  {t("admin.telefonia.causas.porDefecto")}
-                </SelectItem>
-                {carriers.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex justify-end">
           <div className="flex items-center gap-2">
             <Switch
               id="solo-vinculadas"
@@ -253,14 +172,6 @@ export function CausasTab({ carriers }: { carriers: Carrier[] }) {
           </div>
         </div>
 
-        {carrier && (
-          <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm">
-            {t("admin.telefonia.causas.carrierAyuda", {
-              carrier: carrier.name,
-            })}
-          </p>
-        )}
-
         <MitrolTable columns={columns} data={filas} />
       </div>
 
@@ -268,11 +179,7 @@ export function CausasTab({ carriers }: { carriers: Carrier[] }) {
         <CardHeader>
           <CardTitle>{t("admin.telefonia.causas.resumen")}</CardTitle>
           <CardDescription>
-            {carrier
-              ? t("admin.telefonia.causas.resumenCarrier", {
-                  carrier: carrier.name,
-                })
-              : t("admin.telefonia.causas.resumenDefecto")}
+            {t("admin.telefonia.causas.resumenDefecto")}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">

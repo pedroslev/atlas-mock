@@ -4,8 +4,8 @@
 //
 // Cada carrier informa por qué terminó una llamada con un código Q.850. Mitrol
 // define desde Zeus qué tipificación de sistema le corresponde a cada código
-// (igual para todos los tenants; el tenant no lo ve). Un carrier puede tener
-// excepciones cuando informa algún código distinto al estándar. Los códigos
+// (igual para todos los tenants y, por ahora, para todos los carriers; el
+// tenant no lo ve). Los códigos
 // sin tipificación no afectan al contacto: se descartan o son alertas de
 // operación (problemas de carrier o de configuración).
 //
@@ -111,11 +111,3 @@ export const mapeoPorDefecto: MapeoCausas = {
   88: "sys-fax",
 };
 
-/** Excepción de un carrier: id de tipificación, o null = "sin tipificación". */
-export type ExcepcionesCarrier = Record<number, string | null>;
-
-// Ejemplo: Entel informa 31 ("normal sin especificar") cuando el teléfono
-// sonó y nadie atendió, en vez de 19.
-export const excepcionesPorCarrier: Record<string, ExcepcionesCarrier> = {
-  "carrier-entel": { 31: "sys-no-contesta" },
-};

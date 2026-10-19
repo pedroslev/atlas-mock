@@ -775,7 +775,7 @@ export default function TelefoniaPage() {
         {/* Causas Q.850 → tipificaciones de sistema (propuesta 2026-10-16,
             relevamiento/criterios-recontacto). */}
         <TabsContent value="causas">
-          <CausasTab carriers={carriers} />
+          <CausasTab />
         </TabsContent>
       </Tabs>
 
