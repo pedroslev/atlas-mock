@@ -95,7 +95,7 @@ export function CausasTab() {
         accessorKey: "nombre",
         header: t("admin.telefonia.causas.col.causa"),
         Cell: ({ row }) => (
-          <div className="flex max-w-[240px] flex-col gap-0.5 whitespace-normal">
+          <div className="flex max-w-[220px] flex-col gap-0.5 whitespace-normal">
             <span className="font-medium">{row.original.nombre}</span>
             <span className="text-xs text-muted-foreground">
               {row.original.explicacion}
@@ -113,8 +113,10 @@ export function CausasTab() {
             onValueChange={(v) => asignar(row.original.codigo, v)}
           >
             {/* El efecto va dentro de cada opción (y se ve también en el
-                valor elegido): así se sabe qué implica antes de elegirla. */}
-            <SelectTrigger className="w-auto min-w-64">
+                valor elegido), justificado a la derecha: ancho fijo para
+                que todas las filas midan lo mismo y los pills queden
+                alineados. */}
+            <SelectTrigger className="w-[25rem] *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:justify-between">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -124,9 +126,13 @@ export function CausasTab() {
                 </span>
               </SelectItem>
               {tipificaciones.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.nombre}
-                  <Badge variant={efectoVariant[c.efecto]} className="ml-1">
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                  className="*:[span]:last:flex-1 *:[span]:last:justify-between"
+                >
+                  <span>{c.nombre}</span>
+                  <Badge variant={efectoVariant[c.efecto]}>
                     {t(`clasificaciones.efecto.${efectoClave(c.efecto)}`)}
                   </Badge>
                 </SelectItem>
