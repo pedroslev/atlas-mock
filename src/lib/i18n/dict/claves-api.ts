@@ -74,10 +74,10 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videollamada",
     "capacidad.videollamada.descripcion":
       "Iniciar videollamadas entrantes desde una página propia.",
-    "capacidad.customer360.lectura.titulo": "Customer360 · lectura",
+    "capacidad.customer360.lectura.titulo": "Clientes · lectura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar los datos y el historial de contacto de los clientes.",
-    "capacidad.customer360.escritura.titulo": "Customer360 · escritura",
+    "capacidad.customer360.escritura.titulo": "Clientes · escritura",
     "capacidad.customer360.escritura.descripcion":
       "Crear y actualizar datos de clientes desde un CRM.",
     "capacidad.hermes.control-agente.titulo": "Control del agente",
@@ -154,10 +154,10 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Video call",
     "capacidad.videollamada.descripcion":
       "Start inbound video calls from your own page.",
-    "capacidad.customer360.lectura.titulo": "Customer360 · read",
+    "capacidad.customer360.lectura.titulo": "Customers · read",
     "capacidad.customer360.lectura.descripcion":
       "Look up customer data and contact history.",
-    "capacidad.customer360.escritura.titulo": "Customer360 · write",
+    "capacidad.customer360.escritura.titulo": "Customers · write",
     "capacidad.customer360.escritura.descripcion":
       "Create and update customer data from a CRM.",
     "capacidad.hermes.control-agente.titulo": "Agent control",
@@ -234,10 +234,10 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videochamada",
     "capacidad.videollamada.descripcion":
       "Iniciar videochamadas de entrada a partir de uma página própria.",
-    "capacidad.customer360.lectura.titulo": "Customer360 · leitura",
+    "capacidad.customer360.lectura.titulo": "Clientes · leitura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar os dados e o histórico de contato dos clientes.",
-    "capacidad.customer360.escritura.titulo": "Customer360 · escrita",
+    "capacidad.customer360.escritura.titulo": "Clientes · escrita",
     "capacidad.customer360.escritura.descripcion":
       "Criar e atualizar dados de clientes a partir de um CRM.",
     "capacidad.hermes.control-agente.titulo": "Controle do agente",
@@ -314,10 +314,10 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videotrucada",
     "capacidad.videollamada.descripcion":
       "Iniciar videotrucades entrants des d'una pàgina pròpia.",
-    "capacidad.customer360.lectura.titulo": "Customer360 · lectura",
+    "capacidad.customer360.lectura.titulo": "Clients · lectura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar les dades i l'historial de contacte dels clients.",
-    "capacidad.customer360.escritura.titulo": "Customer360 · escriptura",
+    "capacidad.customer360.escritura.titulo": "Clients · escriptura",
     "capacidad.customer360.escritura.descripcion":
       "Crear i actualitzar dades de clients des d'un CRM.",
     "capacidad.hermes.control-agente.titulo": "Control de l'agent",

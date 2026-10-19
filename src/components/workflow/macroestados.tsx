@@ -8,6 +8,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import {
+  MessageSquare,
   Volume2,
   Keyboard,
   Split,
@@ -225,7 +226,7 @@ function Campo({ id, label, children }: { id: string; label: string; children: R
 // ---------------------------------------------------------------------------
 // PLAY — reproduce algo en la interacción. Tres fuentes previstas: audio
 // (la única disponible hoy), TTS (en desarrollo: no hay proveedor definido) y
-// texto (solo para cuentas de chat, que todavía no existen).
+// texto (la única fuente en cuentas de chat y videollamada).
 
 export type PlayData = Comun & {
   fuente?: "audio" | "tts" | "texto";
@@ -237,7 +238,9 @@ export type PlayData = Comun & {
   // marcada la recibe el COLLECT siguiente. Sin tilde, el audio se escucha
   // completo (un aviso legal, por ejemplo). Por defecto, interrumpible.
   interrumpible?: boolean;
-  admiteTexto: boolean;
+  texto?: string; // mensaje que se envía (fuente "texto")
+  // Chat y videollamada: el PLAY solo envía texto, sin audio ni TTS.
+  soloTexto: boolean;
   onSubirAudio: (archivo: File) => { archivo: string; nombre: string; url: string };
 };
 
@@ -293,15 +296,21 @@ function BotonEscuchar({ id, url }: { id: string; url: string }) {
 export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
   const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
-  const fuente = data.fuente ?? "audio";
+  const fuente = data.soloTexto ? "texto" : (data.fuente ?? "audio");
 
   return (
     <NodoMacroestado
-      icono={<Volume2 className="size-4 text-secondary" />}
-      tituloPorDefecto={t("cuentas.flujo.play")}
-      descripcion={t("cuentas.flujo.play.descripcion")}
+      icono={
+        data.soloTexto ? (
+          <MessageSquare className="size-4 text-secondary" />
+        ) : (
+          <Volume2 className="size-4 text-secondary" />
+        )
+      }
+      tituloPorDefecto={t(data.soloTexto ? "cuentas.flujo.play.texto.titulo" : "cuentas.flujo.play")}
+      descripcion={t(data.soloTexto ? "cuentas.flujo.play.descripcionTexto" : "cuentas.flujo.play.descripcion")}
       data={data}
-      resumen={data.audioNombre}
+      resumen={data.soloTexto ? data.texto : data.audioNombre}
       salidas={
         <>
           <Salida id="next" etiqueta={t("cuentas.flujo.salida.next")} />
@@ -309,6 +318,8 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
         </>
       }
     >
+      {/* En chat/videollamada la fuente es fija (texto): no hay selector. */}
+      {!data.soloTexto && (
       <Campo id={`${id}-fuente`} label={t("cuentas.flujo.play.fuente")}>
         <Select
           value={fuente}
@@ -322,14 +333,23 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
             <SelectItem value="tts" disabled>
               {t("cuentas.flujo.play.fuente.tts")}
             </SelectItem>
-            {/* Texto solo existe en cuentas de chat: en una cuenta de
-                telefonía la opción no se muestra. */}
-            {data.admiteTexto && (
-              <SelectItem value="texto">{t("cuentas.flujo.play.fuente.texto")}</SelectItem>
-            )}
           </SelectContent>
         </Select>
       </Campo>
+      )}
+
+      {fuente === "texto" && (
+        <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.texto")}>
+          <Textarea
+            id={`${id}-texto`}
+            rows={3}
+            value={data.texto ?? ""}
+            placeholder={t("cuentas.flujo.play.textoPlaceholder")}
+            data-testid={`play-${id}-texto`}
+            onChange={(e) => data.onChange({ texto: e.target.value })}
+          />
+        </Campo>
+      )}
 
       {fuente === "audio" && (
         <>
@@ -372,6 +392,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
         </>
       )}
 
+      {fuente === "audio" && (
       <div className="flex items-start gap-2">
         <Checkbox
           id={`${id}-interrumpible`}
@@ -383,14 +404,17 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
           {t("cuentas.flujo.play.interrumpible")}
         </Label>
       </div>
+      )}
     </NodoMacroestado>
   );
 }
 
 // ---------------------------------------------------------------------------
-// COLLECT — captura un dato del llamante y lo guarda en una variable. Por
-// ahora solo teclado del teléfono (DTMF): texto y voz llegan con sus canales
-// y proveedores. Pide un mínimo de dígitos y, opcionalmente, una tecla de fin.
+// COLLECT — captura un dato del cliente y lo guarda en una variable. Mismo
+// nodo en todos los canales, propiedades según la cuenta:
+//   · telefonía: teclado del teléfono (DTMF), con mínimo de dígitos y tecla de fin.
+//   · chat y videollamada (soloTexto): el próximo mensaje de texto del cliente;
+//     no hay dígitos ni tecla de fin, solo espera y reintentos.
 
 export type CollectData = Comun & {
   variable?: string;
@@ -398,6 +422,7 @@ export type CollectData = Comun & {
   teclaFin?: "#" | "*"; // opcional: la tecla que corta la captura
   esperaSeg?: number;
   reintentos?: number;
+  soloTexto?: boolean; // chat/videollamada: captura texto libre
 };
 
 export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
@@ -408,8 +433,8 @@ export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
   return (
     <NodoMacroestado
       icono={<Keyboard className="size-4 text-secondary" />}
-      tituloPorDefecto={t("cuentas.flujo.collect")}
-      descripcion={t("cuentas.flujo.collect.descripcion")}
+      tituloPorDefecto={t(data.soloTexto ? "cuentas.flujo.collect.texto" : "cuentas.flujo.collect")}
+      descripcion={t(data.soloTexto ? "cuentas.flujo.collect.descripcionTexto" : "cuentas.flujo.collect.descripcion")}
       data={data}
       resumen={data.variable && `→ ${data.variable}`}
       salidas={
@@ -430,6 +455,8 @@ export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
         />
       </Campo>
       <div className="grid grid-cols-2 gap-2">
+        {!data.soloTexto && (
+        <>
         <Campo id={`${id}-digitos`} label={t("cuentas.flujo.collect.digitos")}>
           <Input
             id={`${id}-digitos`}
@@ -459,6 +486,8 @@ export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
             </SelectContent>
           </Select>
         </Campo>
+        </>
+        )}
         <Campo id={`${id}-espera`} label={t("cuentas.flujo.collect.espera")}>
           <Input
             id={`${id}-espera`}
