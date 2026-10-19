@@ -1,11 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ListTree } from "lucide-react";
 import {
   MitrolTable,
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -88,7 +95,7 @@ export function CausasTab() {
         accessorKey: "nombre",
         header: t("admin.telefonia.causas.col.causa"),
         Cell: ({ row }) => (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex max-w-[240px] flex-col gap-0.5 whitespace-normal">
             <span className="font-medium">{row.original.nombre}</span>
             <span className="text-xs text-muted-foreground">
               {row.original.explicacion}
@@ -105,37 +112,28 @@ export function CausasTab() {
             value={vigente(row.original.codigo) ?? NINGUNA}
             onValueChange={(v) => asignar(row.original.codigo, v)}
           >
-            <SelectTrigger className="w-56">
+            {/* El efecto va dentro de cada opción (y se ve también en el
+                valor elegido): así se sabe qué implica antes de elegirla. */}
+            <SelectTrigger className="w-auto min-w-64">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NINGUNA}>
-                {t("admin.telefonia.causas.sinTipificacion")}
+                <span className="text-muted-foreground">
+                  {t("admin.telefonia.causas.sinTipificacion")}
+                </span>
               </SelectItem>
               {tipificaciones.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.nombre}
+                  <Badge variant={efectoVariant[c.efecto]} className="ml-1">
+                    {t(`clasificaciones.efecto.${efectoClave(c.efecto)}`)}
+                  </Badge>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         ),
-      },
-      {
-        id: "efecto",
-        header: t("admin.telefonia.causas.col.efecto"),
-        accessorFn: (c) => vigente(c.codigo) ?? "",
-        Cell: ({ row }) => {
-          const tip = tipificaciones.find(
-            (c) => c.id === vigente(row.original.codigo)
-          );
-          if (!tip) return <span className="text-muted-foreground">—</span>;
-          return (
-            <Badge variant={efectoVariant[tip.efecto]}>
-              {t(`clasificaciones.efecto.${efectoClave(tip.efecto)}`)}
-            </Badge>
-          );
-        },
       },
     ],
     // vigente/asignar dependen de `mapeo`.
@@ -151,56 +149,80 @@ export function CausasTab() {
       .map((c) => c.codigo),
   }));
 
+  const resumenContenido = (
+    <div className="flex flex-col gap-2 text-sm">
+      {resumen.map(({ tip, codigos }) => (
+        <div key={tip.id} className="flex items-start justify-between gap-2">
+          <span className="font-medium">{tip.nombre}</span>
+          <span className="text-right font-mono text-muted-foreground">
+            {codigos.length > 0 ? codigos.join(", ") : "—"}
+          </span>
+        </div>
+      ))}
+      <div className="mt-2 flex items-start justify-between gap-2 border-t pt-3">
+        <span className="font-medium">{contestador?.nombre}</span>
+        <span className="text-right text-xs text-muted-foreground">
+          {t("admin.telefonia.causas.contestador")}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
       <div className="flex min-w-0 flex-col gap-4">
-        <p className="max-w-[80ch] text-sm text-muted-foreground">
-          {t("admin.telefonia.causas.descripcion")}
-        </p>
-
-        <div className="flex justify-end">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="solo-vinculadas"
-              checked={soloVinculadas}
-              onCheckedChange={setSoloVinculadas}
-              size="sm"
-            />
-            <Label htmlFor="solo-vinculadas" className="text-sm font-normal">
-              {t("admin.telefonia.causas.soloVinculadas")}
-            </Label>
+        {/* Descripción y controles en una sola fila para que la tabla entre
+            en pantalla: scrollea la tabla, no la página. */}
+        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+          <p className="max-w-[80ch] flex-1 text-sm text-muted-foreground">
+            {t("admin.telefonia.causas.descripcion")}
+          </p>
+          <div className="flex shrink-0 items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="solo-vinculadas"
+                checked={soloVinculadas}
+                onCheckedChange={setSoloVinculadas}
+                size="sm"
+              />
+              <Label htmlFor="solo-vinculadas" className="text-sm font-normal">
+                {t("admin.telefonia.causas.soloVinculadas")}
+              </Label>
+            </div>
+            {/* En pantallas angostas el resumen no entra al costado. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="xl:hidden">
+                  <ListTree />
+                  {t("admin.telefonia.causas.resumen")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80">
+                {resumenContenido}
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
-        <MitrolTable columns={columns} data={filas} />
+        <MitrolTable
+          columns={columns}
+          data={filas}
+          options={{
+            muiTableContainerProps: {
+              sx: { maxHeight: "calc(100vh - 25rem)" },
+            },
+          }}
+        />
       </div>
 
-      <Card className="h-fit">
+      <Card className="hidden h-fit xl:flex">
         <CardHeader>
           <CardTitle>{t("admin.telefonia.causas.resumen")}</CardTitle>
           <CardDescription>
             {t("admin.telefonia.causas.resumenDefecto")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2 text-sm">
-          {resumen.map(({ tip, codigos }) => (
-            <div
-              key={tip.id}
-              className="flex items-start justify-between gap-2"
-            >
-              <span className="font-medium">{tip.nombre}</span>
-              <span className="text-right font-mono text-muted-foreground">
-                {codigos.length > 0 ? codigos.join(", ") : "—"}
-              </span>
-            </div>
-          ))}
-          <div className="mt-2 flex items-start justify-between gap-2 border-t pt-3">
-            <span className="font-medium">{contestador?.nombre}</span>
-            <span className="text-right text-xs text-muted-foreground">
-              {t("admin.telefonia.causas.contestador")}
-            </span>
-          </div>
-        </CardContent>
+        <CardContent>{resumenContenido}</CardContent>
       </Card>
     </div>
   );
