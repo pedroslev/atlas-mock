@@ -16,6 +16,7 @@ import { createMockStore } from "@/lib/mock-store";
 export type CapacidadClaveApi =
   | "chat"
   | "videollamada"
+  | "webcall"
   | "customer360.lectura"
   | "customer360.escritura"
   | "hermes.control-agente";
@@ -25,18 +26,20 @@ export type CapacidadClaveApi =
 export const capacidadesClaveApi: CapacidadClaveApi[] = [
   "chat",
   "videollamada",
+  "webcall",
   "customer360.lectura",
   "customer360.escritura",
   "hermes.control-agente",
 ];
 
 // Capacidades que se pueden usar con la clave pública, desde un navegador: el
-// widget de chat o videollamada, o el botón de otra web que opera el PAD con la
+// widget de chat, videollamada o webcall, o el botón de otra web que opera el PAD con la
 // sesión del agente. El resto (Customer360) maneja datos de los clientes y solo
 // se usa con la clave secreta, desde un servidor.
 export const capacidadesPublicas: CapacidadClaveApi[] = [
   "chat",
   "videollamada",
+  "webcall",
   "hermes.control-agente",
 ];
 
