@@ -12,6 +12,7 @@ import {
   Contact,
   Settings,
   KeyRound,
+  BookOpen,
 } from "lucide-react";
 import type { PermisoClaveApi } from "@/lib/mock-data";
 
@@ -53,6 +54,14 @@ export const configuracionNav: NavItem = {
   href: "/configuracion",
   labelKey: "common.nav.configuracion",
   icon: Settings,
+};
+
+// Documentación de la app: cómo usar el editor de workflows y sus
+// macroestados. Va al pie, junto a Configuración.
+export const documentacionNav: NavItem = {
+  href: "/documentacion/workflows",
+  labelKey: "common.nav.documentacion",
+  icon: BookOpen,
 };
 
 export type ConfigItem = NavItem & {

@@ -849,7 +849,10 @@ export function WorkflowEditor({
         ref={lienzoRef}
         className={cn(
           "w-full overflow-hidden rounded-xl ring-1 ring-foreground/10",
-          fullscreen ? "flex-1" : "h-[28rem]",
+          // Sin pantalla completa, el lienzo usa el alto que queda en la
+          // ventana (menos el encabezado, las solapas y el título de la
+          // tarjeta); el mínimo deja lugar a la paleta y a los controles.
+          fullscreen ? "flex-1" : "h-[calc(100dvh-17rem)] min-h-[32rem]",
         )}
       >
         <ReactFlow

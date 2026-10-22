@@ -17,6 +17,7 @@ export const common: NamespaceDict = {
     "nav.estadosAuxiliares": "Estados auxiliares",
     "nav.clientes": "Clientes",
     "nav.configuracion": "Configuración",
+    "nav.documentacion": "Documentación",
     "nav.clavesApi": "Claves de acceso API",
 
     "header.buscar": "Buscar",
@@ -85,6 +86,7 @@ export const common: NamespaceDict = {
     "nav.gruposRoles": "Groups and roles",
     "nav.estadosAuxiliares": "Auxiliary states",
     "nav.configuracion": "Settings",
+    "nav.documentacion": "Documentation",
     "nav.clavesApi": "API access keys",
 
     "header.buscar": "Search",
@@ -154,6 +156,7 @@ export const common: NamespaceDict = {
     "nav.estadosAuxiliares": "Estados auxiliares",
     "nav.clientes": "Clientes",
     "nav.configuracion": "Configurações",
+    "nav.documentacion": "Documentação",
     "nav.clavesApi": "Chaves de acesso API",
 
     "header.buscar": "Pesquisar",
@@ -222,6 +225,7 @@ export const common: NamespaceDict = {
     "nav.gruposRoles": "Grups i rols",
     "nav.estadosAuxiliares": "Estats auxiliars",
     "nav.configuracion": "Configuració",
+    "nav.documentacion": "Documentació",
     "nav.clavesApi": "Claus d'accés API",
 
     "header.buscar": "Cerca",

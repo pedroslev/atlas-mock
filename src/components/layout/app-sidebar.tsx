@@ -16,7 +16,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
-import { configuracionItems, configuracionNav, navItems } from "@/lib/nav";
+import { configuracionItems, configuracionNav, documentacionNav, navItems } from "@/lib/nav";
 import { puedeClaves } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
 
@@ -73,12 +73,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {/* Configuración va al pie, separada de las secciones operativas: es
-          del tenant entero y se toca poco. Solo aparece si el usuario puede
-          ver alguno de sus ítems. */}
-      {configuracionItems.some((item) => puedeClaves(item.permiso)) && (
-        <SidebarFooter className="border-t">
-          <SidebarMenu>
+      {/* Documentación y Configuración van al pie, separadas de las
+          secciones operativas. Configuración es del tenant entero y solo
+          aparece si el usuario puede ver alguno de sus ítems. */}
+      <SidebarFooter className="border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith("/documentacion")}
+              tooltip={t(documentacionNav.labelKey)}
+              data-testid="nav-documentacion"
+            >
+              <Link href={documentacionNav.href}>
+                <documentacionNav.icon />
+                <span>{t(documentacionNav.labelKey)}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {configuracionItems.some((item) => puedeClaves(item.permiso)) && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
@@ -92,9 +105,9 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      )}
+          )}
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

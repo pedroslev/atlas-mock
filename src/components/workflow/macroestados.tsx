@@ -27,6 +27,7 @@ import {
   Moon,
   Globe,
   Calculator,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,6 +78,7 @@ function NodoMacroestado({
   icono,
   tituloPorDefecto,
   descripcion,
+  ayuda,
   data,
   resumen,
   children,
@@ -86,6 +88,9 @@ function NodoMacroestado({
   tituloPorDefecto: string;
   // Qué hace el macroestado: se muestra al pasar el mouse por el ícono.
   descripcion: string;
+  // Ancla de este macroestado en la documentación del workflow
+  // (/documentacion/workflows#<ancla>).
+  ayuda: string;
   data: Comun;
   // Una línea que describe la configuración, visible con las opciones ocultas.
   resumen?: string;
@@ -151,6 +156,20 @@ function NodoMacroestado({
           )}
         </span>
         <span className="flex shrink-0 items-center">
+          {/* Va a la documentación en otra pestaña: el flujo es estado local
+              y navegar en la misma lo perdería. */}
+          <ActionTooltip label={t("cuentas.flujo.ayuda")}>
+            <a
+              href={`/documentacion/workflows#${ayuda}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={t("cuentas.flujo.ayuda")}
+              data-testid={`ayuda-${ayuda}`}
+              className="flex size-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Info className="size-3.5" />
+            </a>
+          </ActionTooltip>
           {accion(t("cuentas.flujo.duplicar"), data.onDuplicate, <Copy className="size-3.5" />)}
           {accion(
             t(data.colapsado ? "cuentas.flujo.mostrarOpciones" : "cuentas.flujo.ocultarOpciones"),
@@ -311,6 +330,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
       }
       tituloPorDefecto={t(data.soloTexto ? "cuentas.flujo.play.texto.titulo" : "cuentas.flujo.play")}
       descripcion={t(data.soloTexto ? "cuentas.flujo.play.descripcionTexto" : "cuentas.flujo.play.descripcion")}
+      ayuda="reproducir"
       data={data}
       resumen={data.soloTexto ? data.texto : data.audioNombre}
       salidas={
@@ -437,6 +457,7 @@ export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
       icono={<Keyboard className="size-4 text-secondary" />}
       tituloPorDefecto={t(data.soloTexto ? "cuentas.flujo.collect.texto" : "cuentas.flujo.collect")}
       descripcion={t(data.soloTexto ? "cuentas.flujo.collect.descripcionTexto" : "cuentas.flujo.collect.descripcion")}
+      ayuda="capturar"
       data={data}
       resumen={data.variable && `→ ${data.variable}`}
       salidas={
@@ -592,6 +613,7 @@ export function IfNode({ id, data }: NodeProps & { data: IfData }) {
       icono={<Split className="size-4 text-secondary" />}
       tituloPorDefecto={t("cuentas.flujo.if")}
       descripcion={t("cuentas.flujo.if.descripcion")}
+      ayuda="condicion"
       data={data}
       resumen={
         modo === "cel"
@@ -689,6 +711,7 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
       icono={<ListTree className="size-4 text-secondary" />}
       tituloPorDefecto={t("cuentas.flujo.case")}
       descripcion={t("cuentas.flujo.case.descripcion")}
+      ayuda="segun-valor"
       data={data}
       resumen={modo === "cel" ? data.cel : data.variable}
       salidas={
@@ -783,6 +806,7 @@ export function DerivacionNode({ id, data }: NodeProps & { data: DerivacionData 
       icono={<GitBranch className="size-4 text-secondary" />}
       tituloPorDefecto={t("cuentas.flujo.derivacion")}
       descripcion={t("cuentas.flujo.derivacion.descripcion")}
+      ayuda="derivacion"
       data={data}
       resumen={campania?.nombre}
     >
@@ -837,6 +861,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
       icono={<Globe className="size-4 text-secondary" />}
       tituloPorDefecto={t("cuentas.flujo.http")}
       descripcion={t("cuentas.flujo.http.descripcion")}
+      ayuda="consulta-http"
       data={data}
       resumen={data.url && `${metodo} ${data.url}`}
       salidas={
@@ -847,7 +872,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
         </>
       }
     >
-      <div className="grid grid-cols-[auto_1fr] gap-2">
+      <div className="grid grid-cols-[auto_1fr] items-end gap-2">
         <Campo id={`${id}-metodo`} label={t("cuentas.flujo.http.metodo")}>
           <Select value={metodo} onValueChange={(v) => data.onChange({ metodo: v })}>
             <SelectTrigger id={`${id}-metodo`} size="sm" data-testid={`http-${id}-metodo`}>
@@ -932,7 +957,9 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
         </Campo>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* items-end: si una etiqueta pasa a dos renglones, los campos quedan
+          igual alineados por abajo. */}
+      <div className="grid grid-cols-2 items-end gap-2">
         <Campo id={`${id}-variable`} label={t("cuentas.flujo.http.variable")}>
           <Input
             id={`${id}-variable`}
@@ -985,6 +1012,7 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
       icono={<Calculator className="size-4 text-secondary" />}
       tituloPorDefecto={t("cuentas.flujo.calcular")}
       descripcion={t("cuentas.flujo.calcular.descripcion")}
+      ayuda="calcular"
       data={data}
       resumen={asignaciones
         .filter((a) => a.variable)
