@@ -59,7 +59,7 @@ export const configuracionNav: NavItem = {
 // Documentación de la app: cómo usar el editor de workflows y sus
 // macroestados. Va al pie, junto a Configuración.
 export const documentacionNav: NavItem = {
-  href: "/documentacion/workflows",
+  href: "/documentacion",
   labelKey: "common.nav.documentacion",
   icon: BookOpen,
 };

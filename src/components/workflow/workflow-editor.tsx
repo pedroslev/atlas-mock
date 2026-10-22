@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -468,6 +468,14 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
 const ENCUADRE = { padding: 0.15, maxZoom: 1 };
 const COLOR_CONEXION = "var(--foreground)";
 
+// Alto del lienzo sin pantalla completa: ocupa lo que queda de la ventana
+// debajo de su posición, sin provocar scroll en la página. MARGEN_INFERIOR es
+// lo que hay debajo del lienzo (relleno de la tarjeta y de la página);
+// ALTO_MINIMO deja lugar a la paleta y a los controles, y en una ventana más
+// baja la página scrollea.
+const MARGEN_INFERIOR = 42;
+const ALTO_MINIMO = 448;
+
 let nextId = 1;
 
 export function WorkflowEditor({
@@ -482,6 +490,7 @@ export function WorkflowEditor({
 }) {
   const t = useT();
   const [fullscreen, setFullscreen] = useState(false);
+  const [alto, setAlto] = useState<number>();
 
   const inicioNode = useMemo<WorkflowNode>(
     () =>
@@ -612,6 +621,22 @@ export function WorkflowEditor({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [pendiente, cancelarConexion]);
+
+  // Mide el alto libre de la ventana a partir de donde empieza el lienzo.
+  useLayoutEffect(() => {
+    if (fullscreen) return;
+    const medir = () => {
+      const lienzo = lienzoRef.current;
+      const pagina = lienzo?.closest("main");
+      if (!lienzo || !pagina) return;
+      const arriba =
+        lienzo.getBoundingClientRect().top - pagina.getBoundingClientRect().top + pagina.scrollTop;
+      setAlto(Math.max(pagina.clientHeight - arriba - MARGEN_INFERIOR, ALTO_MINIMO));
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [fullscreen]);
 
   const addNodo = useCallback(
     (type: Exclude<WorkflowNodeType, "inicio">) => {
@@ -849,11 +874,11 @@ export function WorkflowEditor({
         ref={lienzoRef}
         className={cn(
           "w-full overflow-hidden rounded-xl ring-1 ring-foreground/10",
-          // Sin pantalla completa, el lienzo usa el alto que queda en la
-          // ventana (menos el encabezado, las solapas y el título de la
-          // tarjeta); el mínimo deja lugar a la paleta y a los controles.
-          fullscreen ? "flex-1" : "h-[calc(100dvh-17rem)] min-h-[32rem]",
+          // Sin pantalla completa, el alto lo fija `alto` (ver MARGEN_INFERIOR);
+          // h-[28rem] es solo el de la primera pintura.
+          fullscreen ? "flex-1" : "h-[28rem]",
         )}
+        style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
         <ReactFlow
           nodes={nodosEnLienzo}
