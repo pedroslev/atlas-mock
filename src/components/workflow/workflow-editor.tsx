@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -39,6 +39,8 @@ import {
   Keyboard,
   Split,
   ListTree,
+  Globe,
+  Calculator,
   X,
   LayoutGrid,
   ChevronsUpDown,
@@ -62,13 +64,15 @@ import {
   CollectNode,
   IfNode,
   CaseNode,
+  HttpNode,
+  CalcularNode,
   DerivacionNode,
 } from "@/components/workflow/macroestados";
 
 // Editor de workflow de la cuenta (ver ADR-BD-002 §accounts.workflow): el
 // "Inicio de interacción" (único, fijo), la "Derivación a campaña" y el primer
-// set de macroestados de Fase 1 — PLAY, COLLECT, IF y CASE (ver
-// macroestados.tsx). Cada salida con nombre de un nodo va a un solo destino;
+// set de macroestados de Fase 1 — PLAY, COLLECT, IF y CASE — más las
+// herramientas HTTP y Calcular (ver macroestados.tsx). Cada salida con nombre de un nodo va a un solo destino;
 // para abrir caminos se usan IF y CASE.
 // Estado local únicamente — no hay persistencia real (ver PRODUCT.md).
 
@@ -444,6 +448,8 @@ const nodeTypes = {
   collect: CollectNode,
   if: IfNode,
   case: CaseNode,
+  http: HttpNode,
+  calcular: CalcularNode,
 };
 
 // Macroestados que se agregan desde la paleta, en el orden en que aparecen.
@@ -452,6 +458,8 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
   { type: "collect", icono: Keyboard },
   { type: "if", icono: Split },
   { type: "case", icono: ListTree },
+  { type: "http", icono: Globe },
+  { type: "calcular", icono: Calculator },
   { type: "derivacion", icono: GitBranch },
 ];
 
@@ -459,6 +467,14 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
 // agranda hasta llenar el lienzo.
 const ENCUADRE = { padding: 0.15, maxZoom: 1 };
 const COLOR_CONEXION = "var(--foreground)";
+
+// Alto del lienzo sin pantalla completa: ocupa lo que queda de la ventana
+// debajo de su posición, sin provocar scroll en la página. MARGEN_INFERIOR es
+// lo que hay debajo del lienzo (relleno de la tarjeta y de la página);
+// ALTO_MINIMO deja lugar a la paleta y a los controles, y en una ventana más
+// baja la página scrollea.
+const MARGEN_INFERIOR = 42;
+const ALTO_MINIMO = 448;
 
 let nextId = 1;
 
@@ -474,6 +490,7 @@ export function WorkflowEditor({
 }) {
   const t = useT();
   const [fullscreen, setFullscreen] = useState(false);
+  const [alto, setAlto] = useState<number>();
 
   const inicioNode = useMemo<WorkflowNode>(
     () =>
@@ -604,6 +621,22 @@ export function WorkflowEditor({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [pendiente, cancelarConexion]);
+
+  // Mide el alto libre de la ventana a partir de donde empieza el lienzo.
+  useLayoutEffect(() => {
+    if (fullscreen) return;
+    const medir = () => {
+      const lienzo = lienzoRef.current;
+      const pagina = lienzo?.closest("main");
+      if (!lienzo || !pagina) return;
+      const arriba =
+        lienzo.getBoundingClientRect().top - pagina.getBoundingClientRect().top + pagina.scrollTop;
+      setAlto(Math.max(pagina.clientHeight - arriba - MARGEN_INFERIOR, ALTO_MINIMO));
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [fullscreen]);
 
   const addNodo = useCallback(
     (type: Exclude<WorkflowNodeType, "inicio">) => {
@@ -841,8 +874,11 @@ export function WorkflowEditor({
         ref={lienzoRef}
         className={cn(
           "w-full overflow-hidden rounded-xl ring-1 ring-foreground/10",
+          // Sin pantalla completa, el alto lo fija `alto` (ver MARGEN_INFERIOR);
+          // h-[28rem] es solo el de la primera pintura.
           fullscreen ? "flex-1" : "h-[28rem]",
         )}
+        style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
         <ReactFlow
           nodes={nodosEnLienzo}

@@ -1,0 +1,58 @@
+import type { NamespaceDict } from "@/lib/i18n/dict/types";
+
+// Rótulos del marco de la documentación (/documentacion). El contenido de cada
+// página vive en src/lib/docs/contenido (ver src/lib/docs/tipos.ts).
+export const documentacion: NamespaceDict = {
+  es: {
+    "titulo": "Documentación",
+    "enEstaPagina": "En esta página",
+    "anterior": "Anterior",
+    "siguiente": "Siguiente",
+    "categoria.primeros-pasos": "Primeros pasos",
+    "categoria.operacion": "Operación",
+    "categoria.clasificacion": "Clasificación",
+    "categoria.calendario": "Calendario y restricciones",
+    "categoria.personas": "Personas y permisos",
+    "categoria.configuracion": "Configuración",
+    "navegacion": "Navegación de la documentación",
+  },
+  en: {
+    "titulo": "Documentation",
+    "enEstaPagina": "On this page",
+    "anterior": "Previous",
+    "siguiente": "Next",
+    "categoria.primeros-pasos": "Getting started",
+    "categoria.operacion": "Operation",
+    "categoria.clasificacion": "Classification",
+    "categoria.calendario": "Calendar and restrictions",
+    "categoria.personas": "People and permissions",
+    "categoria.configuracion": "Settings",
+    "navegacion": "Documentation navigation",
+  },
+  pt: {
+    "titulo": "Documentação",
+    "enEstaPagina": "Nesta página",
+    "anterior": "Anterior",
+    "siguiente": "Próxima",
+    "categoria.primeros-pasos": "Primeiros passos",
+    "categoria.operacion": "Operação",
+    "categoria.clasificacion": "Classificação",
+    "categoria.calendario": "Calendário e restrições",
+    "categoria.personas": "Pessoas e permissões",
+    "categoria.configuracion": "Configurações",
+    "navegacion": "Navegação da documentação",
+  },
+  ca: {
+    "titulo": "Documentació",
+    "enEstaPagina": "En aquesta pàgina",
+    "anterior": "Anterior",
+    "siguiente": "Següent",
+    "categoria.primeros-pasos": "Primers passos",
+    "categoria.operacion": "Operació",
+    "categoria.clasificacion": "Classificació",
+    "categoria.calendario": "Calendari i restriccions",
+    "categoria.personas": "Persones i permisos",
+    "categoria.configuracion": "Configuració",
+    "navegacion": "Navegació de la documentació",
+  },
+};
