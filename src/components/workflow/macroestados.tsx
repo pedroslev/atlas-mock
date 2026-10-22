@@ -25,6 +25,8 @@ import {
   ChevronUp,
   GitBranch,
   Moon,
+  Globe,
+  Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,9 +43,9 @@ import {
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useT } from "@/lib/i18n";
 
-// Los macroestados del editor: la derivación a campaña y el primer set de la
-// Fase 1 — PLAY, COLLECT, IF y CASE (decisiones/workflows/propuesta-motor-
-// workflows.md §5). Cada nodo declara sus salidas con nombre — `next`/`error`,
+// Los macroestados del editor: la derivación a campaña, el primer set de la
+// Fase 1 — PLAY, COLLECT, IF y CASE — y las herramientas HTTP y Calcular
+// (decisiones/workflows/propuesta-motor-workflows.md §5). Cada nodo declara sus salidas con nombre — `next`/`error`,
 // `complete`/`timeout`/`error`, `true`/`false`, `case_*`/`default` — y cada
 // salida va a un solo destino.
 // Todos comparten el mismo marco: título editable (el ícono no cambia),
@@ -796,6 +798,250 @@ export function DerivacionNode({ id, data }: NodeProps & { data: DerivacionData 
           ))}
         </SelectContent>
       </Select>
+    </NodoMacroestado>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// HTTP — consulta a un servicio externo del tenant. Omnicanal: funciona igual
+// en todas las cuentas. La respuesta queda en una variable como
+// { status, body }, que después leen IF, CASE y Calcular. Salidas: `success`
+// (respuesta 2xx), `error` (otro status o falla de red) y `timeout`.
+
+const METODOS_HTTP = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+// Los métodos que mandan cuerpo; en GET y DELETE el campo no se muestra.
+const METODOS_CON_CUERPO: readonly string[] = ["POST", "PUT", "PATCH"];
+
+export type HttpEncabezado = { id: string; nombre: string; valor: string };
+export type HttpData = Comun & {
+  metodo?: (typeof METODOS_HTTP)[number];
+  url?: string;
+  encabezados?: HttpEncabezado[];
+  cuerpo?: string;
+  timeoutSeg?: number;
+  variable?: string;
+};
+
+let nextEncabezado = 1;
+
+export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
+  const t = useT();
+  const metodo = data.metodo ?? "GET";
+  const encabezados = data.encabezados ?? [];
+  const setEncabezados = (nuevos: HttpEncabezado[]) => data.onChange({ encabezados: nuevos });
+  const editar = (hid: string, patch: Partial<HttpEncabezado>) =>
+    setEncabezados(encabezados.map((h) => (h.id === hid ? { ...h, ...patch } : h)));
+
+  return (
+    <NodoMacroestado
+      icono={<Globe className="size-4 text-secondary" />}
+      tituloPorDefecto={t("cuentas.flujo.http")}
+      descripcion={t("cuentas.flujo.http.descripcion")}
+      data={data}
+      resumen={data.url && `${metodo} ${data.url}`}
+      salidas={
+        <>
+          <Salida id="success" etiqueta={t("cuentas.flujo.salida.success")} />
+          <Salida id="error" etiqueta={t("cuentas.flujo.salida.error")} />
+          <Salida id="timeout" etiqueta={t("cuentas.flujo.salida.timeout")} />
+        </>
+      }
+    >
+      <div className="grid grid-cols-[auto_1fr] gap-2">
+        <Campo id={`${id}-metodo`} label={t("cuentas.flujo.http.metodo")}>
+          <Select value={metodo} onValueChange={(v) => data.onChange({ metodo: v })}>
+            <SelectTrigger id={`${id}-metodo`} size="sm" data-testid={`http-${id}-metodo`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METODOS_HTTP.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Campo>
+        <Campo id={`${id}-url`} label={t("cuentas.flujo.http.url")}>
+          <Input
+            id={`${id}-url`}
+            className="h-7 font-mono text-xs"
+            placeholder="https://api.cliente.com/saldo/{{ documento }}"
+            value={data.url ?? ""}
+            data-testid={`http-${id}-url`}
+            onChange={(e) => data.onChange({ url: e.target.value })}
+          />
+        </Campo>
+      </div>
+
+      <span className="text-xs font-medium">{t("cuentas.flujo.http.encabezados")}</span>
+      {encabezados.map((h) => (
+        <div key={h.id} className="flex items-center gap-1.5">
+          <Input
+            aria-label={t("cuentas.flujo.http.encabezadoNombre")}
+            className="h-7 font-mono text-xs"
+            placeholder="Authorization"
+            value={h.nombre}
+            data-testid={`http-${id}-encabezado-${h.id}-nombre`}
+            onChange={(e) => editar(h.id, { nombre: e.target.value })}
+          />
+          <Input
+            aria-label={t("cuentas.flujo.http.encabezadoValor")}
+            className="h-7 font-mono text-xs"
+            placeholder="Bearer …"
+            value={h.valor}
+            data-testid={`http-${id}-encabezado-${h.id}-valor`}
+            onChange={(e) => editar(h.id, { valor: e.target.value })}
+          />
+          <ActionTooltip label={t("cuentas.flujo.http.quitarEncabezado")}>
+            <button
+              type="button"
+              aria-label={t("cuentas.flujo.http.quitarEncabezado")}
+              onClick={() => setEncabezados(encabezados.filter((x) => x.id !== h.id))}
+              className="flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            >
+              <X className="size-3.5" />
+            </button>
+          </ActionTooltip>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="justify-start"
+        data-testid={`http-${id}-agregar-encabezado`}
+        onClick={() =>
+          setEncabezados([...encabezados, { id: String(nextEncabezado++), nombre: "", valor: "" }])
+        }
+      >
+        <Plus />
+        {t("cuentas.flujo.http.agregarEncabezado")}
+      </Button>
+
+      {METODOS_CON_CUERPO.includes(metodo) && (
+        <Campo id={`${id}-cuerpo`} label={t("cuentas.flujo.http.cuerpo")}>
+          <Textarea
+            id={`${id}-cuerpo`}
+            className="min-h-16 font-mono text-xs"
+            placeholder='{"documento": "{{ documento }}"}'
+            value={data.cuerpo ?? ""}
+            data-testid={`http-${id}-cuerpo`}
+            onChange={(e) => data.onChange({ cuerpo: e.target.value })}
+          />
+        </Campo>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        <Campo id={`${id}-variable`} label={t("cuentas.flujo.http.variable")}>
+          <Input
+            id={`${id}-variable`}
+            className="h-7 font-mono text-xs"
+            placeholder="respuesta"
+            value={data.variable ?? ""}
+            data-testid={`http-${id}-variable`}
+            onChange={(e) => data.onChange({ variable: e.target.value })}
+          />
+        </Campo>
+        <Campo id={`${id}-timeout`} label={t("cuentas.flujo.http.timeout")}>
+          <Input
+            id={`${id}-timeout`}
+            type="number"
+            min={1}
+            max={30}
+            className="h-7"
+            value={data.timeoutSeg ?? 5}
+            data-testid={`http-${id}-timeout`}
+            onChange={(e) =>
+              data.onChange({ timeoutSeg: e.target.value === "" ? undefined : Number(e.target.value) })
+            }
+          />
+        </Campo>
+      </div>
+    </NodoMacroestado>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Calcular — asigna a variables el resultado de expresiones CEL sobre las
+// variables del workflow (aritmética, texto, fechas). Las asignaciones se
+// evalúan en orden: cada una ve el resultado de las anteriores. Salidas:
+// `next` y `error` (expresión que falla al evaluarse).
+
+export type CalcularAsignacion = { id: string; variable: string; expresion: string };
+export type CalcularData = Comun & { asignaciones?: CalcularAsignacion[] };
+
+let nextAsignacion = 1;
+
+export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
+  const t = useT();
+  const asignaciones = data.asignaciones ?? [];
+  const setAsignaciones = (nuevas: CalcularAsignacion[]) => data.onChange({ asignaciones: nuevas });
+  const editar = (aid: string, patch: Partial<CalcularAsignacion>) =>
+    setAsignaciones(asignaciones.map((a) => (a.id === aid ? { ...a, ...patch } : a)));
+
+  return (
+    <NodoMacroestado
+      icono={<Calculator className="size-4 text-secondary" />}
+      tituloPorDefecto={t("cuentas.flujo.calcular")}
+      descripcion={t("cuentas.flujo.calcular.descripcion")}
+      data={data}
+      resumen={asignaciones
+        .filter((a) => a.variable)
+        .map((a) => `${a.variable} = ${a.expresion}`)
+        .join(" · ")}
+      salidas={
+        <>
+          <Salida id="next" etiqueta={t("cuentas.flujo.salida.next")} />
+          <Salida id="error" etiqueta={t("cuentas.flujo.salida.error")} />
+        </>
+      }
+    >
+      {asignaciones.map((a, i) => (
+        <div key={a.id} className="flex flex-col gap-1 rounded-lg border border-border p-2">
+          <div className="flex items-center gap-1.5">
+            <Input
+              aria-label={`${t("cuentas.flujo.calcular.variable")} ${i + 1}`}
+              className="h-7 font-mono text-xs"
+              placeholder="total"
+              value={a.variable}
+              data-testid={`calcular-${id}-${a.id}-variable`}
+              onChange={(e) => editar(a.id, { variable: e.target.value })}
+            />
+            <ActionTooltip label={t("cuentas.flujo.calcular.quitar")}>
+              <button
+                type="button"
+                aria-label={t("cuentas.flujo.calcular.quitar")}
+                onClick={() => setAsignaciones(asignaciones.filter((x) => x.id !== a.id))}
+                className="flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+              >
+                <X className="size-3.5" />
+              </button>
+            </ActionTooltip>
+          </div>
+          <Textarea
+            aria-label={`${t("cuentas.flujo.condicion.expresion")} ${i + 1}`}
+            className="min-h-10 font-mono text-xs"
+            placeholder="int(saldo) - int(pago)"
+            value={a.expresion}
+            data-testid={`calcular-${id}-${a.id}-expresion`}
+            onChange={(e) => editar(a.id, { expresion: e.target.value })}
+          />
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="justify-start"
+        data-testid={`calcular-${id}-agregar`}
+        onClick={() =>
+          setAsignaciones([...asignaciones, { id: String(nextAsignacion++), variable: "", expresion: "" }])
+        }
+      >
+        <Plus />
+        {t("cuentas.flujo.calcular.agregar")}
+      </Button>
     </NodoMacroestado>
   );
 }

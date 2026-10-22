@@ -39,6 +39,8 @@ import {
   Keyboard,
   Split,
   ListTree,
+  Globe,
+  Calculator,
   X,
   LayoutGrid,
   ChevronsUpDown,
@@ -62,13 +64,15 @@ import {
   CollectNode,
   IfNode,
   CaseNode,
+  HttpNode,
+  CalcularNode,
   DerivacionNode,
 } from "@/components/workflow/macroestados";
 
 // Editor de workflow de la cuenta (ver ADR-BD-002 §accounts.workflow): el
 // "Inicio de interacción" (único, fijo), la "Derivación a campaña" y el primer
-// set de macroestados de Fase 1 — PLAY, COLLECT, IF y CASE (ver
-// macroestados.tsx). Cada salida con nombre de un nodo va a un solo destino;
+// set de macroestados de Fase 1 — PLAY, COLLECT, IF y CASE — más las
+// herramientas HTTP y Calcular (ver macroestados.tsx). Cada salida con nombre de un nodo va a un solo destino;
 // para abrir caminos se usan IF y CASE.
 // Estado local únicamente — no hay persistencia real (ver PRODUCT.md).
 
@@ -444,6 +448,8 @@ const nodeTypes = {
   collect: CollectNode,
   if: IfNode,
   case: CaseNode,
+  http: HttpNode,
+  calcular: CalcularNode,
 };
 
 // Macroestados que se agregan desde la paleta, en el orden en que aparecen.
@@ -452,6 +458,8 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
   { type: "collect", icono: Keyboard },
   { type: "if", icono: Split },
   { type: "case", icono: ListTree },
+  { type: "http", icono: Globe },
+  { type: "calcular", icono: Calculator },
   { type: "derivacion", icono: GitBranch },
 ];
 
