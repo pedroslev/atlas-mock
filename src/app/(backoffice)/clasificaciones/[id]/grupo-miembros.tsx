@@ -53,7 +53,10 @@ export function GrupoMiembros({ initialIds }: { initialIds: string[] }) {
   const [open, setOpen] = useState(false);
 
   const miembros = clasificaciones.filter((c) => ids.includes(c.id));
-  const disponibles = clasificaciones.filter((c) => !ids.includes(c.id));
+  // Las de sistema no van en grupos: aplican solas en todas las campañas.
+  const disponibles = clasificaciones.filter(
+    (c) => !ids.includes(c.id) && !c.sistema
+  );
   const raices = miembros.filter((c) => !c.parentId);
   const hijosDe = (padreId: string) =>
     miembros.filter((c) => c.parentId === padreId);
@@ -96,7 +99,8 @@ export function GrupoMiembros({ initialIds }: { initialIds: string[] }) {
         <div>
           <CardTitle>{t("clasificaciones.miembros.titulo")}</CardTitle>
           <CardDescription>
-            {t("clasificaciones.miembros.descripcion")}
+            {t("clasificaciones.miembros.descripcion")}{" "}
+            {t("clasificaciones.miembros.sistemaNota")}
           </CardDescription>
         </div>
         <Popover open={open} onOpenChange={setOpen}>

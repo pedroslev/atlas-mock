@@ -52,6 +52,7 @@ import {
   type CarrierRate,
 } from "@/lib/mock-telefonia";
 import { useT } from "@/lib/i18n";
+import { CausasTab } from "./causas-tab";
 
 // Fila editable de destino SIP en el modal del carrier (la prioridad queda
 // como texto mientras se edita y se convierte a número al guardar).
@@ -617,6 +618,9 @@ export default function TelefoniaPage() {
           <TabsTrigger value="tarifas">
             {t("admin.telefonia.tab.tarifas")}
           </TabsTrigger>
+          <TabsTrigger value="causas">
+            {t("admin.telefonia.tab.causas")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="carriers" className="flex flex-col gap-4">
@@ -766,6 +770,12 @@ export default function TelefoniaPage() {
               ),
             }}
           />
+        </TabsContent>
+
+        {/* Causas Q.850 → tipificaciones de sistema (propuesta 2026-10-16,
+            relevamiento/criterios-recontacto). */}
+        <TabsContent value="causas">
+          <CausasTab />
         </TabsContent>
       </Tabs>
 

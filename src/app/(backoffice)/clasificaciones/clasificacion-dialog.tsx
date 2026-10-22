@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { EntityCombobox } from "../campanias/entity-combobox";
 import { useT } from "@/lib/i18n";
-import type { Clasificacion } from "@/lib/mock-data";
+import type { Clasificacion, Efecto } from "@/lib/mock-data";
 
 const SIN_PADRE = "__sin_padre__";
 
@@ -46,6 +46,36 @@ const TIPO_CLAVE: Record<string, string> = {
 export function tipoClave(tipo: string) {
   return TIPO_CLAVE[tipo] ?? "neutro";
 }
+
+// Efecto sobre el contacto: mismo criterio que `tipo` (dato crudo en
+// castellano, se traduce al renderizar con `clasificaciones.efecto.*`).
+export const EFECTOS: Efecto[] = [
+  "Seguir intentando",
+  "Dejar este medio",
+  "Dejar de contactar",
+  "Sin efecto",
+];
+
+const EFECTO_CLAVE: Record<Efecto, string> = {
+  "Seguir intentando": "seguir",
+  "Dejar este medio": "dejarMedio",
+  "Dejar de contactar": "dejarContactar",
+  "Sin efecto": "sinEfecto",
+};
+
+export function efectoClave(efecto: Efecto) {
+  return EFECTO_CLAVE[efecto];
+}
+
+export const efectoVariant: Record<
+  Efecto,
+  "info" | "warning" | "secondary" | "outline"
+> = {
+  "Seguir intentando": "info",
+  "Dejar este medio": "warning",
+  "Dejar de contactar": "secondary",
+  "Sin efecto": "outline",
+};
 
 // Alta/edición de una clasificación como modal (feedback 2026-07-16: formularios
 // chicos no justifican una pantalla entera). La clasificación es una entidad
@@ -71,7 +101,7 @@ export function ClasificacionDialog({
   const [idExt, setIdExt] = useState("");
   const [tipo, setTipo] = useState<Clasificacion["tipo"]>("Neutro");
   const [parentId, setParentId] = useState<string | undefined>(undefined);
-  const [callingTime, setCallingTime] = useState("");
+  const [efecto, setEfecto] = useState<Efecto>("Sin efecto");
   const [descripcion, setDescripcion] = useState("");
 
   // Reset del form al abrir (patrón "adjust state during render" de React,
@@ -85,7 +115,7 @@ export function ClasificacionDialog({
       setIdExt(initial?.idExt ?? "");
       setTipo(initial?.tipo ?? "Neutro");
       setParentId(initial?.parentId);
-      setCallingTime(initial?.callingTime ? String(initial.callingTime) : "");
+      setEfecto(initial?.efecto ?? "Sin efecto");
       setDescripcion(initial?.descripcion ?? "");
     }
   }
@@ -102,7 +132,7 @@ export function ClasificacionDialog({
       idExt: idExt.trim() || undefined,
       tipo,
       parentId,
-      callingTime: callingTime ? Number(callingTime) : undefined,
+      efecto,
       descripcion: descripcion.trim() || undefined,
     });
     onOpenChange(false);
@@ -162,19 +192,30 @@ export function ClasificacionDialog({
               </SelectContent>
             </Select>
           </div>
+          {/* Reemplaza al tiempo de rellamada (propuesta 2026-10-16): la
+              clasificación dice qué significa para el contacto; cuándo y por
+              qué canal seguir lo decide la estrategia de salida. */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="clas-calling">
-              {t("clasificaciones.campo.callingTime")}
+            <Label htmlFor="clas-efecto">
+              {t("clasificaciones.campo.efecto")}
             </Label>
-            <Input
-              id="clas-calling"
-              type="number"
-              min={0}
-              value={callingTime}
-              onChange={(e) => setCallingTime(e.target.value)}
-              placeholder={t("common.comunes.opcional")}
-            />
+            <Select value={efecto} onValueChange={(v) => setEfecto(v as Efecto)}>
+              <SelectTrigger id="clas-efecto" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EFECTOS.map((opcion) => (
+                  <SelectItem key={opcion} value={opcion}>
+                    {t(`clasificaciones.efecto.${efectoClave(opcion)}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          <p className="text-xs text-muted-foreground sm:col-span-2">
+            {t(`clasificaciones.efectoDesc.${efectoClave(efecto)}`)}{" "}
+            {t("clasificaciones.efecto.ayuda")}
+          </p>
           <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor="clas-padre">
               {t("clasificaciones.campo.padre")}

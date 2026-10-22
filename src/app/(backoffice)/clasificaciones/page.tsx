@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Lock, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import {
@@ -35,7 +35,14 @@ import {
   type Clasificacion,
   type ClasificacionGrupo,
 } from "@/lib/mock-data";
-import { ClasificacionDialog, TIPOS, tipoClave } from "./clasificacion-dialog";
+import {
+  ClasificacionDialog,
+  EFECTOS,
+  TIPOS,
+  efectoClave,
+  efectoVariant,
+  tipoClave,
+} from "./clasificacion-dialog";
 
 function nombreSugerido(base: string, existentes: string[]) {
   if (!existentes.includes(base)) return base;
@@ -65,6 +72,10 @@ const tipoBadgeVariant: Record<
 export default function ClasificacionesPage() {
   const t = useT();
   const [items, setItems] = useState<Clasificacion[]>(clasificacionesIniciales);
+  // Las de sistema van en su propia solapa: no se agregan a grupos (aplican
+  // solas en todas las campañas), así que no tienen lugar en el catálogo.
+  const pool = items.filter((c) => !c.sistema);
+  const deSistema = items.filter((c) => c.sistema);
   const [grupos, setGrupos] = useState<ClasificacionGrupo[]>(clasificacionGrupos);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Clasificacion | null>(null);
@@ -100,6 +111,24 @@ export default function ClasificacionesPage() {
     [t]
   );
 
+  const columnaEfecto = useMemo<MRT_ColumnDef<Clasificacion>>(
+    () => ({
+      accessorKey: "efecto",
+      header: t("clasificaciones.col.efecto"),
+      filterVariant: "select",
+      filterSelectOptions: EFECTOS.map((efecto) => ({
+        value: efecto,
+        label: t(`clasificaciones.efecto.${efectoClave(efecto)}`),
+      })),
+      Cell: ({ row }) => (
+        <Badge variant={efectoVariant[row.original.efecto]}>
+          {t(`clasificaciones.efecto.${efectoClave(row.original.efecto)}`)}
+        </Badge>
+      ),
+    }),
+    [t]
+  );
+
   const columnasPool = useMemo<MRT_ColumnDef<Clasificacion>[]>(
     () => [
       {
@@ -130,8 +159,36 @@ export default function ClasificacionesPage() {
           </Badge>
         ),
       },
+      columnaEfecto,
     ],
-    [t]
+    [t, columnaEfecto]
+  );
+
+  const columnasSistema = useMemo<MRT_ColumnDef<Clasificacion>[]>(
+    () => [
+      {
+        accessorKey: "nombre",
+        header: t("clasificaciones.col.clasificacion"),
+        Cell: ({ row }) => (
+          <span className="flex items-center gap-1.5 font-medium">
+            <Lock className="size-3.5 text-muted-foreground" />
+            {row.original.nombre}
+          </span>
+        ),
+      },
+      {
+        id: "cuando",
+        header: t("clasificaciones.sistema.cuando"),
+        accessorFn: (c) => c.sistema?.explicacion ?? "",
+        Cell: ({ cell }) => (
+          <span className="text-muted-foreground">
+            {cell.getValue<string>()}
+          </span>
+        ),
+      },
+      columnaEfecto,
+    ],
+    [t, columnaEfecto]
   );
 
   function guardarClasificacion(clasificacion: Clasificacion) {
@@ -197,6 +254,9 @@ export default function ClasificacionesPage() {
             <TabsTrigger value="pool">
               {t("clasificaciones.tab.catalogo")}
             </TabsTrigger>
+            <TabsTrigger value="sistema">
+              {t("clasificaciones.tab.sistema")}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="grupos" className="contents">
             <Button onClick={abrirNuevoGrupo}>
@@ -253,7 +313,7 @@ export default function ClasificacionesPage() {
         <TabsContent value="pool">
           <MitrolTable
             columns={columnasPool}
-            data={items}
+            data={pool}
             options={{
               enableRowActions: true,
               renderRowActions: ({ row }) => (
@@ -281,13 +341,21 @@ export default function ClasificacionesPage() {
             }}
           />
         </TabsContent>
+
+        <TabsContent value="sistema" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t("clasificaciones.sistema.intro")}
+          </p>
+          {/* Sólo consulta: no tienen nada editable. */}
+          <MitrolTable columns={columnasSistema} data={deSistema} />
+        </TabsContent>
       </Tabs>
 
       <ClasificacionDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initial={editing}
-        pool={items}
+        pool={pool}
         onSave={guardarClasificacion}
       />
 
