@@ -7,6 +7,7 @@ import {
   MessageCircle,
   MessageSquare,
   MessageSquareText,
+  Headset,
   Video,
   type LucideIcon,
 } from "lucide-react";
@@ -20,13 +21,14 @@ const iconoPorTipo: Record<Cuenta["tipo"], LucideIcon> = {
   Llamada: Phone,
   Chat: MessageSquare,
   Videollamada: Video,
+  Webcall: Headset,
   WhatsApp: MessageCircle,
   SMS: MessageSquareText,
   Email: Mail,
 };
 
 // REGLA (la implementación real debe respetarla): solo se ofrecen cuentas
-// SIP (`sipcall`) con uso "saliente" u "omnicanal/ambas". Chat y videollamada
+// SIP (`sipcall`) con uso "saliente" u "omnicanal/ambas". Chat, videollamada y webcall
 // son siempre inbound (el cliente inicia la interacción), así que una campaña
 // nunca origina por ellas; una SIP "entrante" tampoco puede originar. Filtrar
 // en el backend también, no solo en este selector.

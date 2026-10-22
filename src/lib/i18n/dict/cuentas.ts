@@ -7,7 +7,7 @@ export const cuentas: NamespaceDict = {
   es: {
     "titulo": "Cuentas",
     "descripcion":
-      "Administrá las cuentas de telefonía, chat y videollamada por las que ingresan y se realizan las interacciones.",
+      "Administrá las cuentas de telefonía, chat, videollamada y webcall por las que ingresan y se realizan las interacciones.",
     "nueva": "Nueva cuenta",
 
     "col.linea": "Línea",
@@ -82,6 +82,7 @@ export const cuentas: NamespaceDict = {
     "capacidad.limitar": "Limitar los chats simultáneos por asesor",
     "capacidad.sinLugar": "No pueden ser más chats simultáneos que el cupo.",
     "tipo.videollamada": "Videollamada",
+    "tipo.webcall": "Webcall (llamada web)",
     "col.uso": "Uso",
 
     "flujo.inicio": "Inicio de interacción",
@@ -237,6 +238,7 @@ export const cuentas: NamespaceDict = {
     "capacidad.limitar": "Limit simultaneous chats per agent",
     "capacidad.sinLugar": "Simultaneous chats cannot exceed the quota.",
     "tipo.videollamada": "Video call",
+    "tipo.webcall": "Webcall (web call)",
     "col.uso": "Usage",
 
     "flujo.inicio": "Interaction start",
@@ -392,6 +394,7 @@ export const cuentas: NamespaceDict = {
     "capacidad.limitar": "Limitar os chats simultâneos por atendente",
     "capacidad.sinLugar": "Não podem ser mais chats simultâneos do que a cota.",
     "tipo.videollamada": "Videochamada",
+    "tipo.webcall": "Webcall (chamada web)",
     "col.uso": "Uso",
 
     "flujo.inicio": "Início da interação",
@@ -547,6 +550,7 @@ export const cuentas: NamespaceDict = {
     "capacidad.limitar": "Limitar els xats simultanis per assessor",
     "capacidad.sinLugar": "No poden ser més xats simultanis que la quota.",
     "tipo.videollamada": "Videotrucada",
+    "tipo.webcall": "Webcall (trucada web)",
     "col.uso": "Ús",
 
     "flujo.inicio": "Inici de la interacció",

@@ -207,13 +207,13 @@ export type Cuenta = {
   id: string;
   nombre: string;
   descripcion?: string;
-  tipo: "Llamada" | "Chat" | "Videollamada" | "WhatsApp" | "SMS" | "Email";
+  tipo: "Llamada" | "Chat" | "Videollamada" | "Webcall" | "WhatsApp" | "SMS" | "Email";
   identificador: string;
   uso?: UsoDeLinea;
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
   workflow?: Workflow;
-  // Capacidad del asesor: cada uno tiene 100. Voz y videollamada ocupan los 100
+  // Capacidad del asesor: cada uno tiene 100. Voz, webcall y videollamada ocupan los 100
   // (una a la vez) y no lo piden. En chat el tenant define el cupo y el máximo
   // de simultáneas, y el resto se deriva:
   //   provisioning     = máximo de interacciones simultáneas de la cuenta por asesor.
@@ -553,6 +553,16 @@ export const cuentas: Cuenta[] = [
     descripcion: "Videollamada con asesores desde el portal del cliente",
     tipo: "Videollamada",
     identificador: "Videollamada Asesoría",
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
+    id: "acc-webcall-1",
+    nombre: "Webcall Soporte",
+    descripcion: "Llamada de voz por web (solo audio) desde el portal del cliente, sin carrier",
+    tipo: "Webcall",
+    identificador: "Webcall Soporte",
     interactionValue: 100,
     provisioning: 1,
     provisioningLock: 100,

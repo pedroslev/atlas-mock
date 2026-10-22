@@ -6,7 +6,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 export const clavesApi: NamespaceDict = {
   es: {
     "descripcion":
-      "Claves con las que aplicaciones propias se conectan a Atlas: páginas y widgets de chat o videollamada, CRMs que usan Customer360, integraciones con el PAD. Cada clave hace solo lo que sus capacidades permiten.",
+      "Claves con las que aplicaciones propias se conectan a Atlas: páginas y widgets de chat, videollamada o webcall, CRMs que usan Customer360, integraciones con el PAD. Cada clave hace solo lo que sus capacidades permiten.",
     "crear": "Crear clave",
     "sinPermiso":
       "Podés ver las claves del tenant, pero crearlas, editarlas o revocarlas requiere los permisos de tu grupo en Grupos y roles.",
@@ -63,7 +63,7 @@ export const clavesApi: NamespaceDict = {
     "creada.copiar": "Copiar",
     "creada.copiada": "Copiada",
     "creada.publicaAyuda":
-      "Va en el código de tu página o app: widget de chat, videollamada, botones del agente. No es un secreto y la podés volver a copiar desde la lista cuando quieras.",
+      "Va en el código de tu página o app: widget de chat, videollamada, webcall, botones del agente. No es un secreto y la podés volver a copiar desde la lista cuando quieras.",
     "creada.secretaAyuda":
       "Va solo en tu servidor (Customer360 y todo lo que maneja datos de clientes). Nunca la pongas en el navegador. Es la única vez que la vas a ver completa: si la perdés, revocá la clave y creá otra.",
     "creada.listo": "Listo, ya la guardé",
@@ -74,6 +74,9 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videollamada",
     "capacidad.videollamada.descripcion":
       "Iniciar videollamadas entrantes desde una página propia.",
+    "capacidad.webcall.titulo": "Webcall",
+    "capacidad.webcall.descripcion":
+      "Iniciar llamadas de voz entrantes por web (solo audio, sin telefonía) desde una página propia.",
     "capacidad.customer360.lectura.titulo": "Clientes · lectura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar los datos y el historial de contacto de los clientes.",
@@ -154,6 +157,9 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Video call",
     "capacidad.videollamada.descripcion":
       "Start inbound video calls from your own page.",
+    "capacidad.webcall.titulo": "Web call",
+    "capacidad.webcall.descripcion":
+      "Start inbound voice calls over the web (audio only, no telephony) from your own page.",
     "capacidad.customer360.lectura.titulo": "Customers · read",
     "capacidad.customer360.lectura.descripcion":
       "Look up customer data and contact history.",
@@ -234,6 +240,9 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videochamada",
     "capacidad.videollamada.descripcion":
       "Iniciar videochamadas de entrada a partir de uma página própria.",
+    "capacidad.webcall.titulo": "Webcall",
+    "capacidad.webcall.descripcion":
+      "Iniciar chamadas de voz de entrada pela web (só áudio, sem telefonia) a partir de uma página própria.",
     "capacidad.customer360.lectura.titulo": "Clientes · leitura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar os dados e o histórico de contato dos clientes.",
@@ -314,6 +323,9 @@ export const clavesApi: NamespaceDict = {
     "capacidad.videollamada.titulo": "Videotrucada",
     "capacidad.videollamada.descripcion":
       "Iniciar videotrucades entrants des d'una pàgina pròpia.",
+    "capacidad.webcall.titulo": "Webcall",
+    "capacidad.webcall.descripcion":
+      "Iniciar trucades de veu entrants per web (només àudio, sense telefonia) des d'una pàgina pròpia.",
     "capacidad.customer360.lectura.titulo": "Clients · lectura",
     "capacidad.customer360.lectura.descripcion":
       "Consultar les dades i l'historial de contacte dels clients.",
