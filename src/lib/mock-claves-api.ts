@@ -84,10 +84,19 @@ export type ClaveApi = {
 export const PREFIJO_CLAVE_PUBLICA = "atl_pub_";
 export const PREFIJO_CLAVE_SECRETA = "atl_sec_";
 
-// URL del Gateway de la región del tenant: la URL de la región seguida de
-// `/gateway`. Es el `baseUrl` que el integrador le pasa al SDK; se muestra al
-// lado de la clave para que no tenga que buscarla en otro lado. No se edita.
-export const URL_GATEWAY = "https://atlas.mitrol.dev/gateway";
+// URL del Gateway de la región del tenant: la URL desde la que corre Olimpo
+// (la región) seguida de `/gateway`. Es el `baseUrl` que el integrador le pasa
+// al SDK; se muestra al lado de la clave para que no tenga que buscarla en otro
+// lado. No se edita. Sale de `window.location` porque Olimpo siempre corre en la
+// región del tenant; en el servidor (render inicial) todavía no hay ventana y
+// se devuelve vacío hasta que el cliente la lea.
+export function useUrlGateway(): string {
+  return useSyncExternalStore(
+    () => () => {},
+    () => `${window.location.origin}/gateway`,
+    () => ""
+  );
+}
 
 // Vencimiento: viene propuesto a un año y es también el máximo que se acepta.
 export const DIAS_VENCIMIENTO_MAXIMO = 365;

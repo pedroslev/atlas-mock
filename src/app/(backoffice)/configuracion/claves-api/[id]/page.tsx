@@ -29,8 +29,8 @@ import {
   nombreUsuario,
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
-  URL_GATEWAY,
   useClavesApi,
+  useUrlGateway,
   type ClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
@@ -78,6 +78,7 @@ function Detalle({ clave }: { clave: ClaveApi }) {
   const t = useT();
   const fecha = useFormatoFecha();
   const fechaCorta = useFormatoFechaCorta();
+  const urlGateway = useUrlGateway();
   const { actualizarDominios, revocar } = useClavesApi();
   const [dominios, setDominios] = useState(clave.dominiosPermitidos);
   const [confirmando, setConfirmando] = useState(false);
@@ -137,10 +138,10 @@ function Detalle({ clave }: { clave: ClaveApi }) {
               <dt className="text-muted-foreground">{t("clavesApi.gateway.titulo")}</dt>
               <dd className="flex min-w-0 items-center gap-2">
                 <code className="truncate font-mono text-xs" data-testid="detalle-gateway-url">
-                  {URL_GATEWAY}
+                  {urlGateway}
                 </code>
                 <BotonCopiar
-                  valor={URL_GATEWAY}
+                  valor={urlGateway}
                   etiqueta={t("clavesApi.gateway.copiar")}
                   testId="detalle-copiar-gateway-url"
                   soloIcono

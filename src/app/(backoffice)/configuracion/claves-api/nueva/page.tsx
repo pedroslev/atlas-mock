@@ -26,13 +26,13 @@ import {
   PREFIJO_CLAVE_PUBLICA,
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
-  URL_GATEWAY,
   useClavesApi,
+  useUrlGateway,
   usuarioActual,
   type CapacidadClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
-import { BloqueClave, DominiosPermitidos } from "../componentes";
+import { BloqueClave, BotonCopiar, DominiosPermitidos } from "../componentes";
 
 // El par recién creado: vive solo en esta pantalla. Al salir se descarta y la
 // secreta no se vuelve a ver nunca más.
@@ -45,6 +45,7 @@ type ParCreado = { publica: string; secreta: string };
 export default function NuevaClaveApiPage() {
   const t = useT();
   const { agregar } = useClavesApi();
+  const urlGateway = useUrlGateway();
   const [nombre, setNombre] = useState("");
   const [capacidades, setCapacidades] = useState<CapacidadClaveApi[]>([]);
   const [dominios, setDominios] = useState<string[]>([]);
@@ -111,6 +112,26 @@ export default function NuevaClaveApiPage() {
             </Button>
           }
         />
+        {/* Arriba de las claves, la URL del Gateway: con las claves y esta URL el
+            integrador tiene todo lo que el SDK necesita (`baseUrl` + `apiKey`). */}
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle>{t("clavesApi.gateway.titulo")}</CardTitle>
+            <CardDescription>{t("clavesApi.gateway.ayuda")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 ring-1 ring-foreground/10">
+              <code className="flex-1 font-mono text-xs break-all" data-testid="clave-api-gateway-url">
+                {urlGateway}
+              </code>
+              <BotonCopiar
+                valor={urlGateway}
+                etiqueta={t("clavesApi.gateway.copiar")}
+                testId="copiar-clave-api-gateway-url"
+              />
+            </div>
+          </CardContent>
+        </Card>
         <Card className="max-w-3xl">
           <CardContent className="flex flex-col gap-6">
             <BloqueClave
@@ -125,14 +146,6 @@ export default function NuevaClaveApiPage() {
               ayuda={t("clavesApi.creada.secretaAyuda")}
               advertencia
               testId="clave-api-secreta"
-            />
-            {/* La URL del Gateway es el otro dato que el integrador necesita
-                (el `baseUrl` del SDK): se entrega junto con las claves. */}
-            <BloqueClave
-              titulo={t("clavesApi.gateway.titulo")}
-              valor={URL_GATEWAY}
-              ayuda={t("clavesApi.gateway.ayuda")}
-              testId="clave-api-gateway-url"
             />
           </CardContent>
         </Card>
