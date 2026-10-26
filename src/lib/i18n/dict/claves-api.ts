@@ -6,7 +6,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 export const clavesApi: NamespaceDict = {
   es: {
     "descripcion":
-      "Claves con las que aplicaciones propias se conectan a Atlas: páginas y widgets de chat, videollamada o webcall, CRMs que usan Customer360, integraciones con el PAD. Cada clave hace solo lo que sus capacidades permiten.",
+      "Claves con las que aplicaciones propias se conectan a Atlas: páginas y widgets de chat, videollamada o webcall, integraciones a CRM, integraciones con el PAD. Cada clave hace solo lo que sus capacidades permiten.",
     "crear": "Crear clave",
     "sinPermiso":
       "Podés ver las claves del tenant, pero crearlas, editarlas o revocarlas requiere los permisos de tu grupo en Grupos y roles.",
@@ -78,7 +78,7 @@ export const clavesApi: NamespaceDict = {
     "creada.publicaAyuda":
       "Va en el código de tu página o app: widget de chat, videollamada, webcall, botones del agente. No es un secreto y la podés volver a copiar desde la lista cuando quieras.",
     "creada.secretaAyuda":
-      "Va solo en tu servidor (Customer360 y todo lo que maneja datos de clientes). Nunca la pongas en el navegador. Es la única vez que la vas a ver completa: si la perdés, revocá la clave y creá otra.",
+      "Va solo en tu servidor (integraciones a CRM y todo lo que maneja datos de clientes). Nunca la pongas en el navegador. Es la única vez que la vas a ver completa: si la perdés, revocá la clave y creá otra.",
     "creada.listo": "Listo, ya la guardé",
 
     "capacidad.chat.titulo": "Chat",
@@ -102,7 +102,7 @@ export const clavesApi: NamespaceDict = {
   },
   en: {
     "descripcion":
-      "Keys your own applications use to connect to Atlas: chat or video call pages and widgets, CRMs using Customer360, PAD integrations. Each key can only do what its capabilities allow.",
+      "Keys your own applications use to connect to Atlas: chat or video call pages and widgets, CRM integrations, PAD integrations. Each key can only do what its capabilities allow.",
     "crear": "Create key",
     "sinPermiso":
       "You can see the tenant's keys, but creating, editing or revoking them requires your group's permissions in Groups and roles.",
@@ -174,7 +174,7 @@ export const clavesApi: NamespaceDict = {
     "creada.publicaAyuda":
       "Goes in your page or app code: chat widget, video call, agent buttons. It is not a secret and you can copy it again from the list at any time.",
     "creada.secretaAyuda":
-      "Goes only on your server (Customer360 and anything handling customer data). Never put it in the browser. This is the only time you will see it in full: if you lose it, revoke the key and create another one.",
+      "Goes only on your server (CRM integrations and anything handling customer data). Never put it in the browser. This is the only time you will see it in full: if you lose it, revoke the key and create another one.",
     "creada.listo": "Done, I saved it",
 
     "capacidad.chat.titulo": "Chat",
@@ -198,7 +198,7 @@ export const clavesApi: NamespaceDict = {
   },
   pt: {
     "descripcion":
-      "Chaves com que aplicações próprias se conectam ao Atlas: páginas e widgets de chat ou videochamada, CRMs que usam o Customer360, integrações com o PAD. Cada chave faz apenas o que suas capacidades permitem.",
+      "Chaves com que aplicações próprias se conectam ao Atlas: páginas e widgets de chat ou videochamada, integrações com CRM, integrações com o PAD. Cada chave faz apenas o que suas capacidades permitem.",
     "crear": "Criar chave",
     "sinPermiso":
       "Você pode ver as chaves do tenant, mas criá-las, editá-las ou revogá-las exige as permissões do seu grupo em Grupos e funções.",
@@ -270,7 +270,7 @@ export const clavesApi: NamespaceDict = {
     "creada.publicaAyuda":
       "Vai no código da sua página ou app: widget de chat, videochamada, botões do agente. Não é um segredo e você pode copiá-la de novo na lista quando quiser.",
     "creada.secretaAyuda":
-      "Vai só no seu servidor (Customer360 e tudo o que lida com dados de clientes). Nunca a coloque no navegador. É a única vez que você a verá completa: se perdê-la, revogue a chave e crie outra.",
+      "Vai só no seu servidor (integrações com CRM e tudo o que lida com dados de clientes). Nunca a coloque no navegador. É a única vez que você a verá completa: se perdê-la, revogue a chave e crie outra.",
     "creada.listo": "Pronto, já guardei",
 
     "capacidad.chat.titulo": "Chat",
@@ -294,7 +294,7 @@ export const clavesApi: NamespaceDict = {
   },
   ca: {
     "descripcion":
-      "Claus amb què les aplicacions pròpies es connecten a Atlas: pàgines i widgets de xat o videotrucada, CRMs que fan servir Customer360, integracions amb el PAD. Cada clau només fa el que permeten les seves capacitats.",
+      "Claus amb què les aplicacions pròpies es connecten a Atlas: pàgines i widgets de xat o videotrucada, integracions amb CRM, integracions amb el PAD. Cada clau només fa el que permeten les seves capacitats.",
     "crear": "Crear clau",
     "sinPermiso":
       "Pots veure les claus del tenant, però crear-les, editar-les o revocar-les requereix els permisos del teu grup a Grups i rols.",
@@ -366,7 +366,7 @@ export const clavesApi: NamespaceDict = {
     "creada.publicaAyuda":
       "Va al codi de la teva pàgina o app: widget de xat, videotrucada, botons de l'agent. No és un secret i la pots tornar a copiar des de la llista quan vulguis.",
     "creada.secretaAyuda":
-      "Va només al teu servidor (Customer360 i tot el que gestiona dades de clients). No la posis mai al navegador. És l'única vegada que la veuràs completa: si la perds, revoca la clau i crea'n una altra.",
+      "Va només al teu servidor (integracions amb CRM i tot el que gestiona dades de clients). No la posis mai al navegador. És l'única vegada que la veuràs completa: si la perds, revoca la clau i crea'n una altra.",
     "creada.listo": "Fet, ja l'he guardada",
 
     "capacidad.chat.titulo": "Xat",
