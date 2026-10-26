@@ -136,6 +136,8 @@ export const padMock: NamespaceDict = {
 
     // HistorialDetailDialog
     "historialDetalle.tipificacion": "Tipificación",
+    "historial.verConversacion": "Ver conversación",
+    "historial.chat": "Chat",
     "historialDetalle.bookmarks": "Bookmarks",
   },
   // Vacíos a propósito: translate() cae al fallback en español (ver

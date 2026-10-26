@@ -320,7 +320,11 @@ export function PadMockShell() {
               colapsada={contextoColapsada}
               onToggle={() => setContextoColapsada((v) => !v)}
               cliente={filaActiva?.canal === "chat" ? clienteChatMock : clienteMock}
-              historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
+              historial={
+                historialPorCliente[
+                  filaActiva?.canal === "chat" ? clienteChatMock.claveHistorial : clienteMock.numeroCliente
+                ] ?? []
+              }
             />
           )}
         </>

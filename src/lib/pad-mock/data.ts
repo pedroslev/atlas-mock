@@ -137,6 +137,8 @@ export const clienteMock = {
 export const clienteChatMock = {
   nombre: "Nicolás Aguirre",
   campania: "Soporte técnico Nivel 1",
+  /** Clave en historialPorCliente. */
+  claveHistorial: "nicolas-aguirre",
 };
 
 // "hora" en formato hora:minuto:segundo.
@@ -224,10 +226,34 @@ export type HistorialEntrada = {
   resumenIA: string;
   duracion: string;
   hilo: { autor: "cliente" | "agente"; texto: string }[];
+  /** Chat: lo conversado, para el modal "Ver conversación". */
+  conversacion?: MensajeChat[];
 };
 
 export const historialPorCliente: Record<string, HistorialEntrada[]> = {
   "3345789": [
+    {
+      id: "h-a0",
+      fecha: "10/08/2026",
+      canal: "chat",
+      estado: "Resuelto",
+      resumen: "Consulta por el débito automático de la factura.",
+      agente: "Marina Acosta",
+      tipificacion: "Consulta resuelta",
+      tipificacionDescripcion: "La consulta del cliente se respondió por completo en esta gestión.",
+      bookmarks: [],
+      resumenIA:
+        "La clienta preguntó cómo adherir la factura al débito automático. Se le explicaron los pasos desde home banking.",
+      duracion: "4:20",
+      hilo: [],
+      conversacion: [
+        { autor: "cliente", texto: "Hola, ¿puedo pagar la factura con débito automático?", hora: "10:14:02" },
+        { autor: "agente", texto: "¡Hola! Sí, claro. Lo adherís desde home banking, en Pagos > Débito automático.", hora: "10:14:40" },
+        { autor: "cliente", texto: "¿Y desde cuándo empieza a debitar?", hora: "10:15:12" },
+        { autor: "agente", texto: "Desde la próxima factura que se emita después de la adhesión.", hora: "10:15:51" },
+        { autor: "cliente", texto: "Perfecto, gracias.", hora: "10:16:05" },
+      ],
+    },
     {
       id: "h-a1",
       fecha: "22/07/2026",
@@ -281,6 +307,31 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       hilo: [
         { autor: "cliente", texto: "Quiero dar de baja el servicio adicional que tengo contratado." },
         { autor: "agente", texto: "Entiendo. Esa baja la tiene que procesar Facturación — te derivo el caso ahora." },
+      ],
+    },
+  ],
+  // Historial del cliente del chat (clienteChatMock).
+  "nicolas-aguirre": [
+    {
+      id: "h-n1",
+      fecha: "02/08/2026",
+      canal: "chat",
+      estado: "Derivado a nivel 2",
+      resumen: "Pedido llegado incompleto: falta un producto.",
+      agente: "Julián Ferreyra",
+      tipificacion: "Deriva a Logística",
+      tipificacionDescripcion: "El caso lo tiene que resolver el equipo de Logística.",
+      bookmarks: ["Reclamo activo"],
+      resumenIA:
+        "El cliente recibió su pedido sin uno de los productos. Se derivó a Logística para el reenvío.",
+      duracion: "6:48",
+      hilo: [],
+      conversacion: [
+        { autor: "cliente", texto: "Hola, me llegó el pedido #47102 pero falta la funda.", hora: "16:20:11" },
+        { autor: "agente", texto: "Hola Nicolás, lamento la molestia. ¿Me confirmás que el resto llegó bien?", hora: "16:20:49" },
+        { autor: "cliente", texto: "Sí, todo lo demás está.", hora: "16:21:30" },
+        { autor: "agente", texto: "Listo, ya le pasé el caso a Logística para que te reenvíen la funda. Te van a escribir por mail.", hora: "16:23:02" },
+        { autor: "cliente", texto: "Buenísimo, gracias.", hora: "16:23:15" },
       ],
     },
   ],
@@ -375,11 +426,30 @@ export type HistorialAgenteEntrada = {
   /** Llamada interna: numeroCliente lleva el nombre del otro agente y no hay
    *  tipificación. */
   interno?: boolean;
+  /** Chat: lo conversado, para el modal "Ver conversación". */
+  conversacion?: MensajeChat[];
 };
 
 export const historialAgenteMock: HistorialAgenteEntrada[] = [
   { id: "ha-0", fecha: "18/08/2026", hora: "14:05", canal: "llamada", numeroCliente: "Lucas Ferreyra", duracion: "1:12", tipificacion: "—", interno: true },
   { id: "ha-1", fecha: "18/08/2026", hora: "13:52", canal: "llamada", numeroCliente: "4498812", nombreCliente: "Elena Rivas", duracion: "3:34", tipificacion: "Reclamo resuelto" },
+  {
+    id: "ha-chat-1",
+    fecha: "18/08/2026",
+    hora: "13:44",
+    canal: "chat",
+    numeroCliente: "Chat web",
+    nombreCliente: "Sofía Medina",
+    duracion: "5:03",
+    tipificacion: "Consulta resuelta",
+    conversacion: [
+      { autor: "cliente", texto: "Hola, ¿hasta qué hora atienden en la sucursal de Palermo?", hora: "13:44:10" },
+      { autor: "agente", texto: "¡Hola Sofía! La sucursal de Palermo atiende de lunes a viernes de 10 a 19 hs.", hora: "13:44:52" },
+      { autor: "cliente", texto: "¿Y los sábados?", hora: "13:45:20" },
+      { autor: "agente", texto: "Los sábados de 10 a 13 hs.", hora: "13:45:41" },
+      { autor: "cliente", texto: "Genial, muchas gracias.", hora: "13:46:02" },
+    ],
+  },
   { id: "ha-2", fecha: "18/08/2026", hora: "13:35", canal: "whatsapp", numeroCliente: "8871023", nombreCliente: "Nicolás Aguirre", duracion: "6:12", tipificacion: "Consulta resuelta" },
   { id: "ha-3", fecha: "18/08/2026", hora: "13:18", canal: "whatsapp", numeroCliente: "5512980", duracion: "4:02", tipificacion: "Deriva a Logística" },
   { id: "ha-4", fecha: "18/08/2026", hora: "12:59", canal: "mail", numeroCliente: "6603317", nombreCliente: "Diego Peralta", duracion: "—", tipificacion: "Sin resolución" },
