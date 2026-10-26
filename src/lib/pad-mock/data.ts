@@ -49,22 +49,16 @@ export const CANAL_LABEL: Record<CanalMock, string> = {
 export type CuentaSaliente = { id: string; nombre: string; canal: CanalMock; identificador: string };
 export type CampaniaSaliente = { id: string; nombre: string; cuentas: CuentaSaliente[] };
 
-// Solo cuentas de los canales que tienen pantalla de interacción (llamada y
-// chat) — los demás no se ofrecen acá (evita un alta que no tendría dónde
-// mostrarse). camp-4 (Soporte técnico) entra con su cuenta de chat.
+// Solo cuentas de llamada: es el único canal en el que el agente inicia la
+// interacción (el chat siempre lo inicia el cliente — ver
+// chatsEntrantesMock). camp-4 (Soporte técnico) solo atiende chats, así que
+// no figura acá — sigue en campaniasAgenteMock ("Mi turno").
 export const campaniasSalientesMock: CampaniaSaliente[] = [
   {
     id: "camp-1",
     nombre: "Cobranzas Activa PCP",
     cuentas: [
       { id: "acc-1", nombre: "Línea Cobranzas AR", canal: "llamada", identificador: "+54 11 4000-1000" },
-    ],
-  },
-  {
-    id: "camp-4",
-    nombre: "Soporte técnico Nivel 1",
-    cuentas: [
-      { id: "acc-5", nombre: "Chat web Soporte", canal: "chat", identificador: "Chat web" },
     ],
   },
   {
@@ -91,6 +85,7 @@ export const campaniasAgenteMock: CampaniaAgente[] = [
   { id: "camp-4", nombre: "Soporte técnico Nivel 1", canales: ["chat", "whatsapp"], horario: "09:00 – 18:00" },
   { id: "camp-6", nombre: "Lanzamiento Tarjeta Plus", canales: ["llamada", "sms"], horario: "13:00 – 18:00" },
   { id: "camp-7", nombre: "Renovación de Seguros", canales: ["llamada"], horario: "09:00 – 17:00" },
+  { id: "camp-12", nombre: "Ventas Online", canales: ["chat"], horario: "09:00 – 21:00" },
   { id: "camp-8", nombre: "Encuesta de Satisfacción", canales: ["sms", "whatsapp"], horario: "10:00 – 16:00" },
   { id: "camp-9", nombre: "Recupero Mora Temprana", canales: ["llamada", "whatsapp"], horario: "09:00 – 18:00" },
   { id: "camp-10", nombre: "Onboarding Cuenta Sueldo", canales: ["mail", "whatsapp"], horario: "09:00 – 18:00" },
@@ -117,6 +112,8 @@ export type FilaCola = {
   retenidaDesde?: number;
   /** Momento en que arrancó — para la duración que queda en el historial. */
   iniciadaEn?: number;
+  /** Chat: id en chatsEntrantesMock. */
+  chatId?: string;
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
@@ -132,23 +129,49 @@ export const clienteMock = {
 };
 
 // --- Chat (pantalla de chat) -----------------------------------------------
-// Ficha del cliente en un chat: sin teléfono, con el nombre que dejó al
-// iniciar el chat.
-export const clienteChatMock = {
-  nombre: "Nicolás Aguirre",
-  campania: "Soporte técnico Nivel 1",
-  /** Clave en historialPorCliente. */
-  claveHistorial: "nicolas-aguirre",
-};
-
 // "hora" en formato hora:minuto:segundo.
 export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
 
-export const mensajesChat: MensajeChat[] = [
-  { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
-  { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
-  { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
-  { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
+// Chats que el sistema le deriva al agente (el chat siempre lo inicia el
+// cliente). Cada uno viene de una campaña, y su "Atención forzada"
+// (Olimpo → Config. operativa) decide cómo llega: activada, entra directo a
+// las interacciones en curso; desactivada, aparece un aviso para aceptarlo.
+// En la ficha del cliente no hay teléfono: se muestra el nombre que dejó al
+// iniciar el chat.
+export type ChatEntrante = {
+  id: string;
+  nombre: string;
+  campania: string;
+  atencionForzada: boolean;
+  /** Clave en historialPorCliente. */
+  claveHistorial: string;
+  mensajes: MensajeChat[];
+};
+
+export const chatsEntrantesMock: ChatEntrante[] = [
+  {
+    id: "ce-1",
+    nombre: "Nicolás Aguirre",
+    campania: "Soporte técnico Nivel 1",
+    atencionForzada: true,
+    claveHistorial: "nicolas-aguirre",
+    mensajes: [
+      { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
+      { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
+      { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
+      { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
+    ],
+  },
+  {
+    id: "ce-2",
+    nombre: "Sofía Medina",
+    campania: "Ventas Online",
+    atencionForzada: false,
+    claveHistorial: "sofia-medina",
+    mensajes: [
+      { autor: "cliente", texto: "Hola! Quería saber si la tarjeta Plus tiene costo de mantenimiento.", hora: "15:10:04" },
+    ],
+  },
 ];
 
 // Plantillas de mensajes del redactor. "descripcion" alimenta el ícono "i"
@@ -310,7 +333,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       ],
     },
   ],
-  // Historial del cliente del chat (clienteChatMock).
+  // Historial de los clientes de chatsEntrantesMock.
   "nicolas-aguirre": [
     {
       id: "h-n1",

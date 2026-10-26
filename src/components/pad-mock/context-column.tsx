@@ -113,26 +113,30 @@ function HistorialItem({
           {entrada.estado}
         </Badge>
       </div>
-      <div className="flex items-center gap-2 border-t border-border px-2 py-1.5">
-        <p className="flex-1 text-xs text-muted-foreground">{entrada.resumen}</p>
-        {onVerConversacion && (
+      {/* Con "Ver conversación" (chats) no entran dos botones al lado del
+          resumen en la columna angosta: los dos van en una fila abajo. */}
+      <div className="flex flex-col gap-1 border-t border-border px-2 py-1.5">
+        <p className="text-xs text-muted-foreground">{entrada.resumen}</p>
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+          {onVerConversacion && (
+            <button
+              type="button"
+              onClick={onVerConversacion}
+              className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <MessageCircle className="size-3" />
+              {t("padMock.historial.verConversacion")}
+            </button>
+          )}
           <button
             type="button"
-            onClick={onVerConversacion}
+            onClick={onVerMas}
             className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
-            <MessageCircle className="size-3" />
-            {t("padMock.historial.verConversacion")}
+            <Eye className="size-3" />
+            {t("padMock.contextColumn.verMasDetalle")}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={onVerMas}
-          className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          <Eye className="size-3" />
-          {t("padMock.contextColumn.verMasDetalle")}
-        </button>
+        </div>
       </div>
     </div>
   );

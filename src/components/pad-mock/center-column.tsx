@@ -7,7 +7,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { paginasExternas, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
+import { paginasExternas, type ChatEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -47,7 +47,7 @@ export function CenterColumn({
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
-  chat = false,
+  chatEntrante,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -59,7 +59,8 @@ export function CenterColumn({
   holdStartedAt: number | null;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
-  chat?: boolean;
+  /** Chat en curso; sin esto, es una llamada. */
+  chatEntrante?: ChatEntrante;
   interno?: boolean;
   sonando?: boolean;
   /** Nombre del otro agente en una llamada interna. */
@@ -69,6 +70,7 @@ export function CenterColumn({
 }) {
   const t = useT();
   const isMac = useIsMac();
+  const chat = chatEntrante !== undefined;
   const [tab, setTab] = useState("conversacion");
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
@@ -207,7 +209,7 @@ export function CenterColumn({
           <ConversationPanel
             tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             enEspera={enEspera}
-            chat={chat}
+            mensajesChat={chatEntrante?.mensajes}
             interno={interno}
             sonando={sonando}
             nombreInterno={nombreInterno}

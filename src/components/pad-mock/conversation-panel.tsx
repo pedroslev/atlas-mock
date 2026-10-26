@@ -16,18 +16,18 @@ import {
 } from "@/components/ui/command";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
-import { mensajesChat, plantillasMensaje } from "@/lib/pad-mock/data";
+import { plantillasMensaje, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 // Chat: hilo de mensajes arriba (cliente a la izquierda, asesor a la
 // derecha) con "Volver al vivo", y el redactor abajo. Traído de la branch
 // feature/pad-mock-omnicanal; la franja de Copiloto queda afuera.
-function HiloChat() {
+function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
   const t = useT();
   return (
     <div className="relative flex-1 overflow-y-auto p-4">
-      <MensajesChat mensajes={mensajesChat} />
+      <MensajesChat mensajes={mensajes} />
 
       <Button
         variant="outline"
@@ -149,7 +149,7 @@ function Redactor() {
 export function ConversationPanel({
   tiempo,
   enEspera,
-  chat = false,
+  mensajesChat,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -158,7 +158,8 @@ export function ConversationPanel({
 }: {
   tiempo: string;
   enEspera: boolean;
-  chat?: boolean;
+  /** Chat: lo conversado hasta ahora. Sin esto, es una llamada. */
+  mensajesChat?: MensajeChat[];
   interno?: boolean;
   sonando?: boolean;
   nombreInterno?: string;
@@ -166,10 +167,10 @@ export function ConversationPanel({
   onSimularRechazo?: () => void;
 }) {
   const t = useT();
-  if (chat) {
+  if (mensajesChat) {
     return (
       <div className="flex h-full min-h-0 flex-col">
-        <HiloChat />
+        <HiloChat mensajes={mensajesChat} />
         <Redactor />
       </div>
     );

@@ -7,12 +7,13 @@ import { ContextColumn } from "@/components/pad-mock/context-column";
 import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
+import { ChatEntranteAviso } from "@/components/pad-mock/chat-entrante";
 import { formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
   agenteLlamadaEntrante,
   campaniasSalientesMock,
-  clienteChatMock,
+  chatsEntrantesMock,
   clienteMock,
   estadoLlamadaInterna,
   historialAgenteMock,
@@ -20,6 +21,7 @@ import {
   tipificaciones,
   type AgenteDirectorio,
   type CampaniaSaliente,
+  type ChatEntrante,
   type CuentaSaliente,
   type FilaCola,
   type HistorialAgenteEntrada,
@@ -28,6 +30,10 @@ import {
 // Cuánto "suena" una llamada interna saliente antes de que el otro agente
 // atienda — en el mock siempre atiende.
 const RING_INTERNO_MS = 3000;
+
+// Cuánto tarda el sistema en derivar un chat después de que el agente pasa a
+// Disponible.
+const DERIVACION_CHAT_MS = 3000;
 
 // Brief §2 — layout de tres columnas: menú izquierdo (con la cola integrada,
 // ver LeftNav), centro (nunca colapsa) y contexto (colapsa a íconos, ancho
@@ -66,6 +72,17 @@ export function PadMockShell() {
     setEstadoAgenteId(id);
     setEstadoAgenteDesde(Date.now());
   }, []);
+
+  // Chat entrante de una campaña sin atención forzada, esperando que el
+  // agente lo acepte o lo rechace.
+  const [chatPorAceptar, setChatPorAceptar] = useState<ChatEntrante | null>(null);
+  // Cada vez que el agente pasa a Disponible el sistema le deriva un chat,
+  // alternando las campañas de chatsEntrantesMock: una con atención forzada
+  // y otra sin, para ver los dos casos.
+  const proximoChatRef = useRef(0);
+  // Al entrar al pad el agente ya está Disponible: eso no cuenta como "pasar
+  // a Disponible", así que no deriva nada hasta que cambie de estado.
+  const estadoInicialDesdeRef = useRef(estadoAgenteDesde);
 
   // Última campaña/cuenta contactada — a pedido, la pantalla de inicio (y el
   // modal del "+") precargan con el último valor usado, no siempre con el
@@ -136,6 +153,32 @@ export function PadMockShell() {
     },
     [seleccionarInteraccion]
   );
+
+  // El chat entra a la cola y pasa al frente (atención forzada, o el agente
+  // aceptó el aviso).
+  const ingresarChat = useCallback(
+    (chat: ChatEntrante) => {
+      const id = `q-chat-${nuevaFilaRef.current++}`;
+      setCola((cur) => [
+        ...cur,
+        { id, numeroCliente: chat.nombre, canal: "chat", esperaSeg: 0, chatId: chat.id },
+      ]);
+      seleccionarInteraccion(id);
+    },
+    [seleccionarInteraccion]
+  );
+
+  useEffect(() => {
+    if (estadoAgenteId !== "disponible" || estadoAgenteDesde === estadoInicialDesdeRef.current) return;
+    const timer = window.setTimeout(() => {
+      const chat = chatsEntrantesMock[proximoChatRef.current % chatsEntrantesMock.length];
+      proximoChatRef.current++;
+      if (chat.atencionForzada) ingresarChat(chat);
+      else setChatPorAceptar(chat);
+    }, DERIVACION_CHAT_MS);
+    return () => window.clearTimeout(timer);
+    // estadoAgenteDesde: cada nuevo paso a Disponible deriva otro chat.
+  }, [estadoAgenteId, estadoAgenteDesde, ingresarChat]);
 
   const atenderEntrante = useCallback(() => {
     if (!entrante) return;
@@ -255,6 +298,7 @@ export function PadMockShell() {
   // left-nav.tsx para marcar el botón "Inicio" como activo).
   const mostrarInicio = modo === "inicio" || !hayInteraccionActiva;
   const filaActiva = cola.find((f) => f.id === interaccionActivaId);
+  const chatActivo = chatsEntrantesMock.find((c) => c.id === filaActiva?.chatId);
   // Mientras hay una llamada interna conectada y al frente, el agente figura
   // "En llamada interna" (propuesta del PO, a confirmar con Pedro).
   const enLlamadaInterna = !!filaActiva?.interno && !filaActiva.sonando;
@@ -304,7 +348,7 @@ export function PadMockShell() {
             holdStartedAt={holdStartedAt}
             onToggleEspera={toggleEspera}
             onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
-            chat={filaActiva?.canal === "chat"}
+            chatEntrante={chatActivo}
             interno={filaActiva?.interno}
             sonando={filaActiva?.sonando}
             nombreInterno={filaActiva?.interno ? filaActiva.numeroCliente : undefined}
@@ -319,15 +363,26 @@ export function PadMockShell() {
               key={`contexto-${interaccionActivaId}`}
               colapsada={contextoColapsada}
               onToggle={() => setContextoColapsada((v) => !v)}
-              cliente={filaActiva?.canal === "chat" ? clienteChatMock : clienteMock}
+              cliente={
+                chatActivo ? { nombre: chatActivo.nombre, campania: chatActivo.campania } : clienteMock
+              }
               historial={
-                historialPorCliente[
-                  filaActiva?.canal === "chat" ? clienteChatMock.claveHistorial : clienteMock.numeroCliente
-                ] ?? []
+                historialPorCliente[chatActivo ? chatActivo.claveHistorial : clienteMock.numeroCliente] ?? []
               }
             />
           )}
         </>
+      )}
+
+      {chatPorAceptar && (
+        <ChatEntranteAviso
+          chat={chatPorAceptar}
+          onAceptar={() => {
+            ingresarChat(chatPorAceptar);
+            setChatPorAceptar(null);
+          }}
+          onRechazar={() => setChatPorAceptar(null)}
+        />
       )}
 
       {entrante && (

@@ -175,8 +175,8 @@ export const campanias: NamespaceDict = {
     "parametros.configOperativaDesc": "Cómo se asignan las interacciones al agente.",
     "parametros.forcedAnswer": "Atención forzada",
     "parametros.forcedAnswerDesc":
-      "Permite que la llamada sea atendida automáticamente sin intervención del agente.",
-    "parametros.forcedAnswerAlcance": "Inbound, Discador Predictivo",
+      "Permite que la llamada o el chat entrante se atienda automáticamente, sin que el agente tenga que aceptarlo.",
+    "parametros.forcedAnswerAlcance": "Inbound, Discador Predictivo, Chat",
 
     "parametros.urlInteraccionTitulo": "URLs externas",
     "parametros.urlInteraccionDesc":
