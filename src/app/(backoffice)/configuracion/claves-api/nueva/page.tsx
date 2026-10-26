@@ -27,7 +27,7 @@ import {
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
   useClavesApi,
-  useUrlGateway,
+  useUrlBase,
   usuarioActual,
   type CapacidadClaveApi,
 } from "@/lib/mock-claves-api";
@@ -45,7 +45,7 @@ type ParCreado = { publica: string; secreta: string };
 export default function NuevaClaveApiPage() {
   const t = useT();
   const { agregar } = useClavesApi();
-  const urlGateway = useUrlGateway();
+  const urlBase = useUrlBase();
   const [nombre, setNombre] = useState("");
   const [capacidades, setCapacidades] = useState<CapacidadClaveApi[]>([]);
   const [dominios, setDominios] = useState<string[]>([]);
@@ -112,22 +112,22 @@ export default function NuevaClaveApiPage() {
             </Button>
           }
         />
-        {/* Arriba de las claves, la URL del Gateway: con las claves y esta URL el
+        {/* Arriba de las claves, la URL base: con las claves y esta URL el
             integrador tiene todo lo que el SDK necesita (`baseUrl` + `apiKey`). */}
         <Card className="max-w-3xl">
           <CardHeader>
-            <CardTitle>{t("clavesApi.gateway.titulo")}</CardTitle>
-            <CardDescription>{t("clavesApi.gateway.ayuda")}</CardDescription>
+            <CardTitle>{t("clavesApi.urlBase.titulo")}</CardTitle>
+            <CardDescription>{t("clavesApi.urlBase.ayuda")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 ring-1 ring-foreground/10">
-              <code className="flex-1 font-mono text-xs break-all" data-testid="clave-api-gateway-url">
-                {urlGateway}
+              <code className="flex-1 font-mono text-xs break-all" data-testid="clave-api-url-base">
+                {urlBase}
               </code>
               <BotonCopiar
-                valor={urlGateway}
-                etiqueta={t("clavesApi.gateway.copiar")}
-                testId="copiar-clave-api-gateway-url"
+                valor={urlBase}
+                etiqueta={t("clavesApi.urlBase.copiar")}
+                testId="copiar-clave-api-url-base"
               />
             </div>
           </CardContent>

@@ -84,16 +84,16 @@ export type ClaveApi = {
 export const PREFIJO_CLAVE_PUBLICA = "atl_pub_";
 export const PREFIJO_CLAVE_SECRETA = "atl_sec_";
 
-// URL del Gateway de la región del tenant: la URL desde la que corre Olimpo
-// (la región) seguida de `/gateway`. Es el `baseUrl` que el integrador le pasa
-// al SDK; se muestra al lado de la clave para que no tenga que buscarla en otro
-// lado. No se edita. Sale de `window.location` porque Olimpo siempre corre en la
-// región del tenant; en el servidor (render inicial) todavía no hay ventana y
-// se devuelve vacío hasta que el cliente la lea.
-export function useUrlGateway(): string {
+// URL base de Atlas para el SDK: la URL desde la que corre Olimpo, que es la de
+// la región del tenant. Es el `baseUrl` que el integrador le pasa al SDK; el SDK
+// arma solo la ruta de cada método a partir de ahí. Se muestra al lado de la
+// clave para que no tenga que buscarla en otro lado. No se edita. En el
+// servidor (render inicial) todavía no hay ventana y se devuelve vacío hasta
+// que el cliente la lea.
+export function useUrlBase(): string {
   return useSyncExternalStore(
     () => () => {},
-    () => `${window.location.origin}/gateway`,
+    () => window.location.origin,
     () => ""
   );
 }

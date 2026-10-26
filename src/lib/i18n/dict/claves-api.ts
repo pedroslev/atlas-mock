@@ -58,10 +58,10 @@ export const clavesApi: NamespaceDict = {
     "vence.enDias": "Vence en {n} días",
     "vence.el": "Vence el {fecha}",
 
-    "gateway.titulo": "URL del Gateway",
-    "gateway.ayuda":
-      "Es el `baseUrl` que le pasás al SDK al crear el cliente. Es la de tu región y no cambia.",
-    "gateway.copiar": "Copiar URL del Gateway",
+    "urlBase.titulo": "URL base",
+    "urlBase.ayuda":
+      "Es el `baseUrl` que le pasás al SDK al crear el cliente: la dirección de Atlas de tu región. No cambia.",
+    "urlBase.copiar": "Copiar URL base",
 
     "nueva.titulo": "Nueva clave de acceso API",
     "nueva.descripcion":
@@ -154,10 +154,10 @@ export const clavesApi: NamespaceDict = {
     "vence.enDias": "Expires in {n} days",
     "vence.el": "Expires on {fecha}",
 
-    "gateway.titulo": "Gateway URL",
-    "gateway.ayuda":
-      "This is the `baseUrl` you pass to the SDK when creating the client. It belongs to your region and doesn't change.",
-    "gateway.copiar": "Copy Gateway URL",
+    "urlBase.titulo": "Base URL",
+    "urlBase.ayuda":
+      "This is the `baseUrl` you pass to the SDK when creating the client: your region's Atlas address. It doesn't change.",
+    "urlBase.copiar": "Copy base URL",
 
     "nueva.titulo": "New API access key",
     "nueva.descripcion":
@@ -250,10 +250,10 @@ export const clavesApi: NamespaceDict = {
     "vence.enDias": "Vence em {n} dias",
     "vence.el": "Vence em {fecha}",
 
-    "gateway.titulo": "URL do Gateway",
-    "gateway.ayuda":
-      "É o `baseUrl` que você passa ao SDK ao criar o cliente. É a da sua região e não muda.",
-    "gateway.copiar": "Copiar URL do Gateway",
+    "urlBase.titulo": "URL base",
+    "urlBase.ayuda":
+      "É o `baseUrl` que você passa ao SDK ao criar o cliente: o endereço do Atlas da sua região. Não muda.",
+    "urlBase.copiar": "Copiar URL base",
 
     "nueva.titulo": "Nova chave de acesso API",
     "nueva.descripcion":
@@ -346,10 +346,10 @@ export const clavesApi: NamespaceDict = {
     "vence.enDias": "Venç d'aquí a {n} dies",
     "vence.el": "Venç el {fecha}",
 
-    "gateway.titulo": "URL del Gateway",
-    "gateway.ayuda":
-      "És el `baseUrl` que passes a l'SDK en crear el client. És la de la teva regió i no canvia.",
-    "gateway.copiar": "Copiar URL del Gateway",
+    "urlBase.titulo": "URL base",
+    "urlBase.ayuda":
+      "És el `baseUrl` que passes a l'SDK en crear el client: l'adreça d'Atlas de la teva regió. No canvia.",
+    "urlBase.copiar": "Copiar URL base",
 
     "nueva.titulo": "Nova clau d'accés API",
     "nueva.descripcion":

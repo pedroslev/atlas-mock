@@ -30,7 +30,7 @@ import {
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
   useClavesApi,
-  useUrlGateway,
+  useUrlBase,
   type ClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
@@ -78,7 +78,7 @@ function Detalle({ clave }: { clave: ClaveApi }) {
   const t = useT();
   const fecha = useFormatoFecha();
   const fechaCorta = useFormatoFechaCorta();
-  const urlGateway = useUrlGateway();
+  const urlBase = useUrlBase();
   const { actualizarDominios, revocar } = useClavesApi();
   const [dominios, setDominios] = useState(clave.dominiosPermitidos);
   const [confirmando, setConfirmando] = useState(false);
@@ -134,16 +134,16 @@ function Detalle({ clave }: { clave: ClaveApi }) {
               <dd className="font-mono text-xs">
                 {PREFIJO_CLAVE_SECRETA}…{clave.finalizacionSecreta}
               </dd>
-              {/* La URL del Gateway va con la clave: es el `baseUrl` del SDK. */}
-              <dt className="text-muted-foreground">{t("clavesApi.gateway.titulo")}</dt>
+              {/* La URL base va con la clave: es el `baseUrl` del SDK. */}
+              <dt className="text-muted-foreground">{t("clavesApi.urlBase.titulo")}</dt>
               <dd className="flex min-w-0 items-center gap-2">
-                <code className="truncate font-mono text-xs" data-testid="detalle-gateway-url">
-                  {urlGateway}
+                <code className="truncate font-mono text-xs" data-testid="detalle-url-base">
+                  {urlBase}
                 </code>
                 <BotonCopiar
-                  valor={urlGateway}
-                  etiqueta={t("clavesApi.gateway.copiar")}
-                  testId="detalle-copiar-gateway-url"
+                  valor={urlBase}
+                  etiqueta={t("clavesApi.urlBase.copiar")}
+                  testId="detalle-copiar-url-base"
                   soloIcono
                 />
               </dd>
