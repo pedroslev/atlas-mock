@@ -18,8 +18,10 @@ import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 
+// En un chat no hay teléfono: la ficha muestra el nombre del cliente.
 type ClienteMock = {
-  telefono: string;
+  telefono?: string;
+  nombre?: string;
   campania: string;
 };
 
@@ -217,10 +219,17 @@ export function ContextColumn({
           onToggle={() => toggle("cliente")}
         >
           <dl className="flex flex-col gap-1.5 text-xs">
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
-              <dd className="text-right tabular-nums">{cliente.telefono}</dd>
-            </div>
+            {cliente.nombre ? (
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{t("padMock.contextColumn.nombre")}</dt>
+                <dd className="text-right">{cliente.nombre}</dd>
+              </div>
+            ) : (
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
+                <dd className="text-right tabular-nums">{cliente.telefono}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">{t("padMock.contextColumn.campania")}</dt>
               <dd className="text-right font-medium">{cliente.campania}</dd>

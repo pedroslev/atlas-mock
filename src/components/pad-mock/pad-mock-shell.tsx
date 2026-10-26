@@ -12,6 +12,7 @@ import {
   accesosRapidosMock,
   agenteLlamadaEntrante,
   campaniasSalientesMock,
+  clienteChatMock,
   clienteMock,
   estadoLlamadaInterna,
   historialAgenteMock,
@@ -318,7 +319,7 @@ export function PadMockShell() {
               key={`contexto-${interaccionActivaId}`}
               colapsada={contextoColapsada}
               onToggle={() => setContextoColapsada((v) => !v)}
-              cliente={clienteMock}
+              cliente={filaActiva?.canal === "chat" ? clienteChatMock : clienteMock}
               historial={historialPorCliente[clienteMock.numeroCliente] ?? []}
             />
           )}

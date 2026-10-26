@@ -132,6 +132,13 @@ export const clienteMock = {
 };
 
 // --- Chat (pantalla de chat) -----------------------------------------------
+// Ficha del cliente en un chat: sin teléfono, con el nombre que dejó al
+// iniciar el chat.
+export const clienteChatMock = {
+  nombre: "Nicolás Aguirre",
+  campania: "Soporte técnico Nivel 1",
+};
+
 // "hora" en formato hora:minuto:segundo.
 export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
 
