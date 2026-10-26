@@ -19,10 +19,14 @@ import { Label } from "@/components/ui/label";
 import {
   capacidadesClaveApi,
   capacidadesPublicas,
+  DIAS_VENCIMIENTO_MAXIMO,
+  fechaDentroDe,
   generarClaveApi,
+  hoyUtc,
   PREFIJO_CLAVE_PUBLICA,
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
+  URL_GATEWAY,
   useClavesApi,
   usuarioActual,
   type CapacidadClaveApi,
@@ -44,9 +48,12 @@ export default function NuevaClaveApiPage() {
   const [nombre, setNombre] = useState("");
   const [capacidades, setCapacidades] = useState<CapacidadClaveApi[]>([]);
   const [dominios, setDominios] = useState<string[]>([]);
+  // Vencimiento: propuesto a un año, que es también el máximo. Obligatorio.
+  const [venceEl, setVenceEl] = useState(() => fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO));
   const [creada, setCreada] = useState<ParCreado | null>(null);
 
-  const valido = nombre.trim() !== "" && capacidades.length > 0;
+  const vencimientoValido = venceEl >= hoyUtc() && venceEl <= fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO);
+  const valido = nombre.trim() !== "" && capacidades.length > 0 && vencimientoValido;
 
   function toggleCapacidad(capacidad: CapacidadClaveApi) {
     setCapacidades((actuales) =>
@@ -74,6 +81,7 @@ export default function NuevaClaveApiPage() {
       creadaEl: new Date().toISOString(),
       ultimoUso: null,
       revocada: null,
+      venceEl,
     });
     setCreada(par);
   }
@@ -117,6 +125,14 @@ export default function NuevaClaveApiPage() {
               ayuda={t("clavesApi.creada.secretaAyuda")}
               advertencia
               testId="clave-api-secreta"
+            />
+            {/* La URL del Gateway es el otro dato que el integrador necesita
+                (el `baseUrl` del SDK): se entrega junto con las claves. */}
+            <BloqueClave
+              titulo={t("clavesApi.gateway.titulo")}
+              valor={URL_GATEWAY}
+              ayuda={t("clavesApi.gateway.ayuda")}
+              testId="clave-api-gateway-url"
             />
           </CardContent>
         </Card>
@@ -162,6 +178,25 @@ export default function NuevaClaveApiPage() {
                 data-testid="clave-api-nombre"
                 autoFocus
               />
+            </div>
+            {/* Vencimiento obligatorio: entre hoy y un año. No se edita después,
+                igual que las capacidades: extender el acceso es crear otra clave. */}
+            <div className="mt-4 flex flex-col gap-1.5">
+              <Label htmlFor="clave-vence">{t("clavesApi.vence.titulo")}</Label>
+              <Input
+                id="clave-vence"
+                type="date"
+                value={venceEl}
+                min={hoyUtc()}
+                max={fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO)}
+                onChange={(e) => setVenceEl(e.target.value)}
+                aria-invalid={!vencimientoValido || undefined}
+                className="w-fit"
+                data-testid="clave-api-vence"
+              />
+              <p className={"text-xs " + (vencimientoValido ? "text-muted-foreground" : "text-destructive")}>
+                {vencimientoValido ? t("clavesApi.vence.ayuda") : t("clavesApi.vence.invalido")}
+              </p>
             </div>
           </CardContent>
         </Card>

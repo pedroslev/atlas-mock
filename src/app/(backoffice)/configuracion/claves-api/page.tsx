@@ -13,6 +13,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  DIAS_AVISO_VENCIMIENTO,
+  diasHastaVencer,
+  estaVencida,
   nombreUsuario,
   PREFIJO_CLAVE_PUBLICA,
   PREFIJO_CLAVE_SECRETA,
@@ -21,7 +24,7 @@ import {
   type ClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
-import { BotonCopiar, useFormatoFecha } from "./componentes";
+import { BotonCopiar, useFormatoFecha, useFormatoFechaCorta } from "./componentes";
 
 // Lista de claves de acceso API del tenant. Verla pide el permiso "Ver";
 // crear, editar y revocar tienen cada uno el suyo (Grupos y roles → Permisos). El alta es una pantalla
@@ -31,6 +34,7 @@ export default function ClavesApiPage() {
   const t = useT();
   const router = useRouter();
   const fecha = useFormatoFecha();
+  const fechaCorta = useFormatoFechaCorta();
   const { claves, revocar } = useClavesApi();
   const puedeAlgoMas = puedeClaves("crear") || puedeClaves("editar") || puedeClaves("revocar");
 
@@ -139,16 +143,47 @@ export default function ClavesApiPage() {
           ),
       },
       {
+        accessorKey: "venceEl",
+        header: t("clavesApi.col.vence"),
+        enableColumnFilter: false,
+        size: 150,
+        // Cuando faltan 30 días o menos se avisa debajo de la fecha, en tono de
+        // advertencia, para que el tenant cree la clave nueva antes del corte.
+        Cell: ({ row }) => {
+          const dias = diasHastaVencer(row.original.venceEl);
+          const porVencer = !row.original.revocada && dias >= 0 && dias <= DIAS_AVISO_VENCIMIENTO;
+          return (
+            <span className="flex flex-col gap-0.5">
+              <span>{fechaCorta.format(new Date(row.original.venceEl))}</span>
+              {porVencer && (
+                <span className="text-xs text-warning" data-testid={`vence-pronto-${row.original.id}`}>
+                  {t("clavesApi.vence.enDias", { n: dias })}
+                </span>
+              )}
+            </span>
+          );
+        },
+      },
+      {
         id: "estado",
         accessorFn: (c) =>
-          c.revocada ? t("clavesApi.estado.revocada") : t("clavesApi.estado.activa"),
+          c.revocada
+            ? t("clavesApi.estado.revocada")
+            : estaVencida(c)
+              ? t("clavesApi.estado.vencida")
+              : t("clavesApi.estado.activa"),
         header: t("common.comunes.estado"),
         size: 150,
         // Una revocada dice quién y cuándo, para que nadie tenga que preguntar.
+        // Una vencida sin revocar ya no funciona: se marca distinto de Activa.
         Cell: ({ row }) => {
           const revocada = row.original.revocada;
           if (!revocada) {
-            return <Badge variant="success">{t("clavesApi.estado.activa")}</Badge>;
+            return estaVencida(row.original) ? (
+              <Badge variant="warning">{t("clavesApi.estado.vencida")}</Badge>
+            ) : (
+              <Badge variant="success">{t("clavesApi.estado.activa")}</Badge>
+            );
           }
           return (
             <span className="flex flex-col items-start gap-0.5">
@@ -164,7 +199,7 @@ export default function ClavesApiPage() {
         },
       },
     ],
-    [t, fecha]
+    [t, fecha, fechaCorta]
   );
 
 

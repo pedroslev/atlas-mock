@@ -49,6 +49,19 @@ export const clavesApi: NamespaceDict = {
 
     "estado.activa": "Activa",
     "estado.revocada": "Revocada",
+    "estado.vencida": "Vencida",
+
+    "col.vence": "Vence",
+    "vence.titulo": "Vence el",
+    "vence.ayuda":
+      "Hasta un año desde hoy. No se edita después: para extender el acceso, creá otra clave y revocá esta.",
+    "vence.invalido": "La fecha tiene que estar entre hoy y un año desde hoy.",
+    "vence.enDias": "Vence en {n} días",
+
+    "gateway.titulo": "URL del Gateway",
+    "gateway.ayuda":
+      "Es el `baseUrl` que le pasás al SDK al crear el cliente. Es la de tu región y no cambia.",
+    "gateway.copiar": "Copiar URL del Gateway",
 
     "nueva.titulo": "Nueva clave de acceso API",
     "nueva.descripcion":
@@ -132,6 +145,19 @@ export const clavesApi: NamespaceDict = {
 
     "estado.activa": "Active",
     "estado.revocada": "Revoked",
+    "estado.vencida": "Expired",
+
+    "col.vence": "Expires",
+    "vence.titulo": "Expires on",
+    "vence.ayuda":
+      "Up to one year from today. It can't be edited later: to extend access, create another key and revoke this one.",
+    "vence.invalido": "The date must be between today and one year from today.",
+    "vence.enDias": "Expires in {n} days",
+
+    "gateway.titulo": "Gateway URL",
+    "gateway.ayuda":
+      "This is the `baseUrl` you pass to the SDK when creating the client. It belongs to your region and doesn't change.",
+    "gateway.copiar": "Copy Gateway URL",
 
     "nueva.titulo": "New API access key",
     "nueva.descripcion":
@@ -215,6 +241,19 @@ export const clavesApi: NamespaceDict = {
 
     "estado.activa": "Ativa",
     "estado.revocada": "Revogada",
+    "estado.vencida": "Vencida",
+
+    "col.vence": "Vence",
+    "vence.titulo": "Vence em",
+    "vence.ayuda":
+      "Até um ano a partir de hoje. Não pode ser editada depois: para estender o acesso, crie outra chave e revogue esta.",
+    "vence.invalido": "A data tem que estar entre hoje e um ano a partir de hoje.",
+    "vence.enDias": "Vence em {n} dias",
+
+    "gateway.titulo": "URL do Gateway",
+    "gateway.ayuda":
+      "É o `baseUrl` que você passa ao SDK ao criar o cliente. É a da sua região e não muda.",
+    "gateway.copiar": "Copiar URL do Gateway",
 
     "nueva.titulo": "Nova chave de acesso API",
     "nueva.descripcion":
@@ -298,6 +337,19 @@ export const clavesApi: NamespaceDict = {
 
     "estado.activa": "Activa",
     "estado.revocada": "Revocada",
+    "estado.vencida": "Vençuda",
+
+    "col.vence": "Venç",
+    "vence.titulo": "Venç el",
+    "vence.ayuda":
+      "Fins a un any des d'avui. No es pot editar després: per allargar l'accés, crea una altra clau i revoca aquesta.",
+    "vence.invalido": "La data ha d'estar entre avui i un any des d'avui.",
+    "vence.enDias": "Venç d'aquí a {n} dies",
+
+    "gateway.titulo": "URL del Gateway",
+    "gateway.ayuda":
+      "És el `baseUrl` que passes a l'SDK en crear el client. És la de la teva regió i no canvia.",
+    "gateway.copiar": "Copiar URL del Gateway",
 
     "nueva.titulo": "Nova clau d'accés API",
     "nueva.descripcion":

@@ -71,12 +71,51 @@ export type ClaveApi = {
   ultimoUso: string | null;
   /** Una clave revocada deja de funcionar pero queda en la lista, para saber que existió. */
   revocada: { por: string; el: string } | null;
+  /**
+   * Último día en que la clave vale (YYYY-MM-DD, UTC). Se elige al crearla,
+   * como mucho a un año, y no se edita: para extender el acceso se crea otra
+   * clave. Pasado ese día la clave deja de funcionar aunque no esté revocada.
+   */
+  venceEl: string;
 };
 
 // Prefijos fijos: dejan reconocer una clave de Atlas, y si es la pública o la
 // secreta, a simple vista (en un log o en un repo).
 export const PREFIJO_CLAVE_PUBLICA = "atl_pub_";
 export const PREFIJO_CLAVE_SECRETA = "atl_sec_";
+
+// URL del Gateway de la región del tenant: la URL de la región seguida de
+// `/gateway`. Es el `baseUrl` que el integrador le pasa al SDK; se muestra al
+// lado de la clave para que no tenga que buscarla en otro lado. No se edita.
+export const URL_GATEWAY = "https://atlas.mitrol.dev/gateway";
+
+// Vencimiento: viene propuesto a un año y es también el máximo que se acepta.
+export const DIAS_VENCIMIENTO_MAXIMO = 365;
+// A partir de cuántos días la lista avisa que la clave está por vencer.
+export const DIAS_AVISO_VENCIMIENTO = 30;
+
+/** Hoy en UTC como YYYY-MM-DD, el mismo recorte que usa la validación de la clave. */
+export function hoyUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** La fecha de hoy más `dias`, como YYYY-MM-DD (UTC). */
+export function fechaDentroDe(dias: number): string {
+  const fecha = new Date();
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return fecha.toISOString().slice(0, 10);
+}
+
+/** Días enteros que faltan para que venza la clave; negativo si ya venció. */
+export function diasHastaVencer(venceEl: string): number {
+  const dia = 24 * 60 * 60 * 1000;
+  return Math.round((Date.parse(venceEl) - Date.parse(hoyUtc())) / dia);
+}
+
+/** Una clave vale hasta terminar su día de vencimiento: vencida es el día siguiente. */
+export function estaVencida(clave: ClaveApi): boolean {
+  return diasHastaVencer(clave.venceEl) < 0;
+}
 
 export const clavesApi: ClaveApi[] = [
   {
@@ -90,6 +129,7 @@ export const clavesApi: ClaveApi[] = [
     creadaEl: "2026-08-12T10:24:00-03:00",
     ultimoUso: "2026-10-07T08:51:00-03:00",
     revocada: null,
+    venceEl: "2027-08-12",
   },
   {
     id: "key-crm",
@@ -102,6 +142,8 @@ export const clavesApi: ClaveApi[] = [
     creadaEl: "2026-09-03T15:02:00-03:00",
     ultimoUso: "2026-10-06T19:12:00-03:00",
     revocada: null,
+    // Vence pronto: muestra el aviso de la lista.
+    venceEl: "2026-11-15",
   },
   {
     id: "key-telefonia",
@@ -114,6 +156,8 @@ export const clavesApi: ClaveApi[] = [
     creadaEl: "2026-09-28T11:40:00-03:00",
     ultimoUso: null,
     revocada: null,
+    // Ya venció sin que nadie la revocara: se ve como "Vencida".
+    venceEl: "2026-10-20",
   },
   {
     id: "key-prueba-fde",
@@ -126,6 +170,7 @@ export const clavesApi: ClaveApi[] = [
     creadaEl: "2026-07-21T09:15:00-03:00",
     ultimoUso: "2026-08-02T17:30:00-03:00",
     revocada: { por: "ag-1", el: "2026-08-20T12:00:00-03:00" },
+    venceEl: "2027-07-21",
   },
 ];
 
