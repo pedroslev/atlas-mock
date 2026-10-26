@@ -25,14 +25,21 @@ import {
 } from "@/components/ui/card";
 import {
   capacidadesPublicas,
+  estaVencida,
   nombreUsuario,
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
   useClavesApi,
+  useUrlBase,
   type ClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
-import { BotonCopiar, DominiosPermitidos, useFormatoFecha } from "../componentes";
+import {
+  BotonCopiar,
+  DominiosPermitidos,
+  useFormatoFecha,
+  useFormatoFechaCorta,
+} from "../componentes";
 
 // Detalle de una clave de acceso API (pide "Ver"). Muestra todo lo de la
 // clave y, con "Editar", deja editar lo único editable: los dominios
@@ -70,9 +77,12 @@ export default function ClaveApiDetallePage() {
 function Detalle({ clave }: { clave: ClaveApi }) {
   const t = useT();
   const fecha = useFormatoFecha();
+  const fechaCorta = useFormatoFechaCorta();
+  const urlBase = useUrlBase();
   const { actualizarDominios, revocar } = useClavesApi();
   const [dominios, setDominios] = useState(clave.dominiosPermitidos);
   const [confirmando, setConfirmando] = useState(false);
+  const vencida = estaVencida(clave);
 
   // Una revocada ya no funciona: se ve, pero no se edita nada. Editar los
   // dominios y revocar tienen cada uno su permiso.
@@ -90,6 +100,9 @@ function Detalle({ clave }: { clave: ClaveApi }) {
         actions={
           clave.revocada ? (
             <Badge variant="neutral">{t("clavesApi.estado.revocada")}</Badge>
+          ) : vencida ? (
+            // Vencida sin revocar: ya no funciona, pero sigue en la lista.
+            <Badge variant="warning">{t("clavesApi.estado.vencida")}</Badge>
           ) : (
             <Badge variant="success">{t("clavesApi.estado.activa")}</Badge>
           )
@@ -121,10 +134,25 @@ function Detalle({ clave }: { clave: ClaveApi }) {
               <dd className="font-mono text-xs">
                 {PREFIJO_CLAVE_SECRETA}…{clave.finalizacionSecreta}
               </dd>
+              {/* La URL base va con la clave: es el `baseUrl` del SDK. */}
+              <dt className="text-muted-foreground">{t("clavesApi.urlBase.titulo")}</dt>
+              <dd className="flex min-w-0 items-center gap-2">
+                <code className="truncate font-mono text-xs" data-testid="detalle-url-base">
+                  {urlBase}
+                </code>
+                <BotonCopiar
+                  valor={urlBase}
+                  etiqueta={t("clavesApi.urlBase.copiar")}
+                  testId="detalle-copiar-url-base"
+                  soloIcono
+                />
+              </dd>
               <dt className="text-muted-foreground">{t("clavesApi.col.creadaPor")}</dt>
               <dd>
                 {nombreUsuario(clave.creadaPor)} · {fecha.format(new Date(clave.creadaEl))}
               </dd>
+              <dt className="text-muted-foreground">{t("clavesApi.vence.titulo")}</dt>
+              <dd data-testid="detalle-vence-el">{fechaCorta.format(new Date(clave.venceEl))}</dd>
               <dt className="text-muted-foreground">{t("clavesApi.col.ultimoUso")}</dt>
               <dd>
                 {clave.ultimoUso

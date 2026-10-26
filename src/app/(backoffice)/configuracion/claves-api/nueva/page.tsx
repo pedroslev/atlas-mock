@@ -19,16 +19,20 @@ import { Label } from "@/components/ui/label";
 import {
   capacidadesClaveApi,
   capacidadesPublicas,
+  DIAS_VENCIMIENTO_MAXIMO,
+  fechaDentroDe,
   generarClaveApi,
+  hoyUtc,
   PREFIJO_CLAVE_PUBLICA,
   PREFIJO_CLAVE_SECRETA,
   puedeClaves,
   useClavesApi,
+  useUrlBase,
   usuarioActual,
   type CapacidadClaveApi,
 } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
-import { BloqueClave, DominiosPermitidos } from "../componentes";
+import { BloqueClave, BotonCopiar, DominiosPermitidos } from "../componentes";
 
 // El par recién creado: vive solo en esta pantalla. Al salir se descarta y la
 // secreta no se vuelve a ver nunca más.
@@ -41,12 +45,16 @@ type ParCreado = { publica: string; secreta: string };
 export default function NuevaClaveApiPage() {
   const t = useT();
   const { agregar } = useClavesApi();
+  const urlBase = useUrlBase();
   const [nombre, setNombre] = useState("");
   const [capacidades, setCapacidades] = useState<CapacidadClaveApi[]>([]);
   const [dominios, setDominios] = useState<string[]>([]);
+  // Vencimiento: propuesto a un año, que es también el máximo. Obligatorio.
+  const [venceEl, setVenceEl] = useState(() => fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO));
   const [creada, setCreada] = useState<ParCreado | null>(null);
 
-  const valido = nombre.trim() !== "" && capacidades.length > 0;
+  const vencimientoValido = venceEl >= hoyUtc() && venceEl <= fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO);
+  const valido = nombre.trim() !== "" && capacidades.length > 0 && vencimientoValido;
 
   function toggleCapacidad(capacidad: CapacidadClaveApi) {
     setCapacidades((actuales) =>
@@ -74,6 +82,7 @@ export default function NuevaClaveApiPage() {
       creadaEl: new Date().toISOString(),
       ultimoUso: null,
       revocada: null,
+      venceEl,
     });
     setCreada(par);
   }
@@ -103,6 +112,26 @@ export default function NuevaClaveApiPage() {
             </Button>
           }
         />
+        {/* Arriba de las claves, la URL base: con las claves y esta URL el
+            integrador tiene todo lo que el SDK necesita (`baseUrl` + `apiKey`). */}
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle>{t("clavesApi.urlBase.titulo")}</CardTitle>
+            <CardDescription>{t("clavesApi.urlBase.ayuda")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 ring-1 ring-foreground/10">
+              <code className="flex-1 font-mono text-xs break-all" data-testid="clave-api-url-base">
+                {urlBase}
+              </code>
+              <BotonCopiar
+                valor={urlBase}
+                etiqueta={t("clavesApi.urlBase.copiar")}
+                testId="copiar-clave-api-url-base"
+              />
+            </div>
+          </CardContent>
+        </Card>
         <Card className="max-w-3xl">
           <CardContent className="flex flex-col gap-6">
             <BloqueClave
@@ -162,6 +191,25 @@ export default function NuevaClaveApiPage() {
                 data-testid="clave-api-nombre"
                 autoFocus
               />
+            </div>
+            {/* Vencimiento obligatorio: entre hoy y un año. No se edita después,
+                igual que las capacidades: extender el acceso es crear otra clave. */}
+            <div className="mt-4 flex flex-col gap-1.5">
+              <Label htmlFor="clave-vence">{t("clavesApi.vence.titulo")}</Label>
+              <Input
+                id="clave-vence"
+                type="date"
+                value={venceEl}
+                min={hoyUtc()}
+                max={fechaDentroDe(DIAS_VENCIMIENTO_MAXIMO)}
+                onChange={(e) => setVenceEl(e.target.value)}
+                aria-invalid={!vencimientoValido || undefined}
+                className="w-fit"
+                data-testid="clave-api-vence"
+              />
+              <p className={"text-xs " + (vencimientoValido ? "text-muted-foreground" : "text-destructive")}>
+                {vencimientoValido ? t("clavesApi.vence.ayuda") : t("clavesApi.vence.invalido")}
+              </p>
             </div>
           </CardContent>
         </Card>

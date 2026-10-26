@@ -22,6 +22,16 @@ export function useFormatoFecha() {
   );
 }
 
+// Solo la fecha, para el vencimiento de la clave (es un día, no un instante).
+// En UTC porque el día de vencimiento se cuenta en UTC, igual que en la validación.
+export function useFormatoFechaCorta() {
+  const { locale } = useLocale();
+  return useMemo(
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }),
+    [locale]
+  );
+}
+
 // Botón de copiar con confirmación visual ("Copiada") que vuelve sola a su
 // estado normal. Lo usan la lista, el detalle (clave pública) y el alta (las dos).
 export function BotonCopiar({
