@@ -117,6 +117,7 @@ export const padMock: NamespaceDict = {
     "chatEntrante.titulo": "Chat entrante",
     "chatEntrante.aceptar": "Aceptar",
     "chatEntrante.rechazar": "Rechazar",
+    "chatEntrante.porAceptar": "Por aceptar",
     "llamadaInterna.atender": "Atender",
     "llamadaInterna.rechazar": "Rechazar",
     "llamadaInterna.titulo": "Llamada interna",

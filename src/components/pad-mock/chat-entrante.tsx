@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import type { ChatEntrante } from "@/lib/pad-mock/data";
 
-// Aviso de chat entrante de una campaña SIN atención forzada: el agente lo
-// acepta o lo rechaza (y el sistema se lo deriva a otro agente). Mismo lugar
-// y forma que el aviso de llamada interna entrante (abajo a la derecha, sin
-// tapar lo que el agente esté haciendo). Con atención forzada no hay aviso:
-// el chat entra directo a las interacciones en curso.
+// Chat entrante de una campaña SIN atención forzada: el agente lo acepta o
+// lo rechaza (y el sistema se lo deriva a otro agente). Con atención forzada
+// no hay nada de esto: el chat entra directo a las interacciones en curso.
+//
+// Cómo se ofrece depende de lo que esté haciendo el agente:
+// - libre (sin interacciones en curso): toma el centro, igual que una
+//   llamada entrante (ChatEntrantePanel);
+// - ya en otra interacción: no lo saca de lo que está haciendo — queda la
+//   fila "Por aceptar" en Interacciones en curso y este aviso flotante abajo
+//   a la derecha (mismo lugar y forma que el de llamada interna entrante).
 export function ChatEntranteAviso({
   chat,
   onAceptar,
@@ -47,6 +52,55 @@ export function ChatEntranteAviso({
           {t("padMock.chatEntrante.rechazar")}
         </Button>
         <Button type="button" className="flex-1 gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAceptar}>
+          <MessageCircle className="size-4" />
+          {t("padMock.chatEntrante.aceptar")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// El chat entrante en el centro de la pantalla — mismo criterio que la
+// llamada entrante de Hermes: quién escribe, por qué campaña, qué escribió, y
+// Aceptar / Rechazar.
+export function ChatEntrantePanel({
+  chat,
+  onAceptar,
+  onRechazar,
+}: {
+  chat: ChatEntrante;
+  onAceptar: () => void;
+  onRechazar: () => void;
+}) {
+  const t = useT();
+  const primerMensaje = chat.mensajes.find((m) => m.autor === "cliente");
+  return (
+    <div className="flex h-full min-h-0 w-0 flex-1 flex-col items-center justify-center gap-5 bg-background p-6 text-center">
+      <span className="relative flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/20" />
+        <MessageCircle className="size-7" />
+      </span>
+      <div className="flex flex-col gap-1">
+        <span className="text-sm text-muted-foreground">{t("padMock.chatEntrante.titulo")}</span>
+        <span className="font-heading text-2xl font-semibold">{chat.nombre}</span>
+        <span className="text-sm text-muted-foreground">{chat.campania}</span>
+      </div>
+      {primerMensaje && (
+        <p className="max-w-md rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-left text-sm leading-relaxed text-foreground">
+          {primerMensaje.texto}
+        </p>
+      )}
+      <div className="flex gap-3">
+        <Button type="button" size="lg" variant="outline" className="min-w-36 gap-1.5" onClick={onRechazar}>
+          <X className="size-4" />
+          {t("padMock.chatEntrante.rechazar")}
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          className="min-w-36 gap-1.5 bg-success text-white hover:bg-success/90"
+          onClick={onAceptar}
+        >
           <MessageCircle className="size-4" />
           {t("padMock.chatEntrante.aceptar")}
         </Button>

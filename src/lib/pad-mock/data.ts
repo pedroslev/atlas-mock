@@ -114,6 +114,8 @@ export type FilaCola = {
   iniciadaEn?: number;
   /** Chat: id en chatsEntrantesMock. */
   chatId?: string;
+  /** Chat entrante sin atención forzada que el agente todavía no aceptó. */
+  porAceptar?: boolean;
 };
 
 // --- Cliente activo (reclamo por facturación) ------------------------------
