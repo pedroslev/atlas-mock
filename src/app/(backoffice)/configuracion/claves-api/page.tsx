@@ -143,28 +143,6 @@ export default function ClavesApiPage() {
           ),
       },
       {
-        accessorKey: "venceEl",
-        header: t("clavesApi.col.vence"),
-        enableColumnFilter: false,
-        size: 150,
-        // Cuando faltan 30 días o menos se avisa debajo de la fecha, en tono de
-        // advertencia, para que el tenant cree la clave nueva antes del corte.
-        Cell: ({ row }) => {
-          const dias = diasHastaVencer(row.original.venceEl);
-          const porVencer = !row.original.revocada && dias >= 0 && dias <= DIAS_AVISO_VENCIMIENTO;
-          return (
-            <span className="flex flex-col gap-0.5">
-              <span>{fechaCorta.format(new Date(row.original.venceEl))}</span>
-              {porVencer && (
-                <span className="text-xs text-warning" data-testid={`vence-pronto-${row.original.id}`}>
-                  {t("clavesApi.vence.enDias", { n: dias })}
-                </span>
-              )}
-            </span>
-          );
-        },
-      },
-      {
         id: "estado",
         accessorFn: (c) =>
           c.revocada
@@ -175,14 +153,32 @@ export default function ClavesApiPage() {
         header: t("common.comunes.estado"),
         size: 150,
         // Una revocada dice quién y cuándo, para que nadie tenga que preguntar.
-        // Una vencida sin revocar ya no funciona: se marca distinto de Activa.
+        // Una activa dice hasta cuándo vale y, a 30 días o menos, en cuántos
+        // días vence. Una vencida sin revocar ya no funciona: se marca distinto
+        // de Activa. Todo en la misma columna: una más no entra en el ancho.
         Cell: ({ row }) => {
           const revocada = row.original.revocada;
           if (!revocada) {
-            return estaVencida(row.original) ? (
-              <Badge variant="warning">{t("clavesApi.estado.vencida")}</Badge>
-            ) : (
-              <Badge variant="success">{t("clavesApi.estado.activa")}</Badge>
+            const dias = diasHastaVencer(row.original.venceEl);
+            const porVencer = dias >= 0 && dias <= DIAS_AVISO_VENCIMIENTO;
+            return (
+              <span className="flex flex-col items-start gap-0.5">
+                {estaVencida(row.original) ? (
+                  <Badge variant="warning">{t("clavesApi.estado.vencida")}</Badge>
+                ) : (
+                  <Badge variant="success">{t("clavesApi.estado.activa")}</Badge>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {t("clavesApi.vence.el", {
+                    fecha: fechaCorta.format(new Date(row.original.venceEl)),
+                  })}
+                </span>
+                {porVencer && (
+                  <span className="text-xs text-warning" data-testid={`vence-pronto-${row.original.id}`}>
+                    {t("clavesApi.vence.enDias", { n: dias })}
+                  </span>
+                )}
+              </span>
             );
           }
           return (
