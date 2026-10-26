@@ -21,8 +21,7 @@ import {
 
 // whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
 // aparecen en historial y en el armado de campañas salientes. "chat" sí
-// tiene su pantalla (conversation-panel.tsx), y solo entra como interacción
-// entrante — no se ofrece en "Contactar".
+// tiene su pantalla (conversation-panel.tsx).
 export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
@@ -50,17 +49,22 @@ export const CANAL_LABEL: Record<CanalMock, string> = {
 export type CuentaSaliente = { id: string; nombre: string; canal: CanalMock; identificador: string };
 export type CampaniaSaliente = { id: string; nombre: string; cuentas: CuentaSaliente[] };
 
-// Solo cuentas de canal "llamada" — a pedido, esta fase no tiene pantalla
-// de interacción para otros canales, así que no se ofrecen como opción acá
-// (evita un alta que no tendría dónde mostrarse). camp-4 (Soporte técnico)
-// solo tenía cuenta de WhatsApp, así que sale de este listado — sigue
-// existiendo en campaniasAgenteMock ("Mi turno"), que es otro dataset.
+// Solo cuentas de los canales que tienen pantalla de interacción (llamada y
+// chat) — los demás no se ofrecen acá (evita un alta que no tendría dónde
+// mostrarse). camp-4 (Soporte técnico) entra con su cuenta de chat.
 export const campaniasSalientesMock: CampaniaSaliente[] = [
   {
     id: "camp-1",
     nombre: "Cobranzas Activa PCP",
     cuentas: [
       { id: "acc-1", nombre: "Línea Cobranzas AR", canal: "llamada", identificador: "+54 11 4000-1000" },
+    ],
+  },
+  {
+    id: "camp-4",
+    nombre: "Soporte técnico Nivel 1",
+    cuentas: [
+      { id: "acc-5", nombre: "Chat web Soporte", canal: "chat", identificador: "Chat web" },
     ],
   },
   {
@@ -84,7 +88,7 @@ export type CampaniaAgente = { id: string; nombre: string; canales: CanalMock[];
 // sección "Campañas" de InicioPanel con más de 3 asignadas).
 export const campaniasAgenteMock: CampaniaAgente[] = [
   { id: "camp-1", nombre: "Cobranzas Activa PCP", canales: ["llamada", "whatsapp"], horario: "09:00 – 18:00" },
-  { id: "camp-4", nombre: "Soporte técnico Nivel 1", canales: ["whatsapp"], horario: "09:00 – 18:00" },
+  { id: "camp-4", nombre: "Soporte técnico Nivel 1", canales: ["chat", "whatsapp"], horario: "09:00 – 18:00" },
   { id: "camp-6", nombre: "Lanzamiento Tarjeta Plus", canales: ["llamada", "sms"], horario: "13:00 – 18:00" },
   { id: "camp-7", nombre: "Renovación de Seguros", canales: ["llamada"], horario: "09:00 – 17:00" },
   { id: "camp-8", nombre: "Encuesta de Satisfacción", canales: ["sms", "whatsapp"], horario: "10:00 – 16:00" },
@@ -127,11 +131,7 @@ export const clienteMock = {
   campania: "Cobranzas Activa PCP",
 };
 
-// --- Chat entrante (pantalla de chat) --------------------------------------
-// El cliente escribe desde el chat de la web de la empresa: no hay teléfono,
-// se lo identifica por el nombre que dejó al iniciar el chat.
-export const clienteChat = { nombre: "Nicolás Aguirre" };
-
+// --- Chat (pantalla de chat) -----------------------------------------------
 // "hora" en formato hora:minuto:segundo.
 export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
 

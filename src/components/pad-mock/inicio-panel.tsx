@@ -48,7 +48,6 @@ export function InicioPanel({
   onContactar,
   onLlamarInterno,
   onSimularEntrante,
-  onSimularChat,
   historial,
 }: {
   estadoAgenteId: string;
@@ -59,8 +58,6 @@ export function InicioPanel({
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
   onSimularEntrante: () => void;
-  /** Solo para la reunión: hace entrar un chat a la cola. */
-  onSimularChat: () => void;
   /** Vive en pad-mock-shell.tsx: las llamadas internas que terminan se suman acá. */
   historial: HistorialAgenteEntrada[];
 }) {
@@ -208,15 +205,6 @@ export function InicioPanel({
                   />
                 </TabsContent>
               </Tabs>
-            </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={onSimularChat}
-                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-              >
-                {t("padMock.inicio.simularChat")}
-              </button>
             </div>
           </div>
         </div>

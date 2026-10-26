@@ -78,7 +78,6 @@ export const padMock: NamespaceDict = {
     "inicio.noRecibiendo": "No estás recibiendo interacciones.",
     "inicio.pasarADisponible": "Pasar a Disponible",
     "inicio.nuevaInteraccion": "Nueva interacción",
-    "inicio.simularChat": "Simular chat entrante",
     "inicio.campanias": "Campañas",
     "inicio.historial": "Historial",
     "inicio.colCanal": "Canal",
