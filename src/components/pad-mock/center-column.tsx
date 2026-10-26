@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Link2, Phone } from "lucide-react";
+import { ExternalLink, Link2, MessageSquareText, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
@@ -20,8 +20,8 @@ import { cn } from "@/lib/utils";
 const ICONO_PAGINA_EXTERNA = Link2;
 const SIN_PAGINAS: PaginaExterna[] = [];
 
-// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — solo
-// "Llamada" por ahora (a pedido, el canal chat se retiró de esta fase). Las
+// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
+// "Llamada" con ícono de teléfono, o "Conversación" en un chat. Las
 // demás son páginas externas configurables, embebidas o "pestaña aparte"
 // (§4.2). w-full en TabsList para que la línea de abajo llegue hasta el
 // borde con la columna de contexto, no solo hasta donde terminan las
@@ -47,6 +47,7 @@ export function CenterColumn({
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
+  chat = false,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -58,6 +59,7 @@ export function CenterColumn({
   holdStartedAt: number | null;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
+  chat?: boolean;
   interno?: boolean;
   sonando?: boolean;
   /** Nombre del otro agente en una llamada interna. */
@@ -154,8 +156,12 @@ export function CenterColumn({
             value="conversacion"
             className="sticky left-0 z-10 flex-none gap-2 bg-background! py-3 pr-4 pl-7 text-sm"
           >
-            <Phone className="size-5" />
-            {interno ? t("padMock.llamadaInterna.titulo") : t("padMock.centerColumn.llamada")}
+            {chat ? <MessageSquareText className="size-5" /> : <Phone className="size-5" />}
+            {chat
+              ? t("padMock.centerColumn.conversacion")
+              : interno
+                ? t("padMock.llamadaInterna.titulo")
+                : t("padMock.centerColumn.llamada")}
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",
@@ -201,6 +207,7 @@ export function CenterColumn({
           <ConversationPanel
             tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             enEspera={enEspera}
+            chat={chat}
             interno={interno}
             sonando={sonando}
             nombreInterno={nombreInterno}
@@ -222,6 +229,7 @@ export function CenterColumn({
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}
         onCerrarInteraccion={onCerrarInteraccion}
+        chat={chat}
         interno={interno}
         sonando={sonando}
       />

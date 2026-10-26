@@ -12,6 +12,7 @@ import {
   accesosRapidosMock,
   agenteLlamadaEntrante,
   campaniasSalientesMock,
+  clienteChat,
   clienteMock,
   estadoLlamadaInterna,
   historialAgenteMock,
@@ -135,6 +136,15 @@ export function PadMockShell() {
     },
     [seleccionarInteraccion]
   );
+
+  // Chat entrante (simulado desde InicioPanel): el chat solo entra, el
+  // agente no lo inicia. Llega a la cola como una interacción más y queda
+  // al frente.
+  const simularChatEntrante = useCallback(() => {
+    const id = `q-chat-${nuevaFilaRef.current++}`;
+    setCola((cur) => [...cur, { id, numeroCliente: clienteChat.nombre, canal: "chat", esperaSeg: 0 }]);
+    seleccionarInteraccion(id);
+  }, [seleccionarInteraccion]);
 
   const atenderEntrante = useCallback(() => {
     if (!entrante) return;
@@ -292,6 +302,7 @@ export function PadMockShell() {
           onContactar={iniciarInteraccion}
           onLlamarInterno={iniciarLlamadaInterna}
           onSimularEntrante={() => setEntrante(agenteLlamadaEntrante)}
+          onSimularChat={simularChatEntrante}
           historial={historial}
         />
       ) : (
@@ -303,6 +314,7 @@ export function PadMockShell() {
             holdStartedAt={holdStartedAt}
             onToggleEspera={toggleEspera}
             onCerrarInteraccion={() => interaccionActivaId && cerrarInteraccion(interaccionActivaId)}
+            chat={filaActiva?.canal === "chat"}
             interno={filaActiva?.interno}
             sonando={filaActiva?.sonando}
             nombreInterno={filaActiva?.interno ? filaActiva.numeroCliente : undefined}

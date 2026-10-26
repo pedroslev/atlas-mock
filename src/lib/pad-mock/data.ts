@@ -7,6 +7,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Phone,
+  MessageCircle,
   MessageSquareText,
   Smartphone,
   Mail,
@@ -18,16 +19,15 @@ import {
   Coffee,
 } from "lucide-react";
 
-// "chat" se retiró como canal — a pedido, esta fase del mock es solo
-// llamada (ver conversation-panel.tsx, center-column.tsx, call-controls.tsx
-// y pad-mock-shell.tsx, todos simplificados a variant única). whatsapp/mail/
-// sms quedan porque no son "chat" propiamente — son otros canales que
-// todavía aparecen en historial y en el armado de campañas salientes,
-// aunque esta fase no tenga una pantalla de interacción activa para ellos.
-export type CanalMock = "llamada" | "whatsapp" | "mail" | "sms";
+// whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
+// aparecen en historial y en el armado de campañas salientes. "chat" sí
+// tiene su pantalla (conversation-panel.tsx), y solo entra como interacción
+// entrante — no se ofrece en "Contactar".
+export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
   llamada: Phone,
+  chat: MessageCircle,
   whatsapp: Smartphone,
   mail: Mail,
   sms: MessageSquareText,
@@ -35,6 +35,7 @@ export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
 
 export const CANAL_LABEL: Record<CanalMock, string> = {
   llamada: "Llamada",
+  chat: "Chat",
   whatsapp: "WhatsApp",
   mail: "Mail",
   sms: "SMS",
@@ -125,6 +126,46 @@ export const clienteMock = {
   telefono: "+54 11 4589-2231",
   campania: "Cobranzas Activa PCP",
 };
+
+// --- Chat entrante (pantalla de chat) --------------------------------------
+// El cliente escribe desde el chat de la web de la empresa: no hay teléfono,
+// se lo identifica por el nombre que dejó al iniciar el chat.
+export const clienteChat = { nombre: "Nicolás Aguirre" };
+
+// "hora" en formato hora:minuto:segundo.
+export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
+
+export const mensajesChat: MensajeChat[] = [
+  { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
+  { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
+  { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
+  { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
+];
+
+// Plantillas de mensajes del redactor. "descripcion" alimenta el ícono "i"
+// de ayuda del selector (hover).
+export type PlantillaMensaje = { id: string; nombre: string; texto: string; descripcion: string };
+
+export const plantillasMensaje: PlantillaMensaje[] = [
+  {
+    id: "pl-1",
+    nombre: "Saludo inicial",
+    texto: "¡Hola! Gracias por escribirnos. ¿En qué te puedo ayudar hoy?",
+    descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
+  },
+  {
+    id: "pl-2",
+    nombre: "Pedir más datos",
+    texto: "Para poder ayudarte mejor, ¿me confirmás tu número de pedido?",
+    descripcion: "Cuando falta un dato puntual (pedido, DNI, número de cliente) para seguir la gestión.",
+  },
+  {
+    id: "pl-3",
+    nombre: "Cierre de conversación",
+    texto: "Perfecto, quedó todo resuelto. ¡Gracias por tu paciencia! Cualquier cosa, escribinos.",
+    descripcion: "Para cerrar de forma prolija una vez resuelta la consulta, antes de tipificar.",
+  },
+];
 
 // Controles de llamada — Marcar (bookmarks de calidad).
 // "descripcion" alimenta el ícono "i" del selector (hover) — mismo patrón

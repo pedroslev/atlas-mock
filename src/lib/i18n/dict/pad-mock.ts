@@ -28,9 +28,16 @@ export const padMock: NamespaceDict = {
 
     // CenterColumn
     "centerColumn.llamada": "Llamada",
+    "centerColumn.conversacion": "Conversación",
 
     // ConversationPanel
     "conversationPanel.llamadaEnCurso": "Llamada en curso.",
+    "conversationPanel.volverAlVivo": "Volver al vivo",
+    "conversationPanel.plantillas": "Plantillas de mensajes…",
+    "conversationPanel.buscarPlantilla": "Buscar plantilla…",
+    "conversationPanel.adjuntar": "Adjuntar archivo",
+    "conversationPanel.enviar": "Enviar",
+    "conversationPanel.placeholder": "Escribí tu respuesta… (Enter para enviar, Shift+Enter para salto de línea)",
 
     // InteractionControls (call-controls.tsx)
     "callControls.buscarTipificacion": "Buscar tipificación…",
@@ -44,6 +51,7 @@ export const padMock: NamespaceDict = {
     "callControls.marcar": "Marcar",
     "callControls.cerrarInteraccion": "Cerrar interacción",
     "callControls.cortar": "Cortar",
+    "callControls.finalizarChat": "Finalizar chat",
     "callControls.enviarTonos": "Enviar tonos (DTMF)",
     "callControls.sinDigitos": "Sin dígitos",
     "callControls.borrar": "Borrar",
@@ -70,6 +78,7 @@ export const padMock: NamespaceDict = {
     "inicio.noRecibiendo": "No estás recibiendo interacciones.",
     "inicio.pasarADisponible": "Pasar a Disponible",
     "inicio.nuevaInteraccion": "Nueva interacción",
+    "inicio.simularChat": "Simular chat entrante",
     "inicio.campanias": "Campañas",
     "inicio.historial": "Historial",
     "inicio.colCanal": "Canal",
