@@ -336,7 +336,9 @@ export function PadMockShell() {
   const enLlamadaInterna = !!filaActiva?.interno && !filaActiva.sonando;
 
   return (
-    <div className="flex h-full min-h-0 flex-1">
+    // min-w-0: que el contenido (por ejemplo, el historial de Inicio) no
+    // estire el pad más allá del ancho de la ventana.
+    <div className="flex h-full min-h-0 min-w-0 flex-1">
       <LeftNav
         modo={modo}
         onModo={cambiarModo}

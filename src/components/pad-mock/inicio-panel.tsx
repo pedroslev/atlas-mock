@@ -77,6 +77,7 @@ export function InicioPanel({
       {
         id: "canal",
         header: t("padMock.inicio.colCanal"),
+        size: 140,
         accessorFn: (h) => CANAL_LABEL[h.canal],
         filterVariant: "select",
         Cell: ({ row }) => {
@@ -92,6 +93,7 @@ export function InicioPanel({
       {
         id: "fecha",
         header: t("padMock.inicio.colFecha"),
+        size: 150,
         accessorFn: (h) => `${h.fecha} ${h.hora}`,
         Cell: ({ row }) => (
           <span className="flex flex-col font-mono text-xs tabular-nums">
@@ -125,6 +127,7 @@ export function InicioPanel({
       {
         accessorKey: "duracion",
         header: t("padMock.inicio.colDuracion"),
+        size: 130,
         Cell: ({ cell }) => (
           <span className="font-mono text-xs tabular-nums">{cell.getValue<string>()}</span>
         ),
@@ -143,6 +146,7 @@ export function InicioPanel({
         // Solo los chats: abre lo conversado en un modal.
         id: "conversacion",
         header: "",
+        size: 150,
         enableSorting: false,
         enableColumnFilter: false,
         enableColumnActions: false,
@@ -164,7 +168,11 @@ export function InicioPanel({
   const conversacion = historial.find((h) => h.id === conversacionId);
 
   return (
-    <div className="h-full min-h-0 w-full flex-1 overflow-y-auto bg-muted/30">
+    // min-w-0: sin esto, el ancho natural del historial (la tabla) estira el
+    // panel más allá del espacio que deja el menú, y la pantalla queda
+    // recortada a la derecha. Con min-w-0 el panel se ajusta y la tabla
+    // scrollea adentro si no entra.
+    <div className="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto bg-muted/30">
       <div className="flex w-full flex-col gap-8 p-6 sm:p-8">
         <div className="flex w-full flex-col gap-6">
           {/* 1. Datos del agente — nombre, estado y cronómetro. Sin saludo
