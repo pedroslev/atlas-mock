@@ -537,9 +537,6 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                               ))}
                           </CommandList>
                         </Command>
-                        <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-                          {t("plantillas.editor.variablesPermiso")}
-                        </p>
                       </PopoverContent>
                     </Popover>
                     <Button type="button" variant="outline" size="sm" onClick={insertarArchivo}>
