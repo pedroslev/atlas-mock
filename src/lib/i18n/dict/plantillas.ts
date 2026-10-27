@@ -11,6 +11,13 @@ export const plantillas: NamespaceDict = {
 
     "tabs.grupos": "Grupos",
     "tabs.catalogo": "Catálogo",
+    "tabs.variables": "Variables",
+    "variables.descripcion": "Los datos que se completan solos en las plantillas: del cliente, de la campaña y del asesor. Si el dato falta, se usa el valor de respaldo; sin respaldo, Atlas avisa al asesor antes de enviar. Vale para todas las plantillas.",
+    "variables.col.variable": "Variable",
+    "variables.col.origen": "Origen",
+    "variables.col.ejemplo": "Ejemplo",
+    "variables.col.respaldo": "Si falta el dato",
+    "variables.placeholderRespaldo": "Avisar al asesor",
 
     nuevoGrupo: "Nuevo grupo",
     nuevaPlantilla: "Nueva plantilla",
@@ -72,18 +79,12 @@ export const plantillas: NamespaceDict = {
     "editor.insertarVariable": "Insertar variable",
     "editor.buscarVariable": "Buscar variable…",
     "editor.sinVariables": "Sin resultados.",
-    "editor.variables": "Variables usadas",
-    "editor.variablesAyuda":
-      "Cada variable se completa sola con los datos del cliente, la campaña o el asesor. Si el dato falta, se usa el valor de respaldo; sin respaldo, Atlas avisa al asesor antes de enviar.",
+    "editor.insertarArchivo": "Insertar archivo",
+    "editor.archivosAyuda": "En chat, el archivo se envía como mensaje aparte en el punto donde lo insertaste; en email va adjunto; SMS no lo admite.",
+    "editor.variablesUsadas": "Variables usadas: {lista}",
+    "editor.variablesConfig": "Si falta un dato, se usa lo configurado en la solapa Variables.",
     "editor.sinVariablesUsadas":
-      "Este mensaje no usa variables. Insertá una desde la barra del mensaje.",
-    "editor.respaldo": "Si falta el dato",
-    "editor.placeholderRespaldo": "Vacío: se omite",
-    "editor.adjuntos": "Archivos adjuntos",
-    "editor.adjuntosAyuda":
-      "Viajan con el mensaje en los canales que lo permiten. Cada canal tiene su límite de tamaño.",
-    "editor.agregarArchivo": "Agregar archivo",
-    "editor.sinAdjuntos": "Sin archivos adjuntos.",
+      "Este mensaje no usa variables.",
     "editor.quitarArchivo": "Quitar {nombre}",
     "editor.vistaPrevia": "Vista previa",
     "editor.vistaPreviaAyuda":
@@ -148,7 +149,7 @@ export const plantillas: NamespaceDict = {
       "¿Querés agregar la plantilla debajo de lo que escribiste o reemplazarlo?",
     "selector.insertar": "Insertar debajo",
     "selector.reemplazar": "Reemplazar",
-    "selector.adjuntoAgregado": "Adjunto de la plantilla",
+    "selector.adjuntoAgregado": "Archivos de la plantilla: en chat van como mensaje aparte, donde está el 📎 en el texto.",
   },
   en: {
     descripcion:
@@ -156,6 +157,13 @@ export const plantillas: NamespaceDict = {
 
     "tabs.grupos": "Groups",
     "tabs.catalogo": "Catalog",
+    "tabs.variables": "Variables",
+    "variables.descripcion": "The data that fills itself in on templates: from the customer, the campaign and the agent. If the data is missing, the fallback value is used; without one, Atlas warns the agent before sending. Applies to every template.",
+    "variables.col.variable": "Variable",
+    "variables.col.origen": "Source",
+    "variables.col.ejemplo": "Example",
+    "variables.col.respaldo": "If the data is missing",
+    "variables.placeholderRespaldo": "Warn the agent",
 
     nuevoGrupo: "New group",
     nuevaPlantilla: "New template",
@@ -215,18 +223,12 @@ export const plantillas: NamespaceDict = {
     "editor.insertarVariable": "Insert variable",
     "editor.buscarVariable": "Search variable…",
     "editor.sinVariables": "No results.",
-    "editor.variables": "Variables used",
-    "editor.variablesAyuda":
-      "Each variable is filled in from the customer, campaign or agent data. If the data is missing, the fallback value is used; without a fallback, Atlas warns the agent before sending.",
+    "editor.insertarArchivo": "Insert file",
+    "editor.archivosAyuda": "In chat the file is sent as a separate message right where you inserted it; in email it goes as an attachment; SMS does not support it.",
+    "editor.variablesUsadas": "Variables used: {lista}",
+    "editor.variablesConfig": "If a value is missing, the Variables tab settings apply.",
     "editor.sinVariablesUsadas":
-      "This message uses no variables. Insert one from the message toolbar.",
-    "editor.respaldo": "If the data is missing",
-    "editor.placeholderRespaldo": "Empty: omitted",
-    "editor.adjuntos": "Attachments",
-    "editor.adjuntosAyuda":
-      "They travel with the message on channels that allow it. Each channel has its own size limit.",
-    "editor.agregarArchivo": "Add file",
-    "editor.sinAdjuntos": "No attachments.",
+      "This message uses no variables.",
     "editor.quitarArchivo": "Remove {nombre}",
     "editor.vistaPrevia": "Preview",
     "editor.vistaPreviaAyuda":
@@ -289,7 +291,7 @@ export const plantillas: NamespaceDict = {
       "Insert the template below what you wrote, or replace it?",
     "selector.insertar": "Insert below",
     "selector.reemplazar": "Replace",
-    "selector.adjuntoAgregado": "Template attachment",
+    "selector.adjuntoAgregado": "Template files: in chat they go as a separate message, where the 📎 is in the text.",
   },
   pt: {
     descripcion:
@@ -297,6 +299,13 @@ export const plantillas: NamespaceDict = {
 
     "tabs.grupos": "Grupos",
     "tabs.catalogo": "Catálogo",
+    "tabs.variables": "Variáveis",
+    "variables.descripcion": "Os dados que se preenchem sozinhos nos modelos: do cliente, da campanha e do agente. Se o dado faltar, usa-se o valor de reserva; sem reserva, o Atlas avisa o agente antes de enviar. Vale para todos os modelos.",
+    "variables.col.variable": "Variável",
+    "variables.col.origen": "Origem",
+    "variables.col.ejemplo": "Exemplo",
+    "variables.col.respaldo": "Se o dado faltar",
+    "variables.placeholderRespaldo": "Avisar o agente",
 
     nuevoGrupo: "Novo grupo",
     nuevaPlantilla: "Novo modelo",
@@ -356,18 +365,12 @@ export const plantillas: NamespaceDict = {
     "editor.insertarVariable": "Inserir variável",
     "editor.buscarVariable": "Pesquisar variável…",
     "editor.sinVariables": "Sem resultados.",
-    "editor.variables": "Variáveis usadas",
-    "editor.variablesAyuda":
-      "Cada variável é preenchida com os dados do cliente, da campanha ou do atendente. Se o dado faltar, usa-se o valor de reserva; sem reserva, o Atlas avisa o atendente antes de enviar.",
+    "editor.insertarArchivo": "Inserir arquivo",
+    "editor.archivosAyuda": "No chat, o arquivo é enviado como mensagem separada no ponto onde você o inseriu; no e-mail vai anexado; SMS não admite.",
+    "editor.variablesUsadas": "Variáveis usadas: {lista}",
+    "editor.variablesConfig": "Se um dado faltar, usa-se o configurado na aba Variáveis.",
     "editor.sinVariablesUsadas":
-      "Esta mensagem não usa variáveis. Insira uma pela barra da mensagem.",
-    "editor.respaldo": "Se o dado faltar",
-    "editor.placeholderRespaldo": "Vazio: é omitido",
-    "editor.adjuntos": "Arquivos anexos",
-    "editor.adjuntosAyuda":
-      "Viajam com a mensagem nos canais que permitem. Cada canal tem seu limite de tamanho.",
-    "editor.agregarArchivo": "Adicionar arquivo",
-    "editor.sinAdjuntos": "Sem anexos.",
+      "Esta mensagem não usa variáveis.",
     "editor.quitarArchivo": "Remover {nombre}",
     "editor.vistaPrevia": "Pré-visualização",
     "editor.vistaPreviaAyuda":
@@ -430,7 +433,7 @@ export const plantillas: NamespaceDict = {
       "Inserir o modelo abaixo do que você escreveu ou substituí-lo?",
     "selector.insertar": "Inserir abaixo",
     "selector.reemplazar": "Substituir",
-    "selector.adjuntoAgregado": "Anexo do modelo",
+    "selector.adjuntoAgregado": "Arquivos do modelo: no chat vão como mensagem separada, onde está o 📎 no texto.",
   },
   ca: {
     descripcion:
@@ -438,6 +441,13 @@ export const plantillas: NamespaceDict = {
 
     "tabs.grupos": "Grups",
     "tabs.catalogo": "Catàleg",
+    "tabs.variables": "Variables",
+    "variables.descripcion": "Les dades que s'omplen soles a les plantilles: del client, de la campanya i de l'assessor. Si la dada falta, es fa servir el valor de reserva; sense reserva, Atlas avisa l'assessor abans d'enviar. Val per a totes les plantilles.",
+    "variables.col.variable": "Variable",
+    "variables.col.origen": "Origen",
+    "variables.col.ejemplo": "Exemple",
+    "variables.col.respaldo": "Si falta la dada",
+    "variables.placeholderRespaldo": "Avisar l'assessor",
 
     nuevoGrupo: "Nou grup",
     nuevaPlantilla: "Nova plantilla",
@@ -497,18 +507,12 @@ export const plantillas: NamespaceDict = {
     "editor.insertarVariable": "Insereix una variable",
     "editor.buscarVariable": "Cerca una variable…",
     "editor.sinVariables": "Sense resultats.",
-    "editor.variables": "Variables usades",
-    "editor.variablesAyuda":
-      "Cada variable s'omple sola amb les dades del client, la campanya o l'agent. Si la dada falta, es fa servir el valor de reserva; sense reserva, Atlas avisa l'agent abans d'enviar.",
+    "editor.insertarArchivo": "Insereix fitxer",
+    "editor.archivosAyuda": "Al xat, el fitxer s'envia com a missatge a part al punt on l'has inserit; al correu va adjunt; l'SMS no l'admet.",
+    "editor.variablesUsadas": "Variables usades: {lista}",
+    "editor.variablesConfig": "Si falta una dada, es fa servir el que hi ha configurat a la pestanya Variables.",
     "editor.sinVariablesUsadas":
-      "Aquest missatge no fa servir variables. Insereix-ne una des de la barra del missatge.",
-    "editor.respaldo": "Si falta la dada",
-    "editor.placeholderRespaldo": "Buit: s'omet",
-    "editor.adjuntos": "Fitxers adjunts",
-    "editor.adjuntosAyuda":
-      "Viatgen amb el missatge als canals que ho permeten. Cada canal té el seu límit de mida.",
-    "editor.agregarArchivo": "Afegeix un fitxer",
-    "editor.sinAdjuntos": "Sense fitxers adjunts.",
+      "Aquest missatge no fa servir variables.",
     "editor.quitarArchivo": "Treu {nombre}",
     "editor.vistaPrevia": "Vista prèvia",
     "editor.vistaPreviaAyuda":
@@ -571,6 +575,6 @@ export const plantillas: NamespaceDict = {
       "Vols afegir la plantilla sota el que has escrit o substituir-lo?",
     "selector.insertar": "Insereix a sota",
     "selector.reemplazar": "Substitueix",
-    "selector.adjuntoAgregado": "Adjunt de la plantilla",
+    "selector.adjuntoAgregado": "Fitxers de la plantilla: al xat van com a missatge a part, on hi ha el 📎 al text.",
   },
 };

@@ -52,7 +52,9 @@ function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
 // Plantillas (ATLAS-1191): el selector lista las del grupo de plantillas de
 // la campaña para este canal. Escribir "/" con el cuadro vacío lo abre. Al
 // elegir una, el texto entra con las variables ya resueltas con los datos
-// del cliente; si ya había texto, el asesor elige Insertar o Reemplazar. La
+// del cliente y los archivos como líneas "📎 nombre" (al enviar salen como
+// mensaje aparte en ese punto); si ya había texto, el asesor elige Insertar o
+// Reemplazar. La
 // plantilla por defecto de la campaña (chat) viene precargada al abrir.
 //
 // Mock: grupo y plantilla por defecto fijos (los de la campaña de ejemplo);

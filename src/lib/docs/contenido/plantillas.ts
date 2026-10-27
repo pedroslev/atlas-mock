@@ -21,7 +21,7 @@ export const contenido: ContenidoPagina = {
             texto:
               "Las plantillas se crean una sola vez en el «Catálogo» y se reutilizan. Un grupo de plantillas es el conjunto que ofrecés para trabajar, y el grupo es lo que se asigna a una campaña: en «Campañas», el campo «Grupo de plantillas» te deja elegirlo. Si no se asigna, la campaña hereda el del proyecto.",
           },
-          { tipo: "p", texto: "La pantalla tiene dos solapas: «Grupos» y «Catálogo»." },
+          { tipo: "p", texto: "La pantalla tiene tres solapas: «Grupos», «Catálogo» y «Variables»." },
         ],
       },
       {
@@ -42,8 +42,8 @@ export const contenido: ContenidoPagina = {
               "Activa — Inactiva no se ofrece al asesor, pero no se pierde.",
               "Canales en los que se ofrece — Chat, Email y SMS. Desmarcá los que no correspondan: una firma larga, por ejemplo, solo en email.",
               "Asunto — Solo para email. Puede llevar variables.",
-              "Mensaje — El texto, con la barra de formato y el botón «Insertar variable».",
-              "Archivos adjuntos — Viajan con el mensaje en los canales que lo permiten. SMS no admite adjuntos.",
+              "Mensaje — El texto, con la barra de formato y los botones «Insertar variable» e «Insertar archivo».",
+              "Archivos — Van dentro del texto, donde los insertás. En chat salen como mensaje aparte en ese punto (texto, archivo, texto); en email van adjuntos; SMS no los admite.",
             ],
           },
           { tipo: "sub", texto: "Variables" },
@@ -55,7 +55,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Cada variable usada tiene un campo «Si falta el dato»: lo que se pone cuando el cliente no tiene ese dato. Por ejemplo, «Hola {{nombre}}» con respaldo «estimado cliente» queda «Hola estimado cliente». Si lo dejás vacío, la variable se omite. Si una variable no tiene dato ni respaldo, Hermes avisa al asesor antes de enviar.",
+              "En la solapa «Variables» definís, una sola vez para todas las plantillas, qué se pone cuando el cliente no tiene ese dato («Si falta el dato»). Por ejemplo, «Hola {{nombre}}» con respaldo «estimado cliente» queda «Hola estimado cliente». Si lo dejás vacío, Hermes avisa al asesor antes de enviar.",
           },
         ],
       },
@@ -89,7 +89,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "En el cuadro de mensaje, escribe «/» (con el cuadro vacío) o toca el botón «Plantillas».",
               "Busca por nombre o por una palabra del mensaje. Arriba ve sus favoritas (estrella) y las que más usa.",
-              "Elige una: el texto entra con los datos del cliente ya puestos y los adjuntos se suman debajo. Si ya había texto escrito, elige entre «Insertar debajo» o «Reemplazar»: Enter reemplaza, Shift+Enter inserta debajo.",
+              "Elige una: el texto entra con los datos del cliente ya puestos y los archivos en su lugar, que al enviar salen como mensaje aparte. Si ya había texto escrito, elige entre «Insertar debajo» o «Reemplazar»: Enter reemplaza, Shift+Enter inserta debajo.",
               "Ajusta lo que quiera y envía con Enter.",
             ],
           },

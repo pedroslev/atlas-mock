@@ -30,8 +30,10 @@ import {
 import {
   plantillas as plantillasIniciales,
   plantillaGrupos,
+  variablesPlantilla,
   type Plantilla,
   type PlantillaGrupo,
+  type VariablePlantilla,
 } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
@@ -54,6 +56,9 @@ export default function PlantillasPage() {
   const [grupos, setGrupos] = useState<PlantillaGrupo[]>(plantillaGrupos);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
   const [grupoNombre, setGrupoNombre] = useState("");
+  // Solapa VARIABLES: qué dato completa cada variable y qué se pone si falta
+  // (una sola configuración para todas las plantillas del tenant).
+  const [variables, setVariables] = useState<VariablePlantilla[]>(variablesPlantilla);
 
   const columnasGrupos = useMemo<MRT_ColumnDef<PlantillaGrupo>[]>(
     () => [
@@ -142,6 +147,57 @@ export default function PlantillasPage() {
     [t]
   );
 
+  const columnasVariables = useMemo<MRT_ColumnDef<VariablePlantilla>[]>(
+    () => [
+      {
+        id: "variable",
+        header: t("plantillas.variables.col.variable"),
+        accessorFn: (v) => t(`plantillas.variable.${v.clave}`),
+        Cell: ({ row }) => (
+          <span className="flex items-center gap-2">
+            <span className="font-medium">{t(`plantillas.variable.${row.original.clave}`)}</span>
+            <Badge variant="outline" className="font-mono">{`{{${row.original.clave}}}`}</Badge>
+          </span>
+        ),
+      },
+      {
+        id: "origen",
+        header: t("plantillas.variables.col.origen"),
+        accessorFn: (v) => t(`plantillas.origen.${v.origen}`),
+      },
+      {
+        accessorKey: "ejemplo",
+        header: t("plantillas.variables.col.ejemplo"),
+        Cell: ({ cell }) => (
+          <span className="text-muted-foreground">{cell.getValue<string>()}</span>
+        ),
+      },
+      {
+        id: "respaldo",
+        header: t("plantillas.variables.col.respaldo"),
+        accessorFn: (v) => v.respaldo ?? "",
+        Cell: ({ row }) => (
+          <Input
+            value={row.original.respaldo ?? ""}
+            placeholder={t("plantillas.variables.placeholderRespaldo")}
+            aria-label={`${t("plantillas.variables.col.respaldo")}: ${t(`plantillas.variable.${row.original.clave}`)}`}
+            onChange={(e) =>
+              setVariables((prev) =>
+                prev.map((v) =>
+                  v.clave === row.original.clave
+                    ? { ...v, respaldo: e.target.value === "" ? undefined : e.target.value }
+                    : v
+                )
+              )
+            }
+            className="h-8 max-w-xs"
+          />
+        ),
+      },
+    ],
+    [t]
+  );
+
   function eliminarPlantilla(id: string) {
     setItems((prev) => prev.filter((p) => p.id !== id));
     setGrupos((prev) =>
@@ -187,6 +243,7 @@ export default function PlantillasPage() {
           <TabsList>
             <TabsTrigger value="grupos">{t("plantillas.tabs.grupos")}</TabsTrigger>
             <TabsTrigger value="catalogo">{t("plantillas.tabs.catalogo")}</TabsTrigger>
+            <TabsTrigger value="variables">{t("plantillas.tabs.variables")}</TabsTrigger>
           </TabsList>
           <TabsContent value="grupos" className="contents">
             <Button onClick={abrirNuevoGrupo}>
@@ -259,6 +316,11 @@ export default function PlantillasPage() {
               ),
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="variables" className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">{t("plantillas.variables.descripcion")}</p>
+          <MitrolTable columns={columnasVariables} data={variables} />
         </TabsContent>
       </Tabs>
 

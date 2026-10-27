@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Bold, Braces, Italic, List, Paperclip, Plus } from "lucide-react";
+import { ArrowRight, Bold, Braces, Italic, List, Paperclip } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -48,6 +47,9 @@ import {
 } from "@/lib/mock-data";
 import {
   datosEjemplo,
+  marcaArchivo,
+  partesChat,
+  quitarArchivos,
   resolverVariables,
   variablesUsadas,
 } from "@/lib/plantillas";
@@ -59,12 +61,15 @@ import {
 
 // Editor de una plantilla del catálogo (alta y edición). Pantalla propia en
 // dos partes: "Datos" (nombre, descripción, estado, canales) y "Mensaje"
-// (asunto, texto con formato y variables, respaldos, adjuntos) con la vista
-// previa al lado, para ver cómo queda mientras se escribe, sin scroll.
+// (asunto, texto con formato, variables y archivos) con la vista previa al
+// lado, para ver cómo queda mientras se escribe, sin scroll.
 //
 // El mensaje se escribe UNA vez, con formato básico (**negrita**, _cursiva_,
-// "- " para listas) y variables {{clave}} que se insertan desde la barra; la
-// vista previa muestra cómo lo recibe el cliente en cada canal elegido.
+// "- " para listas), variables {{clave}} y archivos [[archivo:nombre]] que se
+// insertan desde la barra donde está el cursor; la vista previa muestra cómo
+// lo recibe el cliente en cada canal elegido. Los valores de respaldo de las
+// variables son una configuración general (solapa Variables), no de cada
+// plantilla.
 export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   const t = useT();
   const [nombre, setNombre] = useState(initial?.nombre ?? "");
@@ -75,9 +80,6 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   );
   const [asunto, setAsunto] = useState(initial?.asunto ?? "");
   const [contenido, setContenido] = useState(initial?.contenido ?? "");
-  const [respaldos, setRespaldos] = useState<Record<string, string>>(
-    initial?.respaldos ?? {}
-  );
   const [adjuntos, setAdjuntos] = useState<AdjuntoPlantilla[]>(
     initial?.adjuntos ?? []
   );
@@ -119,32 +121,56 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     });
   }
 
-  function insertarVariable(clave: string) {
+  /** Inserta `marca` donde está el cursor (o al final). */
+  function insertarEnCursor(marca: string, enLineaPropia = false) {
     const el = textareaRef.current;
-    const marca = `{{${clave}}}`;
     const a = el?.selectionStart ?? contenido.length;
     const b = el?.selectionEnd ?? contenido.length;
-    setContenido(contenido.slice(0, a) + marca + contenido.slice(b));
-    setVariablesOpen(false);
+    const antes = contenido.slice(0, a);
+    const despues = contenido.slice(b);
+    let texto = marca;
+    if (enLineaPropia) {
+      if (antes && !antes.endsWith("\n")) texto = "\n" + texto;
+      if (!despues.startsWith("\n")) texto = texto + "\n";
+    }
+    setContenido(antes + texto + despues);
+    const fin = a + texto.length;
     requestAnimationFrame(() => {
       el?.focus();
-      el?.setSelectionRange(a + marca.length, a + marca.length);
+      el?.setSelectionRange(fin, fin);
     });
+  }
+
+  function insertarVariable(clave: string) {
+    insertarEnCursor(`{{${clave}}}`);
+    setVariablesOpen(false);
+  }
+
+  function insertarArchivo() {
+    // Mock: no hay subida real; se agrega un archivo de ejemplo y queda en el
+    // texto, en su propia línea, donde está el cursor.
+    const n = adjuntos.length + 1;
+    const archivo = { id: `adj-nuevo-${n}`, nombre: `archivo-${n}.pdf`, tamano: `${120 + n * 35} KB` };
+    setAdjuntos((prev) => [...prev, archivo]);
+    insertarEnCursor(marcaArchivo(archivo.nombre), true);
+  }
+
+  function quitarArchivo(id: string) {
+    const archivo = adjuntos.find((a) => a.id === id);
+    if (!archivo) return;
+    setAdjuntos((prev) => prev.filter((a) => a.id !== id));
+    setContenido((prev) =>
+      prev
+        .split("\n")
+        .filter((linea) => linea.trim() !== marcaArchivo(archivo.nombre))
+        .join("\n")
+    );
   }
 
   function toggleCanal(canal: CanalPlantilla, on: boolean) {
     setCanales((prev) =>
       on ? CANALES_PLANTILLA.filter((c) => c === canal || prev.includes(c)) : prev.filter((c) => c !== canal)
     );
-  }
-
-  function agregarArchivo() {
-    // Mock: no hay subida real; se agrega un archivo de ejemplo.
-    const n = adjuntos.length + 1;
-    setAdjuntos((prev) => [
-      ...prev,
-      { id: `adj-nuevo-${n}`, nombre: `archivo-${n}.pdf`, tamano: `${120 + n * 35} KB` },
-    ]);
   }
 
   const porOrigen = useMemo(() => {
@@ -185,7 +211,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
 
         {/* Paso 1: Datos ------------------------------------------------ */}
         <TabsContent value="datos">
-          <Card className="max-w-3xl">
+          <Card>
             <CardContent className="flex flex-col gap-4 pt-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="flex flex-col gap-1.5">
@@ -312,92 +338,49 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    <Button type="button" variant="outline" size="sm" onClick={insertarArchivo}>
+                      <Paperclip className="size-4" />
+                      {t("plantillas.editor.insertarArchivo")}
+                    </Button>
                   </div>
                   <Textarea
                     ref={textareaRef}
                     id="pl-contenido"
                     value={contenido}
                     onChange={(e) => setContenido(e.target.value)}
-                    rows={10}
                     placeholder={t("plantillas.editor.placeholderContenido")}
-                    className="font-mono text-sm"
+                    className="h-[calc(100vh-33rem)] min-h-[16rem] resize-y font-mono text-sm"
                     autoFocus={paso === "mensaje"}
                   />
                 </div>
 
-                {/* Adjuntos: en línea, debajo del texto ------------------- */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">{t("plantillas.editor.adjuntos")}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t("plantillas.editor.adjuntosAyuda")}
-                      </span>
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={agregarArchivo}>
-                      <Plus />
-                      {t("plantillas.editor.agregarArchivo")}
-                    </Button>
-                  </div>
-                  {adjuntos.length > 0 && (
-                    <AdjuntosChips
-                      adjuntos={adjuntos}
-                      onQuitar={(id) => setAdjuntos((prev) => prev.filter((a) => a.id !== id))}
-                    />
-                  )}
-                </div>
-
-                {/* Variables usadas + respaldo ---------------------------- */}
-                {usadas.length > 0 && (
-                  <div className="flex flex-col gap-2 rounded-lg border p-3">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">{t("plantillas.editor.variables")}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t("plantillas.editor.variablesAyuda")}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {usadas.map((clave) => {
-                        const def = variablesPlantilla.find((v) => v.clave === clave);
-                        return (
-                          <div
-                            key={clave}
-                            className="grid items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-                          >
-                            <span className="flex items-center gap-2 text-sm">
-                              <Badge variant="outline" className="font-mono">
-                                {`{{${clave}}}`}
-                              </Badge>
-                              <span>{def ? t(`plantillas.variable.${clave}`) : clave}</span>
-                              {def && (
-                                <span className="text-xs text-muted-foreground">
-                                  · {t(`plantillas.origen.${def.origen}`)}
-                                </span>
-                              )}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <Label
-                                htmlFor={`resp-${clave}`}
-                                className="shrink-0 text-xs text-muted-foreground"
-                              >
-                                {t("plantillas.editor.respaldo")}
-                              </Label>
-                              <Input
-                                id={`resp-${clave}`}
-                                value={respaldos[clave] ?? ""}
-                                onChange={(e) =>
-                                  setRespaldos((prev) => ({ ...prev, [clave]: e.target.value }))
-                                }
-                                placeholder={t("plantillas.editor.placeholderRespaldo")}
-                                className="h-8"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                {/* Archivos: están en el texto; acá, la lista para quitarlos */}
+                {adjuntos.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <AdjuntosChips adjuntos={adjuntos} onQuitar={quitarArchivo} />
+                    <span className="text-xs text-muted-foreground">
+                      {t("plantillas.editor.archivosAyuda")}
+                    </span>
                   </div>
                 )}
+
+                {/* Variables: una línea; el respaldo es configuración general */}
+                <p className="text-xs text-muted-foreground">
+                  {usadas.length === 0
+                    ? t("plantillas.editor.sinVariablesUsadas")
+                    : t("plantillas.editor.variablesUsadas", {
+                        lista: usadas
+                          .map((clave) =>
+                            variablesPlantilla.some((v) => v.clave === clave)
+                              ? t(`plantillas.variable.${clave}`)
+                              : clave
+                          )
+                          .join(", "),
+                      })}{" "}
+                  <Link href="/plantillas" className="underline underline-offset-2">
+                    {t("plantillas.editor.variablesConfig")}
+                  </Link>
+                </p>
               </CardContent>
             </Card>
 
@@ -415,7 +398,6 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     canales={canales}
                     asunto={asunto}
                     contenido={contenido}
-                    respaldos={respaldos}
                     adjuntos={adjuntos}
                   />
                 )}
@@ -432,18 +414,18 @@ function VistaPrevia({
   canales,
   asunto,
   contenido,
-  respaldos,
   adjuntos,
 }: {
   canales: CanalPlantilla[];
   asunto: string;
   contenido: string;
-  respaldos: Record<string, string>;
   adjuntos: AdjuntoPlantilla[];
 }) {
   const t = useT();
-  const texto = resolverVariables(contenido, datosEjemplo, respaldos).texto;
-  const asuntoResuelto = resolverVariables(asunto, datosEjemplo, respaldos).texto;
+  const texto = resolverVariables(contenido, datosEjemplo).texto;
+  const asuntoResuelto = resolverVariables(asunto, datosEjemplo).texto;
+  const partes = partesChat(texto);
+  const sinArchivos = quitarArchivos(texto);
 
   return (
     <Tabs defaultValue={canales[0]} className="gap-3">
@@ -461,16 +443,29 @@ function VistaPrevia({
               {t("plantillas.editor.vistaPreviaVacia")}
             </p>
           ) : canal === "chat" ? (
-            <div className="flex justify-end">
-              <div className="max-w-[90%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-primary-foreground">
-                <MensajeRenderizado texto={texto} canal="chat" />
-                {adjuntos.length > 0 && (
-                  <div className="mt-2 flex items-center gap-1 text-xs opacity-80">
-                    <Paperclip className="size-3" />
-                    {t("plantillas.editor.adjuntosPreview", { cantidad: adjuntos.length })}
+            // Chat: cada archivo corta el texto y va como mensaje aparte.
+            <div className="flex flex-col items-end gap-1.5">
+              {partes.map((parte, i) =>
+                parte.tipo === "texto" ? (
+                  <div
+                    key={i}
+                    className="max-w-[90%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-primary-foreground"
+                  >
+                    <MensajeRenderizado texto={parte.texto} canal="chat" />
                   </div>
-                )}
-              </div>
+                ) : (
+                  <div
+                    key={i}
+                    className="flex max-w-[90%] items-center gap-2 rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground"
+                  >
+                    <Paperclip className="size-3.5 shrink-0 opacity-80" />
+                    <span className="truncate">{parte.nombre}</span>
+                    <span className="text-xs opacity-70">
+                      {adjuntos.find((a) => a.nombre === parte.nombre)?.tamano}
+                    </span>
+                  </div>
+                )
+              )}
             </div>
           ) : canal === "email" ? (
             <div className="flex flex-col gap-2 rounded-lg border p-3">
@@ -480,7 +475,7 @@ function VistaPrevia({
                   <span className="font-medium">{asuntoResuelto}</span>
                 </div>
               )}
-              <MensajeRenderizado texto={texto} canal="email" />
+              <MensajeRenderizado texto={sinArchivos} canal="email" />
               {adjuntos.length > 0 && (
                 <div className="border-t pt-2">
                   <AdjuntosChips adjuntos={adjuntos} />
@@ -490,7 +485,7 @@ function VistaPrevia({
           ) : (
             <div className="flex flex-col gap-2">
               <div className="rounded-2xl rounded-bl-sm bg-muted px-3 py-2">
-                <MensajeRenderizado texto={texto} canal="sms" />
+                <MensajeRenderizado texto={sinArchivos} canal="sms" />
               </div>
               {adjuntos.length > 0 && (
                 <p className="text-xs text-muted-foreground">{t("plantillas.editor.smsSinAdjuntos")}</p>

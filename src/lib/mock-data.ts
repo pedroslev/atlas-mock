@@ -296,14 +296,20 @@ export type VariablePlantilla = {
   origen: OrigenVariable;
   /** Valor con el que se arma la vista previa. */
   ejemplo: string;
+  /**
+   * Si falta el dato: texto que lo reemplaza. Es una configuración general
+   * del tenant (solapa Variables), no de cada plantilla. Sin respaldo, Hermes
+   * avisa al asesor antes de enviar.
+   */
+  respaldo?: string;
 };
 
 // Las variables salen de lo que Atlas ya conoce: los campos del cliente
 // (módulo Clientes), la campaña y el asesor. La etiqueta visible se traduce
 // con `plantillas.variable.<clave>`.
 export const variablesPlantilla: VariablePlantilla[] = [
-  { clave: "nombre", origen: "cliente", ejemplo: "Juan" },
-  { clave: "apellido", origen: "cliente", ejemplo: "Pérez" },
+  { clave: "nombre", origen: "cliente", ejemplo: "Juan", respaldo: "" },
+  { clave: "apellido", origen: "cliente", ejemplo: "Pérez", respaldo: "" },
   { clave: "documento", origen: "cliente", ejemplo: "28.456.789" },
   { clave: "telefono", origen: "cliente", ejemplo: "+54 11 5555-0101" },
   { clave: "email", origen: "cliente", ejemplo: "juan.perez@mail.com" },
@@ -323,7 +329,6 @@ export type Plantilla = {
   asunto?: string;
   contenido: string;
   /** Valor de respaldo por variable usada, cuando el dato del cliente falta. */
-  respaldos: Record<string, string>;
   adjuntos: AdjuntoPlantilla[];
   activa: boolean;
 };
@@ -827,7 +832,6 @@ export const plantillas: Plantilla[] = [
     asunto: "Hola {{nombre}}, te escribimos por tu cuenta",
     contenido:
       "¡Hola {{nombre}}! Soy {{asesor}}. ¿En qué te puedo ayudar hoy?",
-    respaldos: { nombre: "" },
     adjuntos: [],
     activa: true,
   },
@@ -838,7 +842,6 @@ export const plantillas: Plantilla[] = [
     canales: ["chat", "email"],
     contenido:
       "Para poder ayudarte mejor, ¿me confirmás estos datos?\n- Número de cliente\n- Últimos 4 dígitos del documento",
-    respaldos: {},
     adjuntos: [],
     activa: true,
   },
@@ -849,8 +852,7 @@ export const plantillas: Plantilla[] = [
     canales: ["chat", "email"],
     asunto: "Tu propuesta de pago",
     contenido:
-      "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas van en el archivo adjunto.\n\n_Tiene validez hasta el último día hábil del mes._",
-    respaldos: { nombre: "Estimado cliente" },
+      "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas están en el archivo.\n[[archivo:propuesta-de-pago.pdf]]\n_Tiene validez hasta el último día hábil del mes._",
     adjuntos: [
       { id: "adj-1", nombre: "propuesta-de-pago.pdf", tamano: "180 KB" },
     ],
@@ -862,7 +864,6 @@ export const plantillas: Plantilla[] = [
     descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
     canales: ["chat"],
     contenido: "Dame un minuto que lo reviso y te confirmo, {{nombre}}.",
-    respaldos: { nombre: "" },
     adjuntos: [],
     activa: true,
   },
@@ -873,7 +874,6 @@ export const plantillas: Plantilla[] = [
     canales: ["chat", "email", "sms"],
     contenido:
       "Perfecto, quedó todo resuelto. ¡Gracias por tu tiempo! Cualquier cosa, escribinos a este mismo número.",
-    respaldos: {},
     adjuntos: [],
     activa: true,
   },
@@ -884,7 +884,6 @@ export const plantillas: Plantilla[] = [
     canales: ["sms"],
     contenido:
       "{{nombre}}, tu cuota vence pronto. Si ya pagaste, ignorá este mensaje.",
-    respaldos: { nombre: "hola" },
     adjuntos: [],
     activa: false,
   },

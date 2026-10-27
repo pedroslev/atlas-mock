@@ -5,13 +5,24 @@ import {
 } from "@/lib/mock-data";
 
 // Plantillas de mensajes (ATLAS-1191): el contenido se escribe una vez con
-// formato básico y variables, y acá se traduce a lo que soporta cada canal.
+// formato básico, variables y archivos, y acá se traduce a lo que soporta
+// cada canal.
 //
 // Formato aceptado en el contenido:
 //   **negrita**   _cursiva_   líneas que empiezan con "- " (lista)
 //   {{clave}}     variable (ver variablesPlantilla en mock-data)
+//   [[archivo:nombre.pdf]]  un archivo de la plantilla, en su propia línea.
+//     En chat/WhatsApp se envía como mensaje aparte en ese punto (texto,
+//     archivo, texto); en email el texto es el cuerpo y el archivo va
+//     adjunto; SMS no admite archivos y se envía solo el texto.
 
 const RE_VARIABLE = /\{\{\s*([a-zA-Z]+)\s*\}\}/g;
+const RE_ARCHIVO = /^\s*\[\[archivo:([^\]]+)\]\]\s*$/gm;
+
+/** Marca que se inserta en el texto para un archivo. */
+export function marcaArchivo(nombre: string) {
+  return `[[archivo:${nombre}]]`;
+}
 
 /** Claves de variable usadas en el contenido (y el asunto), sin repetir. */
 export function variablesUsadas(contenido: string, asunto?: string) {
@@ -29,18 +40,27 @@ export const datosEjemplo: DatosVariables = Object.fromEntries(
   variablesPlantilla.map((v) => [v.clave, v.ejemplo])
 );
 
-export type VariableSinDato = { clave: string };
+/**
+ * Valores de respaldo generales (solapa Variables de Olimpo): una sola
+ * configuración para todas las plantillas. Una variable sin entrada acá no
+ * tiene respaldo: Hermes avisa al asesor.
+ */
+export const respaldosGenerales: Record<string, string> = Object.fromEntries(
+  variablesPlantilla
+    .filter((v) => v.respaldo !== undefined)
+    .map((v) => [v.clave, v.respaldo as string])
+);
 
 /**
  * Reemplaza las variables por el dato real; si falta, por el valor de
- * respaldo. Devuelve también las variables que quedaron sin dato ni
+ * respaldo general. Devuelve también las variables que quedaron sin dato ni
  * respaldo: nunca se envía un mensaje con una variable sin resolver, así que
  * el redactor avisa antes de enviar.
  */
 export function resolverVariables(
   texto: string,
   datos: DatosVariables,
-  respaldos: Record<string, string>
+  respaldos: Record<string, string> = respaldosGenerales
 ): { texto: string; sinDato: string[] } {
   const sinDato: string[] = [];
   const resultado = texto.replace(RE_VARIABLE, (_, clave: string) => {
@@ -52,9 +72,36 @@ export function resolverVariables(
   });
   // Un respaldo vacío puede dejar dobles espacios ("Hola , ¿cómo") — se limpian.
   return {
-    texto: resultado.replace(/[ \t]{2,}/g, " ").replace(/ ,/g, ","),
+    texto: resultado.replace(/[ \t]{2,}/g, " ").replace(/ ,/g, ",").replace(/ !/g, "!"),
     sinDato,
   };
+}
+
+/** Quita las marcas de archivo (email y SMS: el archivo no va en el texto). */
+export function quitarArchivos(contenido: string) {
+  return contenido.replace(RE_ARCHIVO, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+export type ParteChat =
+  | { tipo: "texto"; texto: string }
+  | { tipo: "archivo"; nombre: string };
+
+/**
+ * Cómo sale por chat/WhatsApp: una secuencia de mensajes. Cada archivo corta
+ * el texto y va como mensaje propio en ese punto.
+ */
+export function partesChat(contenido: string): ParteChat[] {
+  const partes: ParteChat[] = [];
+  let ultimo = 0;
+  for (const m of contenido.matchAll(RE_ARCHIVO)) {
+    const antes = contenido.slice(ultimo, m.index).trim();
+    if (antes) partes.push({ tipo: "texto", texto: antes });
+    partes.push({ tipo: "archivo", nombre: m[1].trim() });
+    ultimo = m.index! + m[0].length;
+  }
+  const resto = contenido.slice(ultimo).trim();
+  if (resto) partes.push({ tipo: "texto", texto: resto });
+  return partes;
 }
 
 /** Quita el formato: lo que recibe un canal de texto plano (SMS). */
@@ -87,18 +134,19 @@ export function segmentar(linea: string): Segmento[] {
   return segmentos;
 }
 
-/** Texto final que recibe el cliente por un canal dado. */
+/**
+ * Texto final que recibe el cliente por un canal dado. En chat, cada archivo
+ * queda como una línea "📎 nombre" (en el redactor de Hermes se ve así y al
+ * enviar sale como mensaje aparte); en email y SMS se quita del texto.
+ */
 export function renderizarParaCanal(
-  plantilla: Pick<Plantilla, "contenido" | "respaldos">,
+  plantilla: Pick<Plantilla, "contenido">,
   canal: CanalPlantilla,
   datos: DatosVariables
 ) {
-  const { texto, sinDato } = resolverVariables(
-    plantilla.contenido,
-    datos,
-    plantilla.respaldos
-  );
-  if (canal === "sms") return { texto: aTextoPlano(texto), sinDato };
-  if (canal === "chat") return { texto: aFormatoChat(texto), sinDato };
-  return { texto, sinDato };
+  const { texto, sinDato } = resolverVariables(plantilla.contenido, datos);
+  if (canal === "sms") return { texto: aTextoPlano(quitarArchivos(texto)), sinDato };
+  if (canal === "chat")
+    return { texto: aFormatoChat(texto.replace(RE_ARCHIVO, "📎 $1")), sinDato };
+  return { texto: quitarArchivos(texto), sinDato };
 }
