@@ -104,7 +104,7 @@ export const contenido: ContenidoPagina = {
               "Se puede interrumpir marcando una tecla — Con el tilde, una tecla corta el audio y el flujo sigue al instante; la tecla la recibe el Capturar siguiente. Sin el tilde, el audio se escucha completo.",
               "Tipo de mensaje — Solo en cuentas de texto: Texto, Botones, Lista de opciones, Carrusel o Imagen o archivo. Cada tipo muestra sus propios campos.",
               "Espera (s) — Con Botones, Lista de opciones o Carrusel: cuánto se espera la elección antes de salir por Sin respuesta.",
-              "Mensaje — El texto que recibe el cliente. En Botones y Lista de opciones es el texto que acompaña a las opciones, y en Texto es el mensaje completo. En Carrusel es el mensaje que acompaña a las tarjetas. Hasta 4096 caracteres en Texto y en Lista de opciones, y hasta 1024 en Botones y en Carrusel."
+              "Mensaje — El texto que recibe el cliente. En Botones y Lista de opciones es el texto que acompaña a las opciones, y en Texto es el mensaje completo. En Carrusel es el mensaje que acompaña a las tarjetas."
             ]
           },
           {
@@ -115,12 +115,12 @@ export const contenido: ContenidoPagina = {
             "tipo": "lista",
             "items": [
               "Texto — Un mensaje de texto.",
-              "Botones — Hasta 3 botones debajo del mensaje. Cada uno tiene un título de hasta 20 caracteres, que es lo que lee la persona, y su propia salida en el macroestado. Los títulos no se pueden repetir. Las opciones se numeran (1, 2, 3; en el carrusel, tarjeta.botón: 1.1, 1.2, 2.1) y la salida lleva ese número.",
-              "Lista de opciones — Un menú de hasta 10 opciones. Se completa el texto del botón que abre la lista (hasta 20 caracteres) y, por cada opción, su título (hasta 24 caracteres) y, si se quiere, una descripción de hasta 72 caracteres. Cada opción tiene su propia salida en el macroestado.",
-              "Carrusel — De 2 a 10 tarjetas que la persona recorre deslizando, con un mensaje que las acompaña. Cada tarjeta tiene una imagen (obligatoria), un texto opcional de hasta 160 caracteres y 2 saltos de línea, y de 1 a 2 botones con título de hasta 20 caracteres. Todas las tarjetas tienen que tener la misma cantidad de botones. Cada botón tiene su propia salida en el macroestado, numerada tarjeta.botón.",
-              "Imagen o archivo — Se elige si se envía una Imagen o un Archivo, se sube desde el macroestado y se puede sumar un texto de hasta 1024 caracteres que lo acompañe. Se usa, por ejemplo, para cerrar un camino de autogestión con una imagen de instrucciones o un documento con los pasos a seguir.",
-              "Imágenes admitidas — JPG, JPEG y PNG, de hasta 5 MB.",
-              "Archivos admitidos — PDF, DOC, DOCX, XLS, XLSX y TXT, de hasta 100 MB."
+              "Botones — Los botones que se muestran debajo del mensaje. Cada uno tiene un título, que es lo que lee la persona, y su propia salida en el macroestado. Las opciones se numeran (1, 2, 3; en el carrusel, tarjeta.botón: 1.1, 1.2, 2.1) y la salida lleva ese número.",
+              "Lista de opciones — Un menú de opciones. Se completa el texto del botón que abre la lista y, por cada opción, su título y, si se quiere, una descripción. Cada opción tiene su propia salida en el macroestado.",
+              "Carrusel — Tarjetas que la persona recorre deslizando, con un mensaje que las acompaña. Cada tarjeta tiene una imagen, un texto opcional y los botones que se quiera, cada uno con su título. Cada botón tiene su propia salida en el macroestado, numerada tarjeta.botón.",
+              "Imagen o archivo — Se elige si se envía una Imagen o un Archivo, se sube desde el macroestado y se puede sumar un texto que lo acompañe. Se usa, por ejemplo, para cerrar un camino de autogestión con una imagen de instrucciones o un documento con los pasos a seguir.",
+              "Imágenes admitidas — JPG, JPEG y PNG.",
+              "Archivos admitidos — PDF, DOC, DOCX, XLS, XLSX y TXT."
             ]
           },
           {
@@ -502,7 +502,7 @@ export const contenido: ContenidoPagina = {
               "Can be interrupted by pressing a key — When checked, a key stops the audio and the flow continues immediately; the next Collect receives the key. When unchecked, the audio plays in full.",
               "Message type — Text accounts only: Text, Buttons, Options list, Carousel or Image or file. Each type shows its own fields.",
               "Wait (s) — With Buttons, Options list or Carousel: how long to wait for the choice before leaving through No response.",
-              "Message — The text the customer receives. With Buttons and Options list it is the text that goes with the options, and with Text it is the whole message. With Carousel it is the message that goes with the cards. Up to 4096 characters for Text and Options list, and up to 1024 for Buttons and Carousel."
+              "Message — The text the customer receives. With Buttons and Options list it is the text that goes with the options, and with Text it is the whole message. With Carousel it is the message that goes with the cards."
             ]
           },
           {
@@ -513,12 +513,12 @@ export const contenido: ContenidoPagina = {
             "tipo": "lista",
             "items": [
               "Text — A text message.",
-              "Buttons — Up to 3 buttons below the message. Each has a title of up to 20 characters, which is what the person reads, and its own exit on the macrostate. Titles cannot be repeated. Options are numbered (1, 2, 3; in the carousel, card.button: 1.1, 1.2, 2.1) and the exit carries that number.",
-              "Options list — A menu of up to 10 options. You fill in the text of the button that opens the list (up to 20 characters) and, for each option, its title (up to 24 characters) and, if you want, a description of up to 72 characters. Each option has its own exit on the macrostate.",
-              "Carousel — From 2 to 10 cards the person swipes through, with a message that goes with them. Each card has an image (required), an optional text of up to 160 characters and 2 line breaks, and 1 to 2 buttons with a title of up to 20 characters. All cards must have the same number of buttons. Each button has its own exit on the macrostate, numbered card.button.",
-              "Image or file — You choose whether to send an Image or a File, upload it from the macrostate and can add a text of up to 1024 characters that goes with it. It is used, for example, to close a self-service path with an image of instructions or a document with the steps to follow.",
-              "Accepted images — JPG, JPEG and PNG, up to 5 MB.",
-              "Accepted files — PDF, DOC, DOCX, XLS, XLSX and TXT, up to 100 MB."
+              "Buttons — The buttons shown below the message. Each has a title, which is what the person reads, and its own exit on the macrostate. Options are numbered (1, 2, 3; in the carousel, card.button: 1.1, 1.2, 2.1) and the exit carries that number.",
+              "Options list — A menu of options. You fill in the text of the button that opens the list and, for each option, its title and, if you want, a description. Each option has its own exit on the macrostate.",
+              "Carousel — Cards the person swipes through, with a message that goes with them. Each card has an image, an optional text and as many buttons as you want, each with its own title. Each button has its own exit on the macrostate, numbered card.button.",
+              "Image or file — You choose whether to send an Image or a File, upload it from the macrostate and can add a text that goes with it. It is used, for example, to close a self-service path with an image of instructions or a document with the steps to follow.",
+              "Accepted images — JPG, JPEG and PNG.",
+              "Accepted files — PDF, DOC, DOCX, XLS, XLSX and TXT."
             ]
           },
           {
