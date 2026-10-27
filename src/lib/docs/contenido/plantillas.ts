@@ -50,7 +50,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Una variable es un dato que Atlas completa solo al cargar la plantilla: el nombre del cliente, su número de cliente, el nombre de la campaña, el del asesor. Se eligen de la lista «Insertar variable», agrupadas por origen (Cliente, Campaña, Asesor); no hace falta escribir nada a mano.",
+              "Una variable es un dato que Atlas completa solo al cargar la plantilla: el nombre del cliente, su deuda, el nombre de la campaña, el del asesor. Se eligen de la lista «Insertar variable», agrupadas por origen (datos básicos, formas de contacto e información adicional del cliente; campaña; asesor); no hace falta escribir nada a mano. Las variables del cliente son los campos de su ficha, y ves solo los que tu grupo de trabajo puede ver en «Ficha del cliente».",
           },
           {
             tipo: "p",

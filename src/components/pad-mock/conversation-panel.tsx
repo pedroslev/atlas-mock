@@ -20,13 +20,13 @@ import {
 } from "@/components/pad-mock/selector-plantillas";
 import { AdjuntosChips } from "@/components/plantillas/mensaje-renderizado";
 import type { MensajeChat } from "@/lib/pad-mock/data";
+import { getPlantilla, type AdjuntoPlantilla, type CanalPlantilla } from "@/lib/mock-data";
 import {
-  getPlantilla,
-  variablesPlantilla,
-  type AdjuntoPlantilla,
-  type CanalPlantilla,
-} from "@/lib/mock-data";
-import { renderizarParaCanal, variablesUsadas, type DatosVariables } from "@/lib/plantillas";
+  nombreVariable,
+  renderizarParaCanal,
+  variablesUsadas,
+  type DatosVariables,
+} from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -169,9 +169,7 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
         <p className="flex items-center gap-1.5 text-xs text-warning">
           <AlertTriangle className="size-3.5 shrink-0" />
           {t("plantillas.selector.sinDato", {
-            variables: sinDato
-              .map((v) => (variablesPlantilla.some((d) => d.clave === v) ? t(`plantillas.variable.${v}`) : v))
-              .join(", "),
+            variables: sinDato.map((v) => nombreVariable(v, t)).join(", "),
           })}
         </p>
       )}

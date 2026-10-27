@@ -328,28 +328,7 @@ export function tipoRenderDeCanal(canal: CanalPlantilla): TipoRender {
   return "plano";
 }
 
-export type OrigenVariable = "cliente" | "campania" | "asesor";
-
-export type VariablePlantilla = {
-  clave: string;
-  origen: OrigenVariable;
-  /** Valor con el que se arma la vista previa. */
-  ejemplo: string;
-};
-
-// Las variables salen de lo que Atlas ya conoce: los campos del cliente
-// (módulo Clientes), la campaña y el asesor. La etiqueta visible se traduce
-// con `plantillas.variable.<clave>`.
-export const variablesPlantilla: VariablePlantilla[] = [
-  { clave: "nombre", origen: "cliente", ejemplo: "Juan" },
-  { clave: "apellido", origen: "cliente", ejemplo: "Pérez" },
-  { clave: "documento", origen: "cliente", ejemplo: "28.456.789" },
-  { clave: "telefono", origen: "cliente", ejemplo: "+54 11 5555-0101" },
-  { clave: "email", origen: "cliente", ejemplo: "juan.perez@mail.com" },
-  { clave: "numeroCliente", origen: "cliente", ejemplo: "CL-10422" },
-  { clave: "campania", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
-  { clave: "asesor", origen: "asesor", ejemplo: "Ana" },
-];
+// Las variables de la plantilla (catálogo y permisos) viven en lib/plantillas.ts.
 
 export type AdjuntoPlantilla = { id: string; nombre: string; tamano: string };
 

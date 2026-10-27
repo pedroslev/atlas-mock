@@ -94,6 +94,7 @@ export const plantillas: NamespaceDict = {
     "editor.planoAyuda": "Instagram, Facebook, TikTok, X y LinkedIn no admiten formato: negrita, cursiva, tachado y listas salen como texto; los enlaces, con la dirección completa.",
     "editor.insertarVariable": "Insertar variable",
     "editor.buscarVariable": "Buscar variable…",
+    "editor.variablesPermiso": "Ves los datos del cliente que tu grupo de trabajo puede ver en la ficha del cliente.",
     "editor.sinVariables": "Sin resultados.",
     "editor.insertarArchivo": "Insertar archivo",
     "editor.archivosAyuda": "En chat, el archivo se envía como mensaje aparte en el punto donde lo insertaste; en email va adjunto; SMS no lo admite.",
@@ -113,16 +114,13 @@ export const plantillas: NamespaceDict = {
     "editor.emailArchivosGrandes": "Atención: el correo tiene un límite de tamaño para los archivos. Si lo superan, el envío puede fallar; en ese caso, compartilos con un enlace de descarga (por ejemplo, un Drive).",
     "editor.guardado": "Los cambios se guardan al confirmar.",
 
-    "origen.cliente": "Cliente",
+    "origen.clienteBasicos": "Cliente · Datos básicos",
+
+    "origen.clienteContacto": "Cliente · Formas de contacto",
+
+    "origen.clienteAdicional": "Cliente · Información adicional",
     "origen.campania": "Campaña",
     "origen.asesor": "Asesor",
-
-    "variable.nombre": "Nombre del cliente",
-    "variable.apellido": "Apellido del cliente",
-    "variable.documento": "Documento",
-    "variable.telefono": "Teléfono",
-    "variable.email": "Email",
-    "variable.numeroCliente": "Número de cliente",
     "variable.campania": "Nombre de la campaña",
     "variable.asesor": "Nombre del asesor",
 
@@ -267,6 +265,7 @@ export const plantillas: NamespaceDict = {
     "editor.planoAyuda": "Instagram, Facebook, TikTok, X and LinkedIn do not support formatting: bold, italic, strikethrough and lists go out as plain text; links, with the full address.",
     "editor.insertarVariable": "Insert variable",
     "editor.buscarVariable": "Search variable…",
+    "editor.variablesPermiso": "You see the customer data your workgroup can see on the customer card.",
     "editor.sinVariables": "No results.",
     "editor.insertarArchivo": "Insert file",
     "editor.archivosAyuda": "In chat the file is sent as a separate message right where you inserted it; in email it goes as an attachment; SMS does not support it.",
@@ -286,16 +285,13 @@ export const plantillas: NamespaceDict = {
     "editor.emailArchivosGrandes": "Warning: email has a size limit for files. If they exceed it, sending may fail; in that case share them with a download link (for example, a Drive).",
     "editor.guardado": "Changes are saved on confirm.",
 
-    "origen.cliente": "Customer",
+    "origen.clienteBasicos": "Customer · Basic data",
+
+    "origen.clienteContacto": "Customer · Contact details",
+
+    "origen.clienteAdicional": "Customer · Additional information",
     "origen.campania": "Campaign",
     "origen.asesor": "Agent",
-
-    "variable.nombre": "Customer first name",
-    "variable.apellido": "Customer last name",
-    "variable.documento": "ID number",
-    "variable.telefono": "Phone",
-    "variable.email": "Email",
-    "variable.numeroCliente": "Customer number",
     "variable.campania": "Campaign name",
     "variable.asesor": "Agent name",
 
@@ -438,6 +434,7 @@ export const plantillas: NamespaceDict = {
     "editor.planoAyuda": "Instagram, Facebook, TikTok, X e LinkedIn não admitem formatação: negrito, itálico, tachado e listas saem como texto; os links, com o endereço completo.",
     "editor.insertarVariable": "Inserir variável",
     "editor.buscarVariable": "Pesquisar variável…",
+    "editor.variablesPermiso": "Você vê os dados do cliente que seu grupo de trabalho pode ver na ficha do cliente.",
     "editor.sinVariables": "Sem resultados.",
     "editor.insertarArchivo": "Inserir arquivo",
     "editor.archivosAyuda": "No chat, o arquivo é enviado como mensagem separada no ponto onde você o inseriu; no e-mail vai anexado; SMS não admite.",
@@ -457,16 +454,13 @@ export const plantillas: NamespaceDict = {
     "editor.emailArchivosGrandes": "Atenção: o e-mail tem um limite de tamanho para os arquivos. Se o superarem, o envio pode falhar; nesse caso, compartilhe-os com um link de download (por exemplo, um Drive).",
     "editor.guardado": "As alterações são salvas ao confirmar.",
 
-    "origen.cliente": "Cliente",
+    "origen.clienteBasicos": "Cliente · Dados básicos",
+
+    "origen.clienteContacto": "Cliente · Formas de contato",
+
+    "origen.clienteAdicional": "Cliente · Informação adicional",
     "origen.campania": "Campanha",
     "origen.asesor": "Atendente",
-
-    "variable.nombre": "Nome do cliente",
-    "variable.apellido": "Sobrenome do cliente",
-    "variable.documento": "Documento",
-    "variable.telefono": "Telefone",
-    "variable.email": "E-mail",
-    "variable.numeroCliente": "Número do cliente",
     "variable.campania": "Nome da campanha",
     "variable.asesor": "Nome do atendente",
 
@@ -609,6 +603,7 @@ export const plantillas: NamespaceDict = {
     "editor.planoAyuda": "Instagram, Facebook, TikTok, X i LinkedIn no admeten format: negreta, cursiva, ratllat i llistes surten com a text; els enllaços, amb l'adreça completa.",
     "editor.insertarVariable": "Insereix una variable",
     "editor.buscarVariable": "Cerca una variable…",
+    "editor.variablesPermiso": "Veus les dades del client que el teu grup de treball pot veure a la fitxa del client.",
     "editor.sinVariables": "Sense resultats.",
     "editor.insertarArchivo": "Insereix fitxer",
     "editor.archivosAyuda": "Al xat, el fitxer s'envia com a missatge a part al punt on l'has inserit; al correu va adjunt; l'SMS no l'admet.",
@@ -628,16 +623,13 @@ export const plantillas: NamespaceDict = {
     "editor.emailArchivosGrandes": "Atenció: el correu té un límit de mida per als fitxers. Si el superen, l'enviament pot fallar; en aquest cas, comparteix-los amb un enllaç de descàrrega (per exemple, un Drive).",
     "editor.guardado": "Els canvis es desen en confirmar.",
 
-    "origen.cliente": "Client",
+    "origen.clienteBasicos": "Client · Dades bàsiques",
+
+    "origen.clienteContacto": "Client · Formes de contacte",
+
+    "origen.clienteAdicional": "Client · Informació addicional",
     "origen.campania": "Campanya",
     "origen.asesor": "Agent",
-
-    "variable.nombre": "Nom del client",
-    "variable.apellido": "Cognom del client",
-    "variable.documento": "Document",
-    "variable.telefono": "Telèfon",
-    "variable.email": "Correu",
-    "variable.numeroCliente": "Número de client",
     "variable.campania": "Nom de la campanya",
     "variable.asesor": "Nom de l'agent",
 

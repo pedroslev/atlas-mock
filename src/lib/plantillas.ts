@@ -1,9 +1,11 @@
 import {
+  agentes,
+  gruposTrabajo,
   tipoRenderDeCanal,
-  variablesPlantilla,
   type CanalPlantilla,
   type Plantilla,
 } from "@/lib/mock-data";
+import { camposCliente, clientes, permisoCampo } from "@/lib/mock-clientes";
 
 // Plantillas de mensajes (ATLAS-1191): el contenido se escribe una vez con
 // formato básico, variables y archivos, y acá se traduce a lo que soporta
@@ -23,6 +25,95 @@ import {
 //     adjunto; SMS no admite archivos y se envía solo el texto.
 
 const RE_VARIABLE = /\{\{\s*([a-zA-Z]+)\s*\}\}/g;
+
+// --- Catálogo de variables ---------------------------------------------------
+//
+// Las variables del cliente son los campos de la ficha del cliente (datos
+// básicos, formas de contacto e información adicional, módulo Clientes). A
+// quien arma la plantilla se le ofrecen solo los campos que su grupo de
+// trabajo puede VER en la ficha (solapa "Ficha del cliente" del grupo); si
+// está en varios grupos, la unión. Las etiquetas y las redes no son texto y
+// quedan afuera. Campaña y asesor se ofrecen siempre.
+
+export type OrigenVariable =
+  | "clienteBasicos"
+  | "clienteContacto"
+  | "clienteAdicional"
+  | "campania"
+  | "asesor";
+
+export type VariablePlantilla = {
+  clave: string;
+  origen: OrigenVariable;
+  /** Etiqueta visible para los campos del cliente (la misma de la ficha). */
+  nombre?: string;
+  /** Valor con el que se arma la vista previa. */
+  ejemplo: string;
+  /** Campo de la ficha del cliente del que sale (para el permiso por grupo). */
+  campoId?: string;
+};
+
+const CLAVE_POR_CAMPO: Record<string, string> = {
+  "campo-producto": "producto",
+  "campo-cuenta": "cuenta",
+  "campo-deuda": "deuda",
+  "campo-mora": "mora",
+  "campo-vto": "vencimiento",
+  "campo-sucursal": "sucursal",
+};
+
+const ORIGEN_POR_GRUPO: Record<string, OrigenVariable> = {
+  basicos: "clienteBasicos",
+  contacto: "clienteContacto",
+  adicional: "clienteAdicional",
+};
+
+function ejemploDeCampo(campoId: string, nombre: string): string {
+  const c = clientes[0];
+  switch (campoId) {
+    case "nombre": return c.nombre;
+    case "apellido": return c.apellido;
+    case "tipoDoc": return c.tipoDoc;
+    case "nroDoc": return c.nroDoc;
+    case "idExterno": return c.idExterno ?? "";
+    case "telefono": return c.formasContacto.find((f) => f.tipo === "telefono" && f.principal)?.valor ?? c.formasContacto.find((f) => f.tipo === "telefono")?.valor ?? "";
+    case "email": return c.formasContacto.find((f) => f.tipo === "email")?.valor ?? "";
+    default: return c.infoAdicional[nombre] ?? "";
+  }
+}
+
+/** Todas las variables del tenant (para etiquetas y vista previa). */
+export const variablesPlantilla: VariablePlantilla[] = [
+  ...camposCliente
+    .filter((c) => c.grupo !== "etiquetas" && c.tipo !== "redes")
+    .map((c) => ({
+      clave: CLAVE_POR_CAMPO[c.id] ?? c.id,
+      origen: ORIGEN_POR_GRUPO[c.grupo],
+      nombre: c.nombre,
+      ejemplo: ejemploDeCampo(c.id, c.nombre),
+      campoId: c.id,
+    })),
+  { clave: "campania", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
+  { clave: "asesor", origen: "asesor", ejemplo: "Ana" },
+];
+
+/** Las variables que puede usar un usuario: lo que su grupo ve en la ficha. */
+export function variablesVisiblesPara(usuarioId: string): VariablePlantilla[] {
+  const grupos = gruposTrabajo.filter((g) => g.usuarioIds.includes(usuarioId));
+  return variablesPlantilla.filter(
+    (v) => !v.campoId || grupos.some((g) => permisoCampo(g.id, v.campoId!).ver)
+  );
+}
+
+/** Usuario logueado del mock (el mismo que muestra el header). */
+export const usuarioActualId = agentes[0].id;
+
+/** Etiqueta visible de una variable: la de la ficha para el cliente, traducida para el resto. */
+export function nombreVariable(clave: string, t: (k: string) => string): string {
+  const v = variablesPlantilla.find((x) => x.clave === clave);
+  if (!v) return clave;
+  return v.nombre ?? t(`plantillas.variable.${clave}`);
+}
 const RE_ARCHIVO = /^\s*\[\[archivo:([^\]]+)\]\]\s*$/gm;
 
 /** Marca que se inserta en el texto para un archivo. */

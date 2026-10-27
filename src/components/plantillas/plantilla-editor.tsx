@@ -55,20 +55,23 @@ import {
   CANALES_PLANTILLA,
   TIPOS_RENDER,
   tipoRenderDeCanal,
-  variablesPlantilla,
   type AdjuntoPlantilla,
   type CanalPlantilla,
-  type OrigenVariable,
   type Plantilla,
   type TipoRender,
 } from "@/lib/mock-data";
 import {
   datosEjemplo,
   marcaArchivo,
+  nombreVariable,
   partesChat,
   quitarArchivos,
   resolverVariables,
+  usuarioActualId,
   variablesUsadas,
+  variablesVisiblesPara,
+  type OrigenVariable,
+  type VariablePlantilla,
 } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import {
@@ -252,13 +255,17 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     );
   }
 
+  // Variables que puede usar quien arma la plantilla: los campos de la ficha
+  // del cliente que su grupo de trabajo ve, más campaña y asesor.
   const porOrigen = useMemo(() => {
-    const grupos: Record<OrigenVariable, typeof variablesPlantilla> = {
-      cliente: [],
+    const grupos: Record<OrigenVariable, VariablePlantilla[]> = {
+      clienteBasicos: [],
+      clienteContacto: [],
+      clienteAdicional: [],
       campania: [],
       asesor: [],
     };
-    for (const v of variablesPlantilla) grupos[v.origen].push(v);
+    for (const v of variablesVisiblesPara(usuarioActualId)) grupos[v.origen].push(v);
     return grupos;
   }, []);
 
@@ -505,27 +512,34 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                           {t("plantillas.editor.insertarVariable")}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72 p-0" align="start">
+                      <PopoverContent className="w-80 p-0" align="start">
                         <Command>
                           <CommandInput placeholder={t("plantillas.editor.buscarVariable")} />
                           <CommandList>
                             <CommandEmpty>{t("plantillas.editor.sinVariables")}</CommandEmpty>
-                            {(Object.keys(porOrigen) as OrigenVariable[]).map((origen) => (
-                              <CommandGroup key={origen} heading={t(`plantillas.origen.${origen}`)}>
-                                {porOrigen[origen].map((v) => (
-                                  <CommandItem
-                                    key={v.clave}
-                                    value={`${t(`plantillas.variable.${v.clave}`)} ${v.clave}`}
-                                    onSelect={() => insertarVariable(v.clave)}
-                                  >
-                                    <span className="flex-1">{t(`plantillas.variable.${v.clave}`)}</span>
-                                    <span className="text-xs text-muted-foreground">{v.ejemplo}</span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            ))}
+                            {(Object.keys(porOrigen) as OrigenVariable[])
+                              .filter((origen) => porOrigen[origen].length > 0)
+                              .map((origen) => (
+                                <CommandGroup key={origen} heading={t(`plantillas.origen.${origen}`)}>
+                                  {porOrigen[origen].map((v) => (
+                                    <CommandItem
+                                      key={v.clave}
+                                      value={`${nombreVariable(v.clave, t)} ${v.clave}`}
+                                      onSelect={() => insertarVariable(v.clave)}
+                                    >
+                                      <span className="flex-1">{nombreVariable(v.clave, t)}</span>
+                                      <span className="max-w-[45%] truncate text-xs text-muted-foreground">
+                                        {v.ejemplo}
+                                      </span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              ))}
                           </CommandList>
                         </Command>
+                        <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+                          {t("plantillas.editor.variablesPermiso")}
+                        </p>
                       </PopoverContent>
                     </Popover>
                     <Button type="button" variant="outline" size="sm" onClick={insertarArchivo}>
@@ -572,13 +586,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                   {usadas.length === 0
                     ? t("plantillas.editor.sinVariablesUsadas")
                     : t("plantillas.editor.variablesUsadas", {
-                        lista: usadas
-                          .map((clave) =>
-                            variablesPlantilla.some((v) => v.clave === clave)
-                              ? t(`plantillas.variable.${clave}`)
-                              : clave
-                          )
-                          .join(", "),
+                        lista: usadas.map((clave) => nombreVariable(clave, t)).join(", "),
                       })}{" "}
                   {t("plantillas.editor.variablesConfig")}
                 </p>
