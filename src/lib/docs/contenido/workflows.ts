@@ -125,7 +125,7 @@ export const contenido: ContenidoPagina = {
           },
           {
             "tipo": "p",
-            "texto": "Con Botones, Lista de opciones o Carrusel el macroestado espera a que la persona elija, y el flujo sigue por la salida de la opción que tocó: se conecta cada salida al paso que corresponde, sin necesitar un Condición ni un Según valor. Si el canal no puede mostrar un tipo de mensaje, la persona lo recibe como texto con las opciones numeradas y puede responder con el número."
+            "texto": "Con Botones, Lista de opciones o Carrusel el macroestado espera a que la persona elija, y el flujo sigue por la salida de la opción que tocó: se conecta cada salida al paso que corresponde, sin necesitar un Condición ni un Según valor. Cada mensaje llega como datos y quien integra la comunicación con el SDK de Atlas decide cómo mostrarlo."
           },
           {
             "tipo": "sub",
@@ -523,7 +523,7 @@ export const contenido: ContenidoPagina = {
           },
           {
             "tipo": "p",
-            "texto": "With Buttons, Options list or Carousel the macrostate waits for the person to choose, and the flow continues through the exit of the option they tapped: each exit is connected to the step it corresponds to, with no need for a Condition or By value. If the channel cannot show a message type, the person receives it as text with numbered options and can reply with the number."
+            "texto": "With Buttons, Options list or Carousel the macrostate waits for the person to choose, and the flow continues through the exit of the option they tapped: each exit is connected to the step it corresponds to, with no need for a Condition or By value. Each message arrives as data and whoever integrates the communication with the Atlas SDK decides how to show it."
           },
           {
             "tipo": "sub",
