@@ -260,10 +260,240 @@ export type PlayData = Comun & {
   // completo (un aviso legal, por ejemplo). Por defecto, interrumpible.
   interrumpible?: boolean;
   texto?: string; // mensaje que se envía (fuente "texto")
-  // Chat y videollamada: el PLAY solo envía texto, sin audio ni TTS.
+  // Chat, videollamada y webcall: el PLAY envía mensajes de texto, sin audio ni TTS.
   soloTexto: boolean;
+  // Tipo de mensaje que se envía en cuentas de texto (propuesta-mensajes-enriquecidos
+  // §2); sin valor es "texto", como antes de que existieran los demás.
+  tipoMensaje?: TipoMensaje;
+  botones?: OpcionMensaje[]; // tipo "botones"
+  listaBoton?: string; // tipo "lista": rótulo del botón que abre el menú
+  opciones?: OpcionMensaje[]; // tipo "lista"
+  tarjetas?: TarjetaMensaje[]; // tipo "carrusel"
+  adjuntoTipo?: AdjuntoTipo; // tipo "adjunto": imagen o archivo
+  adjuntoNombre?: string; // nombre del archivo subido, solo para mostrar
+  adjuntoUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
+  // Botones, lista y carrusel: el nodo espera la elección y tiene una salida por opción.
+  esperaSeg?: number;
   onSubirAudio: (archivo: File) => { archivo: string; nombre: string; url: string };
 };
+
+export type TipoMensaje = "texto" | "botones" | "lista" | "carrusel" | "adjunto";
+export type AdjuntoTipo = "image" | "document";
+// `id` lo genera el editor y no se muestra: identifica la salida de la opción y es lo
+// que el canal devuelve cuando la persona elige. `titulo` es lo que lee la persona.
+export type OpcionMensaje = { id: string; titulo: string; descripcion?: string };
+export type TarjetaMensaje = {
+  id: string;
+  texto?: string; // texto de la tarjeta (opcional)
+  imagenNombre?: string; // nombre de la imagen subida, solo para mostrar
+  imagenUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
+  botones: OpcionMensaje[];
+};
+
+const TIPOS_MENSAJE: TipoMensaje[] = ["texto", "botones", "lista", "carrusel", "adjunto"];
+const TIPOS_ADJUNTO: AdjuntoTipo[] = ["image", "document"];
+const ACEPTA_ADJUNTO: Record<AdjuntoTipo, string> = {
+  image: ".jpg,.jpeg,.png",
+  document: ".pdf,.doc,.docx,.xls,.xlsx,.txt",
+};
+
+// Topes del mínimo común entre canales (propuesta-mensajes-enriquecidos §4).
+// En cuentas de chat, videollamada y webcall no hay máximos: los topes de WhatsApp
+// (analisis-tecnico-mensajes-enriquecidos.md) se aplicarán solo a las cuentas de
+// WhatsApp cuando existan.
+
+// Identificador nuevo e irrepetible para una opción o una tarjeta. No cambia aunque
+// se reordenen o se quiten otras, así quitar una opción no reconecta las demás.
+let siguienteId = 1;
+const idNuevo = () => `m${siguienteId++}`;
+
+// Tipos de mensaje que esperan la elección de la persona: tienen una salida por opción.
+const TIPOS_CON_OPCIONES: TipoMensaje[] = ["botones", "lista", "carrusel"];
+const salidaDeOpcion = (id: string) => `opcion_${id}`;
+
+// Las opciones que dan una salida. `numero` es la posición que se ve en el editor
+// al lado de cada opción (1, 2, 3; en el carrusel, tarjeta.botón: 1.1, 1.2, 2.1) y
+// en el nombre de la salida, para reconocer cuál es cuál.
+type OpcionConSalida = { id: string; numero: string; titulo: string };
+
+function opcionesConSalida(data: PlayData): OpcionConSalida[] {
+  switch (data.tipoMensaje) {
+    case "botones":
+      return (data.botones ?? []).map((o, i) => ({ id: o.id, numero: String(i + 1), titulo: o.titulo }));
+    case "lista":
+      return (data.opciones ?? []).map((o, i) => ({ id: o.id, numero: String(i + 1), titulo: o.titulo }));
+    case "carrusel":
+      return (data.tarjetas ?? []).flatMap((tarjeta, i) =>
+        tarjeta.botones.map((b, j) => ({
+          id: b.id,
+          numero: `${i + 1}.${j + 1}`,
+          titulo: b.titulo,
+        })),
+      );
+    default:
+      return [];
+  }
+}
+
+// Subida de un archivo (imagen de una tarjeta, imagen o archivo adjunto): el
+// tenant lo sube desde la cuenta y queda con su nombre. En la plataforma real
+// el archivo queda guardado y el mensaje lo referencia; en el mock solo se
+// guarda un enlace local para verlo en el editor.
+function SubirArchivo({
+  testid,
+  accept,
+  nombre,
+  url,
+  esImagen,
+  onSubir,
+  onQuitar,
+}: {
+  testid: string;
+  accept: string;
+  nombre?: string;
+  url?: string;
+  esImagen?: boolean;
+  onSubir: (archivo: { nombre: string; url: string }) => void;
+  onQuitar: () => void;
+}) {
+  const t = useT();
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        data-testid={`${testid}-archivo`}
+        onChange={(e) => {
+          const archivo = e.target.files?.[0];
+          if (archivo) onSubir({ nombre: archivo.name, url: URL.createObjectURL(archivo) });
+          e.target.value = "";
+        }}
+      />
+      {nombre && (
+        <span className="flex items-center gap-1.5 text-sm">
+          {esImagen && url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt="" className="size-8 shrink-0 rounded object-cover" />
+          ) : (
+            <FileAudio className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="min-w-0 flex-1 truncate" data-testid={`${testid}-nombre`}>
+            {nombre}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("cuentas.flujo.play.archivo.quitar")}
+            data-testid={`${testid}-quitar`}
+            onClick={onQuitar}
+          >
+            <X />
+          </Button>
+        </span>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="justify-start"
+        data-testid={`${testid}-subir`}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload />
+        {t(nombre ? "cuentas.flujo.play.archivo.cambiar" : "cuentas.flujo.play.archivo.subir")}
+      </Button>
+    </div>
+  );
+}
+
+// Filas editables de opciones (botones, filas de la lista, botones de una
+// tarjeta): identificador + título, y descripción cuando el tipo la admite.
+function OpcionesEditor({
+  nodoId,
+  clave,
+  opciones,
+  conDescripcion,
+  prefijoNumero = "",
+  onChange,
+  onRemoveExit,
+}: {
+  nodoId: string;
+  clave: string;
+  opciones: OpcionMensaje[];
+  conDescripcion?: boolean;
+  // Delante del número de cada fila: en las tarjetas del carrusel, el de la tarjeta ("2.").
+  prefijoNumero?: string;
+  onChange: (opciones: OpcionMensaje[]) => void;
+  // Quitar una opción quita su salida y las conexiones que tenía.
+  onRemoveExit: (salida: string) => void;
+}) {
+  const t = useT();
+  const cambiar = (i: number, parche: Partial<OpcionMensaje>) =>
+    onChange(opciones.map((o, j) => (j === i ? { ...o, ...parche } : o)));
+  return (
+    <div className="flex flex-col gap-1.5" data-testid={`play-${nodoId}-${clave}`}>
+      {opciones.map((o, i) => (
+        <div key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
+          <div className="flex items-center gap-1">
+            <span
+              className="w-8 shrink-0 text-center text-xs font-medium tabular-nums text-muted-foreground"
+              data-testid={`play-${nodoId}-${clave}-${i}-numero`}
+            >
+              {prefijoNumero}
+              {i + 1}
+            </span>
+            <Input
+              className="h-7 min-w-0 flex-1"
+              aria-label={t("cuentas.flujo.play.opcion.titulo")}
+              placeholder={t("cuentas.flujo.play.opcion.titulo")}
+              value={o.titulo}
+              data-testid={`play-${nodoId}-${clave}-${i}-titulo`}
+              onChange={(e) => cambiar(i, { titulo: e.target.value })}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("cuentas.flujo.play.opcion.quitar")}
+              data-testid={`play-${nodoId}-${clave}-${i}-quitar`}
+              onClick={() => {
+                onChange(opciones.filter((_, j) => j !== i));
+                onRemoveExit(salidaDeOpcion(o.id));
+              }}
+            >
+              <X />
+            </Button>
+          </div>
+          {conDescripcion && (
+            <Input
+              className="h-7"
+              aria-label={t("cuentas.flujo.play.opcion.descripcion")}
+              placeholder={t("cuentas.flujo.play.opcion.descripcion")}
+              value={o.descripcion ?? ""}
+              data-testid={`play-${nodoId}-${clave}-${i}-descripcion`}
+              onChange={(e) => cambiar(i, { descripcion: e.target.value })}
+            />
+          )}
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="justify-start"
+        data-testid={`play-${nodoId}-${clave}-agregar`}
+        onClick={() => onChange([...opciones, { id: idNuevo(), titulo: "" }])}
+      >
+        <Plus />
+        {t("cuentas.flujo.play.opcion.agregar")}
+      </Button>
+    </div>
+  );
+}
 
 // Botón para escuchar el audio cargado sin salir del editor: quien arma el
 // flujo oye qué tiene puesto en vez de tener que buscar el archivo por nombre.
@@ -318,6 +548,30 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
   const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const fuente = data.soloTexto ? "texto" : (data.fuente ?? "audio");
+  const tipoMensaje = data.tipoMensaje ?? "texto";
+  const updateNodeInternals = useUpdateNodeInternals();
+  const conOpciones = data.soloTexto && TIPOS_CON_OPCIONES.includes(tipoMensaje);
+  const salidasOpcion = conOpciones ? opcionesConSalida(data) : [];
+
+  // Las salidas cambian al sumar o quitar opciones o al cambiar de tipo: React
+  // Flow tiene que volver a medir los puntos de conexión del nodo.
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, conOpciones, salidasOpcion.length, updateNodeInternals]);
+
+  // Al cambiar de tipo se quitan las conexiones de las salidas que dejan de existir:
+  // las de las opciones del tipo anterior, y "Siguiente" si el nuevo espera una elección.
+  const cambiarTipo = (nuevo: TipoMensaje) => {
+    const eraConOpciones = TIPOS_CON_OPCIONES.includes(tipoMensaje);
+    const seraConOpciones = TIPOS_CON_OPCIONES.includes(nuevo);
+    opcionesConSalida(data).forEach((o) => data.onRemoveExit(salidaDeOpcion(o.id)));
+    if (eraConOpciones && !seraConOpciones) {
+      data.onRemoveExit("other");
+      data.onRemoveExit("timeout");
+    }
+    if (seraConOpciones && !eraConOpciones) data.onRemoveExit("next");
+    data.onChange({ tipoMensaje: nuevo });
+  };
 
   return (
     <NodoMacroestado
@@ -332,12 +586,35 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
       descripcion={t(data.soloTexto ? "cuentas.flujo.play.descripcionTexto" : "cuentas.flujo.play.descripcion")}
       ayuda="reproducir"
       data={data}
-      resumen={data.soloTexto ? data.texto : data.audioNombre}
+      resumen={
+        data.soloTexto
+          ? tipoMensaje === "texto"
+            ? data.texto
+            : t(`cuentas.flujo.play.tipo.${tipoMensaje}`)
+          : data.audioNombre
+      }
       salidas={
-        <>
-          <Salida id="next" etiqueta={t("cuentas.flujo.salida.next")} />
-          <Salida id="error" etiqueta={t("cuentas.flujo.salida.error")} />
-        </>
+        conOpciones ? (
+          <>
+            {salidasOpcion.map((o) => (
+              <Salida
+                key={o.id}
+                id={salidaDeOpcion(o.id)}
+                etiqueta={
+                  o.titulo ? `${o.numero} · ${o.titulo}` : `${t("cuentas.flujo.case.opcion")} ${o.numero}`
+                }
+              />
+            ))}
+            <Salida id="other" etiqueta={t("cuentas.flujo.salida.otra")} />
+            <Salida id="timeout" etiqueta={t("cuentas.flujo.salida.timeout")} />
+            <Salida id="error" etiqueta={t("cuentas.flujo.salida.error")} />
+          </>
+        ) : (
+          <>
+            <Salida id="next" etiqueta={t("cuentas.flujo.salida.next")} />
+            <Salida id="error" etiqueta={t("cuentas.flujo.salida.error")} />
+          </>
+        )
       }
     >
       {/* En chat/videollamada la fuente es fija (texto): no hay selector. */}
@@ -360,7 +637,35 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
       </Campo>
       )}
 
-      {fuente === "texto" && (
+      {/* Cuentas de texto: qué tipo de mensaje envía el nodo. */}
+      {data.soloTexto && (
+        <Campo id={`${id}-tipo-mensaje`} label={t("cuentas.flujo.play.tipo")}>
+          <Select
+            value={tipoMensaje}
+            onValueChange={(v) => cambiarTipo(v as TipoMensaje)}
+          >
+            <SelectTrigger
+              id={`${id}-tipo-mensaje`}
+              size="sm"
+              className="w-full"
+              data-testid={`play-${id}-tipo`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TIPOS_MENSAJE.map((tipo) => (
+                <SelectItem key={tipo} value={tipo}>
+                  {t(`cuentas.flujo.play.tipo.${tipo}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Campo>
+      )}
+
+      {/* Texto del mensaje: el propio mensaje (texto) o el cuerpo que acompaña
+          a los botones y a la lista. */}
+      {fuente === "texto" && (tipoMensaje === "texto" || tipoMensaje === "botones" || tipoMensaje === "lista" || tipoMensaje === "carrusel") && (
         <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.texto")}>
           <Textarea
             id={`${id}-texto`}
@@ -371,6 +676,188 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
             onChange={(e) => data.onChange({ texto: e.target.value })}
           />
         </Campo>
+      )}
+
+      {fuente === "texto" && tipoMensaje === "botones" && (
+        <Campo id={`${id}-botones`} label={t("cuentas.flujo.play.botones")}>
+          <OpcionesEditor
+            nodoId={id}
+            clave="botones"
+            opciones={data.botones ?? []}
+            onChange={(botones) => data.onChange({ botones })}
+            onRemoveExit={data.onRemoveExit}
+          />
+        </Campo>
+      )}
+
+      {fuente === "texto" && tipoMensaje === "lista" && (
+        <>
+          <Campo id={`${id}-lista-boton`} label={t("cuentas.flujo.play.lista.boton")}>
+            <Input
+              id={`${id}-lista-boton`}
+              className="h-7"
+              placeholder={t("cuentas.flujo.play.lista.botonPlaceholder")}
+              value={data.listaBoton ?? ""}
+              data-testid={`play-${id}-lista-boton`}
+              onChange={(e) => data.onChange({ listaBoton: e.target.value })}
+            />
+          </Campo>
+          <Campo id={`${id}-opciones`} label={t("cuentas.flujo.play.lista.opciones")}>
+            <OpcionesEditor
+              nodoId={id}
+              clave="opciones"
+              opciones={data.opciones ?? []}
+              conDescripcion
+              onChange={(opciones) => data.onChange({ opciones })}
+              onRemoveExit={data.onRemoveExit}
+            />
+          </Campo>
+        </>
+      )}
+
+      {fuente === "texto" && tipoMensaje === "carrusel" && (
+        <div className="flex flex-col gap-2" data-testid={`play-${id}-tarjetas`}>
+          {(data.tarjetas ?? []).map((tarjeta, i) => {
+            const cambiarTarjeta = (parche: Partial<TarjetaMensaje>) =>
+              data.onChange({
+                tarjetas: (data.tarjetas ?? []).map((x, j) => (j === i ? { ...x, ...parche } : x)),
+              });
+            return (
+              <div key={i} className="flex flex-col gap-1.5 rounded-md border p-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium">
+                    {t("cuentas.flujo.play.tarjeta")} {i + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={t("cuentas.flujo.play.tarjeta.quitar")}
+                    data-testid={`play-${id}-tarjeta-${i}-quitar`}
+                    onClick={() => {
+                      data.onChange({ tarjetas: (data.tarjetas ?? []).filter((_, j) => j !== i) });
+                      tarjeta.botones.forEach((b) => data.onRemoveExit(salidaDeOpcion(b.id)));
+                    }}
+                  >
+                    <X />
+                  </Button>
+                </div>
+                <Textarea
+                  rows={2}
+                  aria-label={t("cuentas.flujo.play.tarjeta.texto")}
+                  placeholder={t("cuentas.flujo.play.tarjeta.texto")}
+                  value={tarjeta.texto ?? ""}
+                  data-testid={`play-${id}-tarjeta-${i}-texto`}
+                  onChange={(e) => cambiarTarjeta({ texto: e.target.value })}
+                />
+                <SubirArchivo
+                  testid={`play-${id}-tarjeta-${i}-imagen`}
+                  accept={ACEPTA_ADJUNTO.image}
+                  esImagen
+                  nombre={tarjeta.imagenNombre}
+                  url={tarjeta.imagenUrl}
+                  onSubir={(f) => cambiarTarjeta({ imagenNombre: f.nombre, imagenUrl: f.url })}
+                  onQuitar={() => cambiarTarjeta({ imagenNombre: undefined, imagenUrl: undefined })}
+                />
+                <OpcionesEditor
+                  nodoId={id}
+                  clave={`tarjeta-${i}-botones`}
+                  opciones={tarjeta.botones}
+                  prefijoNumero={`${i + 1}.`}
+                  onChange={(botones) => cambiarTarjeta({ botones })}
+                  onRemoveExit={data.onRemoveExit}
+                />
+              </div>
+            );
+          })}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="justify-start"
+            data-testid={`play-${id}-tarjeta-agregar`}
+            onClick={() =>
+              data.onChange({
+                tarjetas: [
+                  ...(data.tarjetas ?? []),
+                  { id: idNuevo(), botones: [] },
+                ],
+              })
+            }
+          >
+            <Plus />
+            {t("cuentas.flujo.play.tarjeta.agregar")}
+          </Button>
+        </div>
+      )}
+
+      {fuente === "texto" && tipoMensaje === "adjunto" && (
+        <>
+          <Campo id={`${id}-adjunto-tipo`} label={t("cuentas.flujo.play.adjunto.tipo")}>
+            <Select
+              value={data.adjuntoTipo ?? "image"}
+              onValueChange={(v) =>
+                data.onChange({
+                  adjuntoTipo: v as AdjuntoTipo,
+                  adjuntoNombre: undefined,
+                  adjuntoUrl: undefined,
+                })
+              }
+            >
+              <SelectTrigger
+                id={`${id}-adjunto-tipo`}
+                size="sm"
+                className="w-full"
+                data-testid={`play-${id}-adjunto-tipo`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIPOS_ADJUNTO.map((tipo) => (
+                  <SelectItem key={tipo} value={tipo}>
+                    {t(`cuentas.flujo.play.adjunto.${tipo}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Campo>
+          <SubirArchivo
+            testid={`play-${id}-adjunto`}
+            accept={ACEPTA_ADJUNTO[data.adjuntoTipo ?? "image"]}
+            esImagen={(data.adjuntoTipo ?? "image") === "image"}
+            nombre={data.adjuntoNombre}
+            url={data.adjuntoUrl}
+            onSubir={(f) => data.onChange({ adjuntoNombre: f.nombre, adjuntoUrl: f.url })}
+            onQuitar={() => data.onChange({ adjuntoNombre: undefined, adjuntoUrl: undefined })}
+          />
+          <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.adjunto.pie")}>
+            <Input
+              id={`${id}-texto`}
+              className="h-7"
+              value={data.texto ?? ""}
+              data-testid={`play-${id}-texto`}
+              onChange={(e) => data.onChange({ texto: e.target.value })}
+            />
+          </Campo>
+        </>
+      )}
+
+      {conOpciones && (
+        <>
+          <Campo id={`${id}-espera`} label={t("cuentas.flujo.collect.espera")}>
+            <Input
+              id={`${id}-espera`}
+              type="number"
+              min={1}
+              className="h-7"
+              value={data.esperaSeg ?? 60}
+              data-testid={`play-${id}-espera`}
+              onChange={(e) =>
+                data.onChange({ esperaSeg: e.target.value === "" ? undefined : Number(e.target.value) })
+              }
+            />
+          </Campo>
+        </>
       )}
 
       {fuente === "audio" && (
