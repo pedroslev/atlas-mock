@@ -103,6 +103,8 @@ export const contenido: ContenidoPagina = {
               "Audio — Se sube un archivo y se puede escuchar desde el macroestado.",
               "Se puede interrumpir marcando una tecla — Con el tilde, una tecla corta el audio y el flujo sigue al instante; la tecla la recibe el Capturar siguiente. Sin el tilde, el audio se escucha completo.",
               "Tipo de mensaje — Solo en cuentas de texto: Texto, Botones, Lista de opciones, Carrusel o Imagen o archivo. Cada tipo muestra sus propios campos.",
+              "Espera (s) — Con Botones, Lista de opciones o Carrusel: cuánto se espera la elección antes de salir por Sin respuesta.",
+              "Guardar lo que escriba en la variable — Opcional. Con Botones, Lista de opciones o Carrusel: dónde queda el texto si la persona escribe en vez de elegir.",
               "Mensaje — El texto que recibe el cliente. En Botones y Lista de opciones es el texto que acompaña a las opciones, y en Texto es el mensaje completo. Hasta 1024 caracteres."
             ]
           },
@@ -114,9 +116,9 @@ export const contenido: ContenidoPagina = {
             "tipo": "lista",
             "items": [
               "Texto — Un mensaje de texto.",
-              "Botones — Hasta 3 botones debajo del mensaje. Cada uno tiene un identificador y un título de hasta 20 caracteres. El identificador es el valor que recibe el flujo cuando la persona toca el botón; el título es lo que lee la persona.",
-              "Lista de opciones — Un menú de hasta 10 opciones. Se completa el texto del botón que abre la lista (hasta 20 caracteres) y, por cada opción, su identificador, su título (hasta 24 caracteres) y, si se quiere, una descripción.",
-              "Carrusel — Hasta 10 tarjetas que la persona recorre deslizando. Cada tarjeta tiene un título y un subtítulo (hasta 80 caracteres cada uno), una imagen y hasta 3 botones con identificador y título.",
+              "Botones — Hasta 3 botones debajo del mensaje. Cada uno tiene un título de hasta 20 caracteres, que es lo que lee la persona, y su propia salida en el macroestado.",
+              "Lista de opciones — Un menú de hasta 10 opciones. Se completa el texto del botón que abre la lista (hasta 20 caracteres) y, por cada opción, su título (hasta 24 caracteres) y, si se quiere, una descripción. Cada opción tiene su propia salida en el macroestado.",
+              "Carrusel — Hasta 10 tarjetas que la persona recorre deslizando. Cada tarjeta tiene un título y un subtítulo (hasta 80 caracteres cada uno), una imagen y hasta 3 botones con título. Cada botón tiene su propia salida en el macroestado, nombrada con el título de la tarjeta y el del botón.",
               "Imagen o archivo — Se elige si se envía una Imagen o un Archivo, se sube desde el macroestado y se puede sumar un texto que lo acompañe. Se usa, por ejemplo, para cerrar un camino de autogestión con una imagen de instrucciones o un documento con los pasos a seguir.",
               "Imágenes admitidas — JPG, JPEG y PNG.",
               "Archivos admitidos — PDF, DOC, DOCX, XLS, XLSX y TXT."
@@ -124,7 +126,7 @@ export const contenido: ContenidoPagina = {
           },
           {
             "tipo": "p",
-            "texto": "Cuando la persona toca un botón o una opción, el flujo sigue en el macroestado «Capturar texto» que viene después, y su variable guarda el identificador de lo que eligió. Para tomar un camino distinto según la elección se usa Condición o Según valor sobre esa variable. Si el canal no puede mostrar un tipo de mensaje, la persona lo recibe como texto con las opciones numeradas y puede responder con el número."
+            "texto": "Con Botones, Lista de opciones o Carrusel el macroestado espera a que la persona elija, y el flujo sigue por la salida de la opción que tocó: se conecta cada salida al paso que corresponde, sin necesitar un Condición ni un Según valor. Si el canal no puede mostrar un tipo de mensaje, la persona lo recibe como texto con las opciones numeradas y puede responder con el número."
           },
           {
             "tipo": "sub",
@@ -133,7 +135,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "lista",
             "items": [
-              "Siguiente — El audio terminó o se interrumpió.",
+              "Siguiente — El audio terminó o se interrumpió, o el mensaje se envió (Texto e Imagen o archivo).",
+              "Una salida por opción — Con Botones, Lista de opciones o Carrusel: el flujo sigue por la salida de lo que la persona eligió.",
+              "Otra respuesta — Con Botones, Lista de opciones o Carrusel: la persona escribió en vez de elegir. Lo que escribió queda en la variable indicada, si se completó.",
+              "Sin respuesta — Con Botones, Lista de opciones o Carrusel: pasó la espera sin que la persona eligiera ni escribiera.",
               "Error — No se pudo reproducir o enviar."
             ]
           }
@@ -497,6 +502,8 @@ export const contenido: ContenidoPagina = {
               "Audio — A file is uploaded and can be played from the macrostate.",
               "Can be interrupted by pressing a key — When checked, a key stops the audio and the flow continues immediately; the next Collect receives the key. When unchecked, the audio plays in full.",
               "Message type — Text accounts only: Text, Buttons, Options list, Carousel or Image or file. Each type shows its own fields.",
+              "Wait (s) — With Buttons, Options list or Carousel: how long to wait for the choice before leaving through No response.",
+              "Save what they type in the variable — Optional. With Buttons, Options list or Carousel: where the text is saved if the person types instead of choosing.",
               "Message — The text the customer receives. With Buttons and Options list it is the text that goes with the options, and with Text it is the whole message. Up to 1024 characters."
             ]
           },
@@ -508,9 +515,9 @@ export const contenido: ContenidoPagina = {
             "tipo": "lista",
             "items": [
               "Text — A text message.",
-              "Buttons — Up to 3 buttons below the message. Each has an identifier and a title of up to 20 characters. The identifier is the value the flow receives when the person taps the button; the title is what the person reads.",
-              "Options list — A menu of up to 10 options. You fill in the text of the button that opens the list (up to 20 characters) and, for each option, its identifier, its title (up to 24 characters) and, if you want, a description.",
-              "Carousel — Up to 10 cards the person swipes through. Each card has a title and a subtitle (up to 80 characters each), an image and up to 3 buttons with an identifier and a title.",
+              "Buttons — Up to 3 buttons below the message. Each has a title of up to 20 characters, which is what the person reads, and its own exit on the macrostate.",
+              "Options list — A menu of up to 10 options. You fill in the text of the button that opens the list (up to 20 characters) and, for each option, its title (up to 24 characters) and, if you want, a description. Each option has its own exit on the macrostate.",
+              "Carousel — Up to 10 cards the person swipes through. Each card has a title and a subtitle (up to 80 characters each), an image and up to 3 buttons with a title. Each button has its own exit on the macrostate, named with the card title and the button title.",
               "Image or file — You choose whether to send an Image or a File, upload it from the macrostate and can add a text that goes with it. It is used, for example, to close a self-service path with an image of instructions or a document with the steps to follow.",
               "Accepted images — JPG, JPEG and PNG.",
               "Accepted files — PDF, DOC, DOCX, XLS, XLSX and TXT."
@@ -518,7 +525,7 @@ export const contenido: ContenidoPagina = {
           },
           {
             "tipo": "p",
-            "texto": "When the person taps a button or an option, the flow continues in the \"Collect text\" macrostate that follows, and its variable stores the identifier of what they chose. To take a different path depending on the choice, use Condition or By value on that variable. If the channel cannot show a message type, the person receives it as text with numbered options and can reply with the number."
+            "texto": "With Buttons, Options list or Carousel the macrostate waits for the person to choose, and the flow continues through the exit of the option they tapped: each exit is connected to the step it corresponds to, with no need for a Condition or By value. If the channel cannot show a message type, the person receives it as text with numbered options and can reply with the number."
           },
           {
             "tipo": "sub",
@@ -527,7 +534,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "lista",
             "items": [
-              "Next — The audio ended or was interrupted.",
+              "Next — The audio ended or was interrupted, or the message was sent (Text and Image or file).",
+              "One exit per option — With Buttons, Options list or Carousel: the flow continues through the exit of what the person chose.",
+              "Other reply — With Buttons, Options list or Carousel: the person typed instead of choosing. What they typed is saved in the variable, if one was filled in.",
+              "No response — With Buttons, Options list or Carousel: the wait ended without the person choosing or typing.",
               "Error — It could not be played or sent."
             ]
           }
