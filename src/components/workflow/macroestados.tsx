@@ -284,8 +284,7 @@ export type AdjuntoTipo = "image" | "document";
 export type OpcionMensaje = { id: string; titulo: string; descripcion?: string };
 export type TarjetaMensaje = {
   id: string;
-  titulo: string;
-  subtitulo?: string;
+  texto?: string; // texto de la tarjeta (opcional)
   imagenNombre?: string; // nombre de la imagen subida, solo para mostrar
   imagenUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
   botones: OpcionMensaje[];
@@ -299,14 +298,31 @@ const ACEPTA_ADJUNTO: Record<AdjuntoTipo, string> = {
 };
 
 // Topes del mínimo común entre canales (propuesta-mensajes-enriquecidos §4).
+// Topes alineados con los de WhatsApp (mensajes interactivos de sesión, documentación
+// de Meta), que es el canal más restrictivo: ver analisis-tecnico-mensajes-enriquecidos.md.
 const MAX_BOTONES = 3;
 const MAX_OPCIONES_LISTA = 10;
+const MIN_TARJETAS = 2;
 const MAX_TARJETAS = 10;
-const MAX_BOTONES_TARJETA = 3;
+const MAX_BOTONES_TARJETA = 2;
 const MAX_TITULO_BOTON = 20;
 const MAX_TITULO_OPCION = 24;
-const MAX_TITULO_TARJETA = 80;
-const MAX_CUERPO = 1024;
+const MAX_DESCRIPCION_OPCION = 72;
+const MAX_TEXTO_TARJETA = 160;
+const MAX_LINEAS_TARJETA = 3; // hasta 2 saltos de línea
+const MAX_PIE_ADJUNTO = 1024;
+// Texto del mensaje según el tipo.
+const MAX_TEXTO: Record<"texto" | "botones" | "lista" | "carrusel", number> = {
+  texto: 4096,
+  botones: 1024,
+  lista: 4096,
+  carrusel: 1024,
+};
+// Tamaño máximo del archivo que se sube.
+const MAX_BYTES_ADJUNTO: Record<AdjuntoTipo, number> = {
+  image: 5 * 1024 * 1024,
+  document: 100 * 1024 * 1024,
+};
 
 // Identificador nuevo e irrepetible para una opción o una tarjeta. No cambia aunque
 // se reordenen o se quiten otras, así quitar una opción no reconecta las demás.
@@ -319,10 +335,10 @@ const salidaDeOpcion = (id: string) => `opcion_${id}`;
 
 // Las opciones que dan una salida. `numero` es la posición que se ve en el editor
 // al lado de cada opción (1, 2, 3; en el carrusel, tarjeta.botón: 1.1, 1.2, 2.1) y
-// en el nombre de la salida, para reconocer cuál es cuál. `contexto` es la tarjeta.
-type OpcionConSalida = { id: string; numero: string; contexto?: string; titulo: string };
+// en el nombre de la salida, para reconocer cuál es cuál.
+type OpcionConSalida = { id: string; numero: string; titulo: string };
 
-function opcionesConSalida(data: PlayData, tarjetaDefault: string): OpcionConSalida[] {
+function opcionesConSalida(data: PlayData): OpcionConSalida[] {
   switch (data.tipoMensaje) {
     case "botones":
       return (data.botones ?? []).map((o, i) => ({ id: o.id, numero: String(i + 1), titulo: o.titulo }));
@@ -333,13 +349,35 @@ function opcionesConSalida(data: PlayData, tarjetaDefault: string): OpcionConSal
         tarjeta.botones.map((b, j) => ({
           id: b.id,
           numero: `${i + 1}.${j + 1}`,
-          contexto: tarjeta.titulo || `${tarjetaDefault} ${i + 1}`,
           titulo: b.titulo,
         })),
       );
     default:
       return [];
   }
+}
+
+// Reglas del canal más restrictivo (WhatsApp) que el editor no puede impedir con un
+// tope de caracteres: se muestran como error en el nodo. Devuelve claves de texto.
+function erroresDelMensaje(data: PlayData): string[] {
+  const errores: string[] = [];
+  if (data.tipoMensaje === "botones") {
+    // WhatsApp no admite dos botones con el mismo título en un mismo mensaje.
+    const titulos = (data.botones ?? []).map((b) => b.titulo.trim()).filter(Boolean);
+    if (new Set(titulos).size !== titulos.length) errores.push("cuentas.flujo.play.error.titulosRepetidos");
+  }
+  if (data.tipoMensaje === "carrusel") {
+    const tarjetas = data.tarjetas ?? [];
+    if (tarjetas.length > 0) {
+      if (tarjetas.length < MIN_TARJETAS) errores.push("cuentas.flujo.play.error.minimoTarjetas");
+      if (tarjetas.some((x) => !x.imagenUrl)) errores.push("cuentas.flujo.play.error.sinImagen");
+      if (tarjetas.some((x) => x.botones.length === 0)) errores.push("cuentas.flujo.play.error.sinBoton");
+      if (new Set(tarjetas.map((x) => x.botones.length)).size > 1) {
+        errores.push("cuentas.flujo.play.error.botonesDistintos");
+      }
+    }
+  }
+  return errores;
 }
 
 // Subida de un archivo (imagen de una tarjeta, imagen o archivo adjunto): el
@@ -352,11 +390,13 @@ function SubirArchivo({
   nombre,
   url,
   esImagen,
+  maxBytes,
   onSubir,
   onQuitar,
 }: {
   testid: string;
   accept: string;
+  maxBytes: number;
   nombre?: string;
   url?: string;
   esImagen?: boolean;
@@ -365,6 +405,8 @@ function SubirArchivo({
 }) {
   const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
+  // El archivo que supera el tope no se sube: se avisa cuánto es el máximo.
+  const [excedido, setExcedido] = useState(false);
   return (
     <div className="flex flex-col gap-1.5">
       <input
@@ -375,7 +417,12 @@ function SubirArchivo({
         data-testid={`${testid}-archivo`}
         onChange={(e) => {
           const archivo = e.target.files?.[0];
-          if (archivo) onSubir({ nombre: archivo.name, url: URL.createObjectURL(archivo) });
+          if (archivo && archivo.size > maxBytes) {
+            setExcedido(true);
+          } else if (archivo) {
+            setExcedido(false);
+            onSubir({ nombre: archivo.name, url: URL.createObjectURL(archivo) });
+          }
           e.target.value = "";
         }}
       />
@@ -413,6 +460,11 @@ function SubirArchivo({
         <Upload />
         {t(nombre ? "cuentas.flujo.play.archivo.cambiar" : "cuentas.flujo.play.archivo.subir")}
       </Button>
+      {excedido && (
+        <p className="text-xs text-destructive" data-testid={`${testid}-excedido`}>
+          {t("cuentas.flujo.play.archivo.excedido")} {Math.round(maxBytes / (1024 * 1024))} MB
+        </p>
+      )}
     </div>
   );
 }
@@ -483,6 +535,7 @@ function OpcionesEditor({
           {conDescripcion && (
             <Input
               className="h-7"
+              maxLength={MAX_DESCRIPCION_OPCION}
               aria-label={t("cuentas.flujo.play.opcion.descripcion")}
               placeholder={t("cuentas.flujo.play.opcion.descripcion")}
               value={o.descripcion ?? ""}
@@ -564,7 +617,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
   const tipoMensaje = data.tipoMensaje ?? "texto";
   const updateNodeInternals = useUpdateNodeInternals();
   const conOpciones = data.soloTexto && TIPOS_CON_OPCIONES.includes(tipoMensaje);
-  const salidasOpcion = conOpciones ? opcionesConSalida(data, t("cuentas.flujo.play.tarjeta")) : [];
+  const salidasOpcion = conOpciones ? opcionesConSalida(data) : [];
 
   // Las salidas cambian al sumar o quitar opciones o al cambiar de tipo: React
   // Flow tiene que volver a medir los puntos de conexión del nodo.
@@ -577,7 +630,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
   const cambiarTipo = (nuevo: TipoMensaje) => {
     const eraConOpciones = TIPOS_CON_OPCIONES.includes(tipoMensaje);
     const seraConOpciones = TIPOS_CON_OPCIONES.includes(nuevo);
-    opcionesConSalida(data, "").forEach((o) => data.onRemoveExit(salidaDeOpcion(o.id)));
+    opcionesConSalida(data).forEach((o) => data.onRemoveExit(salidaDeOpcion(o.id)));
     if (eraConOpciones && !seraConOpciones) {
       data.onRemoveExit("other");
       data.onRemoveExit("timeout");
@@ -614,9 +667,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                 key={o.id}
                 id={salidaDeOpcion(o.id)}
                 etiqueta={
-                  o.titulo
-                    ? [o.numero, o.contexto, o.titulo].filter(Boolean).join(" · ")
-                    : [o.contexto, `${t("cuentas.flujo.case.opcion")} ${o.numero}`].filter(Boolean).join(" · ")
+                  o.titulo ? `${o.numero} · ${o.titulo}` : `${t("cuentas.flujo.case.opcion")} ${o.numero}`
                 }
               />
             ))}
@@ -680,12 +731,12 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
 
       {/* Texto del mensaje: el propio mensaje (texto) o el cuerpo que acompaña
           a los botones y a la lista. */}
-      {fuente === "texto" && (tipoMensaje === "texto" || tipoMensaje === "botones" || tipoMensaje === "lista") && (
+      {fuente === "texto" && (tipoMensaje === "texto" || tipoMensaje === "botones" || tipoMensaje === "lista" || tipoMensaje === "carrusel") && (
         <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.texto")}>
           <Textarea
             id={`${id}-texto`}
             rows={3}
-            maxLength={MAX_CUERPO}
+            maxLength={MAX_TEXTO[tipoMensaje as keyof typeof MAX_TEXTO]}
             value={data.texto ?? ""}
             placeholder={t("cuentas.flujo.play.textoPlaceholder")}
             data-testid={`play-${id}-texto`}
@@ -763,27 +814,24 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                     <X />
                   </Button>
                 </div>
-                <Input
-                  className="h-7"
-                  aria-label={t("cuentas.flujo.play.tarjeta.titulo")}
-                  placeholder={t("cuentas.flujo.play.tarjeta.titulo")}
-                  maxLength={MAX_TITULO_TARJETA}
-                  value={tarjeta.titulo}
-                  data-testid={`play-${id}-tarjeta-${i}-titulo`}
-                  onChange={(e) => cambiarTarjeta({ titulo: e.target.value })}
-                />
-                <Input
-                  className="h-7"
-                  aria-label={t("cuentas.flujo.play.tarjeta.subtitulo")}
-                  placeholder={t("cuentas.flujo.play.tarjeta.subtitulo")}
-                  maxLength={MAX_TITULO_TARJETA}
-                  value={tarjeta.subtitulo ?? ""}
-                  data-testid={`play-${id}-tarjeta-${i}-subtitulo`}
-                  onChange={(e) => cambiarTarjeta({ subtitulo: e.target.value })}
+                <Textarea
+                  rows={2}
+                  aria-label={t("cuentas.flujo.play.tarjeta.texto")}
+                  placeholder={t("cuentas.flujo.play.tarjeta.texto")}
+                  maxLength={MAX_TEXTO_TARJETA}
+                  value={tarjeta.texto ?? ""}
+                  data-testid={`play-${id}-tarjeta-${i}-texto`}
+                  onChange={(e) => {
+                    // Hasta 2 saltos de línea por tarjeta.
+                    if (e.target.value.split("\n").length <= MAX_LINEAS_TARJETA) {
+                      cambiarTarjeta({ texto: e.target.value });
+                    }
+                  }}
                 />
                 <SubirArchivo
                   testid={`play-${id}-tarjeta-${i}-imagen`}
                   accept={ACEPTA_ADJUNTO.image}
+                  maxBytes={MAX_BYTES_ADJUNTO.image}
                   esImagen
                   nombre={tarjeta.imagenNombre}
                   url={tarjeta.imagenUrl}
@@ -814,7 +862,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               data.onChange({
                 tarjetas: [
                   ...(data.tarjetas ?? []),
-                  { id: idNuevo(), titulo: "", botones: [] },
+                  { id: idNuevo(), botones: [{ id: idNuevo(), titulo: "" }] },
                 ],
               })
             }
@@ -858,6 +906,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
           <SubirArchivo
             testid={`play-${id}-adjunto`}
             accept={ACEPTA_ADJUNTO[data.adjuntoTipo ?? "image"]}
+            maxBytes={MAX_BYTES_ADJUNTO[data.adjuntoTipo ?? "image"]}
             esImagen={(data.adjuntoTipo ?? "image") === "image"}
             nombre={data.adjuntoNombre}
             url={data.adjuntoUrl}
@@ -868,13 +917,23 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
             <Input
               id={`${id}-texto`}
               className="h-7"
-              maxLength={MAX_CUERPO}
+              maxLength={MAX_PIE_ADJUNTO}
               value={data.texto ?? ""}
               data-testid={`play-${id}-texto`}
               onChange={(e) => data.onChange({ texto: e.target.value })}
             />
           </Campo>
         </>
+      )}
+
+      {erroresDelMensaje(data).length > 0 && (
+        <ul className="flex flex-col gap-0.5" data-testid={`play-${id}-errores`}>
+          {erroresDelMensaje(data).map((clave) => (
+            <li key={clave} className="text-xs text-destructive">
+              {t(clave)}
+            </li>
+          ))}
+        </ul>
       )}
 
       {conOpciones && (
