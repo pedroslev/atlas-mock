@@ -1028,13 +1028,14 @@ export function WorkflowEditor({
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon-sm"
+                  size="sm"
                   className="bg-card shadow-sm"
                   aria-label={t("cuentas.flujo.paleta.mostrar")}
                   data-testid="paleta-alternar"
                   onClick={() => setPaletaAbierta(true)}
                 >
                   <PanelLeftOpen />
+                  {t("cuentas.flujo.macroestados")}
                 </Button>
               </ActionTooltip>
             )}
