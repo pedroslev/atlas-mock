@@ -16,7 +16,7 @@ import {
   Strikethrough,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { EmojiStyle } from "emoji-picker-react";
+import { Categories, EmojiStyle } from "emoji-picker-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,20 @@ import {
 // un dato falta, la variable queda visible tal cual: el asesor la completa.
 // Se carga solo al abrir el selector: el listado completo de emojis es pesado.
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
+
+// Categorías del selector de emojis, en el orden en que se muestran; el
+// nombre visible sale del diccionario (idioma del aplicativo).
+const CATEGORIAS_EMOJI = [
+  Categories.SUGGESTED,
+  Categories.SMILEYS_PEOPLE,
+  Categories.ANIMALS_NATURE,
+  Categories.FOOD_DRINK,
+  Categories.TRAVEL_PLACES,
+  Categories.ACTIVITIES,
+  Categories.OBJECTS,
+  Categories.SYMBOLS,
+  Categories.FLAGS,
+];
 
 function formatoTamano(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -467,7 +481,18 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                           previewConfig={{ showPreview: false }}
                           skinTonesDisabled
                           emojiStyle={EmojiStyle.NATIVE}
-                          style={{ "--epr-emoji-size": "20px", fontSize: 13 } as React.CSSProperties}
+                          categories={CATEGORIAS_EMOJI.map((c) => ({
+                            category: c,
+                            name: t(`plantillas.emojiCat.${c}`),
+                          }))}
+                          style={
+                            {
+                              "--epr-emoji-size": "20px",
+                              "--epr-category-navigation-button-size": "22px",
+                              "--epr-category-label-height": "28px",
+                              fontSize: 13,
+                            } as React.CSSProperties
+                          }
                           width={300}
                           height={300}
                         />
