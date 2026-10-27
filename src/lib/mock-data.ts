@@ -309,7 +309,6 @@ export const variablesPlantilla: VariablePlantilla[] = [
   { clave: "email", origen: "cliente", ejemplo: "juan.perez@mail.com" },
   { clave: "numeroCliente", origen: "cliente", ejemplo: "CL-10422" },
   { clave: "campania", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
-  { clave: "empresa", origen: "campania", ejemplo: "Banco Austral" },
   { clave: "asesor", origen: "asesor", ejemplo: "Ana" },
 ];
 
@@ -825,9 +824,9 @@ export const plantillas: Plantilla[] = [
     nombre: "Saludo inicial",
     descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
     canales: ["chat", "email", "sms"],
-    asunto: "Hola {{nombre}}, te escribimos de {{empresa}}",
+    asunto: "Hola {{nombre}}, te escribimos por tu cuenta",
     contenido:
-      "¡Hola {{nombre}}! Soy {{asesor}}, de **{{empresa}}**. ¿En qué te puedo ayudar hoy?",
+      "¡Hola {{nombre}}! Soy {{asesor}}. ¿En qué te puedo ayudar hoy?",
     respaldos: { nombre: "" },
     adjuntos: [],
     activa: true,
@@ -848,7 +847,7 @@ export const plantillas: Plantilla[] = [
     nombre: "Propuesta de pago",
     descripcion: "Envía las condiciones de la propuesta con el detalle adjunto.",
     canales: ["chat", "email"],
-    asunto: "Tu propuesta de pago — {{empresa}}",
+    asunto: "Tu propuesta de pago",
     contenido:
       "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas van en el archivo adjunto.\n\n_Tiene validez hasta el último día hábil del mes._",
     respaldos: { nombre: "Estimado cliente" },
@@ -884,7 +883,7 @@ export const plantillas: Plantilla[] = [
     descripcion: "Mensaje corto de recordatorio, pensado para SMS.",
     canales: ["sms"],
     contenido:
-      "{{empresa}}: {{nombre}}, tu cuota vence pronto. Si ya pagaste, ignorá este mensaje.",
+      "{{nombre}}, tu cuota vence pronto. Si ya pagaste, ignorá este mensaje.",
     respaldos: { nombre: "hola" },
     adjuntos: [],
     activa: false,

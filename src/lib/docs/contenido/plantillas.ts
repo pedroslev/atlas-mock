@@ -31,7 +31,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email y chat va con negrita, cursiva y listas; en SMS va solo el texto. La vista previa de la derecha muestra cómo lo recibe el cliente en cada canal elegido.",
+              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email y chat va con negrita, cursiva y listas; en SMS va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente en cada canal elegido, mientras lo escribís.",
           },
           { tipo: "sub", texto: "Campos" },
           {
@@ -89,7 +89,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "En el cuadro de mensaje, escribe «/» (con el cuadro vacío) o toca el botón «Plantillas».",
               "Busca por nombre o por una palabra del mensaje. Arriba ve sus favoritas (estrella) y las que más usa.",
-              "Elige una: el texto entra con los datos del cliente ya puestos y los adjuntos se suman debajo. Si ya había texto escrito, elige entre «Insertar debajo» o «Reemplazar».",
+              "Elige una: el texto entra con los datos del cliente ya puestos y los adjuntos se suman debajo. Si ya había texto escrito, elige entre «Insertar debajo» o «Reemplazar»: Enter reemplaza, Shift+Enter inserta debajo.",
               "Ajusta lo que quiera y envía con Enter.",
             ],
           },

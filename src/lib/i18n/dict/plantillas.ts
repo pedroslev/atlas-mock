@@ -51,6 +51,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Se escribe una vez; Atlas la adapta a lo que soporta cada canal.",
     "editor.datos": "Datos",
+    "editor.continuar": "Continuar al mensaje",
     "editor.placeholderNombre": "Ej: Saludo inicial",
     "editor.placeholderDescripcion":
       "Cuándo conviene usarla. El asesor la ve al elegirla.",
@@ -105,7 +106,6 @@ export const plantillas: NamespaceDict = {
     "variable.email": "Email",
     "variable.numeroCliente": "Número de cliente",
     "variable.campania": "Nombre de la campaña",
-    "variable.empresa": "Empresa",
     "variable.asesor": "Nombre del asesor",
 
     "canal.chat": "Chat",
@@ -195,6 +195,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Written once; Atlas adapts it to what each channel supports.",
     "editor.datos": "Details",
+    "editor.continuar": "Continue to message",
     "editor.placeholderNombre": "E.g.: Opening greeting",
     "editor.placeholderDescripcion":
       "When to use it. Agents see it when picking the template.",
@@ -248,7 +249,6 @@ export const plantillas: NamespaceDict = {
     "variable.email": "Email",
     "variable.numeroCliente": "Customer number",
     "variable.campania": "Campaign name",
-    "variable.empresa": "Company",
     "variable.asesor": "Agent name",
 
     "canal.chat": "Chat",
@@ -336,6 +336,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Escrito uma vez; o Atlas o adapta ao que cada canal suporta.",
     "editor.datos": "Dados",
+    "editor.continuar": "Continuar para a mensagem",
     "editor.placeholderNombre": "Ex.: Saudação inicial",
     "editor.placeholderDescripcion":
       "Quando convém usá-lo. O atendente o vê ao escolher.",
@@ -389,7 +390,6 @@ export const plantillas: NamespaceDict = {
     "variable.email": "E-mail",
     "variable.numeroCliente": "Número do cliente",
     "variable.campania": "Nome da campanha",
-    "variable.empresa": "Empresa",
     "variable.asesor": "Nome do atendente",
 
     "canal.chat": "Chat",
@@ -477,6 +477,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "S'escriu un cop; Atlas l'adapta al que admet cada canal.",
     "editor.datos": "Dades",
+    "editor.continuar": "Continua al missatge",
     "editor.placeholderNombre": "Ex.: Salutació inicial",
     "editor.placeholderDescripcion":
       "Quan convé fer-la servir. L'agent la veu en triar-la.",
@@ -530,7 +531,6 @@ export const plantillas: NamespaceDict = {
     "variable.email": "Correu",
     "variable.numeroCliente": "Número de client",
     "variable.campania": "Nom de la campanya",
-    "variable.empresa": "Empresa",
     "variable.asesor": "Nom de l'agent",
 
     "canal.chat": "Xat",

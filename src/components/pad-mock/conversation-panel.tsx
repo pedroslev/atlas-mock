@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDown, Info, Paperclip, Phone, PhoneOutgoing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Kbd } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Dialog,
   DialogContent,
@@ -69,7 +69,6 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
       nombre,
       apellido: resto.join(" "),
       campania: "Soporte técnico Nivel 1",
-      empresa: "Banco Austral",
       asesor: "Ana",
     };
   }, [nombreCliente]);
@@ -199,7 +198,17 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
       )}
 
       <Dialog open={pendiente !== null} onOpenChange={(open) => !open && setPendiente(null)}>
-        <DialogContent className="sm:max-w-md">
+        {/* Reemplazar es el camino más común: Enter lo hace; Shift+Enter
+            inserta debajo (como Shift+Enter agrega una línea en el cuadro);
+            Esc cancela. */}
+        <DialogContent
+          className="sm:max-w-md"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" || !pendiente) return;
+            e.preventDefault();
+            aplicar(pendiente, e.shiftKey ? "insertar" : "reemplazar");
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{t("plantillas.selector.reemplazarTitulo")}</DialogTitle>
             <DialogDescription>{t("plantillas.selector.reemplazarDescripcion")}</DialogDescription>
@@ -207,9 +216,14 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => pendiente && aplicar(pendiente, "insertar")}>
               {t("plantillas.selector.insertar")}
+              <KbdGroup>
+                <Kbd>⇧</Kbd>
+                <Kbd>↵</Kbd>
+              </KbdGroup>
             </Button>
-            <Button onClick={() => pendiente && aplicar(pendiente, "reemplazar")}>
+            <Button autoFocus onClick={() => pendiente && aplicar(pendiente, "reemplazar")}>
               {t("plantillas.selector.reemplazar")}
+              <Kbd className="bg-primary-foreground/20 text-primary-foreground">↵</Kbd>
             </Button>
           </DialogFooter>
         </DialogContent>

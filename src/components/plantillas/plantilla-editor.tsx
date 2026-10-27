@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Bold, Braces, Italic, List, Paperclip, Plus } from "lucide-react";
+import { ArrowRight, Bold, Braces, Italic, List, Paperclip, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Button } from "@/components/ui/button";
@@ -57,9 +57,10 @@ import {
   MensajeRenderizado,
 } from "@/components/plantillas/mensaje-renderizado";
 
-// Editor de una plantilla del catálogo (alta y edición). Pantalla propia y no
-// un modal porque tiene: datos, canales, mensaje con formato y variables,
-// valores de respaldo, adjuntos y vista previa por canal.
+// Editor de una plantilla del catálogo (alta y edición). Pantalla propia en
+// dos partes: "Datos" (nombre, descripción, estado, canales) y "Mensaje"
+// (asunto, texto con formato y variables, respaldos, adjuntos) con la vista
+// previa al lado, para ver cómo queda mientras se escribe, sin scroll.
 //
 // El mensaje se escribe UNA vez, con formato básico (**negrita**, _cursiva_,
 // "- " para listas) y variables {{clave}} que se insertan desde la barra; la
@@ -81,6 +82,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     initial?.adjuntos ?? []
   );
   const [variablesOpen, setVariablesOpen] = useState(false);
+  // Una plantilla nueva arranca en Datos; una existente, en el mensaje.
+  const [paso, setPaso] = useState<"datos" | "mensaje">(initial ? "mensaje" : "datos");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const usadas = useMemo(
@@ -155,7 +158,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title={initial ? initial.nombre : t("plantillas.editor.nueva")}
         description={t("plantillas.editor.subtitulo")}
@@ -174,14 +177,16 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <div className="flex min-w-0 flex-col gap-6">
-          {/* Datos ----------------------------------------------------- */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("plantillas.editor.datos")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+      <Tabs value={paso} onValueChange={(v) => setPaso(v as "datos" | "mensaje")} className="gap-4">
+        <TabsList>
+          <TabsTrigger value="datos">{t("plantillas.editor.datos")}</TabsTrigger>
+          <TabsTrigger value="mensaje">{t("plantillas.editor.contenido")}</TabsTrigger>
+        </TabsList>
+
+        {/* Paso 1: Datos ------------------------------------------------ */}
+        <TabsContent value="datos">
+          <Card className="max-w-3xl">
+            <CardContent className="flex flex-col gap-4 pt-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="pl-nombre">{t("common.comunes.nombre")}</Label>
@@ -232,189 +237,193 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     : t("plantillas.editor.canalesAyuda")}
                 </span>
               </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="secondary" onClick={() => setPaso("mensaje")}>
+                  {t("plantillas.editor.continuar")}
+                  <ArrowRight />
+                </Button>
+              </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Mensaje --------------------------------------------------- */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("plantillas.editor.contenido")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {canales.includes("email") && (
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="pl-asunto">{t("plantillas.editor.asunto")}</Label>
-                  <Input
-                    id="pl-asunto"
-                    value={asunto}
-                    onChange={(e) => setAsunto(e.target.value)}
-                    placeholder={t("plantillas.editor.placeholderAsunto")}
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-1">
-                  <ActionTooltip label={t("plantillas.editor.negrita")}>
-                    <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("**")}>
-                      <Bold className="size-4" />
-                    </Button>
-                  </ActionTooltip>
-                  <ActionTooltip label={t("plantillas.editor.cursiva")}>
-                    <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("_")}>
-                      <Italic className="size-4" />
-                    </Button>
-                  </ActionTooltip>
-                  <ActionTooltip label={t("plantillas.editor.lista")}>
-                    <Button type="button" variant="outline" size="icon-sm" onClick={listar}>
-                      <List className="size-4" />
-                    </Button>
-                  </ActionTooltip>
-                  <Popover open={variablesOpen} onOpenChange={setVariablesOpen}>
-                    <PopoverTrigger asChild>
-                      <Button type="button" variant="outline" size="sm" className="ml-1">
-                        <Braces className="size-4" />
-                        {t("plantillas.editor.insertarVariable")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder={t("plantillas.editor.buscarVariable")} />
-                        <CommandList>
-                          <CommandEmpty>{t("plantillas.editor.sinVariables")}</CommandEmpty>
-                          {(Object.keys(porOrigen) as OrigenVariable[]).map((origen) => (
-                            <CommandGroup key={origen} heading={t(`plantillas.origen.${origen}`)}>
-                              {porOrigen[origen].map((v) => (
-                                <CommandItem
-                                  key={v.clave}
-                                  value={`${t(`plantillas.variable.${v.clave}`)} ${v.clave}`}
-                                  onSelect={() => insertarVariable(v.clave)}
-                                >
-                                  <span className="flex-1">{t(`plantillas.variable.${v.clave}`)}</span>
-                                  <span className="text-xs text-muted-foreground">{v.ejemplo}</span>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <Textarea
-                  ref={textareaRef}
-                  id="pl-contenido"
-                  value={contenido}
-                  onChange={(e) => setContenido(e.target.value)}
-                  rows={7}
-                  placeholder={t("plantillas.editor.placeholderContenido")}
-                  className="font-mono text-sm"
-                />
-              </div>
-
-              {/* Variables usadas + respaldo ------------------------------ */}
-              <div className="flex flex-col gap-2 rounded-lg border p-3">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{t("plantillas.editor.variables")}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("plantillas.editor.variablesAyuda")}
-                  </span>
-                </div>
-                {usadas.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("plantillas.editor.sinVariablesUsadas")}
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {usadas.map((clave) => {
-                      const def = variablesPlantilla.find((v) => v.clave === clave);
-                      return (
-                        <div
-                          key={clave}
-                          className="grid items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-                        >
-                          <span className="flex items-center gap-2 text-sm">
-                            <Badge variant="outline" className="font-mono">
-                              {`{{${clave}}}`}
-                            </Badge>
-                            <span>
-                              {def ? t(`plantillas.variable.${clave}`) : clave}
-                            </span>
-                            {def && (
-                              <span className="text-xs text-muted-foreground">
-                                · {t(`plantillas.origen.${def.origen}`)}
-                              </span>
-                            )}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Label htmlFor={`resp-${clave}`} className="shrink-0 text-xs text-muted-foreground">
-                              {t("plantillas.editor.respaldo")}
-                            </Label>
-                            <Input
-                              id={`resp-${clave}`}
-                              value={respaldos[clave] ?? ""}
-                              onChange={(e) =>
-                                setRespaldos((prev) => ({ ...prev, [clave]: e.target.value }))
-                              }
-                              placeholder={t("plantillas.editor.placeholderRespaldo")}
-                              className="h-8"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+        {/* Paso 2: Mensaje + vista previa al lado ---------------------- */}
+        <TabsContent value="mensaje">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
+            <Card className="min-w-0">
+              <CardContent className="flex flex-col gap-4 pt-6">
+                {canales.includes("email") && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="pl-asunto">{t("plantillas.editor.asunto")}</Label>
+                    <Input
+                      id="pl-asunto"
+                      value={asunto}
+                      onChange={(e) => setAsunto(e.target.value)}
+                      placeholder={t("plantillas.editor.placeholderAsunto")}
+                    />
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Adjuntos -------------------------------------------------- */}
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div>
-                <CardTitle>{t("plantillas.editor.adjuntos")}</CardTitle>
-                <CardDescription>{t("plantillas.editor.adjuntosAyuda")}</CardDescription>
-              </div>
-              <Button type="button" variant="outline" onClick={agregarArchivo}>
-                <Plus />
-                {t("plantillas.editor.agregarArchivo")}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {adjuntos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("plantillas.editor.sinAdjuntos")}</p>
-              ) : (
-                <AdjuntosChips
-                  adjuntos={adjuntos}
-                  onQuitar={(id) => setAdjuntos((prev) => prev.filter((a) => a.id !== id))}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pl-contenido">{t("plantillas.editor.contenido")}</Label>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <ActionTooltip label={t("plantillas.editor.negrita")}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("**")}>
+                        <Bold className="size-4" />
+                      </Button>
+                    </ActionTooltip>
+                    <ActionTooltip label={t("plantillas.editor.cursiva")}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("_")}>
+                        <Italic className="size-4" />
+                      </Button>
+                    </ActionTooltip>
+                    <ActionTooltip label={t("plantillas.editor.lista")}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={listar}>
+                        <List className="size-4" />
+                      </Button>
+                    </ActionTooltip>
+                    <Popover open={variablesOpen} onOpenChange={setVariablesOpen}>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" className="ml-1">
+                          <Braces className="size-4" />
+                          {t("plantillas.editor.insertarVariable")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder={t("plantillas.editor.buscarVariable")} />
+                          <CommandList>
+                            <CommandEmpty>{t("plantillas.editor.sinVariables")}</CommandEmpty>
+                            {(Object.keys(porOrigen) as OrigenVariable[]).map((origen) => (
+                              <CommandGroup key={origen} heading={t(`plantillas.origen.${origen}`)}>
+                                {porOrigen[origen].map((v) => (
+                                  <CommandItem
+                                    key={v.clave}
+                                    value={`${t(`plantillas.variable.${v.clave}`)} ${v.clave}`}
+                                    onSelect={() => insertarVariable(v.clave)}
+                                  >
+                                    <span className="flex-1">{t(`plantillas.variable.${v.clave}`)}</span>
+                                    <span className="text-xs text-muted-foreground">{v.ejemplo}</span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <Textarea
+                    ref={textareaRef}
+                    id="pl-contenido"
+                    value={contenido}
+                    onChange={(e) => setContenido(e.target.value)}
+                    rows={10}
+                    placeholder={t("plantillas.editor.placeholderContenido")}
+                    className="font-mono text-sm"
+                    autoFocus={paso === "mensaje"}
+                  />
+                </div>
 
-        {/* Vista previa ------------------------------------------------ */}
-        <Card className="h-fit xl:sticky xl:top-4">
-          <CardHeader>
-            <CardTitle>{t("plantillas.editor.vistaPrevia")}</CardTitle>
-            <CardDescription>{t("plantillas.editor.vistaPreviaAyuda")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {canales.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("plantillas.editor.sinCanales")}</p>
-            ) : (
-              <VistaPrevia
-                canales={canales}
-                asunto={asunto}
-                contenido={contenido}
-                respaldos={respaldos}
-                adjuntos={adjuntos}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                {/* Adjuntos: en línea, debajo del texto ------------------- */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{t("plantillas.editor.adjuntos")}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("plantillas.editor.adjuntosAyuda")}
+                      </span>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={agregarArchivo}>
+                      <Plus />
+                      {t("plantillas.editor.agregarArchivo")}
+                    </Button>
+                  </div>
+                  {adjuntos.length > 0 && (
+                    <AdjuntosChips
+                      adjuntos={adjuntos}
+                      onQuitar={(id) => setAdjuntos((prev) => prev.filter((a) => a.id !== id))}
+                    />
+                  )}
+                </div>
+
+                {/* Variables usadas + respaldo ---------------------------- */}
+                {usadas.length > 0 && (
+                  <div className="flex flex-col gap-2 rounded-lg border p-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{t("plantillas.editor.variables")}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("plantillas.editor.variablesAyuda")}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {usadas.map((clave) => {
+                        const def = variablesPlantilla.find((v) => v.clave === clave);
+                        return (
+                          <div
+                            key={clave}
+                            className="grid items-center gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+                          >
+                            <span className="flex items-center gap-2 text-sm">
+                              <Badge variant="outline" className="font-mono">
+                                {`{{${clave}}}`}
+                              </Badge>
+                              <span>{def ? t(`plantillas.variable.${clave}`) : clave}</span>
+                              {def && (
+                                <span className="text-xs text-muted-foreground">
+                                  · {t(`plantillas.origen.${def.origen}`)}
+                                </span>
+                              )}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor={`resp-${clave}`}
+                                className="shrink-0 text-xs text-muted-foreground"
+                              >
+                                {t("plantillas.editor.respaldo")}
+                              </Label>
+                              <Input
+                                id={`resp-${clave}`}
+                                value={respaldos[clave] ?? ""}
+                                onChange={(e) =>
+                                  setRespaldos((prev) => ({ ...prev, [clave]: e.target.value }))
+                                }
+                                placeholder={t("plantillas.editor.placeholderRespaldo")}
+                                className="h-8"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Vista previa ------------------------------------------------ */}
+            <Card className="h-fit lg:sticky lg:top-4">
+              <CardHeader>
+                <CardTitle>{t("plantillas.editor.vistaPrevia")}</CardTitle>
+                <CardDescription>{t("plantillas.editor.vistaPreviaAyuda")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {canales.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t("plantillas.editor.sinCanales")}</p>
+                ) : (
+                  <VistaPrevia
+                    canales={canales}
+                    asunto={asunto}
+                    contenido={contenido}
+                    respaldos={respaldos}
+                    adjuntos={adjuntos}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
