@@ -36,6 +36,19 @@ export const padMock: NamespaceDict = {
     "conversationPanel.plantillas": "Plantillas de mensajes…",
     "conversationPanel.buscarPlantilla": "Buscar plantilla…",
     "conversationPanel.adjuntar": "Adjuntar archivo",
+    "conversationPanel.emoji": "Emojis",
+    "conversationPanel.buscarEmoji": "Buscar emoji…",
+
+    // Categorías del selector de emojis del chat
+    "emojiCat.suggested": "Recientes",
+    "emojiCat.smileys_people": "Caritas y personas",
+    "emojiCat.animals_nature": "Animales y naturaleza",
+    "emojiCat.food_drink": "Comida y bebida",
+    "emojiCat.travel_places": "Viajes y lugares",
+    "emojiCat.activities": "Actividades",
+    "emojiCat.objects": "Objetos",
+    "emojiCat.symbols": "Símbolos",
+    "emojiCat.flags": "Banderas",
     "conversationPanel.enviar": "Enviar",
     "conversationPanel.placeholder": "Escribí tu respuesta… (Enter para enviar, Shift+Enter para salto de línea)",
 

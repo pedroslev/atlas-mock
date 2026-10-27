@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowDown, ChevronsUpDown, FileText, Paperclip, Phone, PhoneOutgoing } from "lucide-react";
+import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { Categories, EmojiStyle } from "emoji-picker-react";
+import { ArrowDown, ChevronsUpDown, FileText, Paperclip, Phone, PhoneOutgoing, SmilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Kbd } from "@/components/ui/kbd";
@@ -91,11 +93,94 @@ function PlantillaSelector({ onElegir }: { onElegir: (texto: string) => void }) 
   );
 }
 
-// Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar y
-// plantillas en línea, arriba del área de texto.
+// Se carga solo al abrir el selector: el listado completo de emojis es
+// pesado. Misma librería y configuración que el editor de plantillas de
+// Olimpo (ATLAS-1191), para que los dos selectores se vean igual.
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
+
+// Categorías del selector de emojis, en el orden en que se muestran; el
+// nombre visible sale del diccionario (idioma del aplicativo).
+const CATEGORIAS_EMOJI = [
+  Categories.SUGGESTED,
+  Categories.SMILEYS_PEOPLE,
+  Categories.ANIMALS_NATURE,
+  Categories.FOOD_DRINK,
+  Categories.TRAVEL_PLACES,
+  Categories.ACTIVITIES,
+  Categories.OBJECTS,
+  Categories.SYMBOLS,
+  Categories.FLAGS,
+];
+
+// Botón de emojis del redactor: todos los emojis, con buscador y categorías.
+// El elegido se inserta donde está el cursor. Mock con emoji-picker-react;
+// la librería definitiva y el idioma del buscador (hoy busca en inglés) se
+// definen con el Architect.
+function EmojiSelector({ onElegir }: { onElegir: (emoji: string) => void }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          aria-label={t("padMock.conversationPanel.emoji")}
+          title={t("padMock.conversationPanel.emoji")}
+        >
+          <SmilePlus className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start" side="top">
+        <EmojiPicker
+          onEmojiClick={(e) => {
+            onElegir(e.emoji);
+            setOpen(false);
+          }}
+          searchPlaceholder={t("padMock.conversationPanel.buscarEmoji")}
+          previewConfig={{ showPreview: false }}
+          skinTonesDisabled
+          emojiStyle={EmojiStyle.NATIVE}
+          categories={CATEGORIAS_EMOJI.map((c) => ({
+            category: c,
+            name: t(`padMock.emojiCat.${c}`),
+          }))}
+          style={
+            {
+              "--epr-emoji-size": "20px",
+              "--epr-category-navigation-button-size": "22px",
+              "--epr-category-label-height": "28px",
+              fontSize: 13,
+            } as React.CSSProperties
+          }
+          width={300}
+          height={300}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar, emojis
+// y plantillas en línea, arriba del área de texto.
 function Redactor() {
   const t = useT();
   const [texto, setTexto] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Inserta el emoji donde está el cursor (o reemplaza lo seleccionado) y
+  // deja el cursor justo después, para seguir escribiendo.
+  function insertarEmoji(emoji: string) {
+    const el = textareaRef.current;
+    const inicio = el?.selectionStart ?? texto.length;
+    const fin = el?.selectionEnd ?? texto.length;
+    setTexto(texto.slice(0, inicio) + emoji + texto.slice(fin));
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(inicio + emoji.length, inicio + emoji.length);
+    });
+  }
 
   function enviar() {
     if (!texto.trim()) return;
@@ -113,6 +198,7 @@ function Redactor() {
         >
           <Paperclip className="size-4" />
         </Button>
+        <EmojiSelector onElegir={insertarEmoji} />
         <PlantillaSelector onElegir={setTexto} />
         <Button size="sm" onClick={enviar} className="shrink-0 gap-1.5">
           {t("padMock.conversationPanel.enviar")}
@@ -120,6 +206,7 @@ function Redactor() {
         </Button>
       </div>
       <Textarea
+        ref={textareaRef}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onKeyDown={(e) => {
