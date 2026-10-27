@@ -51,6 +51,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Se escribe una vez; Atlas la adapta a lo que soporta cada canal.",
     "editor.datos": "Datos",
+    "editor.datosAyuda": "Nombre, estado y canales en los que se ofrece.",
     "editor.continuar": "Continuar al mensaje",
     "editor.placeholderNombre": "Ej: Saludo inicial",
     "editor.placeholderDescripcion":
@@ -62,6 +63,8 @@ export const plantillas: NamespaceDict = {
     "editor.canalesAyuda":
       "Por defecto todos los escritos. Restringila si solo tiene sentido en uno.",
     "editor.contenido": "Mensaje",
+    "editor.contenidoAyuda": "Texto, variables y archivos, en el orden en que se envían.",
+    "editor.texto": "Texto",
     "editor.asunto": "Asunto (solo email)",
     "editor.placeholderAsunto": "Opcional. Puede llevar variables.",
     "editor.placeholderContenido":
@@ -87,6 +90,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Asunto",
     "editor.adjuntosPreview": "{cantidad} adjunto(s)",
     "editor.smsSinAdjuntos": "SMS no admite adjuntos: se envía solo el texto.",
+    "editor.emailArchivosGrandes": "Si los archivos superan el tamaño que admite el correo, se envían como enlace de descarga en lugar de adjuntos.",
     "editor.guardado": "Los cambios se guardan al confirmar.",
 
     "origen.cliente": "Cliente",
@@ -200,6 +204,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Written once; Atlas adapts it to what each channel supports.",
     "editor.datos": "Details",
+    "editor.datosAyuda": "Name, status and the channels it is offered on.",
     "editor.continuar": "Continue to message",
     "editor.placeholderNombre": "E.g.: Opening greeting",
     "editor.placeholderDescripcion":
@@ -210,6 +215,8 @@ export const plantillas: NamespaceDict = {
     "editor.canalesAyuda":
       "All written channels by default. Restrict it if it only makes sense on one.",
     "editor.contenido": "Message",
+    "editor.contenidoAyuda": "Text, variables and files, in the order they are sent.",
+    "editor.texto": "Text",
     "editor.asunto": "Subject (email only)",
     "editor.placeholderAsunto": "Optional. May contain variables.",
     "editor.placeholderContenido":
@@ -235,6 +242,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Subject",
     "editor.adjuntosPreview": "{cantidad} attachment(s)",
     "editor.smsSinAdjuntos": "SMS does not support attachments: only the text is sent.",
+    "editor.emailArchivosGrandes": "If the files exceed the size email allows, they are sent as a download link instead of attachments.",
     "editor.guardado": "Changes are saved on confirm.",
 
     "origen.cliente": "Customer",
@@ -346,6 +354,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "Escrito uma vez; o Atlas o adapta ao que cada canal suporta.",
     "editor.datos": "Dados",
+    "editor.datosAyuda": "Nome, estado e canais em que se oferece.",
     "editor.continuar": "Continuar para a mensagem",
     "editor.placeholderNombre": "Ex.: Saudação inicial",
     "editor.placeholderDescripcion":
@@ -356,6 +365,8 @@ export const plantillas: NamespaceDict = {
     "editor.canalesAyuda":
       "Por padrão, todos os escritos. Restrinja se só faz sentido em um.",
     "editor.contenido": "Mensagem",
+    "editor.contenidoAyuda": "Texto, variáveis e arquivos, na ordem em que se enviam.",
+    "editor.texto": "Texto",
     "editor.asunto": "Assunto (somente e-mail)",
     "editor.placeholderAsunto": "Opcional. Pode conter variáveis.",
     "editor.placeholderContenido":
@@ -381,6 +392,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Assunto",
     "editor.adjuntosPreview": "{cantidad} anexo(s)",
     "editor.smsSinAdjuntos": "SMS não admite anexos: envia-se só o texto.",
+    "editor.emailArchivosGrandes": "Se os arquivos superarem o tamanho que o e-mail admite, são enviados como link de download em vez de anexos.",
     "editor.guardado": "As alterações são salvas ao confirmar.",
 
     "origen.cliente": "Cliente",
@@ -492,6 +504,7 @@ export const plantillas: NamespaceDict = {
     "editor.subtitulo":
       "S'escriu un cop; Atlas l'adapta al que admet cada canal.",
     "editor.datos": "Dades",
+    "editor.datosAyuda": "Nom, estat i canals en què s'ofereix.",
     "editor.continuar": "Continua al missatge",
     "editor.placeholderNombre": "Ex.: Salutació inicial",
     "editor.placeholderDescripcion":
@@ -502,6 +515,8 @@ export const plantillas: NamespaceDict = {
     "editor.canalesAyuda":
       "Per defecte tots els escrits. Restringeix-la si només té sentit en un.",
     "editor.contenido": "Missatge",
+    "editor.contenidoAyuda": "Text, variables i fitxers, en l'ordre en què s'envien.",
+    "editor.texto": "Text",
     "editor.asunto": "Assumpte (només correu)",
     "editor.placeholderAsunto": "Opcional. Pot portar variables.",
     "editor.placeholderContenido":
@@ -527,6 +542,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Assumpte",
     "editor.adjuntosPreview": "{cantidad} adjunt(s)",
     "editor.smsSinAdjuntos": "L'SMS no admet adjunts: només s'envia el text.",
+    "editor.emailArchivosGrandes": "Si els fitxers superen la mida que admet el correu, s'envien com a enllaç de descàrrega en lloc d'adjunts.",
     "editor.guardado": "Els canvis es desen en confirmar.",
 
     "origen.cliente": "Client",

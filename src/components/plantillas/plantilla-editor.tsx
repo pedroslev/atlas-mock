@@ -231,7 +231,11 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         {/* Paso 1: Datos ------------------------------------------------ */}
         <TabsContent value="datos">
           <Card>
-            <CardContent className="flex flex-col gap-4 pt-6">
+            <CardHeader>
+              <CardTitle>{t("plantillas.editor.datos")}</CardTitle>
+              <CardDescription>{t("plantillas.editor.datosAyuda")}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="pl-nombre">{t("common.comunes.nombre")}</Label>
@@ -294,9 +298,15 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
 
         {/* Paso 2: Mensaje + vista previa al lado ---------------------- */}
         <TabsContent value="mensaje">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
-            <Card className="min-w-0">
-              <CardContent className="flex flex-col gap-4 pt-6">
+          {/* Altura fija a la pantalla: lo que no entra se desplaza dentro de
+              cada recuadro, nunca la página. */}
+          <div className="grid gap-4 lg:h-[calc(100vh-13.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
+            <Card className="min-h-0 min-w-0">
+              <CardHeader>
+                <CardTitle>{t("plantillas.editor.contenido")}</CardTitle>
+                <CardDescription>{t("plantillas.editor.contenidoAyuda")}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
                 {canales.includes("email") && (
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="pl-asunto">{t("plantillas.editor.asunto")}</Label>
@@ -309,8 +319,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="pl-contenido">{t("plantillas.editor.contenido")}</Label>
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                  <Label htmlFor="pl-contenido">{t("plantillas.editor.texto")}</Label>
                   <div className="flex flex-wrap items-center gap-1">
                     <ActionTooltip label={t("plantillas.editor.negrita")}>
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("**")}>
@@ -375,7 +385,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     value={contenido}
                     onChange={(e) => setContenido(e.target.value)}
                     placeholder={t("plantillas.editor.placeholderContenido")}
-                    className="h-[calc(100vh-33rem)] min-h-[16rem] resize-y font-mono text-sm"
+                    className="min-h-[14rem] flex-1 resize-none font-mono text-sm"
                     autoFocus={paso === "mensaje"}
                   />
                 </div>
@@ -409,12 +419,12 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
             </Card>
 
             {/* Vista previa: misma altura que el cuadro del mensaje (grid) ---- */}
-            <Card className="min-w-0">
+            <Card className="min-h-0 min-w-0">
               <CardHeader>
                 <CardTitle>{t("plantillas.editor.vistaPrevia")}</CardTitle>
                 <CardDescription>{t("plantillas.editor.vistaPreviaAyuda")}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="min-h-0 flex-1 overflow-y-auto">
                 {canales.length === 0 ? (
                   <p className="text-sm text-muted-foreground">{t("plantillas.editor.sinCanales")}</p>
                 ) : (
@@ -505,8 +515,11 @@ function VistaPrevia({
               )}
               <MensajeRenderizado texto={sinArchivos} canal="email" />
               {adjuntos.length > 0 && (
-                <div className="border-t pt-2">
+                <div className="flex flex-col gap-2 border-t pt-2">
                   <AdjuntosChips adjuntos={adjuntos} />
+                  <p className="text-xs text-muted-foreground">
+                    {t("plantillas.editor.emailArchivosGrandes")}
+                  </p>
                 </div>
               )}
             </div>
