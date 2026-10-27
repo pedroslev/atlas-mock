@@ -269,25 +269,31 @@ export type PlayData = Comun & {
   listaBoton?: string; // tipo "lista": rótulo del botón que abre el menú
   opciones?: OpcionMensaje[]; // tipo "lista"
   tarjetas?: TarjetaMensaje[]; // tipo "carrusel"
-  adjuntoTipo?: AdjuntoTipo; // tipo "adjunto"
-  adjuntoUrl?: string; // tipo "adjunto"
+  adjuntoTipo?: AdjuntoTipo; // tipo "adjunto": imagen o archivo
+  adjuntoNombre?: string; // nombre del archivo subido, solo para mostrar
+  adjuntoUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
   onSubirAudio: (archivo: File) => { archivo: string; nombre: string; url: string };
 };
 
 export type TipoMensaje = "texto" | "botones" | "lista" | "carrusel" | "adjunto";
-export type AdjuntoTipo = "image" | "video" | "audio" | "document";
+export type AdjuntoTipo = "image" | "document";
 // `id` es lo que recibe el flujo cuando el cliente elige; `titulo` es lo que ve el cliente.
 export type OpcionMensaje = { id: string; titulo: string; descripcion?: string };
 export type TarjetaMensaje = {
   id: string;
   titulo: string;
   subtitulo?: string;
-  imagenUrl?: string;
+  imagenNombre?: string; // nombre de la imagen subida, solo para mostrar
+  imagenUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
   botones: OpcionMensaje[];
 };
 
 const TIPOS_MENSAJE: TipoMensaje[] = ["texto", "botones", "lista", "carrusel", "adjunto"];
-const TIPOS_ADJUNTO: AdjuntoTipo[] = ["image", "video", "audio", "document"];
+const TIPOS_ADJUNTO: AdjuntoTipo[] = ["image", "document"];
+const ACEPTA_ADJUNTO: Record<AdjuntoTipo, string> = {
+  image: "image/*",
+  document: ".pdf,.doc,.docx,.xls,.xlsx,.txt",
+};
 
 // Topes del mínimo común entre canales (propuesta-mensajes-enriquecidos §4).
 const MAX_BOTONES = 3;
@@ -306,6 +312,81 @@ function idLibre(prefijo: string, existentes: { id: string }[]) {
   let n = existentes.length + 1;
   while (usados.has(`${prefijo}-${n}`)) n += 1;
   return `${prefijo}-${n}`;
+}
+
+// Subida de un archivo (imagen de una tarjeta, imagen o archivo adjunto): el
+// tenant lo sube desde la cuenta y queda con su nombre. En la plataforma real
+// el archivo queda guardado y el mensaje lo referencia; en el mock solo se
+// guarda un enlace local para verlo en el editor.
+function SubirArchivo({
+  testid,
+  accept,
+  nombre,
+  url,
+  esImagen,
+  onSubir,
+  onQuitar,
+}: {
+  testid: string;
+  accept: string;
+  nombre?: string;
+  url?: string;
+  esImagen?: boolean;
+  onSubir: (archivo: { nombre: string; url: string }) => void;
+  onQuitar: () => void;
+}) {
+  const t = useT();
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        data-testid={`${testid}-archivo`}
+        onChange={(e) => {
+          const archivo = e.target.files?.[0];
+          if (archivo) onSubir({ nombre: archivo.name, url: URL.createObjectURL(archivo) });
+          e.target.value = "";
+        }}
+      />
+      {nombre && (
+        <span className="flex items-center gap-1.5 text-sm">
+          {esImagen && url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt="" className="size-8 shrink-0 rounded object-cover" />
+          ) : (
+            <FileAudio className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span className="min-w-0 flex-1 truncate" data-testid={`${testid}-nombre`}>
+            {nombre}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("cuentas.flujo.play.archivo.quitar")}
+            data-testid={`${testid}-quitar`}
+            onClick={onQuitar}
+          >
+            <X />
+          </Button>
+        </span>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="justify-start"
+        data-testid={`${testid}-subir`}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload />
+        {t(nombre ? "cuentas.flujo.play.archivo.cambiar" : "cuentas.flujo.play.archivo.subir")}
+      </Button>
+    </div>
+  );
 }
 
 // Filas editables de opciones (botones, filas de la lista, botones de una
@@ -619,13 +700,14 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                   data-testid={`play-${id}-tarjeta-${i}-subtitulo`}
                   onChange={(e) => cambiarTarjeta({ subtitulo: e.target.value })}
                 />
-                <Input
-                  className="h-7"
-                  aria-label={t("cuentas.flujo.play.tarjeta.imagen")}
-                  placeholder={t("cuentas.flujo.play.tarjeta.imagen")}
-                  value={tarjeta.imagenUrl ?? ""}
-                  data-testid={`play-${id}-tarjeta-${i}-imagen`}
-                  onChange={(e) => cambiarTarjeta({ imagenUrl: e.target.value })}
+                <SubirArchivo
+                  testid={`play-${id}-tarjeta-${i}-imagen`}
+                  accept={ACEPTA_ADJUNTO.image}
+                  esImagen
+                  nombre={tarjeta.imagenNombre}
+                  url={tarjeta.imagenUrl}
+                  onSubir={(f) => cambiarTarjeta({ imagenNombre: f.nombre, imagenUrl: f.url })}
+                  onQuitar={() => cambiarTarjeta({ imagenNombre: undefined, imagenUrl: undefined })}
                 />
                 <OpcionesEditor
                   nodoId={id}
@@ -665,7 +747,13 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
           <Campo id={`${id}-adjunto-tipo`} label={t("cuentas.flujo.play.adjunto.tipo")}>
             <Select
               value={data.adjuntoTipo ?? "image"}
-              onValueChange={(v) => data.onChange({ adjuntoTipo: v as AdjuntoTipo })}
+              onValueChange={(v) =>
+                data.onChange({
+                  adjuntoTipo: v as AdjuntoTipo,
+                  adjuntoNombre: undefined,
+                  adjuntoUrl: undefined,
+                })
+              }
             >
               <SelectTrigger
                 id={`${id}-adjunto-tipo`}
@@ -684,16 +772,15 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               </SelectContent>
             </Select>
           </Campo>
-          <Campo id={`${id}-adjunto-url`} label={t("cuentas.flujo.play.adjunto.url")}>
-            <Input
-              id={`${id}-adjunto-url`}
-              className="h-7"
-              placeholder="https://…"
-              value={data.adjuntoUrl ?? ""}
-              data-testid={`play-${id}-adjunto-url`}
-              onChange={(e) => data.onChange({ adjuntoUrl: e.target.value })}
-            />
-          </Campo>
+          <SubirArchivo
+            testid={`play-${id}-adjunto`}
+            accept={ACEPTA_ADJUNTO[data.adjuntoTipo ?? "image"]}
+            esImagen={(data.adjuntoTipo ?? "image") === "image"}
+            nombre={data.adjuntoNombre}
+            url={data.adjuntoUrl}
+            onSubir={(f) => data.onChange({ adjuntoNombre: f.nombre, adjuntoUrl: f.url })}
+            onQuitar={() => data.onChange({ adjuntoNombre: undefined, adjuntoUrl: undefined })}
+          />
           <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.adjunto.pie")}>
             <Input
               id={`${id}-texto`}
