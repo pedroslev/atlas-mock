@@ -28,9 +28,16 @@ export const padMock: NamespaceDict = {
 
     // CenterColumn
     "centerColumn.llamada": "Llamada",
+    "centerColumn.conversacion": "Conversación",
 
     // ConversationPanel
     "conversationPanel.llamadaEnCurso": "Llamada en curso.",
+    "conversationPanel.volverAlVivo": "Volver al vivo",
+    "conversationPanel.plantillas": "Plantillas de mensajes…",
+    "conversationPanel.buscarPlantilla": "Buscar plantilla…",
+    "conversationPanel.adjuntar": "Adjuntar archivo",
+    "conversationPanel.enviar": "Enviar",
+    "conversationPanel.placeholder": "Escribí tu respuesta… (Enter para enviar, Shift+Enter para salto de línea)",
 
     // InteractionControls (call-controls.tsx)
     "callControls.buscarTipificacion": "Buscar tipificación…",
@@ -44,6 +51,7 @@ export const padMock: NamespaceDict = {
     "callControls.marcar": "Marcar",
     "callControls.cerrarInteraccion": "Cerrar interacción",
     "callControls.cortar": "Cortar",
+    "callControls.finalizarChat": "Finalizar chat",
     "callControls.enviarTonos": "Enviar tonos (DTMF)",
     "callControls.sinDigitos": "Sin dígitos",
     "callControls.borrar": "Borrar",
@@ -59,6 +67,7 @@ export const padMock: NamespaceDict = {
     "contextColumn.contexto": "Contexto",
     "contextColumn.colapsarContexto": "Colapsar contexto",
     "contextColumn.telefono": "Teléfono",
+    "contextColumn.nombre": "Nombre",
     "contextColumn.campania": "Campaña",
     "contextColumn.verMas": "Ver {n} más",
     "contextColumn.verMasDetalle": "Ver más",
@@ -105,6 +114,10 @@ export const padMock: NamespaceDict = {
     "llamadaInterna.simularSinReglas": "Simular grupo sin reglas",
     "llamadaInterna.simularEntrante": "Simular llamada interna entrante",
     "llamadaInterna.entrante": "Llamada interna entrante",
+    "chatEntrante.titulo": "Chat entrante",
+    "chatEntrante.aceptar": "Aceptar",
+    "chatEntrante.rechazar": "Rechazar",
+    "chatEntrante.porAceptar": "Por aceptar",
     "llamadaInterna.atender": "Atender",
     "llamadaInterna.rechazar": "Rechazar",
     "llamadaInterna.titulo": "Llamada interna",
@@ -127,6 +140,8 @@ export const padMock: NamespaceDict = {
 
     // HistorialDetailDialog
     "historialDetalle.tipificacion": "Tipificación",
+    "historial.verConversacion": "Ver conversación",
+    "historial.chat": "Chat",
     "historialDetalle.bookmarks": "Bookmarks",
   },
   // Vacíos a propósito: translate() cae al fallback en español (ver

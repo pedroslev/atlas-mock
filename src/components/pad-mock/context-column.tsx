@@ -8,6 +8,7 @@ import {
   User,
   History,
   Eye,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +17,13 @@ import { useT, type TranslateFn } from "@/lib/i18n";
 import { CANAL_ICON, type HistorialEntrada } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { HistorialDetailDialog } from "@/components/pad-mock/historial-detail-dialog";
+import { ConversacionChatDialog } from "@/components/pad-mock/conversacion-chat";
 import { ResizeHandle } from "@/components/pad-mock/resize-handle";
 
+// En un chat no hay teléfono: la ficha muestra el nombre del cliente.
 type ClienteMock = {
-  telefono: string;
+  telefono?: string;
+  nombre?: string;
   campania: string;
 };
 
@@ -83,9 +87,12 @@ function Seccion({
 function HistorialItem({
   entrada,
   onVerMas,
+  onVerConversacion,
 }: {
   entrada: HistorialEntrada;
   onVerMas: () => void;
+  /** Solo en un chat con conversación guardada. */
+  onVerConversacion?: () => void;
 }) {
   const t = useT();
   const Icon = CANAL_ICON[entrada.canal];
@@ -106,16 +113,30 @@ function HistorialItem({
           {entrada.estado}
         </Badge>
       </div>
-      <div className="flex items-center gap-2 border-t border-border px-2 py-1.5">
-        <p className="flex-1 text-xs text-muted-foreground">{entrada.resumen}</p>
-        <button
-          type="button"
-          onClick={onVerMas}
-          className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          <Eye className="size-3" />
-          {t("padMock.contextColumn.verMasDetalle")}
-        </button>
+      {/* Con "Ver conversación" (chats) no entran dos botones al lado del
+          resumen en la columna angosta: los dos van en una fila abajo. */}
+      <div className="flex flex-col gap-1 border-t border-border px-2 py-1.5">
+        <p className="text-xs text-muted-foreground">{entrada.resumen}</p>
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+          {onVerConversacion && (
+            <button
+              type="button"
+              onClick={onVerConversacion}
+              className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <MessageCircle className="size-3" />
+              {t("padMock.historial.verConversacion")}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onVerMas}
+            className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <Eye className="size-3" />
+            {t("padMock.contextColumn.verMasDetalle")}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -141,6 +162,7 @@ export function ContextColumn({
   const [abiertas, setAbiertas] = useState<Set<SeccionId>>(new Set(SECCIONES_ABIERTAS_INIT));
   const [historialCompleto, setHistorialCompleto] = useState(false);
   const [detalleId, setDetalleId] = useState<string | null>(null);
+  const [conversacionId, setConversacionId] = useState<string | null>(null);
   const [ancho, setAncho] = useState(ANCHO_INICIAL);
 
   function toggle(id: SeccionId) {
@@ -159,6 +181,7 @@ export function ContextColumn({
 
   const historialVisible = historialCompleto ? historial : historial.slice(0, HISTORIAL_VISIBLE_INICIAL);
   const detalle = historial.find((h) => h.id === detalleId);
+  const conversacion = historial.find((h) => h.id === conversacionId);
 
   if (colapsada) {
     return (
@@ -217,10 +240,17 @@ export function ContextColumn({
           onToggle={() => toggle("cliente")}
         >
           <dl className="flex flex-col gap-1.5 text-xs">
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
-              <dd className="text-right tabular-nums">{cliente.telefono}</dd>
-            </div>
+            {cliente.nombre ? (
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{t("padMock.contextColumn.nombre")}</dt>
+                <dd className="text-right">{cliente.nombre}</dd>
+              </div>
+            ) : (
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{t("padMock.contextColumn.telefono")}</dt>
+                <dd className="text-right tabular-nums">{cliente.telefono}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">{t("padMock.contextColumn.campania")}</dt>
               <dd className="text-right font-medium">{cliente.campania}</dd>
@@ -236,7 +266,14 @@ export function ContextColumn({
         >
           <div className="flex flex-col gap-1.5">
             {historialVisible.map((h) => (
-              <HistorialItem key={h.id} entrada={h} onVerMas={() => setDetalleId(h.id)} />
+              <HistorialItem
+                key={h.id}
+                entrada={h}
+                onVerMas={() => setDetalleId(h.id)}
+                onVerConversacion={
+                  h.canal === "chat" && h.conversacion ? () => setConversacionId(h.id) : undefined
+                }
+              />
             ))}
             {!historialCompleto && historial.length > HISTORIAL_VISIBLE_INICIAL && (
               <button
@@ -252,6 +289,14 @@ export function ContextColumn({
       </div>
 
       <HistorialDetailDialog entrada={detalle} open={detalleId !== null} onOpenChange={(o) => !o && setDetalleId(null)} />
+      {conversacion?.conversacion && (
+        <ConversacionChatDialog
+          open
+          onOpenChange={(o) => !o && setConversacionId(null)}
+          titulo={`${t("padMock.historial.chat")} · ${conversacion.fecha} · ${conversacion.agente}`}
+          mensajes={conversacion.conversacion}
+        />
+      )}
     </div>
   );
 }

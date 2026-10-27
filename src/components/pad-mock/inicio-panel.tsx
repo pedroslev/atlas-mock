@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
 import { LlamadaInternaDirectorio } from "@/components/pad-mock/llamada-interna-directorio";
+import { ConversacionChatDialog } from "@/components/pad-mock/conversacion-chat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
@@ -68,11 +70,14 @@ export function InicioPanel({
   const now = useNow(true);
   const cronometro = formatDuration(Math.max(0, Math.floor((now - estadoAgenteDesde) / 1000)));
 
+  const [conversacionId, setConversacionId] = useState<string | null>(null);
+
   const columnasHistorial = useMemo<MRT_ColumnDef<HistorialAgenteEntrada>[]>(
     () => [
       {
         id: "canal",
         header: t("padMock.inicio.colCanal"),
+        size: 140,
         accessorFn: (h) => CANAL_LABEL[h.canal],
         filterVariant: "select",
         Cell: ({ row }) => {
@@ -88,6 +93,7 @@ export function InicioPanel({
       {
         id: "fecha",
         header: t("padMock.inicio.colFecha"),
+        size: 150,
         accessorFn: (h) => `${h.fecha} ${h.hora}`,
         Cell: ({ row }) => (
           <span className="flex flex-col font-mono text-xs tabular-nums">
@@ -121,6 +127,7 @@ export function InicioPanel({
       {
         accessorKey: "duracion",
         header: t("padMock.inicio.colDuracion"),
+        size: 130,
         Cell: ({ cell }) => (
           <span className="font-mono text-xs tabular-nums">{cell.getValue<string>()}</span>
         ),
@@ -135,12 +142,37 @@ export function InicioPanel({
             <Badge variant="neutral">{cell.getValue<string>()}</Badge>
           ),
       },
+      {
+        // Solo los chats: abre lo conversado en un modal.
+        id: "conversacion",
+        header: "",
+        size: 150,
+        enableSorting: false,
+        enableColumnFilter: false,
+        enableColumnActions: false,
+        Cell: ({ row }) =>
+          row.original.canal === "chat" && row.original.conversacion ? (
+            <button
+              type="button"
+              onClick={() => setConversacionId(row.original.id)}
+              className="flex items-center gap-1 text-xs font-medium whitespace-nowrap text-primary hover:underline"
+            >
+              <MessageCircle className="size-3.5" />
+              {t("padMock.historial.verConversacion")}
+            </button>
+          ) : null,
+      },
     ],
     [t]
   );
+  const conversacion = historial.find((h) => h.id === conversacionId);
 
   return (
-    <div className="h-full min-h-0 w-full flex-1 overflow-y-auto bg-muted/30">
+    // min-w-0: sin esto, el ancho natural del historial (la tabla) estira el
+    // panel más allá del espacio que deja el menú, y la pantalla queda
+    // recortada a la derecha. Con min-w-0 el panel se ajusta y la tabla
+    // scrollea adentro si no entra.
+    <div className="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto bg-muted/30">
       <div className="flex w-full flex-col gap-8 p-6 sm:p-8">
         <div className="flex w-full flex-col gap-6">
           {/* 1. Datos del agente — nombre, estado y cronómetro. Sin saludo
@@ -258,6 +290,14 @@ export function InicioPanel({
               muiTableContainerProps: { sx: {} },
             }}
           />
+          {conversacion?.conversacion && (
+            <ConversacionChatDialog
+              open
+              onOpenChange={(o) => !o && setConversacionId(null)}
+              titulo={`${t("padMock.historial.chat")} · ${conversacion.fecha} ${conversacion.hora} · ${conversacion.nombreCliente ?? conversacion.numeroCliente}`}
+              mensajes={conversacion.conversacion}
+            />
+          )}
         </div>
       </div>
     </div>

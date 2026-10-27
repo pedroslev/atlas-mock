@@ -8,6 +8,7 @@ import {
   Pause,
   Play,
   PhoneOff,
+  CircleX,
   Bookmark,
   Check,
   ChevronsUpDown,
@@ -173,6 +174,9 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // para poder reflejar el mismo tiempo en espera en la fila de la cola del
 // menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
 //
+// Chat: sin espera, silenciar ni teclado numérico (son de la voz); el
+// primer paso del botón de la derecha es "Finalizar chat".
+//
 // Llamada interna (interno): solo espera, silenciar y cortar — sin
 // tipificación, teclado ni marcas. Cortar la cierra de una (no hay
 // tipificación que cargar). Mientras suena (sonando), cortar la cancela.
@@ -181,6 +185,7 @@ export function InteractionControls({
   enEspera,
   onToggleEspera,
   onCerrarInteraccion,
+  chat = false,
   interno = false,
   sonando = false,
 }: {
@@ -188,6 +193,7 @@ export function InteractionControls({
   enEspera: boolean;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
+  chat?: boolean;
   interno?: boolean;
   sonando?: boolean;
 }) {
@@ -255,13 +261,13 @@ export function InteractionControls({
       switch (key) {
         case SHORTCUTS.espera.toLowerCase():
           // Ninguno de estos controles aplica una vez cortada.
-          if (!cortada) {
+          if (!cortada && !chat) {
             e.preventDefault();
             onToggleEspera();
           }
           break;
         case SHORTCUTS.silenciar.toLowerCase():
-          if (!cortada) {
+          if (!cortada && !chat) {
             e.preventDefault();
             setSilenciado((v) => !v);
           }
@@ -273,7 +279,7 @@ export function InteractionControls({
           }
           break;
         case SHORTCUTS.dialpad.toLowerCase():
-          if (!cortada) {
+          if (!cortada && !chat) {
             e.preventDefault();
             setDialpadAbierto(true);
           }
@@ -292,7 +298,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, interno, sonando]);
+  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, interno, sonando]);
 
   if (interno) {
     return (
@@ -367,70 +373,74 @@ export function InteractionControls({
         );
       })}
       <div className="ml-auto flex min-w-0 items-center gap-2">
-        <ControlButton
-          icon={enEspera ? Play : Pause}
-          label={enEspera ? t("padMock.callControls.retomar") : t("padMock.callControls.espera")}
-          shortcutKey={SHORTCUTS.espera}
-          isMac={isMac}
-          tone={enEspera ? "active" : "neutral"}
-          pressed={enEspera}
-          disabled={cortada}
-          onClick={onToggleEspera}
-        />
-        <ControlButton
-          icon={silenciado ? MicOff : Mic}
-          label={silenciado ? t("padMock.callControls.reactivar") : t("padMock.callControls.silenciar")}
-          shortcutKey={SHORTCUTS.silenciar}
-          isMac={isMac}
-          tone={silenciado ? "active" : "neutral"}
-          pressed={silenciado}
-          disabled={cortada}
-          onClick={() => setSilenciado((v) => !v)}
-        />
-        <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>
-          <PopoverTrigger asChild>
-            <div>
-              <ControlButton
-                icon={Grid3x3}
-                label={t("padMock.callControls.tecladoNumerico")}
-                shortcutKey={SHORTCUTS.dialpad}
-                isMac={isMac}
-                tone="neutral"
-                disabled={cortada}
-                onClick={() => setDialpadAbierto(true)}
-              />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-52 p-2">
-            <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
-              {t("padMock.callControls.enviarTonos")}
-            </p>
-            <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
-              {digitosMarcados || <span className="text-muted-foreground">{t("padMock.callControls.sinDigitos")}</span>}
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {TECLAS_DIALPAD.map((tecla) => (
+        {!chat && (
+          <>
+            <ControlButton
+              icon={enEspera ? Play : Pause}
+              label={enEspera ? t("padMock.callControls.retomar") : t("padMock.callControls.espera")}
+              shortcutKey={SHORTCUTS.espera}
+              isMac={isMac}
+              tone={enEspera ? "active" : "neutral"}
+              pressed={enEspera}
+              disabled={cortada}
+              onClick={onToggleEspera}
+            />
+            <ControlButton
+              icon={silenciado ? MicOff : Mic}
+              label={silenciado ? t("padMock.callControls.reactivar") : t("padMock.callControls.silenciar")}
+              shortcutKey={SHORTCUTS.silenciar}
+              isMac={isMac}
+              tone={silenciado ? "active" : "neutral"}
+              pressed={silenciado}
+              disabled={cortada}
+              onClick={() => setSilenciado((v) => !v)}
+            />
+            <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>
+              <PopoverTrigger asChild>
+                <div>
+                  <ControlButton
+                    icon={Grid3x3}
+                    label={t("padMock.callControls.tecladoNumerico")}
+                    shortcutKey={SHORTCUTS.dialpad}
+                    isMac={isMac}
+                    tone="neutral"
+                    disabled={cortada}
+                    onClick={() => setDialpadAbierto(true)}
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-52 p-2">
+                <p className="px-1 py-1 text-xs font-medium text-muted-foreground">
+                  {t("padMock.callControls.enviarTonos")}
+                </p>
+                <div className="mb-2 flex h-8 items-center rounded-md border border-border bg-muted/40 px-2 font-mono text-sm tabular-nums">
+                  {digitosMarcados || <span className="text-muted-foreground">{t("padMock.callControls.sinDigitos")}</span>}
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {TECLAS_DIALPAD.map((tecla) => (
+                    <button
+                      key={tecla}
+                      type="button"
+                      onClick={() => setDigitosMarcados((cur) => cur + tecla)}
+                      className="flex h-9 items-center justify-center rounded-md border border-border text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {tecla}
+                    </button>
+                  ))}
+                </div>
                 <button
-                  key={tecla}
                   type="button"
-                  onClick={() => setDigitosMarcados((cur) => cur + tecla)}
-                  className="flex h-9 items-center justify-center rounded-md border border-border text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  disabled={!digitosMarcados}
+                  onClick={() => setDigitosMarcados((cur) => cur.slice(0, -1))}
+                  className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                 >
-                  {tecla}
+                  <Delete className="size-3.5" />
+                  {t("padMock.callControls.borrar")}
                 </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={!digitosMarcados}
-              onClick={() => setDigitosMarcados((cur) => cur.slice(0, -1))}
-              className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
-            >
-              <Delete className="size-3.5" />
-              {t("padMock.callControls.borrar")}
-            </button>
-          </PopoverContent>
-        </Popover>
+              </PopoverContent>
+            </Popover>
+          </>
+        )}
 
         <Popover open={marcarAbierto} onOpenChange={cerrarMarcar}>
           <PopoverTrigger asChild>
@@ -492,8 +502,14 @@ export function InteractionControls({
             y recién ahí el mismo botón cierra la interacción de verdad
             (deshabilitado hasta que haya tipificación elegida). */}
         <ControlButton
-          icon={cortada ? X : PhoneOff}
-          label={cortada ? t("padMock.callControls.cerrarInteraccion") : t("padMock.callControls.cortar")}
+          icon={cortada ? X : chat ? CircleX : PhoneOff}
+          label={
+            cortada
+              ? t("padMock.callControls.cerrarInteraccion")
+              : chat
+                ? t("padMock.callControls.finalizarChat")
+                : t("padMock.callControls.cortar")
+          }
           shortcutKey={SHORTCUTS.cerrar}
           isMac={isMac}
           tone="destructive"
