@@ -21,7 +21,7 @@ export const contenido: ContenidoPagina = {
             texto:
               "Las plantillas se crean una sola vez en el «Catálogo» y se reutilizan. Un grupo de plantillas es el conjunto que ofrecés para trabajar, y el grupo es lo que se asigna a una campaña: en «Campañas», el campo «Grupo de plantillas» te deja elegirlo. Si no se asigna, la campaña hereda el del proyecto.",
           },
-          { tipo: "p", texto: "La pantalla tiene tres solapas: «Grupos», «Catálogo» y «Variables»." },
+          { tipo: "p", texto: "La pantalla tiene dos solapas: «Grupos» y «Catálogo»." },
         ],
       },
       {
@@ -31,7 +31,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email y chat va con negrita, cursiva y listas; en SMS va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente en cada canal elegido, mientras lo escribís.",
+              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email, chat, WhatsApp y redes va con negrita, cursiva y listas; en SMS va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente («Chat y redes», «Email», «SMS»), mientras lo escribís.",
           },
           { tipo: "sub", texto: "Campos" },
           {
@@ -40,10 +40,10 @@ export const contenido: ContenidoPagina = {
               "Nombre — Lo que busca el asesor en el selector.",
               "Descripción — Cuándo conviene usarla. El asesor la ve debajo del nombre.",
               "Activa — Inactiva no se ofrece al asesor, pero no se pierde.",
-              "Canales en los que se ofrece — Chat, Email y SMS. Desmarcá los que no correspondan: una firma larga, por ejemplo, solo en email.",
+              "Canales en los que se ofrece — Los canales escritos: Chat, WhatsApp, Email, SMS y las redes sociales. Desmarcá los que no correspondan: una firma larga, por ejemplo, solo en email; una plantilla con imágenes, no en SMS.",
               "Asunto — Solo para email. Puede llevar variables.",
               "Mensaje — El texto, con la barra de formato y los botones «Insertar variable» e «Insertar archivo».",
-              "Archivos — Van dentro del texto, donde los insertás. En chat salen como mensaje aparte en ese punto (texto, archivo, texto); en email van adjuntos; SMS no los admite.",
+              "Archivos — «Insertar archivo» abre el selector de archivos de tu equipo y deja el archivo dentro del texto, donde está el cursor. En chat sale como mensaje aparte en ese punto (texto, archivo, texto); en email va adjunto; SMS no los admite.",
             ],
           },
           { tipo: "sub", texto: "Variables" },
@@ -55,7 +55,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "En la solapa «Variables» definís, una sola vez para todas las plantillas, qué se pone cuando el cliente no tiene ese dato («Si falta el dato»). Por ejemplo, «Hola {{nombre}}» con respaldo «estimado cliente» queda «Hola estimado cliente». Si lo dejás vacío, Hermes avisa al asesor antes de enviar.",
+              "Si el cliente no tiene ese dato, la variable queda visible en el mensaje tal cual, igual que la ves en el editor, y Hermes avisa al asesor, que la completa a mano antes de enviar.",
           },
         ],
       },

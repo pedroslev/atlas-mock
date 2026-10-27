@@ -39,11 +39,14 @@ import {
 } from "@/components/ui/tabs";
 import {
   CANALES_PLANTILLA,
+  TIPOS_RENDER,
+  tipoRenderDeCanal,
   variablesPlantilla,
   type AdjuntoPlantilla,
   type CanalPlantilla,
   type OrigenVariable,
   type Plantilla,
+  type TipoRender,
 } from "@/lib/mock-data";
 import {
   datosEjemplo,
@@ -67,9 +70,14 @@ import {
 // El mensaje se escribe UNA vez, con formato básico (**negrita**, _cursiva_,
 // "- " para listas), variables {{clave}} y archivos [[archivo:nombre]] que se
 // insertan desde la barra donde está el cursor; la vista previa muestra cómo
-// lo recibe el cliente en cada canal elegido. Los valores de respaldo de las
-// variables son una configuración general (solapa Variables), no de cada
-// plantilla.
+// lo recibe el cliente según el tipo de canal (chat y redes, email, SMS). Si
+// un dato falta, la variable queda visible tal cual: el asesor la completa.
+function formatoTamano(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   const t = useT();
   const [nombre, setNombre] = useState(initial?.nombre ?? "");
@@ -87,6 +95,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   // Una plantilla nueva arranca en Datos; una existente, en el mensaje.
   const [paso, setPaso] = useState<"datos" | "mensaje">(initial ? "mensaje" : "datos");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const usadas = useMemo(
     () => variablesUsadas(contenido, canales.includes("email") ? asunto : ""),
@@ -146,13 +155,23 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     setVariablesOpen(false);
   }
 
+  /** Abre el selector de archivos del sistema. */
   function insertarArchivo() {
-    // Mock: no hay subida real; se agrega un archivo de ejemplo y queda en el
-    // texto, en su propia línea, donde está el cursor.
-    const n = adjuntos.length + 1;
-    const archivo = { id: `adj-nuevo-${n}`, nombre: `archivo-${n}.pdf`, tamano: `${120 + n * 35} KB` };
-    setAdjuntos((prev) => [...prev, archivo]);
-    insertarEnCursor(marcaArchivo(archivo.nombre), true);
+    fileInputRef.current?.click();
+  }
+
+  /** Los archivos elegidos quedan en el texto, en su propia línea, donde está el cursor. */
+  function archivosElegidos(lista: FileList | null) {
+    if (!lista || lista.length === 0) return;
+    const nuevos: AdjuntoPlantilla[] = [];
+    for (const f of Array.from(lista)) {
+      if (adjuntos.some((a) => a.nombre === f.name) || nuevos.some((a) => a.nombre === f.name)) continue;
+      nuevos.push({ id: `adj-${adjuntos.length + nuevos.length + 1}-${f.name}`, nombre: f.name, tamano: formatoTamano(f.size) });
+    }
+    if (nuevos.length === 0) return;
+    setAdjuntos((prev) => [...prev, ...nuevos]);
+    insertarEnCursor(nuevos.map((a) => marcaArchivo(a.nombre)).join("\n"), true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function quitarArchivo(id: string) {
@@ -342,6 +361,13 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                       <Paperclip className="size-4" />
                       {t("plantillas.editor.insertarArchivo")}
                     </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => archivosElegidos(e.target.files)}
+                    />
                   </div>
                   <Textarea
                     ref={textareaRef}
@@ -364,7 +390,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                   </div>
                 )}
 
-                {/* Variables: una línea; el respaldo es configuración general */}
+                {/* Variables: una línea; sin dato, quedan visibles para el asesor */}
                 <p className="text-xs text-muted-foreground">
                   {usadas.length === 0
                     ? t("plantillas.editor.sinVariablesUsadas")
@@ -377,9 +403,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                           )
                           .join(", "),
                       })}{" "}
-                  <Link href="/plantillas" className="underline underline-offset-2">
-                    {t("plantillas.editor.variablesConfig")}
-                  </Link>
+                  {t("plantillas.editor.variablesConfig")}
                 </p>
               </CardContent>
             </Card>
@@ -426,17 +450,21 @@ function VistaPrevia({
   const asuntoResuelto = resolverVariables(asunto, datosEjemplo).texto;
   const partes = partesChat(texto);
   const sinArchivos = quitarArchivos(texto);
+  // Una solapa por tipo de render presente: chat y redes, email, SMS.
+  const tipos: TipoRender[] = TIPOS_RENDER.filter((tipo) =>
+    canales.some((c) => tipoRenderDeCanal(c) === tipo)
+  );
 
   return (
-    <Tabs defaultValue={canales[0]} className="gap-3">
+    <Tabs key={tipos.join(",")} defaultValue={tipos[0]} className="gap-3">
       <TabsList>
-        {canales.map((c) => (
-          <TabsTrigger key={c} value={c}>
-            {t(`plantillas.canal.${c}`)}
+        {tipos.map((tipo) => (
+          <TabsTrigger key={tipo} value={tipo}>
+            {t(`plantillas.render.${tipo}`)}
           </TabsTrigger>
         ))}
       </TabsList>
-      {canales.map((canal) => (
+      {tipos.map((canal) => (
         <TabsContent key={canal} value={canal}>
           {contenido.trim() === "" ? (
             <p className="text-sm text-muted-foreground">

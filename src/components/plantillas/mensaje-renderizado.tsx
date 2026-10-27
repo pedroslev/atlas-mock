@@ -1,6 +1,11 @@
 import { Paperclip } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { AdjuntoPlantilla, CanalPlantilla } from "@/lib/mock-data";
+import {
+  CANALES_PLANTILLA,
+  type AdjuntoPlantilla,
+  type CanalPlantilla,
+  type TipoRender,
+} from "@/lib/mock-data";
 import { aTextoPlano, segmentar } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -15,7 +20,8 @@ export function MensajeRenderizado({
   className,
 }: {
   texto: string;
-  canal: CanalPlantilla;
+  /** Cómo se dibuja: chat (y redes), email o sms. */
+  canal: TipoRender;
   className?: string;
 }) {
   const lineas = (canal === "sms" ? aTextoPlano(texto) : texto).split("\n");
@@ -48,8 +54,12 @@ export function MensajeRenderizado({
   );
 }
 
+// Con todos los canales marcados muestra un solo chip "Todos los canales".
 export function CanalBadges({ canales }: { canales: CanalPlantilla[] }) {
   const t = useT();
+  if (CANALES_PLANTILLA.every((c) => canales.includes(c))) {
+    return <Badge variant="outline">{t("plantillas.canal.todos")}</Badge>;
+  }
   return (
     <span className="flex flex-wrap gap-1">
       {canales.map((c) => (

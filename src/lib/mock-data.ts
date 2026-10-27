@@ -285,9 +285,38 @@ export type MarcadorGrupo = {
 // clasificaciones y marcas. El contenido se escribe una vez con formato
 // básico (**negrita**, _cursiva_, listas con "- ") y variables {{clave}};
 // Atlas lo adapta a lo que soporta cada canal.
-export type CanalPlantilla = "chat" | "email" | "sms";
+// Canales escritos: los tipos de cuenta de texto (todo menos Teléfono).
+export type CanalPlantilla =
+  | "chat"
+  | "whatsapp"
+  | "email"
+  | "sms"
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "x"
+  | "telegram"
+  | "linkedin";
 
-export const CANALES_PLANTILLA: CanalPlantilla[] = ["chat", "email", "sms"];
+export const CANALES_PLANTILLA: CanalPlantilla[] = [
+  "chat",
+  "whatsapp",
+  "email",
+  "sms",
+  "instagram",
+  "facebook",
+  "tiktok",
+  "x",
+  "telegram",
+  "linkedin",
+];
+
+/** Cómo se ve el mensaje: email con formato, SMS texto plano, el resto como chat. */
+export type TipoRender = "chat" | "email" | "sms";
+export const TIPOS_RENDER: TipoRender[] = ["chat", "email", "sms"];
+export function tipoRenderDeCanal(canal: CanalPlantilla): TipoRender {
+  return canal === "email" || canal === "sms" ? canal : "chat";
+}
 
 export type OrigenVariable = "cliente" | "campania" | "asesor";
 
@@ -296,20 +325,14 @@ export type VariablePlantilla = {
   origen: OrigenVariable;
   /** Valor con el que se arma la vista previa. */
   ejemplo: string;
-  /**
-   * Si falta el dato: texto que lo reemplaza. Es una configuración general
-   * del tenant (solapa Variables), no de cada plantilla. Sin respaldo, Hermes
-   * avisa al asesor antes de enviar.
-   */
-  respaldo?: string;
 };
 
 // Las variables salen de lo que Atlas ya conoce: los campos del cliente
 // (módulo Clientes), la campaña y el asesor. La etiqueta visible se traduce
 // con `plantillas.variable.<clave>`.
 export const variablesPlantilla: VariablePlantilla[] = [
-  { clave: "nombre", origen: "cliente", ejemplo: "Juan", respaldo: "" },
-  { clave: "apellido", origen: "cliente", ejemplo: "Pérez", respaldo: "" },
+  { clave: "nombre", origen: "cliente", ejemplo: "Juan" },
+  { clave: "apellido", origen: "cliente", ejemplo: "Pérez" },
   { clave: "documento", origen: "cliente", ejemplo: "28.456.789" },
   { clave: "telefono", origen: "cliente", ejemplo: "+54 11 5555-0101" },
   { clave: "email", origen: "cliente", ejemplo: "juan.perez@mail.com" },
@@ -328,7 +351,6 @@ export type Plantilla = {
   /** Solo email. */
   asunto?: string;
   contenido: string;
-  /** Valor de respaldo por variable usada, cuando el dato del cliente falta. */
   adjuntos: AdjuntoPlantilla[];
   activa: boolean;
 };
@@ -828,7 +850,7 @@ export const plantillas: Plantilla[] = [
     id: "pl-saludo",
     nombre: "Saludo inicial",
     descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
-    canales: ["chat", "email", "sms"],
+    canales: [...CANALES_PLANTILLA],
     asunto: "Hola {{nombre}}, te escribimos por tu cuenta",
     contenido:
       "¡Hola {{nombre}}! Soy {{asesor}}. ¿En qué te puedo ayudar hoy?",
@@ -839,7 +861,7 @@ export const plantillas: Plantilla[] = [
     id: "pl-datos",
     nombre: "Pedir más datos",
     descripcion: "Cuando falta un dato puntual para seguir la gestión.",
-    canales: ["chat", "email"],
+    canales: ["chat", "whatsapp", "email"],
     contenido:
       "Para poder ayudarte mejor, ¿me confirmás estos datos?\n- Número de cliente\n- Últimos 4 dígitos del documento",
     adjuntos: [],
@@ -849,7 +871,7 @@ export const plantillas: Plantilla[] = [
     id: "pl-propuesta",
     nombre: "Propuesta de pago",
     descripcion: "Envía las condiciones de la propuesta con el detalle adjunto.",
-    canales: ["chat", "email"],
+    canales: ["chat", "whatsapp", "email"],
     asunto: "Tu propuesta de pago",
     contenido:
       "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas están en el archivo.\n[[archivo:propuesta-de-pago.pdf]]\n_Tiene validez hasta el último día hábil del mes._",
@@ -862,7 +884,7 @@ export const plantillas: Plantilla[] = [
     id: "pl-demora",
     nombre: "Aviso de demora",
     descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
-    canales: ["chat"],
+    canales: ["chat", "whatsapp"],
     contenido: "Dame un minuto que lo reviso y te confirmo, {{nombre}}.",
     adjuntos: [],
     activa: true,
@@ -871,7 +893,7 @@ export const plantillas: Plantilla[] = [
     id: "pl-cierre",
     nombre: "Cierre de conversación",
     descripcion: "Para cerrar de forma prolija una vez resuelta la consulta, antes de tipificar.",
-    canales: ["chat", "email", "sms"],
+    canales: [...CANALES_PLANTILLA],
     contenido:
       "Perfecto, quedó todo resuelto. ¡Gracias por tu tiempo! Cualquier cosa, escribinos a este mismo número.",
     adjuntos: [],

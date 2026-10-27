@@ -26,6 +26,7 @@ import { MensajeRenderizado } from "@/components/plantillas/mensaje-renderizado"
 import {
   getPlantillasDeGrupo,
   plantillaGrupos,
+  tipoRenderDeCanal,
   type CanalPlantilla,
   type Plantilla,
 } from "@/lib/mock-data";
@@ -47,7 +48,7 @@ export type PlantillaElegida = {
   plantilla: Plantilla;
   /** Texto final para el canal, con variables resueltas. */
   texto: string;
-  /** Variables sin dato ni respaldo: hay que completarlas a mano. */
+  /** Variables sin dato: quedan visibles en el texto y hay que completarlas a mano. */
   sinDato: string[];
 };
 
@@ -152,7 +153,7 @@ export function SelectorPlantillas({
           </CommandItem>
         </HoverCardTrigger>
         <HoverCardContent side="right" align="start" className="w-72 p-3">
-          <MensajeRenderizado texto={preview} canal={canal} />
+          <MensajeRenderizado texto={preview} canal={tipoRenderDeCanal(canal)} />
         </HoverCardContent>
       </HoverCard>
     );

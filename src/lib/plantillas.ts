@@ -1,4 +1,5 @@
 import {
+  tipoRenderDeCanal,
   variablesPlantilla,
   type CanalPlantilla,
   type Plantilla,
@@ -41,40 +42,23 @@ export const datosEjemplo: DatosVariables = Object.fromEntries(
 );
 
 /**
- * Valores de respaldo generales (solapa Variables de Olimpo): una sola
- * configuración para todas las plantillas. Una variable sin entrada acá no
- * tiene respaldo: Hermes avisa al asesor.
- */
-export const respaldosGenerales: Record<string, string> = Object.fromEntries(
-  variablesPlantilla
-    .filter((v) => v.respaldo !== undefined)
-    .map((v) => [v.clave, v.respaldo as string])
-);
-
-/**
- * Reemplaza las variables por el dato real; si falta, por el valor de
- * respaldo general. Devuelve también las variables que quedaron sin dato ni
- * respaldo: nunca se envía un mensaje con una variable sin resolver, así que
- * el redactor avisa antes de enviar.
+ * Reemplaza las variables por el dato real. Si el dato falta, la variable
+ * queda visible tal cual ({{nombre}}), igual que en el editor, y se devuelve
+ * en `sinDato`: nunca se envía un mensaje con una variable sin resolver, así
+ * que el redactor avisa y el asesor la completa a mano.
  */
 export function resolverVariables(
   texto: string,
-  datos: DatosVariables,
-  respaldos: Record<string, string> = respaldosGenerales
+  datos: DatosVariables
 ): { texto: string; sinDato: string[] } {
   const sinDato: string[] = [];
-  const resultado = texto.replace(RE_VARIABLE, (_, clave: string) => {
+  const resultado = texto.replace(RE_VARIABLE, (marca, clave: string) => {
     const dato = datos[clave];
     if (dato !== undefined && dato !== "") return dato;
-    if (clave in respaldos) return respaldos[clave];
-    sinDato.push(clave);
-    return "";
+    if (!sinDato.includes(clave)) sinDato.push(clave);
+    return marca;
   });
-  // Un respaldo vacío puede dejar dobles espacios ("Hola , ¿cómo") — se limpian.
-  return {
-    texto: resultado.replace(/[ \t]{2,}/g, " ").replace(/ ,/g, ",").replace(/ !/g, "!"),
-    sinDato,
-  };
+  return { texto: resultado, sinDato };
 }
 
 /** Quita las marcas de archivo (email y SMS: el archivo no va en el texto). */
@@ -135,7 +119,7 @@ export function segmentar(linea: string): Segmento[] {
 }
 
 /**
- * Texto final que recibe el cliente por un canal dado. En chat, cada archivo
+ * Texto final que recibe el cliente por un canal dado. En chat (y redes), cada archivo
  * queda como una línea "📎 nombre" (en el redactor de Hermes se ve así y al
  * enviar sale como mensaje aparte); en email y SMS se quita del texto.
  */
@@ -145,8 +129,9 @@ export function renderizarParaCanal(
   datos: DatosVariables
 ) {
   const { texto, sinDato } = resolverVariables(plantilla.contenido, datos);
-  if (canal === "sms") return { texto: aTextoPlano(quitarArchivos(texto)), sinDato };
-  if (canal === "chat")
+  const tipo = tipoRenderDeCanal(canal);
+  if (tipo === "sms") return { texto: aTextoPlano(quitarArchivos(texto)), sinDato };
+  if (tipo === "chat")
     return { texto: aFormatoChat(texto.replace(RE_ARCHIVO, "📎 $1")), sinDato };
   return { texto: quitarArchivos(texto), sinDato };
 }

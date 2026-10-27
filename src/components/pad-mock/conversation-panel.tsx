@@ -20,8 +20,13 @@ import {
 } from "@/components/pad-mock/selector-plantillas";
 import { AdjuntosChips } from "@/components/plantillas/mensaje-renderizado";
 import type { MensajeChat } from "@/lib/pad-mock/data";
-import { getPlantilla, type AdjuntoPlantilla, type CanalPlantilla } from "@/lib/mock-data";
-import { renderizarParaCanal, type DatosVariables } from "@/lib/plantillas";
+import {
+  getPlantilla,
+  variablesPlantilla,
+  type AdjuntoPlantilla,
+  type CanalPlantilla,
+} from "@/lib/mock-data";
+import { renderizarParaCanal, variablesUsadas, type DatosVariables } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -85,11 +90,13 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
     precargada?.plantilla.adjuntos ?? []
   );
   const [aviso, setAviso] = useState<"precargada" | null>(precargada ? "precargada" : null);
-  const [sinDato, setSinDato] = useState<string[]>(precargada?.sinDato ?? []);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [pendiente, setPendiente] = useState<PlantillaElegida | null>(null);
   const [favoritas, setFavoritas] = useState<string[]>(["pl-datos"]);
   const [usos, setUsos] = useState<Record<string, number>>({ "pl-cierre": 4, "pl-demora": 2 });
+  // Una variable sin dato queda visible en el texto ({{nombre}}); mientras
+  // quede alguna, no se puede enviar: el asesor la completa a mano.
+  const sinDato = variablesUsadas(texto);
 
   function aplicar(elegida: PlantillaElegida, modo: "insertar" | "reemplazar") {
     setTexto((prev) =>
@@ -99,7 +106,6 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
       ...prev,
       ...elegida.plantilla.adjuntos.filter((a) => !prev.some((x) => x.id === a.id)),
     ]);
-    setSinDato(elegida.sinDato);
     setAviso(null);
     setUsos((prev) => ({ ...prev, [elegida.plantilla.id]: (prev[elegida.plantilla.id] ?? 0) + 1 }));
     setPendiente(null);
@@ -163,7 +169,9 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
         <p className="flex items-center gap-1.5 text-xs text-warning">
           <AlertTriangle className="size-3.5 shrink-0" />
           {t("plantillas.selector.sinDato", {
-            variables: sinDato.map((v) => t(`plantillas.variable.${v}`)).join(", "),
+            variables: sinDato
+              .map((v) => (variablesPlantilla.some((d) => d.clave === v) ? t(`plantillas.variable.${v}`) : v))
+              .join(", "),
           })}
         </p>
       )}
@@ -172,7 +180,6 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
         onChange={(e) => {
           setTexto(e.target.value);
           if (aviso === "precargada") setAviso(null);
-          if (sinDato.length > 0) setSinDato([]);
         }}
         onKeyDown={(e) => {
           if (e.key === "/" && texto.trim() === "") {
