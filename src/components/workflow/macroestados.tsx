@@ -274,7 +274,6 @@ export type PlayData = Comun & {
   adjuntoUrl?: string; // de dónde se ve en el editor (en el mock, un blob local)
   // Botones, lista y carrusel: el nodo espera la elección y tiene una salida por opción.
   esperaSeg?: number;
-  variable?: string; // dónde queda lo que la persona escribe en vez de elegir (opcional)
   onSubirAudio: (archivo: File) => { archivo: string; nombre: string; url: string };
 };
 
@@ -318,18 +317,24 @@ const idNuevo = () => `m${siguienteId++}`;
 const TIPOS_CON_OPCIONES: TipoMensaje[] = ["botones", "lista", "carrusel"];
 const salidaDeOpcion = (id: string) => `opcion_${id}`;
 
-// Las opciones que dan una salida, con el título que las nombra en el nodo.
-function opcionesConSalida(data: PlayData, tarjetaDefault: string): { id: string; titulo: string }[] {
+// Las opciones que dan una salida. `numero` es la posición que se ve en el editor
+// al lado de cada opción (1, 2, 3; en el carrusel, tarjeta.botón: 1.1, 1.2, 2.1) y
+// en el nombre de la salida, para reconocer cuál es cuál. `contexto` es la tarjeta.
+type OpcionConSalida = { id: string; numero: string; contexto?: string; titulo: string };
+
+function opcionesConSalida(data: PlayData, tarjetaDefault: string): OpcionConSalida[] {
   switch (data.tipoMensaje) {
     case "botones":
-      return data.botones ?? [];
+      return (data.botones ?? []).map((o, i) => ({ id: o.id, numero: String(i + 1), titulo: o.titulo }));
     case "lista":
-      return data.opciones ?? [];
+      return (data.opciones ?? []).map((o, i) => ({ id: o.id, numero: String(i + 1), titulo: o.titulo }));
     case "carrusel":
       return (data.tarjetas ?? []).flatMap((tarjeta, i) =>
-        tarjeta.botones.map((b) => ({
+        tarjeta.botones.map((b, j) => ({
           id: b.id,
-          titulo: `${tarjeta.titulo || `${tarjetaDefault} ${i + 1}`} · ${b.titulo}`,
+          numero: `${i + 1}.${j + 1}`,
+          contexto: tarjeta.titulo || `${tarjetaDefault} ${i + 1}`,
+          titulo: b.titulo,
         })),
       );
     default:
@@ -421,6 +426,7 @@ function OpcionesEditor({
   max,
   maxTitulo,
   conDescripcion,
+  prefijoNumero = "",
   onChange,
   onRemoveExit,
 }: {
@@ -430,6 +436,8 @@ function OpcionesEditor({
   max: number;
   maxTitulo: number;
   conDescripcion?: boolean;
+  // Delante del número de cada fila: en las tarjetas del carrusel, el de la tarjeta ("2.").
+  prefijoNumero?: string;
   onChange: (opciones: OpcionMensaje[]) => void;
   // Quitar una opción quita su salida y las conexiones que tenía.
   onRemoveExit: (salida: string) => void;
@@ -442,6 +450,13 @@ function OpcionesEditor({
       {opciones.map((o, i) => (
         <div key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
           <div className="flex items-center gap-1">
+            <span
+              className="w-8 shrink-0 text-center text-xs font-medium tabular-nums text-muted-foreground"
+              data-testid={`play-${nodoId}-${clave}-${i}-numero`}
+            >
+              {prefijoNumero}
+              {i + 1}
+            </span>
             <Input
               className="h-7 min-w-0 flex-1"
               aria-label={t("cuentas.flujo.play.opcion.titulo")}
@@ -594,11 +609,15 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
       salidas={
         conOpciones ? (
           <>
-            {salidasOpcion.map((o, i) => (
+            {salidasOpcion.map((o) => (
               <Salida
                 key={o.id}
                 id={salidaDeOpcion(o.id)}
-                etiqueta={o.titulo || `${t("cuentas.flujo.case.opcion")} ${i + 1}`}
+                etiqueta={
+                  o.titulo
+                    ? [o.numero, o.contexto, o.titulo].filter(Boolean).join(" · ")
+                    : [o.contexto, `${t("cuentas.flujo.case.opcion")} ${o.numero}`].filter(Boolean).join(" · ")
+                }
               />
             ))}
             <Salida id="other" etiqueta={t("cuentas.flujo.salida.otra")} />
@@ -777,6 +796,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                   opciones={tarjeta.botones}
                   max={MAX_BOTONES_TARJETA}
                   maxTitulo={MAX_TITULO_BOTON}
+                  prefijoNumero={`${i + 1}.`}
                   onChange={(botones) => cambiarTarjeta({ botones })}
                   onRemoveExit={data.onRemoveExit}
                 />
@@ -870,16 +890,6 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               onChange={(e) =>
                 data.onChange({ esperaSeg: e.target.value === "" ? undefined : Number(e.target.value) })
               }
-            />
-          </Campo>
-          <Campo id={`${id}-variable`} label={t("cuentas.flujo.play.variable")}>
-            <Input
-              id={`${id}-variable`}
-              className="h-7 font-mono text-xs"
-              placeholder="respuesta"
-              value={data.variable ?? ""}
-              data-testid={`play-${id}-variable`}
-              onChange={(e) => data.onChange({ variable: e.target.value })}
             />
           </Campo>
         </>
