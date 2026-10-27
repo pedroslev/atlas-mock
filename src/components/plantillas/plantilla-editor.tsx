@@ -467,8 +467,9 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                           previewConfig={{ showPreview: false }}
                           skinTonesDisabled
                           emojiStyle={EmojiStyle.NATIVE}
-                          width={340}
-                          height={380}
+                          style={{ "--epr-emoji-size": "20px", fontSize: 13 } as React.CSSProperties}
+                          width={300}
+                          height={300}
                         />
                       </PopoverContent>
                     </Popover>
