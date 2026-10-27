@@ -4,6 +4,7 @@ import {
   Landmark,
   Tags,
   Bookmark,
+  MessageSquareText,
   CalendarDays,
   ShieldOff,
   Users,
@@ -40,6 +41,8 @@ export const navItems: NavItem[] = [
   { href: "/cuentas", labelKey: "common.nav.cuentas", icon: Landmark },
   { href: "/clasificaciones", labelKey: "common.nav.clasificaciones", icon: Tags },
   { href: "/marcadores", labelKey: "common.nav.marcas", icon: Bookmark },
+  // Plantillas de mensajes (ATLAS-1191): catálogo + grupos, como Marcas.
+  { href: "/plantillas", labelKey: "common.nav.plantillas", icon: MessageSquareText },
   { href: "/feriados", labelKey: "common.nav.feriados", icon: CalendarDays },
   { href: "/listas-de-exclusion", labelKey: "common.nav.listasExclusion", icon: ShieldOff },
   { href: "/agentes", labelKey: "common.nav.usuarios", icon: Users },

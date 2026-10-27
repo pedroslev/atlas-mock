@@ -167,6 +167,9 @@ export function CampaniaEditor({
                 nombreProyecto={nombreProyecto}
                 initialGrupoClasificacionId={campania.grupoClasificacionId}
                 initialGrupoBookmarksId={campania.grupoBookmarksId}
+                initialGrupoPlantillasId={campania.grupoPlantillasId}
+                initialPlantillaDefaultChatId={campania.plantillaDefaultChatId}
+                initialPlantillaDefaultEmailId={campania.plantillaDefaultEmailId}
                 initialFeriadosId={campania.feriadosId}
                 initialListaExclusionId={campania.listaExclusionId}
               />

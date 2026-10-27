@@ -210,6 +210,7 @@ export function CenterColumn({
             tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             enEspera={enEspera}
             mensajesChat={chatEntrante?.mensajes}
+            nombreCliente={chatEntrante?.nombre}
             interno={interno}
             sonando={sonando}
             nombreInterno={nombreInterno}

@@ -158,6 +158,12 @@ export type Campania = {
   businessHours?: BusinessHours;
   grupoClasificacionId?: string;
   grupoBookmarksId?: string;
+  // Plantillas de mensajes (ATLAS-1191): un grupo por campaña, igual que
+  // clasificaciones y marcas, y una plantilla por defecto por canal escrito
+  // que Hermes precarga al abrir la conversación.
+  grupoPlantillasId?: string;
+  plantillaDefaultChatId?: string;
+  plantillaDefaultEmailId?: string;
   feriadosId?: string;
   listaExclusionId?: string;
   outboundAccountIds: string[];
@@ -272,6 +278,62 @@ export type MarcadorGrupo = {
   id: string;
   nombre: string;
   marcadorIds: string[];
+};
+
+// Plantillas de mensajes (ATLAS-1191, relevamiento/plantillas-de-mensajes):
+// catálogo del tenant + grupos asignables a campañas, mismo modelo que
+// clasificaciones y marcas. El contenido se escribe una vez con formato
+// básico (**negrita**, _cursiva_, listas con "- ") y variables {{clave}};
+// Atlas lo adapta a lo que soporta cada canal.
+export type CanalPlantilla = "chat" | "email" | "sms";
+
+export const CANALES_PLANTILLA: CanalPlantilla[] = ["chat", "email", "sms"];
+
+export type OrigenVariable = "cliente" | "campania" | "asesor";
+
+export type VariablePlantilla = {
+  clave: string;
+  origen: OrigenVariable;
+  /** Valor con el que se arma la vista previa. */
+  ejemplo: string;
+};
+
+// Las variables salen de lo que Atlas ya conoce: los campos del cliente
+// (módulo Clientes), la campaña y el asesor. La etiqueta visible se traduce
+// con `plantillas.variable.<clave>`.
+export const variablesPlantilla: VariablePlantilla[] = [
+  { clave: "nombre", origen: "cliente", ejemplo: "Juan" },
+  { clave: "apellido", origen: "cliente", ejemplo: "Pérez" },
+  { clave: "documento", origen: "cliente", ejemplo: "28.456.789" },
+  { clave: "telefono", origen: "cliente", ejemplo: "+54 11 5555-0101" },
+  { clave: "email", origen: "cliente", ejemplo: "juan.perez@mail.com" },
+  { clave: "numeroCliente", origen: "cliente", ejemplo: "CL-10422" },
+  { clave: "campania", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
+  { clave: "empresa", origen: "campania", ejemplo: "Banco Austral" },
+  { clave: "asesor", origen: "asesor", ejemplo: "Ana" },
+];
+
+export type AdjuntoPlantilla = { id: string; nombre: string; tamano: string };
+
+export type Plantilla = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  canales: CanalPlantilla[];
+  /** Solo email. */
+  asunto?: string;
+  contenido: string;
+  /** Valor de respaldo por variable usada, cuando el dato del cliente falta. */
+  respaldos: Record<string, string>;
+  adjuntos: AdjuntoPlantilla[];
+  activa: boolean;
+};
+
+export type PlantillaGrupo = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  plantillaIds: string[];
 };
 
 // holidays.holidays (JSONB): [{ date, description }] — cada fecha no laborable
@@ -431,6 +493,9 @@ export const campanias: Campania[] = [
     usuariosAsignados: ["ag-1", "ag-2", "ag-3"],
     grupoClasificacionId: "cg-cobranzas",
     grupoBookmarksId: "bg-cobranzas",
+    grupoPlantillasId: "pg-cobranzas",
+    plantillaDefaultChatId: "pl-saludo",
+    plantillaDefaultEmailId: "pl-saludo",
     feriadosId: "fer-ar",
     listaExclusionId: "dnc-1",
     outboundAccountIds: ["acc-1"],
@@ -754,6 +819,93 @@ export const marcadorGrupos: MarcadorGrupo[] = [
   { id: "bg-general", nombre: "General", marcadorIds: ["mk-3"] },
 ];
 
+export const plantillas: Plantilla[] = [
+  {
+    id: "pl-saludo",
+    nombre: "Saludo inicial",
+    descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
+    canales: ["chat", "email", "sms"],
+    asunto: "Hola {{nombre}}, te escribimos de {{empresa}}",
+    contenido:
+      "¡Hola {{nombre}}! Soy {{asesor}}, de **{{empresa}}**. ¿En qué te puedo ayudar hoy?",
+    respaldos: { nombre: "" },
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-datos",
+    nombre: "Pedir más datos",
+    descripcion: "Cuando falta un dato puntual para seguir la gestión.",
+    canales: ["chat", "email"],
+    contenido:
+      "Para poder ayudarte mejor, ¿me confirmás estos datos?\n- Número de cliente\n- Últimos 4 dígitos del documento",
+    respaldos: {},
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-propuesta",
+    nombre: "Propuesta de pago",
+    descripcion: "Envía las condiciones de la propuesta con el detalle adjunto.",
+    canales: ["chat", "email"],
+    asunto: "Tu propuesta de pago — {{empresa}}",
+    contenido:
+      "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas van en el archivo adjunto.\n\n_Tiene validez hasta el último día hábil del mes._",
+    respaldos: { nombre: "Estimado cliente" },
+    adjuntos: [
+      { id: "adj-1", nombre: "propuesta-de-pago.pdf", tamano: "180 KB" },
+    ],
+    activa: true,
+  },
+  {
+    id: "pl-demora",
+    nombre: "Aviso de demora",
+    descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
+    canales: ["chat"],
+    contenido: "Dame un minuto que lo reviso y te confirmo, {{nombre}}.",
+    respaldos: { nombre: "" },
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-cierre",
+    nombre: "Cierre de conversación",
+    descripcion: "Para cerrar de forma prolija una vez resuelta la consulta, antes de tipificar.",
+    canales: ["chat", "email", "sms"],
+    contenido:
+      "Perfecto, quedó todo resuelto. ¡Gracias por tu tiempo! Cualquier cosa, escribinos a este mismo número.",
+    respaldos: {},
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-recordatorio",
+    nombre: "Recordatorio de vencimiento",
+    descripcion: "Mensaje corto de recordatorio, pensado para SMS.",
+    canales: ["sms"],
+    contenido:
+      "{{empresa}}: {{nombre}}, tu cuota vence pronto. Si ya pagaste, ignorá este mensaje.",
+    respaldos: { nombre: "hola" },
+    adjuntos: [],
+    activa: false,
+  },
+];
+
+export const plantillaGrupos: PlantillaGrupo[] = [
+  {
+    id: "pg-cobranzas",
+    nombre: "Cobranzas",
+    descripcion: "Mensajes de gestión de deuda y propuestas de pago.",
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-propuesta", "pl-demora", "pl-cierre", "pl-recordatorio"],
+  },
+  {
+    id: "pg-atencion",
+    nombre: "Atención al cliente",
+    descripcion: "Saludo, pedido de datos y cierre para consultas generales.",
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-demora", "pl-cierre"],
+  },
+];
+
 export const feriados: Feriado[] = [
   {
     id: "fer-ar",
@@ -1014,6 +1166,20 @@ export function getMarcadoresDeGrupo(grupoId: string) {
   const grupo = getMarcadorGrupo(grupoId);
   if (!grupo) return [];
   return marcadores.filter((m) => grupo.marcadorIds.includes(m.id));
+}
+
+export function getPlantilla(id: string) {
+  return plantillas.find((p) => p.id === id);
+}
+
+export function getPlantillaGrupo(id: string) {
+  return plantillaGrupos.find((g) => g.id === id);
+}
+
+export function getPlantillasDeGrupo(grupoId: string) {
+  const grupo = getPlantillaGrupo(grupoId);
+  if (!grupo) return [];
+  return plantillas.filter((p) => grupo.plantillaIds.includes(p.id));
 }
 
 export function getFeriado(id: string) {
