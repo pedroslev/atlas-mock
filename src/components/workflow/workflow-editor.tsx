@@ -48,6 +48,8 @@ import {
   Plus,
   Minus,
   Scan,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
@@ -490,6 +492,8 @@ export function WorkflowEditor({
 }) {
   const t = useT();
   const [fullscreen, setFullscreen] = useState(false);
+  // La paleta de macroestados se puede cerrar para ganar lugar en el lienzo.
+  const [paletaAbierta, setPaletaAbierta] = useState(true);
   const [alto, setAlto] = useState<number>();
 
   const inicioNode = useMemo<WorkflowNode>(
@@ -981,29 +985,59 @@ export function WorkflowEditor({
               2026-07-16): la paleta vive adentro del lienzo, no en una barra
               superior. Flota sobre el contenido → lleva sombra (DESIGN.md). */}
           <Panel position="top-left">
-            <div className="flex w-56 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground shadow-md ring-1 ring-foreground/10">
-              <span className="text-xs font-medium text-muted-foreground">
-                {t("cuentas.flujo.macroestados")}
-              </span>
-              {PALETA.map(({ type, icono }) => {
-                const Icono = soloTexto && type === "play" ? MessageSquare : icono;
-                return (
-                <ActionTooltip key={type} label={t(claveDescripcion(type, soloTexto))}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="justify-start"
-                    data-testid={`paleta-${type}`}
-                    onClick={() => addNodo(type)}
-                  >
-                    <Icono />
-                    {t(claveTitulo(type, soloTexto))}
-                  </Button>
-                </ActionTooltip>
-                );
-              })}
-            </div>
+            {paletaAbierta ? (
+              <div className="flex w-56 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground shadow-md ring-1 ring-foreground/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t("cuentas.flujo.macroestados")}
+                  </span>
+                  <ActionTooltip label={t("cuentas.flujo.paleta.ocultar")}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t("cuentas.flujo.paleta.ocultar")}
+                      data-testid="paleta-alternar"
+                      onClick={() => setPaletaAbierta(false)}
+                    >
+                      <PanelLeftClose />
+                    </Button>
+                  </ActionTooltip>
+                </div>
+                {PALETA.map(({ type, icono }) => {
+                  const Icono = soloTexto && type === "play" ? MessageSquare : icono;
+                  return (
+                  <ActionTooltip key={type} label={t(claveDescripcion(type, soloTexto))}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="justify-start"
+                      data-testid={`paleta-${type}`}
+                      onClick={() => addNodo(type)}
+                    >
+                      <Icono />
+                      {t(claveTitulo(type, soloTexto))}
+                    </Button>
+                  </ActionTooltip>
+                  );
+                })}
+              </div>
+            ) : (
+              <ActionTooltip label={t("cuentas.flujo.paleta.mostrar")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="bg-card shadow-sm"
+                  aria-label={t("cuentas.flujo.paleta.mostrar")}
+                  data-testid="paleta-alternar"
+                  onClick={() => setPaletaAbierta(true)}
+                >
+                  <PanelLeftOpen />
+                </Button>
+              </ActionTooltip>
+            )}
           </Panel>
 
           <Panel position="top-right">

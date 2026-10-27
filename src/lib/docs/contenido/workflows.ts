@@ -90,7 +90,7 @@ export const contenido: ContenidoPagina = {
         "bloques": [
           {
             "tipo": "p",
-            "texto": "Reproduce un audio en la llamada. En las cuentas de chat, videollamada y webcall se llama «Enviar mensaje» y envía un texto."
+            "texto": "Reproduce un audio en la llamada. En las cuentas de chat, videollamada y webcall se llama «Enviar mensaje» y envía un mensaje: texto, botones, una lista de opciones, un carrusel, una imagen o un archivo."
           },
           {
             "tipo": "sub",
@@ -102,8 +102,29 @@ export const contenido: ContenidoPagina = {
               "Qué reproduce — Audio. Texto a voz (TTS) todavía no está disponible. En cuentas de texto es siempre Texto.",
               "Audio — Se sube un archivo y se puede escuchar desde el macroestado.",
               "Se puede interrumpir marcando una tecla — Con el tilde, una tecla corta el audio y el flujo sigue al instante; la tecla la recibe el Capturar siguiente. Sin el tilde, el audio se escucha completo.",
-              "Mensaje — El texto que recibe el cliente (cuentas de texto)."
+              "Tipo de mensaje — Solo en cuentas de texto: Texto, Botones, Lista de opciones, Carrusel o Imagen o archivo. Cada tipo muestra sus propios campos.",
+              "Mensaje — El texto que recibe el cliente. En Botones y Lista de opciones es el texto que acompaña a las opciones, y en Texto es el mensaje completo. Hasta 1024 caracteres."
             ]
+          },
+          {
+            "tipo": "sub",
+            "texto": "Tipos de mensaje"
+          },
+          {
+            "tipo": "lista",
+            "items": [
+              "Texto — Un mensaje de texto.",
+              "Botones — Hasta 3 botones debajo del mensaje. Cada uno tiene un identificador y un título de hasta 20 caracteres. El identificador es el valor que recibe el flujo cuando la persona toca el botón; el título es lo que lee la persona.",
+              "Lista de opciones — Un menú de hasta 10 opciones. Se completa el texto del botón que abre la lista (hasta 20 caracteres) y, por cada opción, su identificador, su título (hasta 24 caracteres) y, si se quiere, una descripción.",
+              "Carrusel — Hasta 10 tarjetas que la persona recorre deslizando. Cada tarjeta tiene un título y un subtítulo (hasta 80 caracteres cada uno), una imagen y hasta 3 botones con identificador y título.",
+              "Imagen o archivo — Se elige si se envía una Imagen o un Archivo, se sube desde el macroestado y se puede sumar un texto que lo acompañe. Se usa, por ejemplo, para cerrar un camino de autogestión con una imagen de instrucciones o un documento con los pasos a seguir.",
+              "Imágenes admitidas — JPG, JPEG y PNG.",
+              "Archivos admitidos — PDF, DOC, DOCX, XLS, XLSX y TXT."
+            ]
+          },
+          {
+            "tipo": "p",
+            "texto": "Cuando la persona toca un botón o una opción, el flujo sigue en el macroestado «Capturar texto» que viene después, y su variable guarda el identificador de lo que eligió. Para tomar un camino distinto según la elección se usa Condición o Según valor sobre esa variable. Si el canal no puede mostrar un tipo de mensaje, la persona lo recibe como texto con las opciones numeradas y puede responder con el número."
           },
           {
             "tipo": "sub",
@@ -463,7 +484,7 @@ export const contenido: ContenidoPagina = {
         "bloques": [
           {
             "tipo": "p",
-            "texto": "Plays an audio on the call. On chat, video call and webcall accounts it is called \"Send message\" and sends a text."
+            "texto": "Plays an audio on the call. On chat, video call and webcall accounts it is called \"Send message\" and sends a message: text, buttons, an options list, a carousel, an image or a file."
           },
           {
             "tipo": "sub",
@@ -475,8 +496,29 @@ export const contenido: ContenidoPagina = {
               "What it plays — Audio. Text to speech (TTS) is not available yet. On text accounts it is always Text.",
               "Audio — A file is uploaded and can be played from the macrostate.",
               "Can be interrupted by pressing a key — When checked, a key stops the audio and the flow continues immediately; the next Collect receives the key. When unchecked, the audio plays in full.",
-              "Message — The text the customer receives (text accounts)."
+              "Message type — Text accounts only: Text, Buttons, Options list, Carousel or Image or file. Each type shows its own fields.",
+              "Message — The text the customer receives. With Buttons and Options list it is the text that goes with the options, and with Text it is the whole message. Up to 1024 characters."
             ]
+          },
+          {
+            "tipo": "sub",
+            "texto": "Message types"
+          },
+          {
+            "tipo": "lista",
+            "items": [
+              "Text — A text message.",
+              "Buttons — Up to 3 buttons below the message. Each has an identifier and a title of up to 20 characters. The identifier is the value the flow receives when the person taps the button; the title is what the person reads.",
+              "Options list — A menu of up to 10 options. You fill in the text of the button that opens the list (up to 20 characters) and, for each option, its identifier, its title (up to 24 characters) and, if you want, a description.",
+              "Carousel — Up to 10 cards the person swipes through. Each card has a title and a subtitle (up to 80 characters each), an image and up to 3 buttons with an identifier and a title.",
+              "Image or file — You choose whether to send an Image or a File, upload it from the macrostate and can add a text that goes with it. It is used, for example, to close a self-service path with an image of instructions or a document with the steps to follow.",
+              "Accepted images — JPG, JPEG and PNG.",
+              "Accepted files — PDF, DOC, DOCX, XLS, XLSX and TXT."
+            ]
+          },
+          {
+            "tipo": "p",
+            "texto": "When the person taps a button or an option, the flow continues in the \"Collect text\" macrostate that follows, and its variable stores the identifier of what they chose. To take a different path depending on the choice, use Condition or By value on that variable. If the channel cannot show a message type, the person receives it as text with numbered options and can reply with the number."
           },
           {
             "tipo": "sub",

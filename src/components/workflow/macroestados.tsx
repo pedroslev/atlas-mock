@@ -291,7 +291,7 @@ export type TarjetaMensaje = {
 const TIPOS_MENSAJE: TipoMensaje[] = ["texto", "botones", "lista", "carrusel", "adjunto"];
 const TIPOS_ADJUNTO: AdjuntoTipo[] = ["image", "document"];
 const ACEPTA_ADJUNTO: Record<AdjuntoTipo, string> = {
-  image: "image/*",
+  image: ".jpg,.jpeg,.png",
   document: ".pdf,.doc,.docx,.xls,.xlsx,.txt",
 };
 
@@ -898,13 +898,6 @@ export function CollectNode({ id, data }: NodeProps & { data: CollectData }) {
           onChange={(e) => data.onChange({ variable: e.target.value })}
         />
       </Campo>
-      {/* Cuentas de texto: si el cliente toca un botón u opción del mensaje
-          anterior, la variable recibe el identificador de esa opción. */}
-      {data.soloTexto && (
-        <p className="text-xs text-muted-foreground" data-testid={`collect-${id}-opcion-elegida`}>
-          {t("cuentas.flujo.collect.opcionElegida")}
-        </p>
-      )}
       <div className="grid grid-cols-2 gap-2">
         {!data.soloTexto && (
         <>
