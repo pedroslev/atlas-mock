@@ -408,8 +408,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
               </CardContent>
             </Card>
 
-            {/* Vista previa ------------------------------------------------ */}
-            <Card className="h-fit lg:sticky lg:top-4">
+            {/* Vista previa: misma altura que el cuadro del mensaje (grid) ---- */}
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>{t("plantillas.editor.vistaPrevia")}</CardTitle>
                 <CardDescription>{t("plantillas.editor.vistaPreviaAyuda")}</CardDescription>
