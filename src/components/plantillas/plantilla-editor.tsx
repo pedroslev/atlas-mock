@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Bold, Braces, Italic, List, Paperclip } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bold, Braces, Italic, List, Paperclip } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Button } from "@/components/ui/button";
@@ -203,7 +203,9 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4">
+    // min-h-0 + flex-1: el editor ocupa el alto del <main> y nunca lo desborda;
+    // lo que no entra se desplaza dentro de cada recuadro.
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageHeader
         title={initial ? initial.nombre : t("plantillas.editor.nueva")}
         description={t("plantillas.editor.subtitulo")}
@@ -222,7 +224,11 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         }
       />
 
-      <Tabs value={paso} onValueChange={(v) => setPaso(v as "datos" | "mensaje")} className="gap-4">
+      <Tabs
+        value={paso}
+        onValueChange={(v) => setPaso(v as "datos" | "mensaje")}
+        className="min-h-0 flex-1 gap-4"
+      >
         <TabsList>
           <TabsTrigger value="datos">{t("plantillas.editor.datos")}</TabsTrigger>
           <TabsTrigger value="mensaje">{t("plantillas.editor.contenido")}</TabsTrigger>
@@ -297,10 +303,10 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         </TabsContent>
 
         {/* Paso 2: Mensaje + vista previa al lado ---------------------- */}
-        <TabsContent value="mensaje">
-          {/* Altura fija a la pantalla: lo que no entra se desplaza dentro de
+        <TabsContent value="mensaje" className="min-h-0 flex-1">
+          {/* Ocupa el alto disponible: lo que no entra se desplaza dentro de
               cada recuadro, nunca la página. */}
-          <div className="grid gap-4 lg:h-[calc(100vh-13.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
+          <div className="grid h-full gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
             <Card className="min-h-0 min-w-0">
               <CardHeader>
                 <CardTitle>{t("plantillas.editor.contenido")}</CardTitle>
@@ -319,7 +325,10 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                   </div>
                 )}
 
-                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                {/* Sin min-h-0: el cuadro crece con el espacio libre pero nunca
+                    se achica por debajo de su mínimo; el exceso lo desplaza el
+                    recuadro. */}
+                <div className="flex flex-1 flex-col gap-1.5">
                   <Label htmlFor="pl-contenido">{t("plantillas.editor.texto")}</Label>
                   <div className="flex flex-wrap items-center gap-1">
                     <ActionTooltip label={t("plantillas.editor.negrita")}>
@@ -517,7 +526,8 @@ function VistaPrevia({
               {adjuntos.length > 0 && (
                 <div className="flex flex-col gap-2 border-t pt-2">
                   <AdjuntosChips adjuntos={adjuntos} />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex items-start gap-1.5 text-xs text-warning">
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                     {t("plantillas.editor.emailArchivosGrandes")}
                   </p>
                 </div>

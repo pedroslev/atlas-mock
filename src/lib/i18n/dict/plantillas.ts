@@ -90,7 +90,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Asunto",
     "editor.adjuntosPreview": "{cantidad} adjunto(s)",
     "editor.smsSinAdjuntos": "SMS no admite adjuntos: se envía solo el texto.",
-    "editor.emailArchivosGrandes": "Si los archivos superan el tamaño que admite el correo, se envían como enlace de descarga en lugar de adjuntos.",
+    "editor.emailArchivosGrandes": "Atención: el correo tiene un límite de tamaño para los archivos. Si lo superan, el envío puede fallar; en ese caso, compartilos con un enlace de descarga (por ejemplo, un Drive).",
     "editor.guardado": "Los cambios se guardan al confirmar.",
 
     "origen.cliente": "Cliente",
@@ -242,7 +242,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Subject",
     "editor.adjuntosPreview": "{cantidad} attachment(s)",
     "editor.smsSinAdjuntos": "SMS does not support attachments: only the text is sent.",
-    "editor.emailArchivosGrandes": "If the files exceed the size email allows, they are sent as a download link instead of attachments.",
+    "editor.emailArchivosGrandes": "Warning: email has a size limit for files. If they exceed it, sending may fail; in that case share them with a download link (for example, a Drive).",
     "editor.guardado": "Changes are saved on confirm.",
 
     "origen.cliente": "Customer",
@@ -392,7 +392,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Assunto",
     "editor.adjuntosPreview": "{cantidad} anexo(s)",
     "editor.smsSinAdjuntos": "SMS não admite anexos: envia-se só o texto.",
-    "editor.emailArchivosGrandes": "Se os arquivos superarem o tamanho que o e-mail admite, são enviados como link de download em vez de anexos.",
+    "editor.emailArchivosGrandes": "Atenção: o e-mail tem um limite de tamanho para os arquivos. Se o superarem, o envio pode falhar; nesse caso, compartilhe-os com um link de download (por exemplo, um Drive).",
     "editor.guardado": "As alterações são salvas ao confirmar.",
 
     "origen.cliente": "Cliente",
@@ -542,7 +542,7 @@ export const plantillas: NamespaceDict = {
     "editor.asuntoPreview": "Assumpte",
     "editor.adjuntosPreview": "{cantidad} adjunt(s)",
     "editor.smsSinAdjuntos": "L'SMS no admet adjunts: només s'envia el text.",
-    "editor.emailArchivosGrandes": "Si els fitxers superen la mida que admet el correu, s'envien com a enllaç de descàrrega en lloc d'adjunts.",
+    "editor.emailArchivosGrandes": "Atenció: el correu té un límit de mida per als fitxers. Si el superen, l'enviament pot fallar; en aquest cas, comparteix-los amb un enllaç de descàrrega (per exemple, un Drive).",
     "editor.guardado": "Els canvis es desen en confirmar.",
 
     "origen.cliente": "Client",
