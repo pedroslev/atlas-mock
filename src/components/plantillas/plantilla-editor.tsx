@@ -2,7 +2,21 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Bold, Braces, Italic, List, Paperclip } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Bold,
+  Braces,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Paperclip,
+  SmilePlus,
+  Strikethrough,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import { EmojiStyle } from "emoji-picker-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Button } from "@/components/ui/button";
@@ -72,6 +86,9 @@ import {
 // insertan desde la barra donde está el cursor; la vista previa muestra cómo
 // lo recibe el cliente según el tipo de canal (chat y redes, email, SMS). Si
 // un dato falta, la variable queda visible tal cual: el asesor la completa.
+// Se carga solo al abrir el selector: el listado completo de emojis es pesado.
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
+
 function formatoTamano(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -92,10 +109,17 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     initial?.adjuntos ?? []
   );
   const [variablesOpen, setVariablesOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [enlaceOpen, setEnlaceOpen] = useState(false);
+  const [enlaceTexto, setEnlaceTexto] = useState("");
+  const [enlaceUrl, setEnlaceUrl] = useState("");
   // Una plantilla nueva arranca en Datos; una existente, en el mensaje.
   const [paso, setPaso] = useState<"datos" | "mensaje">(initial ? "mensaje" : "datos");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Última posición del cursor en el texto. Si nunca se tocó el cuadro, lo
+  // que se inserta (variable, archivo, emoji, enlace) va al final.
+  const cursorRef = useRef<{ a: number; b: number } | null>(null);
 
   const usadas = useMemo(
     () => variablesUsadas(contenido, canales.includes("email") ? asunto : ""),
@@ -117,24 +141,45 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     });
   }
 
-  function listar() {
+  /** Viñeta ("- ") o número ("N. ", siguiendo la línea anterior) al inicio de la línea actual. */
+  function listar(tipo: "vineta" | "numero") {
     const el = textareaRef.current;
     if (!el) return;
     const a = el.selectionStart;
     const inicioLinea = contenido.lastIndexOf("\n", a - 1) + 1;
-    const nuevo = contenido.slice(0, inicioLinea) + "- " + contenido.slice(inicioLinea);
+    let marca = "- ";
+    if (tipo === "numero") {
+      const anterior = contenido.slice(0, inicioLinea).split("\n").at(-2) ?? "";
+      const n = anterior.match(/^(\d+)\. /);
+      marca = `${n ? Number(n[1]) + 1 : 1}. `;
+    }
+    const nuevo = contenido.slice(0, inicioLinea) + marca + contenido.slice(inicioLinea);
     setContenido(nuevo);
     requestAnimationFrame(() => {
       el.focus();
-      el.setSelectionRange(a + 2, a + 2);
+      el.setSelectionRange(a + marca.length, a + marca.length);
     });
+  }
+
+  function abrirEnlace() {
+    const el = textareaRef.current;
+    const seleccion = el ? contenido.slice(el.selectionStart, el.selectionEnd) : "";
+    setEnlaceTexto(seleccion);
+    setEnlaceUrl("");
+    setEnlaceOpen(true);
+  }
+
+  function insertarEnlace() {
+    if (!enlaceUrl.trim()) return;
+    insertarEnCursor(`[${enlaceTexto.trim() || enlaceUrl.trim()}](${enlaceUrl.trim()})`);
+    setEnlaceOpen(false);
   }
 
   /** Inserta `marca` donde está el cursor (o al final). */
   function insertarEnCursor(marca: string, enLineaPropia = false) {
     const el = textareaRef.current;
-    const a = el?.selectionStart ?? contenido.length;
-    const b = el?.selectionEnd ?? contenido.length;
+    const a = cursorRef.current?.a ?? contenido.length;
+    const b = cursorRef.current?.b ?? contenido.length;
     const antes = contenido.slice(0, a);
     const despues = contenido.slice(b);
     let texto = marca;
@@ -144,6 +189,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     }
     setContenido(antes + texto + despues);
     const fin = a + texto.length;
+    cursorRef.current = { a: fin, b: fin };
     requestAnimationFrame(() => {
       el?.focus();
       el?.setSelectionRange(fin, fin);
@@ -341,11 +387,91 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         <Italic className="size-4" />
                       </Button>
                     </ActionTooltip>
+                    <ActionTooltip label={t("plantillas.editor.tachado")}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("~~")}>
+                        <Strikethrough className="size-4" />
+                      </Button>
+                    </ActionTooltip>
                     <ActionTooltip label={t("plantillas.editor.lista")}>
-                      <Button type="button" variant="outline" size="icon-sm" onClick={listar}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={() => listar("vineta")}>
                         <List className="size-4" />
                       </Button>
                     </ActionTooltip>
+                    <ActionTooltip label={t("plantillas.editor.listaNumerada")}>
+                      <Button type="button" variant="outline" size="icon-sm" onClick={() => listar("numero")}>
+                        <ListOrdered className="size-4" />
+                      </Button>
+                    </ActionTooltip>
+                    <Popover open={enlaceOpen} onOpenChange={setEnlaceOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={t("plantillas.editor.enlace")}
+                          title={t("plantillas.editor.enlace")}
+                          onClick={abrirEnlace}
+                        >
+                          <Link2 className="size-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="flex w-80 flex-col gap-3" align="start">
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="pl-enlace-texto">{t("plantillas.editor.enlaceTexto")}</Label>
+                          <Input
+                            id="pl-enlace-texto"
+                            value={enlaceTexto}
+                            onChange={(e) => setEnlaceTexto(e.target.value)}
+                            placeholder={t("plantillas.editor.enlaceTextoPlaceholder")}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="pl-enlace-url">{t("plantillas.editor.enlaceUrl")}</Label>
+                          <Input
+                            id="pl-enlace-url"
+                            value={enlaceUrl}
+                            onChange={(e) => setEnlaceUrl(e.target.value)}
+                            placeholder="https://"
+                            onKeyDown={(e) => e.key === "Enter" && insertarEnlace()}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{t("plantillas.editor.enlaceAyuda")}</p>
+                        <Button type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim()}>
+                          {t("plantillas.editor.insertarEnlace")}
+                        </Button>
+                      </PopoverContent>
+                    </Popover>
+                    <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={t("plantillas.editor.emoji")}
+                          title={t("plantillas.editor.emoji")}
+                        >
+                          <SmilePlus className="size-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        {/* Todos los emojis, con buscador y categorías. Mock con
+                            emoji-picker-react; la librería definitiva y el idioma
+                            del buscador (hoy busca en inglés) se definen con el
+                            Architect. */}
+                        <EmojiPicker
+                          onEmojiClick={(e) => {
+                            insertarEnCursor(e.emoji);
+                            setEmojiOpen(false);
+                          }}
+                          searchPlaceholder={t("plantillas.editor.buscarEmoji")}
+                          previewConfig={{ showPreview: false }}
+                          skinTonesDisabled
+                          emojiStyle={EmojiStyle.NATIVE}
+                          width={340}
+                          height={380}
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <Popover open={variablesOpen} onOpenChange={setVariablesOpen}>
                       <PopoverTrigger asChild>
                         <Button type="button" variant="outline" size="sm" className="ml-1">
@@ -393,6 +519,12 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     id="pl-contenido"
                     value={contenido}
                     onChange={(e) => setContenido(e.target.value)}
+                    onSelect={(e) =>
+                      (cursorRef.current = {
+                        a: e.currentTarget.selectionStart,
+                        b: e.currentTarget.selectionEnd,
+                      })
+                    }
                     placeholder={t("plantillas.editor.placeholderContenido")}
                     className="min-h-[14rem] flex-1 resize-none font-mono text-sm"
                     autoFocus={paso === "mensaje"}
@@ -489,16 +621,22 @@ function VistaPrevia({
             <p className="text-sm text-muted-foreground">
               {t("plantillas.editor.vistaPreviaVacia")}
             </p>
-          ) : canal === "chat" ? (
-            // Chat: cada archivo corta el texto y va como mensaje aparte.
+          ) : canal === "chat" || canal === "plano" ? (
+            // Chat y redes: cada archivo corta el texto y va como mensaje
+            // aparte. En redes (plano) el texto sale sin formato.
             <div className="flex flex-col items-end gap-1.5">
+              {canal === "plano" && (
+                <p className="self-stretch text-xs text-muted-foreground">
+                  {t("plantillas.editor.planoAyuda")}
+                </p>
+              )}
               {partes.map((parte, i) =>
                 parte.tipo === "texto" ? (
                   <div
                     key={i}
                     className="max-w-[90%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-primary-foreground"
                   >
-                    <MensajeRenderizado texto={parte.texto} canal="chat" />
+                    <MensajeRenderizado texto={parte.texto} canal={canal} />
                   </div>
                 ) : (
                   <div

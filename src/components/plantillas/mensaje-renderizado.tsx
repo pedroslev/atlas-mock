@@ -6,7 +6,7 @@ import {
   type CanalPlantilla,
   type TipoRender,
 } from "@/lib/mock-data";
-import { aTextoPlano, segmentar } from "@/lib/plantillas";
+import { aTextoPlano, segmentar, tipoDeLinea } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -20,32 +20,41 @@ export function MensajeRenderizado({
   className,
 }: {
   texto: string;
-  /** Cómo se dibuja: chat (y redes), email o sms. */
+  /** Cómo se dibuja: chat (y WhatsApp), plano (redes), email o sms. */
   canal: TipoRender;
   className?: string;
 }) {
-  const lineas = (canal === "sms" ? aTextoPlano(texto) : texto).split("\n");
+  const conFormato = canal === "chat" || canal === "email";
+  const lineas = (conFormato ? texto : aTextoPlano(texto)).split("\n");
   return (
     <div className={cn("whitespace-pre-wrap text-sm leading-relaxed", className)}>
       {lineas.map((linea, i) => {
-        const esItem = canal !== "sms" && linea.startsWith("- ");
-        const contenido = esItem ? linea.slice(2) : linea;
-        const segmentos =
-          canal === "sms" ? [{ texto: contenido }] : segmentar(contenido);
+        const { tipo, marcador, texto: contenido } = conFormato
+          ? tipoDeLinea(linea)
+          : { tipo: "texto" as const, marcador: "", texto: linea };
+        const segmentos = conFormato ? segmentar(contenido) : [{ texto: contenido }];
         return (
-          <div key={i} className={cn(esItem && "flex gap-1.5 pl-1")}>
-            {esItem && <span aria-hidden>•</span>}
+          <div key={i} className={cn(tipo !== "texto" && "flex gap-1.5 pl-1")}>
+            {tipo !== "texto" && <span aria-hidden>{marcador}</span>}
             <span>
               {segmentos.map((s, j) =>
-                s.negrita ? (
+                s.url ? (
+                  // Chat web y email muestran el enlace con su texto; en WhatsApp y
+                  // los canales planos sale "texto (url)" (ver aFormatoChat).
+                  <a key={j} href={s.url} className="underline underline-offset-2" onClick={(e) => e.preventDefault()}>
+                    {s.texto}
+                  </a>
+                ) : s.negrita ? (
                   <strong key={j}>{s.texto}</strong>
                 ) : s.cursiva ? (
                   <em key={j}>{s.texto}</em>
+                ) : s.tachado ? (
+                  <s key={j}>{s.texto}</s>
                 ) : (
                   <span key={j}>{s.texto}</span>
                 )
               )}
-              {linea === "" && " "}
+              {linea === "" && " "}
             </span>
           </div>
         );

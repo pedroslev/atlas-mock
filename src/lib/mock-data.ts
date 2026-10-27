@@ -311,11 +311,21 @@ export const CANALES_PLANTILLA: CanalPlantilla[] = [
   "linkedin",
 ];
 
-/** Cómo se ve el mensaje: email con formato, SMS texto plano, el resto como chat. */
-export type TipoRender = "chat" | "email" | "sms";
-export const TIPOS_RENDER: TipoRender[] = ["chat", "email", "sms"];
+/**
+ * Cómo se ve el mensaje según el canal:
+ * - chat: chat web, WhatsApp y Telegram admiten formato (negrita, cursiva,
+ *   tachado, listas); los enlaces van con la dirección completa.
+ * - plano: Instagram, Facebook, TikTok, X y LinkedIn no admiten formato en
+ *   sus mensajes: sale solo el texto (y los archivos como mensaje aparte).
+ * - email: formato completo y enlaces con texto.
+ * - sms: solo texto, sin archivos.
+ */
+export type TipoRender = "chat" | "plano" | "email" | "sms";
+export const TIPOS_RENDER: TipoRender[] = ["chat", "plano", "email", "sms"];
 export function tipoRenderDeCanal(canal: CanalPlantilla): TipoRender {
-  return canal === "email" || canal === "sms" ? canal : "chat";
+  if (canal === "email" || canal === "sms") return canal;
+  if (canal === "chat" || canal === "whatsapp" || canal === "telegram") return "chat";
+  return "plano";
 }
 
 export type OrigenVariable = "cliente" | "campania" | "asesor";
@@ -863,7 +873,7 @@ export const plantillas: Plantilla[] = [
     descripcion: "Cuando falta un dato puntual para seguir la gestión.",
     canales: ["chat", "whatsapp", "email"],
     contenido:
-      "Para poder ayudarte mejor, ¿me confirmás estos datos?\n- Número de cliente\n- Últimos 4 dígitos del documento",
+      "Para poder ayudarte mejor, ¿me confirmás estos datos?\n1. Número de cliente\n2. Últimos 4 dígitos del documento",
     adjuntos: [],
     activa: true,
   },
@@ -874,7 +884,7 @@ export const plantillas: Plantilla[] = [
     canales: ["chat", "whatsapp", "email"],
     asunto: "Tu propuesta de pago",
     contenido:
-      "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas están en el archivo.\n[[archivo:propuesta-de-pago.pdf]]\n_Tiene validez hasta el último día hábil del mes._",
+      "{{nombre}}, te dejo la **propuesta de pago** que conversamos. Las condiciones completas están en el archivo.\n[[archivo:propuesta-de-pago.pdf]]\n_Tiene validez hasta el último día hábil del mes._ Las condiciones generales están en [nuestro sitio](https://www.ejemplo.com/condiciones).",
     adjuntos: [
       { id: "adj-1", nombre: "propuesta-de-pago.pdf", tamano: "180 KB" },
     ],

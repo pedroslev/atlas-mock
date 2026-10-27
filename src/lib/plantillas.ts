@@ -9,9 +9,14 @@ import {
 // formato básico, variables y archivos, y acá se traduce a lo que soporta
 // cada canal.
 //
-// Formato aceptado en el contenido:
-//   **negrita**   _cursiva_   líneas que empiezan con "- " (lista)
+// Formato aceptado en el contenido (el mínimo común de WhatsApp, chat web y
+// email; ver propuesta §2.7):
+//   **negrita**   _cursiva_   ~~tachado~~
+//   líneas que empiezan con "- " (lista) o "1. " (lista numerada)
+//   [texto](url)  enlace: con texto en chat web y email; en WhatsApp y los
+//                 canales planos sale "texto (url)"
 //   {{clave}}     variable (ver variablesPlantilla en mock-data)
+//   emojis: se escriben tal cual, funcionan en todos los canales
 //   [[archivo:nombre.pdf]]  un archivo de la plantilla, en su propia línea.
 //     En chat/WhatsApp se envía como mensaje aparte en ese punto (texto,
 //     archivo, texto); en email el texto es el cuerpo y el archivo va
@@ -88,34 +93,57 @@ export function partesChat(contenido: string): ParteChat[] {
   return partes;
 }
 
-/** Quita el formato: lo que recibe un canal de texto plano (SMS). */
+/** Quita el formato: lo que recibe un canal de texto plano (SMS y redes). */
 export function aTextoPlano(contenido: string) {
   return contenido
     .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/_(.+?)_/g, "$1")
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/(^|[^\w])_(.+?)_(?!\w)/g, "$1$2")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)")
     .replace(/^- /gm, "• ");
 }
 
-/** Formato de WhatsApp/chat: *negrita* y _cursiva_, viñetas con "•". */
+/** Formato de WhatsApp/chat: *negrita*, _cursiva_, ~tachado~, viñetas con "•", enlace como "texto (url)". */
 export function aFormatoChat(contenido: string) {
-  return contenido.replace(/\*\*(.+?)\*\*/g, "*$1*").replace(/^- /gm, "• ");
+  return contenido
+    .replace(/\*\*(.+?)\*\*/g, "*$1*")
+    .replace(/~~(.+?)~~/g, "~$1~")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)")
+    .replace(/^- /gm, "• ");
 }
 
-export type Segmento = { texto: string; negrita?: boolean; cursiva?: boolean };
+export type Segmento = {
+  texto: string;
+  negrita?: boolean;
+  cursiva?: boolean;
+  tachado?: boolean;
+  /** Enlace: `texto` es lo visible, `url` el destino. */
+  url?: string;
+};
 
 /** Parte una línea en segmentos con formato, para dibujarla con énfasis. */
 export function segmentar(linea: string): Segmento[] {
   const segmentos: Segmento[] = [];
-  const re = /\*\*(.+?)\*\*|_(.+?)_/g;
+  const re = /\*\*(.+?)\*\*|~~(.+?)~~|\[([^\]]+)\]\(([^)]+)\)|_(.+?)_/g;
   let ultimo = 0;
   for (const m of linea.matchAll(re)) {
     if (m.index! > ultimo) segmentos.push({ texto: linea.slice(ultimo, m.index) });
     if (m[1] !== undefined) segmentos.push({ texto: m[1], negrita: true });
-    else segmentos.push({ texto: m[2], cursiva: true });
+    else if (m[2] !== undefined) segmentos.push({ texto: m[2], tachado: true });
+    else if (m[3] !== undefined) segmentos.push({ texto: m[3], url: m[4] });
+    else segmentos.push({ texto: m[5], cursiva: true });
     ultimo = m.index! + m[0].length;
   }
   if (ultimo < linea.length) segmentos.push({ texto: linea.slice(ultimo) });
   return segmentos;
+}
+
+/** Línea de lista: "- " (viñeta) o "1. " (numerada). */
+export function tipoDeLinea(linea: string): { tipo: "vineta" | "numero" | "texto"; marcador: string; texto: string } {
+  const num = linea.match(/^(\d+)\. (.*)$/);
+  if (num) return { tipo: "numero", marcador: `${num[1]}.`, texto: num[2] };
+  if (linea.startsWith("- ")) return { tipo: "vineta", marcador: "•", texto: linea.slice(2) };
+  return { tipo: "texto", marcador: "", texto: linea };
 }
 
 /**
@@ -131,6 +159,7 @@ export function renderizarParaCanal(
   const { texto, sinDato } = resolverVariables(plantilla.contenido, datos);
   const tipo = tipoRenderDeCanal(canal);
   if (tipo === "sms") return { texto: aTextoPlano(quitarArchivos(texto)), sinDato };
+  if (tipo === "plano") return { texto: aTextoPlano(texto.replace(RE_ARCHIVO, "📎 $1")), sinDato };
   if (tipo === "chat")
     return { texto: aFormatoChat(texto.replace(RE_ARCHIVO, "📎 $1")), sinDato };
   return { texto: quitarArchivos(texto), sinDato };

@@ -31,7 +31,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email, chat, WhatsApp y redes va con negrita, cursiva y listas; en SMS va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente («Chat y redes», «Email», «SMS»), mientras lo escribís.",
+              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email, chat web y WhatsApp va con negrita, cursiva, tachado, listas y enlaces; en SMS y en las redes sociales va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente («Chat y WhatsApp», «Redes», «Email», «SMS»), mientras lo escribís.",
           },
           { tipo: "sub", texto: "Campos" },
           {
@@ -42,7 +42,7 @@ export const contenido: ContenidoPagina = {
               "Activa — Inactiva no se ofrece al asesor, pero no se pierde.",
               "Canales en los que se ofrece — Los canales escritos: Chat, WhatsApp, Email, SMS y las redes sociales. Desmarcá los que no correspondan: una firma larga, por ejemplo, solo en email; una plantilla con imágenes, no en SMS.",
               "Asunto — Solo para email. Puede llevar variables.",
-              "Mensaje — El texto, con la barra de formato y los botones «Insertar variable» e «Insertar archivo».",
+              "Mensaje — El texto, con la barra de formato (negrita, cursiva, tachado, lista, lista numerada, enlace y emoji) y los botones «Insertar variable» e «Insertar archivo». La barra tiene solo lo que WhatsApp, el chat web y el email muestran los tres; lo que solo entiende el email (colores, títulos, tablas) queda afuera para que el mismo mensaje sirva en todos los canales.",
               "Archivos — «Insertar archivo» abre el selector de archivos de tu equipo y deja el archivo dentro del texto, donde está el cursor. En chat sale como mensaje aparte en ese punto (texto, archivo, texto); en email va adjunto; SMS no los admite.",
             ],
           },
