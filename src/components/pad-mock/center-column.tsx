@@ -365,6 +365,7 @@ export function CenterColumn({
               nombreInterno={nombreInterno}
               onSimularForzada={onSimularForzada}
               onSimularRechazo={onSimularRechazo}
+              webcall={webcall}
             />
           )}
         </TabsContent>

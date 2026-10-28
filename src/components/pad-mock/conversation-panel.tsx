@@ -9,6 +9,7 @@ import {
   CaseSensitive,
   ChevronsUpDown,
   FileText,
+  Headset,
   Italic,
   Link2,
   List,
@@ -45,6 +46,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { InfoHint } from "@/components/pad-mock/info-hint";
+import { IconoEnCurso, Vumetro } from "@/components/pad-mock/vumetro";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
 import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
@@ -671,7 +673,9 @@ function ChatPanel({
 }
 
 // Llamada: placeholder simple (sin transcripción, retirada a pedido) para
-// no dejar el área vacía sin explicación.
+// no dejar el área vacía sin explicación, con un vúmetro que da la sensación
+// de llamada en curso (quieto en espera). La webcall sin chat usa el mismo,
+// con el ícono de auricular.
 //
 // tiempo/enEspera: mismo cronómetro que ya se muestra en el título de la
 // solapa (CenterColumn) — a pedido, se repite acá abajo de "Llamada en
@@ -690,6 +694,7 @@ export function ConversationPanel({
   onSimularForzada,
   onSimularRechazo,
   adjuntoNuevo,
+  webcall = false,
 }: {
   tiempo: string;
   enEspera: boolean;
@@ -700,6 +705,8 @@ export function ConversationPanel({
   nombreInterno?: string;
   onSimularForzada?: () => void;
   onSimularRechazo?: () => void;
+  /** Llamada de webcall (ícono de auricular y "Webcall en curso"). */
+  webcall?: boolean;
   /** Chat: adjunto que se suma al redactor (captura de la videollamada). */
   adjuntoNuevo?: AdjuntoExterno;
 }) {
@@ -726,7 +733,7 @@ export function ConversationPanel({
           </>
         ) : (
           <>
-            <Phone className="size-6" />
+            <IconoEnCurso icono={Phone} activo={!enEspera} />
             <p className="text-sm">{t("padMock.llamadaInterna.enCursoCon", { nombre: nombreInterno ?? "" })}</p>
             <span
               className={cn(
@@ -736,6 +743,7 @@ export function ConversationPanel({
             >
               {tiempo}
             </span>
+            <Vumetro activo={!enEspera} />
             {onSimularForzada && (
               <button
                 type="button"
@@ -751,9 +759,15 @@ export function ConversationPanel({
     );
   }
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 p-4 text-center text-muted-foreground">
-      <Phone className="size-6" />
-      <p className="text-sm">{t("padMock.conversationPanel.llamadaEnCurso")}</p>
+    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 p-4 text-center text-muted-foreground">
+      <IconoEnCurso icono={webcall ? Headset : Phone} activo={!enEspera} />
+      <p className="text-sm">
+        {enEspera
+          ? t("padMock.conversationPanel.enEspera")
+          : webcall
+            ? t("padMock.conversationPanel.webcallEnCurso")
+            : t("padMock.conversationPanel.llamadaEnCurso")}
+      </p>
       <span
         className={cn(
           "font-mono text-2xl font-bold tabular-nums",
@@ -762,6 +776,7 @@ export function ConversationPanel({
       >
         {tiempo}
       </span>
+      <Vumetro activo={!enEspera} />
     </div>
   );
 }

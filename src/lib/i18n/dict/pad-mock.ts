@@ -31,7 +31,9 @@ export const padMock: NamespaceDict = {
     "centerColumn.conversacion": "Conversación",
 
     // ConversationPanel
-    "conversationPanel.llamadaEnCurso": "Llamada en curso.",
+    "conversationPanel.llamadaEnCurso": "Llamada en curso",
+    "conversationPanel.webcallEnCurso": "Webcall en curso",
+    "conversationPanel.enEspera": "En espera",
     "conversationPanel.volverAlVivo": "Volver al vivo",
     "conversationPanel.plantillas": "Plantillas de mensajes…",
     "conversationPanel.buscarPlantilla": "Buscar plantilla…",
