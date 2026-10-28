@@ -18,6 +18,7 @@ import {
   estadoLlamadaInterna,
   historialAgenteMock,
   historialPorCliente,
+  ocupaAlAsesorEntero,
   tipificaciones,
   type AgenteDirectorio,
   type CampaniaSaliente,
@@ -34,6 +35,14 @@ const RING_INTERNO_MS = 3000;
 // Cuánto tarda el sistema en derivar un chat después de que el agente pasa a
 // Disponible.
 const DERIVACION_CHAT_MS = 3000;
+
+// Capacidad del asesor (Olimpo → Cuentas): una llamada, una webcall o una
+// videollamada lo ocupan entero. Con una en curso no se le deriva nada; y
+// una webcall o videollamada solo llega con el asesor libre.
+function puedeLlegar(entrante: InteraccionEntrante, cola: FilaCola[]) {
+  if (cola.some((f) => ocupaAlAsesorEntero(f.canal))) return false;
+  return !(ocupaAlAsesorEntero(entrante.canal) && cola.length > 0);
+}
 
 // Brief §2 — layout de tres columnas: menú izquierdo (con la cola integrada,
 // ver LeftNav), centro (nunca colapsa) y contexto (colapsa a íconos, ancho
@@ -195,25 +204,36 @@ export function PadMockShell() {
   // La cola actual, para leerla desde el timer de derivación sin reiniciarlo
   // cada vez que cambia.
   const colaRef = useRef(cola);
-  colaRef.current = cola;
+  useEffect(() => {
+    colaRef.current = cola;
+  }, [cola]);
 
   useEffect(() => {
     if (estadoAgenteId !== "disponible" || estadoAgenteDesde === estadoInicialDesdeRef.current) return;
     const timer = window.setTimeout(() => {
       const entrante = entrantesMock[proximoChatRef.current % entrantesMock.length];
       const cola = colaRef.current;
-      // Capacidad del asesor (Olimpo → Cuentas): una llamada o una webcall lo
-      // ocupan entero. Con una en curso no se le deriva nada; y una webcall
-      // solo llega con el asesor libre. Si no puede llegar, sigue esperando
-      // (el próximo paso a Disponible la vuelve a intentar).
-      const ocupadoEntero = cola.some((f) => f.canal === "llamada" || f.canal === "webcall");
-      if (ocupadoEntero || (entrante.canal === "webcall" && cola.length > 0)) return;
+      // Si no puede llegar (capacidad, ver puedeLlegar), sigue esperando: el
+      // próximo paso a Disponible la vuelve a intentar.
+      if (!puedeLlegar(entrante, cola)) return;
       proximoChatRef.current++;
       derivarEntrante(entrante, cola.length === 0);
     }, DERIVACION_CHAT_MS);
     return () => window.clearTimeout(timer);
     // estadoAgenteDesde: cada nuevo paso a Disponible deriva otra interacción.
   }, [estadoAgenteId, estadoAgenteDesde, derivarEntrante]);
+
+  // Botones temporales de Inicio (solo para probar el mock, a pedido del PO):
+  // hacen llegar ya una interacción puntual, sin cambiar de estado. Respetan
+  // la misma regla de capacidad.
+  const simularEntrante = useCallback(
+    (id: string) => {
+      const entrante = entrantesMock.find((e) => e.id === id);
+      if (!entrante || !puedeLlegar(entrante, colaRef.current)) return;
+      derivarEntrante(entrante, colaRef.current.length === 0);
+    },
+    [derivarEntrante]
+  );
 
   const atenderEntrante = useCallback(() => {
     if (!entrante) return;
@@ -386,6 +406,8 @@ export function PadMockShell() {
           onContactar={iniciarInteraccion}
           onLlamarInterno={iniciarLlamadaInterna}
           onSimularEntrante={() => setEntrante(agenteLlamadaEntrante)}
+          entrantesSimulables={entrantesMock.map((e) => ({ entrante: e, disponible: puedeLlegar(e, cola) }))}
+          onSimularEntranteCliente={simularEntrante}
           historial={historial}
         />
       ) : (

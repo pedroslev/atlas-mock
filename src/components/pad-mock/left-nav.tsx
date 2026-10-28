@@ -275,7 +275,7 @@ export function LeftNav({
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
                   {f.porAceptar && (
                     <span className="truncate text-[0.65rem] font-medium text-primary">
-                      {f.canal === "webcall" ? t("padMock.webcallEntrante.sonando") : t("padMock.chatEntrante.porAceptar")}
+                      {f.canal !== "chat" ? t("padMock.webcallEntrante.sonando") : t("padMock.chatEntrante.porAceptar")}
                     </span>
                   )}
                   {f.interno && (

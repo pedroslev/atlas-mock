@@ -130,18 +130,21 @@ export function CuentaForm({
           </div>
         )}
 
-        {/* Webcall: el chat durante la llamada es de la cuenta, porque define
-            qué ve el cliente en la web (solo audio, o audio y chat). */}
-        {tipo === "Webcall" && (
+        {/* Webcall y videollamada: el chat durante la llamada es de la cuenta,
+            porque define qué ve el cliente en la web (solo la llamada, o la
+            llamada y el chat). */}
+        {(tipo === "Webcall" || tipo === "Videollamada") && (
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>{t("cuentas.webcall.titulo")}</CardTitle>
+              <CardTitle>{tipo === "Webcall" ? t("cuentas.webcall.titulo") : t("cuentas.videollamada.titulo")}</CardTitle>
             </CardHeader>
             <CardContent>
               <label htmlFor="chat-en-llamada" className="flex items-start justify-between gap-4">
                 <span className="flex flex-col gap-1">
                   <span className="text-sm font-medium">{t("cuentas.webcall.chatEnLlamada")}</span>
-                  <span className="text-xs text-muted-foreground">{t("cuentas.webcall.chatEnLlamadaDesc")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {tipo === "Webcall" ? t("cuentas.webcall.chatEnLlamadaDesc") : t("cuentas.videollamada.chatEnLlamadaDesc")}
+                  </span>
                 </span>
                 <Switch id="chat-en-llamada" checked={chatEnLlamada} onCheckedChange={setChatEnLlamada} />
               </label>

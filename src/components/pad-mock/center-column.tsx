@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ExternalLink, Headset, Link2, MessageSquareText, Phone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink, Headset, Link2, MessageSquareText, Phone, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
+import { VentanaFlotanteVideo, VideoPanel, type CapturaVideo } from "@/components/pad-mock/video-panel";
 import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
@@ -39,6 +40,12 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // Ctrl/Cmd+Alt+N salta a la solapa N (1 = Llamada, 2… = cada integración) —
 // mismo "número = posición" que Alt+N en la cola, con un modificador extra
 // para no chocar con ese atajo ni con nada del navegador.
+//
+// Videollamada: la solapa fija es "Video" y, si la cuenta suma chat, hay una
+// segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
+// lugar). El chat queda montado al cambiar de solapa, para no perder lo que
+// se estaba escribiendo. Compartir pantalla, capturas y ventana flotante
+// viven acá porque los usan la barra de controles y la solapa del video.
 //
 // Llamada interna (interno): sin páginas externas (CRM, tickets, etc.) — no
 // hay cliente sobre el que trabajar.
@@ -73,9 +80,25 @@ export function CenterColumn({
   const isMac = useIsMac();
   const chat = entrante?.canal === "chat";
   const webcall = entrante?.canal === "webcall";
+  const video = entrante?.canal === "videollamada";
   // La solapa muestra el chat en un chat y en una webcall cuya cuenta suma
-  // chat durante la llamada; si no, el cuerpo de una llamada.
+  // chat durante la llamada; si no, el cuerpo de una llamada. En la
+  // videollamada el chat va en su propia solapa.
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
+  const solapaChat = video && entrante?.chatEnLlamada === true;
+  const fijas = solapaChat ? 2 : 1;
+  const [compartiendo, setCompartiendo] = useState(false);
+  const [ventanaFlotante, setVentanaFlotante] = useState(false);
+  const [capturas, setCapturas] = useState<CapturaVideo[]>([]);
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<number | undefined>(undefined);
+  function capturar() {
+    const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
+    setCapturas((cur) => [...cur, { n: cur.length + 1, hora }]);
+    setFlash(true);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlash(false), 250);
+  }
   const [tab, setTab] = useState("conversacion");
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
@@ -98,7 +121,7 @@ export function CenterColumn({
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx > paginas.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx >= paginas.length + fijas) return;
       e.preventDefault();
       // Posición 1 = Llamada/Conversación (siempre una solapa). Del resto,
       // las "pestana" (solo externas) no se seleccionan — abren su link
@@ -107,7 +130,11 @@ export function CenterColumn({
         setTab("conversacion");
         return;
       }
-      const p = paginas[idx - 1];
+      if (idx === 1 && fijas === 2) {
+        setTab("chat");
+        return;
+      }
+      const p = paginas[idx - fijas];
       if (!p) return;
       if (p.modo === "pestana") {
         window.open(p.url, "_blank", "noopener,noreferrer");
@@ -117,7 +144,7 @@ export function CenterColumn({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paginas]);
+  }, [paginas, fijas]);
 
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
@@ -165,6 +192,8 @@ export function CenterColumn({
           >
             {chat ? (
               <MessageSquareText className="size-5" />
+            ) : video ? (
+              <Video className="size-5" />
             ) : webcall ? (
               <Headset className="size-5" />
             ) : (
@@ -172,7 +201,9 @@ export function CenterColumn({
             )}
             {chat
               ? t("padMock.centerColumn.conversacion")
-              : webcall
+              : video
+                ? t("padMock.centerColumn.video")
+                : webcall
                 ? t("padMock.centerColumn.webcall")
                 : interno
                   ? t("padMock.llamadaInterna.titulo")
@@ -187,6 +218,13 @@ export function CenterColumn({
             </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
+          {solapaChat && (
+            <TabsTrigger value="chat" className="flex-none gap-2 px-4 py-3 text-sm">
+              <MessageSquareText className="size-5" />
+              {t("padMock.centerColumn.chat")}
+              <Kbd className="ml-1">{shortcutMod} 2</Kbd>
+            </TabsTrigger>
+          )}
           {paginas.map((p, i) =>
             p.modo === "pestana" ? (
               // Solo externa ("blank"): no es una solapa seleccionable — un
@@ -203,7 +241,7 @@ export function CenterColumn({
                 {p.nombre}
                 <ExternalLink className="size-3.5 text-muted-foreground" />
                 <Kbd className="ml-1">
-                  {shortcutMod} {i + 2}
+                  {shortcutMod} {i + 1 + fijas}
                 </Kbd>
               </button>
             ) : (
@@ -211,7 +249,7 @@ export function CenterColumn({
                 <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
                 <Kbd className="ml-1">
-                  {shortcutMod} {i + 2}
+                  {shortcutMod} {i + 1 + fijas}
                 </Kbd>
               </TabsTrigger>
             )
@@ -219,17 +257,42 @@ export function CenterColumn({
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
-          <ConversationPanel
-            tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
-            enEspera={enEspera}
-            mensajesChat={conChat ? entrante?.mensajes : undefined}
-            interno={interno}
-            sonando={sonando}
-            nombreInterno={nombreInterno}
-            onSimularForzada={onSimularForzada}
-            onSimularRechazo={onSimularRechazo}
-          />
+          {video && entrante ? (
+            <VideoPanel
+              nombre={entrante.nombre}
+              compartiendo={compartiendo}
+              onDejarDeCompartir={() => setCompartiendo(false)}
+              ventanaFlotante={ventanaFlotante}
+              onCerrarVentanaFlotante={() => setVentanaFlotante(false)}
+              capturas={capturas}
+              flash={flash}
+            />
+          ) : (
+            <ConversationPanel
+              tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              enEspera={enEspera}
+              mensajesChat={conChat ? entrante?.mensajes : undefined}
+              interno={interno}
+              sonando={sonando}
+              nombreInterno={nombreInterno}
+              onSimularForzada={onSimularForzada}
+              onSimularRechazo={onSimularRechazo}
+            />
+          )}
         </TabsContent>
+        {solapaChat && (
+          <TabsContent
+            value="chat"
+            forceMount
+            className="min-h-0 flex-1 overflow-hidden data-[state=inactive]:hidden"
+          >
+            <ConversationPanel
+              tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              enEspera={enEspera}
+              mensajesChat={entrante?.mensajes}
+            />
+          </TabsContent>
+        )}
         {paginas
           .filter((p) => p.modo === "embebido")
           .map((p) => (
@@ -245,9 +308,27 @@ export function CenterColumn({
         onToggleEspera={onToggleEspera}
         onCerrarInteraccion={onCerrarInteraccion}
         chat={chat}
+        llamadaWeb={webcall || video}
+        video={
+          webcall || video
+            ? {
+                compartiendo,
+                onToggleCompartir: () => setCompartiendo((v) => !v),
+                ...(video && {
+                  onCaptura: capturar,
+                  ventanaFlotante,
+                  onToggleVentanaFlotante: () => setVentanaFlotante((v) => !v),
+                }),
+              }
+            : undefined
+        }
         interno={interno}
         sonando={sonando}
       />
+
+      {video && entrante && ventanaFlotante && (
+        <VentanaFlotanteVideo nombre={entrante.nombre} onCerrar={() => setVentanaFlotante(false)} />
+      )}
     </div>
   );
 }

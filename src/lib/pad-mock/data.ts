@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Phone,
   Headset,
+  Video,
   MessageCircle,
   MessageSquareText,
   Smartphone,
@@ -23,11 +24,12 @@ import {
 // whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
 // aparecen en historial y en el armado de campañas salientes. "chat" sí
 // tiene su pantalla (conversation-panel.tsx).
-export type CanalMock = "llamada" | "webcall" | "chat" | "whatsapp" | "mail" | "sms";
+export type CanalMock = "llamada" | "webcall" | "videollamada" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
   llamada: Phone,
   webcall: Headset,
+  videollamada: Video,
   chat: MessageCircle,
   whatsapp: Smartphone,
   mail: Mail,
@@ -37,6 +39,7 @@ export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
 export const CANAL_LABEL: Record<CanalMock, string> = {
   llamada: "Llamada",
   webcall: "Webcall",
+  videollamada: "Videollamada",
   chat: "Chat",
   whatsapp: "WhatsApp",
   mail: "Mail",
@@ -115,7 +118,7 @@ export type FilaCola = {
   retenidaDesde?: number;
   /** Momento en que arrancó — para la duración que queda en el historial. */
   iniciadaEn?: number;
-  /** Chat o webcall: id en entrantesMock. */
+  /** Chat, webcall o videollamada: id en entrantesMock. */
   entranteId?: string;
   /** Entrante sin atención forzada que el agente todavía no aceptó/atendió. */
   porAceptar?: boolean;
@@ -161,25 +164,28 @@ export const ADJUNTOS_CHAT = {
   archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "txt"], maxMB: 100 },
 };
 
-// Interacciones que el sistema le deriva al agente: chats y webcalls (las
-// dos las inicia siempre el cliente). Cada una viene de una campaña, y su
+// Interacciones que el sistema le deriva al agente: chats, webcalls y
+// videollamadas (las inicia siempre el cliente). Cada una viene de una campaña, y su
 // "Atención forzada" (Olimpo → Config. operativa) decide cómo llega:
 // activada, entra directo a las interacciones en curso; desactivada, se
-// ofrece para aceptar (chat) o atender (webcall).
+// ofrece para aceptar (chat) o atender (webcall y videollamada).
 // En la ficha del cliente no hay teléfono: se muestra el nombre que dejó al
 // iniciar el chat o la llamada web.
 // Webcall: se maneja como una llamada (mismos controles). Si su cuenta tiene
 // "Chat durante la llamada" (Olimpo → Cuentas), la solapa de la llamada
 // muestra además el chat, igual que la pantalla de chat.
+// Videollamada: mismos controles que la webcall, más los de video. El video
+// va en su solapa y, si la cuenta tiene "Chat durante la llamada", el chat en
+// otra solapa al lado.
 export type InteraccionEntrante = {
   id: string;
-  canal: "chat" | "webcall";
+  canal: "chat" | "webcall" | "videollamada";
   nombre: string;
   campania: string;
   /** Cuenta por la que entra (Olimpo → Cuentas). */
   cuenta: string;
   atencionForzada: boolean;
-  /** Webcall: la cuenta suma chat durante la llamada. */
+  /** Webcall o videollamada: la cuenta suma chat durante la llamada. */
   chatEnLlamada?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
@@ -239,7 +245,36 @@ export const entrantesMock: InteraccionEntrante[] = [
     claveHistorial: "martin-sosa",
     mensajes: [],
   },
+  {
+    id: "vc-1",
+    canal: "videollamada",
+    nombre: "Valentina Ruiz",
+    campania: "Ventas Online",
+    cuenta: "Videollamada Ventas",
+    atencionForzada: false,
+    chatEnLlamada: true,
+    claveHistorial: "valentina-ruiz",
+    mensajes: [
+      { autor: "cliente", texto: "Hola! Quiero ver el modelo de heladera que tienen en promoción.", hora: "17:05:12" },
+    ],
+  },
+  {
+    id: "vc-2",
+    canal: "videollamada",
+    nombre: "Diego Romero",
+    campania: "Soporte técnico Nivel 1",
+    cuenta: "Videollamada Asesoría",
+    atencionForzada: true,
+    chatEnLlamada: false,
+    claveHistorial: "diego-romero",
+    mensajes: [],
+  },
 ];
+
+// Llamada, webcall y videollamada ocupan al asesor entero (Olimpo → Cuentas).
+export function ocupaAlAsesorEntero(canal: CanalMock) {
+  return canal === "llamada" || canal === "webcall" || canal === "videollamada";
+}
 
 // Plantillas de mensajes del redactor. "descripcion" alimenta el ícono "i"
 // de ayuda del selector (hover).

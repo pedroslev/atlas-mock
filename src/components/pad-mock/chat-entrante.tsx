@@ -1,6 +1,6 @@
 "use client";
 
-import { Headset, MessageCircle, Phone, PhoneOff, X } from "lucide-react";
+import { Headset, MessageCircle, Phone, PhoneOff, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import type { InteraccionEntrante } from "@/lib/pad-mock/data";
@@ -60,11 +60,12 @@ export function ChatEntranteAviso({
   );
 }
 
-// El chat o la webcall entrante en el centro de la pantalla — mismo criterio
-// que la llamada entrante de Hermes: quién es, por qué campaña, y los dos
-// botones. Chat: su primer mensaje, Aceptar / Rechazar. Webcall: Atender /
-// Rechazar, como una llamada, y si suma chat lo indica (con lo que el cliente
-// ya escribió, si escribió algo).
+// El chat, la webcall o la videollamada entrante en el centro de la
+// pantalla — mismo criterio que la llamada entrante de Hermes: quién es, por
+// qué campaña, y los dos botones. Chat: su primer mensaje, Aceptar /
+// Rechazar. Webcall y videollamada: Atender / Rechazar, como una llamada, y
+// si suman chat lo indican (con lo que el cliente ya escribió, si escribió
+// algo).
 export function ChatEntrantePanel({
   chat,
   onAceptar,
@@ -75,8 +76,8 @@ export function ChatEntrantePanel({
   onRechazar: () => void;
 }) {
   const t = useT();
-  const webcall = chat.canal === "webcall";
-  const Icono = webcall ? Headset : MessageCircle;
+  const webcall = chat.canal !== "chat";
+  const Icono = chat.canal === "videollamada" ? Video : webcall ? Headset : MessageCircle;
   const primerMensaje = chat.mensajes.find((m) => m.autor === "cliente");
   return (
     <div className="flex h-full min-h-0 w-0 flex-1 flex-col items-center justify-center gap-5 bg-background p-6 text-center">
@@ -86,7 +87,11 @@ export function ChatEntrantePanel({
       </span>
       <div className="flex flex-col gap-1">
         <span className="text-sm text-muted-foreground">
-          {webcall ? t("padMock.webcallEntrante.titulo") : t("padMock.chatEntrante.titulo")}
+          {chat.canal === "videollamada"
+            ? t("padMock.videollamadaEntrante.titulo")
+            : webcall
+              ? t("padMock.webcallEntrante.titulo")
+              : t("padMock.chatEntrante.titulo")}
         </span>
         <span className="font-heading text-2xl font-semibold">{chat.nombre}</span>
         <span className="text-sm text-muted-foreground">{chat.campania}</span>

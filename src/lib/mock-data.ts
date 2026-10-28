@@ -216,8 +216,8 @@ export type Cuenta = {
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
   workflow?: Workflow;
-  // Solo webcall: además del audio, cliente y asesor se escriben por chat en
-  // la misma pantalla de la llamada.
+  // Solo webcall y videollamada: además del audio (o del video), cliente y
+  // asesor se escriben por chat durante la llamada.
   chatEnLlamada?: boolean;
   // Capacidad del asesor: cada uno tiene 100. Voz, webcall y videollamada ocupan los 100
   // (una a la vez) y no lo piden. En chat el tenant define el cupo y el máximo
@@ -559,6 +559,17 @@ export const cuentas: Cuenta[] = [
     descripcion: "Videollamada con asesores desde el portal del cliente",
     tipo: "Videollamada",
     identificador: "Videollamada Asesoría",
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
+    id: "acc-video-2",
+    nombre: "Videollamada Ventas",
+    descripcion: "Videollamada con chat desde la tienda online, para mostrar productos y mandar comprobantes",
+    tipo: "Videollamada",
+    identificador: "Videollamada Ventas",
+    chatEnLlamada: true,
     interactionValue: 100,
     provisioning: 1,
     provisioningLock: 100,
