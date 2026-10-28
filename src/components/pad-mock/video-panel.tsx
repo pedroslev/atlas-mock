@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-export type CapturaVideo = { n: number; hora: string };
-
 function iniciales(nombre: string) {
   return nombre
     .split(" ")
@@ -17,7 +15,7 @@ function iniciales(nombre: string) {
 }
 
 // En el mock no hay cámara: el "video" del cliente es un fondo con sus
-// iniciales. Lo comparten la solapa, la ventana flotante y las capturas.
+// iniciales. Lo comparten la solapa y la ventana flotante.
 function ImagenCliente({ nombre, chica = false }: { nombre: string; chica?: boolean }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-600 via-slate-700 to-slate-900">
@@ -35,7 +33,8 @@ function ImagenCliente({ nombre, chica = false }: { nombre: string; chica?: bool
 
 // Solapa "Video" de una videollamada: el video del cliente grande, la cámara
 // del asesor chica abajo a la derecha (o su pantalla, si la está
-// compartiendo), y las capturas que sacó. Los controles (compartir,
+// compartiendo). La captura de imagen destella acá y queda adjunta en el
+// chat (CenterColumn). Los controles (compartir,
 // captura, Picture-in-Picture) están en la barra de abajo, con los de la
 // llamada. Mientras el video está en el Picture-in-Picture, la solapa lo
 // indica en su lugar.
@@ -45,7 +44,6 @@ export function VideoPanel({
   onDejarDeCompartir,
   pip,
   onCerrarPip,
-  capturas,
   flash,
 }: {
   nombre: string;
@@ -53,7 +51,6 @@ export function VideoPanel({
   onDejarDeCompartir: () => void;
   pip: boolean;
   onCerrarPip: () => void;
-  capturas: CapturaVideo[];
   /** Destello de la captura recién sacada. */
   flash: boolean;
 }) {
@@ -103,25 +100,6 @@ export function VideoPanel({
         )}
       </div>
 
-      {capturas.length > 0 && (
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            {t("padMock.video.capturas")} ({capturas.length}) · {t("padMock.video.capturaGuardada")}
-          </span>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {capturas.map((c) => (
-              <div key={c.n} className="flex shrink-0 flex-col gap-1">
-                <div className="relative aspect-video w-28 overflow-hidden rounded-md border border-border">
-                  <ImagenCliente nombre={nombre} chica />
-                </div>
-                <span className="text-[0.65rem] text-muted-foreground">
-                  {t("padMock.video.capturaDe", { n: c.n, hora: c.hora })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -131,6 +109,39 @@ export function VideoPanel({
 // la solapa Chat, en una página externa, en Inicio o en un acceso rápido).
 // Se arrastra desde la barra de arriba y "Volver al video" lo lleva a la
 // solapa. Fuera del pad (otra pestaña u otro programa) lo cubre el
+// Cuadro del video del cliente (640x360) dibujado en un canvas: lo usan el
+// Picture-in-Picture y la captura de imagen.
+function dibujarCliente(ctx: CanvasRenderingContext2D, nombre: string) {
+  const g = ctx.createLinearGradient(0, 0, 640, 360);
+  g.addColorStop(0, "#475569");
+  g.addColorStop(1, "#0f172a");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.beginPath();
+  ctx.arc(320, 170, 70, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.font = "600 56px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(iniciales(nombre), 320, 172);
+  ctx.font = "500 22px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(nombre, 20, 336);
+}
+
+/** Captura del video del cliente como imagen PNG (dirección data:). */
+export function capturarCliente(nombre: string): { url: string; bytes: number } {
+  const canvas = document.createElement("canvas");
+  canvas.width = 640;
+  canvas.height = 360;
+  const ctx = canvas.getContext("2d");
+  if (ctx) dibujarCliente(ctx, nombre);
+  const url = canvas.toDataURL("image/png");
+  return { url, bytes: Math.round(((url.length - url.indexOf(",") - 1) * 3) / 4) };
+}
+
 // Picture-in-Picture del navegador (usePipNavegador).
 export function VentanitaVideo({ nombre, onVolver }: { nombre: string; onVolver: () => void }) {
   const t = useT();
@@ -209,24 +220,7 @@ export function usePipNavegador(nombre: string | null, onVolver: () => void) {
     canvas.height = 360;
     const ctx = canvas.getContext("2d");
     function dibujar() {
-      if (!ctx || !nombre) return;
-      const g = ctx.createLinearGradient(0, 0, 640, 360);
-      g.addColorStop(0, "#475569");
-      g.addColorStop(1, "#0f172a");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 640, 360);
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.beginPath();
-      ctx.arc(320, 170, 70, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.font = "600 56px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(iniciales(nombre), 320, 172);
-      ctx.font = "500 22px sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText(nombre, 20, 336);
+      if (ctx && nombre) dibujarCliente(ctx, nombre);
     }
     dibujar();
     // El stream necesita cuadros nuevos para seguir "en vivo".

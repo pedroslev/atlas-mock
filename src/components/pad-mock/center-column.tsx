@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Headset, Link2, MessageSquareText, Phone, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
-import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
+import { ConversationPanel, formatoTamano, type AdjuntoExterno } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { VideoPanel, type CapturaVideo } from "@/components/pad-mock/video-panel";
+import { VideoPanel, capturarCliente } from "@/components/pad-mock/video-panel";
 import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
@@ -44,8 +44,8 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // Videollamada: la solapa fija es "Video" y, si la cuenta suma chat, hay una
 // segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
 // lugar). El chat queda montado al cambiar de solapa, para no perder lo que
-// se estaba escribiendo. Compartir pantalla, capturas y ventana flotante
-// viven acá porque los usan la barra de controles y la solapa del video. El
+// se estaba escribiendo. Compartir pantalla y captura de imagen
+// viven acá porque las usan la barra de controles, la solapa del video y la del chat. El
 // Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
 // porque siguen mientras el asesor está en Inicio o en un acceso rápido: por
 // eso esta columna avisa si la solapa Video está a la vista
@@ -100,15 +100,26 @@ export function CenterColumn({
   const solapaChat = video && entrante?.chatEnLlamada === true;
   const fijas = solapaChat ? 2 : 1;
   const [compartiendo, setCompartiendo] = useState(false);
-  const [capturas, setCapturas] = useState<CapturaVideo[]>([]);
+  // Captura de imagen (solo videollamada con chat): destella el video, queda
+  // adjunta en el redactor del chat como "Captura-HH:MM" y lleva a la solapa
+  // Chat; el asesor decide si la envía o la quita.
+  const [captura, setCaptura] = useState<AdjuntoExterno | undefined>();
   const [flash, setFlash] = useState(false);
   const flashTimer = useRef<number | undefined>(undefined);
   function capturar() {
-    const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
-    setCapturas((cur) => [...cur, { n: cur.length + 1, hora }]);
+    if (!entrante) return;
+    const hora = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const { url, bytes } = capturarCliente(entrante.nombre);
+    setCaptura((cur) => ({
+      id: (cur?.id ?? 0) + 1,
+      adjunto: { nombre: `Captura-${hora}`, tamano: formatoTamano(bytes), esImagen: true, url },
+    }));
     setFlash(true);
     window.clearTimeout(flashTimer.current);
-    flashTimer.current = window.setTimeout(() => setFlash(false), 250);
+    flashTimer.current = window.setTimeout(() => {
+      setFlash(false);
+      setTab("chat");
+    }, 250);
   }
   const [tab, setTab] = useState("conversacion");
   const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
@@ -285,7 +296,6 @@ export function CenterColumn({
               onDejarDeCompartir={() => setCompartiendo(false)}
               pip={pip?.activo ?? false}
               onCerrarPip={() => pip?.alternar()}
-              capturas={capturas}
               flash={flash}
             />
           ) : (
@@ -311,6 +321,7 @@ export function CenterColumn({
               tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
               enEspera={enEspera}
               mensajesChat={entrante?.mensajes}
+              adjuntoNuevo={captura}
             />
           </TabsContent>
         )}
@@ -336,7 +347,8 @@ export function CenterColumn({
                 compartiendo,
                 onToggleCompartir: () => setCompartiendo((v) => !v),
                 ...(video && {
-                  onCaptura: capturar,
+                  esVideo: true,
+                  ...(solapaChat && { onCaptura: capturar }),
                   ...(pip && { pip: pip.activo, onTogglePip: pip.alternar }),
                 }),
               }

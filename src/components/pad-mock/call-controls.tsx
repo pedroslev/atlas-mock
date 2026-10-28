@@ -214,8 +214,9 @@ export function InteractionControls({
   /** Webcall o videollamada. */
   llamadaWeb?: boolean;
   /** Compartir pantalla (webcall y videollamada) y, solo en videollamada,
-   *  captura y Picture-in-Picture. */
+   *  Picture-in-Picture y — si la cuenta suma chat — captura de imagen. */
   video?: {
+    esVideo?: boolean;
     compartiendo: boolean;
     onToggleCompartir: () => void;
     onCaptura?: () => void;
@@ -238,8 +239,7 @@ export function InteractionControls({
   // interacción. El botón de la derecha es el mismo, cambia
   // de rol según "cortada".
   const [cortada, setCortada] = useState(false);
-  // Videollamada: tiene captura de imagen (solo la videollamada la recibe).
-  const esVideo = !!video?.onCaptura;
+  const esVideo = !!video?.esVideo;
   const [tipSeleccionada, setTipSeleccionada] = useState(tipificaciones[0]?.id);
 
   function cerrarMarcar(next: boolean) {

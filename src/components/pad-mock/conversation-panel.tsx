@@ -244,10 +244,12 @@ const EXTENSIONES_ARCHIVO = ADJUNTOS_CHAT.archivo.extensiones;
 // pueden mandar (los demás aparecen deshabilitados u ocultos).
 const ACCEPT_ADJUNTOS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_ARCHIVO].map((e) => `.${e}`).join(",");
 
-function formatoTamano(bytes: number) {
+export function formatoTamano(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
 }
+
+export type AdjuntoExterno = { id: number; adjunto: AdjuntoChat };
 
 type ArchivoRechazado = { nombre: string; motivo: "tipo" | "tamano"; maxMB?: number };
 
@@ -311,11 +313,25 @@ function etiquetaAtajo(a: AtajoFormato, isMac: boolean) {
 // filtrar antes; por eso, al elegir, se revisa de nuevo y lo que no se puede
 // mandar se avisa en un diálogo. Lo que sí, queda como ficha arriba del
 // cuadro hasta enviar (se puede quitar).
-function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void }) {
+//
+// adjuntoNuevo: un adjunto que llega de afuera (la captura de imagen de la
+// videollamada); cada id nuevo se suma a las fichas, igual que uno elegido.
+function Redactor({
+  onEnviar,
+  adjuntoNuevo,
+}: {
+  onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void;
+  adjuntoNuevo?: AdjuntoExterno;
+}) {
   const t = useT();
   const isMac = useIsMac();
   const [texto, setTexto] = useState("");
   const [adjuntos, setAdjuntos] = useState<AdjuntoChat[]>([]);
+  const [adjuntoNuevoVisto, setAdjuntoNuevoVisto] = useState(adjuntoNuevo?.id);
+  if (adjuntoNuevo && adjuntoNuevo.id !== adjuntoNuevoVisto) {
+    setAdjuntoNuevoVisto(adjuntoNuevo.id);
+    setAdjuntos((cur) => [...cur, adjuntoNuevo.adjunto]);
+  }
   const [rechazados, setRechazados] = useState<ArchivoRechazado[]>([]);
   const archivoRef = useRef<HTMLInputElement>(null);
   const [formatoAbierto, setFormatoAbierto] = useState(false);
@@ -630,7 +646,13 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
 
 // Chat en curso: el hilo arriba y el redactor abajo. Lo que envía el asesor
 // se suma al hilo (con su formato) — en el mock no hay cliente del otro lado.
-function ChatPanel({ mensajesIniciales }: { mensajesIniciales: MensajeChat[] }) {
+function ChatPanel({
+  mensajesIniciales,
+  adjuntoNuevo,
+}: {
+  mensajesIniciales: MensajeChat[];
+  adjuntoNuevo?: AdjuntoExterno;
+}) {
   const [mensajes, setMensajes] = useState(mensajesIniciales);
   function enviar(texto: string, adjuntos: AdjuntoChat[]) {
     const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
@@ -642,7 +664,7 @@ function ChatPanel({ mensajesIniciales }: { mensajesIniciales: MensajeChat[] }) 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <HiloChat mensajes={mensajes} />
-      <Redactor onEnviar={enviar} />
+      <Redactor onEnviar={enviar} adjuntoNuevo={adjuntoNuevo} />
     </div>
   );
 }
@@ -666,6 +688,7 @@ export function ConversationPanel({
   nombreInterno,
   onSimularForzada,
   onSimularRechazo,
+  adjuntoNuevo,
 }: {
   tiempo: string;
   enEspera: boolean;
@@ -676,10 +699,12 @@ export function ConversationPanel({
   nombreInterno?: string;
   onSimularForzada?: () => void;
   onSimularRechazo?: () => void;
+  /** Chat: adjunto que se suma al redactor (captura de la videollamada). */
+  adjuntoNuevo?: AdjuntoExterno;
 }) {
   const t = useT();
   if (mensajesChat) {
-    return <ChatPanel mensajesIniciales={mensajesChat} />;
+    return <ChatPanel mensajesIniciales={mensajesChat} adjuntoNuevo={adjuntoNuevo} />;
   }
   if (interno) {
     return (
