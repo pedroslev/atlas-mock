@@ -54,26 +54,67 @@ import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 // Chat: hilo de mensajes arriba (cliente a la izquierda, asesor a la
 // derecha) con "Volver al vivo", y el redactor abajo. Traído de la branch
 // feature/pad-mock-omnicanal; la franja de Copiloto queda afuera.
+// Distancia al final (px) a partir de la cual el asesor "perdió el vivo".
+const UMBRAL_VIVO_PX = 48;
+// Atajo de "Volver al vivo": funciona desde cualquier lugar del chat, también
+// con el foco en el cuadro de texto, y solo actúa si el vivo está perdido.
+const ATAJO_VIVO: AtajoFormato = { shift: true, code: "ArrowDown", tecla: "↓" };
+
 function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
   const t = useT();
+  const isMac = useIsMac();
   const hiloRef = useRef<HTMLDivElement>(null);
+  // "Volver al vivo" aparece solo cuando el asesor sube y deja de ver lo
+  // último; al volver abajo (scrolleando o con el botón) desaparece.
+  const [fueraDelVivo, setFueraDelVivo] = useState(false);
+
+  function actualizarVivo() {
+    const el = hiloRef.current;
+    if (!el) return;
+    setFueraDelVivo(el.scrollHeight - el.scrollTop - el.clientHeight > UMBRAL_VIVO_PX);
+  }
+
+  function volverAlVivo() {
+    const el = hiloRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }
+
   // Cada mensaje nuevo (por ejemplo, uno que acaba de enviar el asesor) deja
   // el hilo abajo de todo, en lo último.
   useEffect(() => {
     hiloRef.current?.scrollTo({ top: hiloRef.current.scrollHeight });
+    actualizarVivo();
   }, [mensajes.length]);
-  return (
-    <div ref={hiloRef} className="relative flex-1 overflow-y-auto p-4">
-      <MensajesChat mensajes={mensajes} />
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="absolute bottom-3 left-1/2 -translate-x-1/2 gap-1.5 shadow-sm"
-      >
-        <ArrowDown className="size-3.5" />
-        {t("padMock.conversationPanel.volverAlVivo")}
-      </Button>
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!fueraDelVivo || !(e.ctrlKey || e.metaKey) || e.altKey || !e.shiftKey) return;
+      if (e.key !== "ArrowDown") return;
+      e.preventDefault();
+      volverAlVivo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fueraDelVivo]);
+
+  return (
+    <div className="relative min-h-0 flex-1">
+      <div ref={hiloRef} onScroll={actualizarVivo} className="h-full overflow-y-auto p-4">
+        <MensajesChat mensajes={mensajes} />
+      </div>
+
+      {fueraDelVivo && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={volverAlVivo}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 gap-1.5 shadow-sm"
+        >
+          <ArrowDown className="size-3.5" />
+          {t("padMock.conversationPanel.volverAlVivo")}
+          <Kbd className="ml-0.5">{etiquetaAtajo(ATAJO_VIVO, isMac)}</Kbd>
+        </Button>
+      )}
     </div>
   );
 }
