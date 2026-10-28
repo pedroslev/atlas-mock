@@ -8,7 +8,8 @@ import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
 import { ChatEntranteAviso, ChatEntrantePanel } from "@/components/pad-mock/chat-entrante";
-import { VentanitaVideo, usePipNavegador } from "@/components/pad-mock/video-panel";
+import { useT } from "@/lib/i18n";
+import { VentanitaVideo, usePipNavegador, type FuenteVideo } from "@/components/pad-mock/video-panel";
 import { formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
@@ -54,6 +55,7 @@ function puedeLlegar(entrante: InteraccionEntrante, cola: FilaCola[]) {
 // LeftNav también lo necesita, para mostrar el tiempo en espera en la fila de
 // la cola de la interacción activa.
 export function PadMockShell() {
+  const t = useT();
   // A pedido: al ingresar no hay ninguna interacción activa — la cola
   // arranca vacía, no con los dos escenarios de ejemplo precargados. Recién
   // aparecen cuando el agente las crea (ver iniciarInteraccion) desde el "+"
@@ -357,12 +359,36 @@ export function PadMockShell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [cola, seleccionarFila]);
 
-  // Videollamada en curso (ya atendida). Mientras dura, su video sigue a la
-  // vista aunque el asesor no esté en la solapa Video: dentro del pad, con
-  // la ventanita (VentanitaVideo); fuera del pad, con el Picture-in-Picture
-  // del navegador. Las dos vuelven a la solapa Video.
-  const filaVideo = cola.find((f) => f.canal === "videollamada" && !f.porAceptar);
+  // Videollamada o webcall en curso (ya atendida; hay una sola a la vez por
+  // la capacidad del asesor). Lo que el asesor mira en ella sigue a la vista
+  // aunque no esté en su solapa: dentro del pad, con la ventanita
+  // (VentanitaVideo); fuera del pad, con el Picture-in-Picture del
+  // navegador. Las dos vuelven a la solapa.
+  // - Videollamada: siempre, con lo fijado en el recuadro grande.
+  // - Webcall: solo mientras el cliente comparte su pantalla, con la pantalla.
+  // Que el cliente comparta y el pin viven acá (no en CenterColumn, que se
+  // vuelve a armar al cambiar de interacción) para que la ventanita y el
+  // Picture-in-Picture los sigan desde cualquier parte del pad.
+  const filaVideo = cola.find((f) => (f.canal === "videollamada" || f.canal === "webcall") && !f.porAceptar);
+  const filaVideoEsVideo = filaVideo?.canal === "videollamada";
   const nombreVideo = filaVideo ? (entrantesMock.find((e) => e.id === filaVideo.entranteId)?.nombre ?? null) : null;
+  const [clienteComparte, setClienteComparte] = useState(false);
+  const [fijado, setFijado] = useState<FuenteVideo>("cliente");
+  const [filaVideoVista, setFilaVideoVista] = useState(filaVideo?.id);
+  if (filaVideo?.id !== filaVideoVista) {
+    setFilaVideoVista(filaVideo?.id);
+    setClienteComparte(false);
+    setFijado("cliente");
+  }
+  // Al empezar a compartir, la pantalla pasa sola al recuadro grande; al
+  // terminar, si estaba fijada, vuelve la cámara del cliente.
+  function alternarClienteComparte() {
+    if (clienteComparte) setFijado((f) => (f === "pantalla" ? "cliente" : f));
+    else setFijado("pantalla");
+    setClienteComparte(!clienteComparte);
+  }
+  const sigueALaVista = filaVideoEsVideo || clienteComparte;
+  const fuenteALaVista: FuenteVideo = filaVideoEsVideo ? fijado : "pantalla";
   const [solapaVideoVisible, setSolapaVideoVisible] = useState(false);
   const [pedidoSolapaVideo, setPedidoSolapaVideo] = useState(0);
   const volverAlVideo = useCallback(() => {
@@ -373,7 +399,12 @@ export function PadMockShell() {
     else seleccionarInteraccion(filaVideo.id, filaVideo.retenidaDesde);
     setPedidoSolapaVideo((n) => n + 1);
   }, [filaVideo, interaccionActivaId, seleccionarInteraccion]);
-  const pip = usePipNavegador(nombreVideo, volverAlVideo);
+  const pip = usePipNavegador(
+    sigueALaVista ? nombreVideo : null,
+    fuenteALaVista,
+    t("padMock.video.tuCamara"),
+    volverAlVideo
+  );
 
   const hayInteraccionActiva = interaccionActivaId !== null;
   const accesoActivo = accesosRapidosMock.find((a) => a.id === accesoAbiertoId);
@@ -454,6 +485,10 @@ export function PadMockShell() {
                 filaActiva?.sonando ? () => rechazarSaliente(filaActiva.id) : undefined
               }
               pip={pip}
+              clienteComparte={clienteComparte}
+              onAlternarClienteComparte={alternarClienteComparte}
+              fijado={fijado}
+              onFijar={setFijado}
               onSolapaVideoVisible={setSolapaVideoVisible}
               pedidoSolapaVideo={pedidoSolapaVideo}
             />
@@ -483,8 +518,13 @@ export function PadMockShell() {
         />
       )}
 
-      {nombreVideo && !solapaVideoVisible && !pip.activo && (
-        <VentanitaVideo nombre={nombreVideo} onVolver={volverAlVideo} />
+      {nombreVideo && sigueALaVista && !solapaVideoVisible && !pip.activo && (
+        <VentanitaVideo
+          nombre={nombreVideo}
+          fuente={fuenteALaVista}
+          webcall={!filaVideoEsVideo}
+          onVolver={volverAlVideo}
+        />
       )}
 
       {entrante && (

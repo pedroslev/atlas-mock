@@ -97,13 +97,14 @@ function ContenidoFuente({
 // Solapa "Video" de una videollamada: un recuadro grande y, en la esquina,
 // los recuadros chicos del resto — la cámara del asesor (o su pantalla, si
 // la está compartiendo) y, cuando el cliente comparte la suya, su cámara o
-// su pantalla. Mientras el cliente comparte, cada recuadro chico tiene un
-// pin para fijarlo en el grande (el asesor elige qué ver grande: la
-// pantalla del cliente, su cámara o la propia). La captura de imagen
+// su pantalla. Cada recuadro chico tiene un pin para fijarlo en el grande
+// (el asesor elige qué ver grande: la cámara del cliente, su pantalla si la
+// comparte, o la propia). La captura de imagen
 // destella acá y queda adjunta en el chat (CenterColumn). Los controles
 // (compartir, captura, Picture-in-Picture) están en la barra de abajo, con
-// los de la llamada. Mientras el video está en el Picture-in-Picture, la
-// solapa lo indica en su lugar.
+// los de la llamada. La ventanita y el Picture-in-Picture muestran lo
+// fijado en grande; mientras está en el Picture-in-Picture, la solapa lo
+// indica en su lugar.
 export function VideoPanel({
   nombre,
   compartiendo,
@@ -157,18 +158,12 @@ export function VideoPanel({
 
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-slate-900">
         {pip ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-slate-300">
-            <PictureInPicture2 className="size-8" />
-            {t("padMock.video.enPip")}
-            <Button size="sm" variant="secondary" onClick={onCerrarPip}>
-              {t("padMock.video.volverAca")}
-            </Button>
-          </div>
+          <EnPip onCerrarPip={onCerrarPip} />
         ) : (
           <>
             <ContenidoFuente fuente={fijado} nombre={nombre} compartiendo={compartiendo} chica={false} />
             <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
-              {clienteComparte && <Pin className="size-3" />}
+              <Pin className="size-3" />
               {etiqueta(fijado)}
             </span>
             <div className="absolute right-3 bottom-3 flex gap-2">
@@ -183,17 +178,15 @@ export function VideoPanel({
                     <span className="absolute bottom-1 left-1.5 max-w-[80%] truncate rounded bg-black/40 px-1 text-[0.65rem] text-white">
                       {etiqueta(f)}
                     </span>
-                    {clienteComparte && (
-                      <button
-                        type="button"
-                        onClick={() => onFijar(f)}
-                        aria-label={t("padMock.video.fijar", { fuente: etiqueta(f) })}
-                        title={t("padMock.video.fijar", { fuente: etiqueta(f) })}
-                        className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/50 text-white hover:bg-black/75"
-                      >
-                        <Pin className="size-3.5" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onFijar(f)}
+                      aria-label={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                      title={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                      className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/50 text-white hover:bg-black/75"
+                    >
+                      <Pin className="size-3.5" />
+                    </button>
                   </div>
                 ))}
             </div>
@@ -211,30 +204,55 @@ export function VideoPanel({
   );
 }
 
+function EnPip({ onCerrarPip }: { onCerrarPip: () => void }) {
+  const t = useT();
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 bg-slate-900 text-sm text-slate-300">
+      <PictureInPicture2 className="size-8" />
+      {t("padMock.video.enPip")}
+      <Button size="sm" variant="secondary" onClick={onCerrarPip}>
+        {t("padMock.video.volverAca")}
+      </Button>
+    </div>
+  );
+}
+
 // Solapa "Pantalla del cliente" de una webcall: aparece solo mientras el
 // cliente comparte su pantalla (el resto del tiempo la webcall prioriza el
-// chat, como siempre).
-export function PantallaClientePanel({ nombre }: { nombre: string }) {
+// chat, como siempre). Igual que el video de una videollamada, la pantalla
+// tiene Picture-in-Picture (botón de la barra) y, fuera de esta solapa, la
+// sigue la ventanita.
+export function PantallaClientePanel({
+  nombre,
+  pip,
+  onCerrarPip,
+}: {
+  nombre: string;
+  pip: boolean;
+  onCerrarPip: () => void;
+}) {
   const t = useT();
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border">
-        <PantallaCliente />
-        <span className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
-          {t("padMock.video.pantallaDe", { nombre })}
-        </span>
+        {pip ? (
+          <EnPip onCerrarPip={onCerrarPip} />
+        ) : (
+          <>
+            <PantallaCliente />
+            <span className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
+              {t("padMock.video.pantallaDe", { nombre })}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-// Ventanita del video dentro del pad: aparece sola mientras hay una
-// videollamada en curso y el asesor no está mirando la solapa Video (está en
-// la solapa Chat, en una página externa, en Inicio o en un acceso rápido).
-// Se arrastra desde la barra de arriba y "Volver al video" lo lleva a la
-// solapa. Fuera del pad (otra pestaña u otro programa) lo cubre el
-// Cuadro del video del cliente (640x360) dibujado en un canvas: lo usan el
-// Picture-in-Picture y la captura de imagen.
+// Cuadros del video (640x360) dibujados en un canvas: los usan el
+// Picture-in-Picture y la captura de imagen. Son los mismos dibujos que
+// ImagenCliente, PantallaCliente y la cámara del asesor.
 function dibujarCliente(ctx: CanvasRenderingContext2D, nombre: string) {
   const g = ctx.createLinearGradient(0, 0, 640, 360);
   g.addColorStop(0, "#475569");
@@ -255,6 +273,48 @@ function dibujarCliente(ctx: CanvasRenderingContext2D, nombre: string) {
   ctx.fillText(nombre, 20, 336);
 }
 
+function dibujarPantalla(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = "#f1f5f9";
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = "#cbd5e1";
+  ctx.fillRect(0, 0, 640, 26);
+  ctx.fillStyle = "#94a3b8";
+  [14, 30, 46].forEach((x) => {
+    ctx.beginPath();
+    ctx.arc(x, 13, 5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.fillRect(64, 6, 560, 14);
+  ctx.fillStyle = "#cbd5e1";
+  ctx.fillRect(20, 44, 200, 26);
+  for (let i = 0; i < 3; i++) {
+    const y = 90 + i * 76;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(20, y, 390, 60);
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillRect(32, y + 8, 44, 44);
+    ctx.fillRect(90, y + 24, 300, 12);
+  }
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(430, 44, 190, 296);
+  ctx.fillStyle = "#e2e8f0";
+  ctx.fillRect(442, 58, 140, 18);
+  ctx.fillRect(442, 86, 100, 18);
+  ctx.fillStyle = "rgba(14,165,233,0.7)";
+  ctx.fillRect(442, 290, 166, 38);
+}
+
+function dibujarAsesor(ctx: CanvasRenderingContext2D, etiqueta: string) {
+  ctx.fillStyle = "#334155";
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.font = "500 22px sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(etiqueta, 20, 336);
+}
+
 /** Captura del video del cliente como imagen PNG (dirección data:). */
 export function capturarCliente(nombre: string): { url: string; bytes: number } {
   const canvas = document.createElement("canvas");
@@ -266,18 +326,37 @@ export function capturarCliente(nombre: string): { url: string; bytes: number } 
   return { url, bytes: Math.round(((url.length - url.indexOf(",") - 1) * 3) / 4) };
 }
 
+// Ventanita del video dentro del pad: aparece sola mientras hay una
+// videollamada en curso (o una webcall con el cliente compartiendo su
+// pantalla) y el asesor no está mirando su solapa (está en el chat, en una
+// página externa, en Inicio o en un acceso rápido). Muestra lo mismo que esa
+// solapa: lo fijado en grande en la videollamada, la pantalla del cliente en
+// la webcall. Se arrastra desde la barra de arriba y el botón lleva a la
+// solapa. Fuera del pad (otra pestaña u otro programa) lo cubre el
 // Picture-in-Picture del navegador (usePipNavegador).
-export function VentanitaVideo({ nombre, onVolver }: { nombre: string; onVolver: () => void }) {
+export function VentanitaVideo({
+  nombre,
+  fuente,
+  webcall = false,
+  onVolver,
+}: {
+  nombre: string;
+  fuente: FuenteVideo;
+  /** Webcall: el botón vuelve a la solapa "Pantalla del cliente". */
+  webcall?: boolean;
+  onVolver: () => void;
+}) {
   const t = useT();
   // Distancia al borde inferior derecho de la pantalla: arranca por encima
   // del redactor del chat y de la barra de controles.
   const [pos, setPos] = useState({ right: 24, bottom: 220 });
   const arrastre = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
+  const volver = webcall ? t("padMock.video.volverALaPantalla") : t("padMock.video.volverAlVideo");
 
   return (
     <div
       role="dialog"
-      aria-label={t("padMock.video.ventanita")}
+      aria-label={webcall ? t("padMock.video.ventanitaPantalla") : t("padMock.video.ventanita")}
       style={{ right: pos.right, bottom: pos.bottom }}
       className="fixed z-50 w-64 overflow-hidden rounded-xl border border-border bg-card shadow-xl"
     >
@@ -300,42 +379,54 @@ export function VentanitaVideo({ nombre, onVolver }: { nombre: string; onVolver:
         }}
       >
         <GripHorizontal className="size-3.5 text-muted-foreground" />
-        <span className="flex-1 truncate font-medium">{nombre}</span>
+        <span className="flex-1 truncate font-medium">
+          {fuente === "pantalla" ? t("padMock.video.pantallaDe", { nombre }) : nombre}
+        </span>
       </div>
       <button
         type="button"
         onClick={onVolver}
         className="group relative block aspect-video w-full"
-        aria-label={t("padMock.video.volverAlVideo")}
+        aria-label={volver}
       >
-        <ImagenCliente nombre={nombre} chica />
+        <ContenidoFuente fuente={fuente} nombre={nombre} compartiendo={false} chica />
         <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-black/55 py-1.5 text-xs font-medium text-white group-hover:bg-black/70">
           <Maximize2 className="size-3.5" />
-          {t("padMock.video.volverAlVideo")}
+          {volver}
         </span>
       </button>
     </div>
   );
 }
 
-// Picture-in-Picture del navegador: el video del cliente en una ventana del
-// sistema que queda encima de todo, también fuera del navegador — para que
-// el asesor siga viendo al cliente mientras busca información en otro lado.
+// Picture-in-Picture del navegador: el video en una ventana del sistema que
+// queda encima de todo, también fuera del navegador — para que el asesor
+// siga viendo al cliente (o su pantalla) mientras busca información en otro
+// lado. Muestra lo mismo que la ventanita: en la videollamada, lo fijado en
+// grande (si el asesor cambia el pin, cambia también acá); en la webcall, la
+// pantalla del cliente mientras la comparte.
 // - El botón de la barra la abre y la cierra.
 // - Al salir de la pestaña se abre sola donde el navegador lo permite (Chrome
 //   lo hace en videollamadas con cámara o micrófono en uso; en el mock, que
 //   no usa la cámara, puede no pasar).
-// - "Volver a la pestaña" de la ventana trae al asesor a la solapa Video;
+// - "Volver a la pestaña" de la ventana trae al asesor a su solapa;
 //   cerrarla con la X no lo mueve de donde está.
-// En el mock no hay cámara: el video es un dibujo con las iniciales.
-export function usePipNavegador(nombre: string | null, onVolver: () => void) {
+// En el mock no hay cámara: el video es un dibujo.
+export function usePipNavegador(
+  nombre: string | null,
+  fuente: FuenteVideo,
+  etiquetaAsesor: string,
+  onVolver: () => void
+) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const onVolverRef = useRef(onVolver);
+  const fuenteRef = useRef({ fuente, etiquetaAsesor });
   const [activo, setActivo] = useState(false);
 
   useEffect(() => {
     onVolverRef.current = onVolver;
-  }, [onVolver]);
+    fuenteRef.current = { fuente, etiquetaAsesor };
+  }, [onVolver, fuente, etiquetaAsesor]);
 
   useEffect(() => {
     if (!nombre || !document.pictureInPictureEnabled) return;
@@ -344,10 +435,15 @@ export function usePipNavegador(nombre: string | null, onVolver: () => void) {
     canvas.height = 360;
     const ctx = canvas.getContext("2d");
     function dibujar() {
-      if (ctx && nombre) dibujarCliente(ctx, nombre);
+      if (!ctx || !nombre) return;
+      const f = fuenteRef.current;
+      if (f.fuente === "pantalla") dibujarPantalla(ctx);
+      else if (f.fuente === "asesor") dibujarAsesor(ctx, f.etiquetaAsesor);
+      else dibujarCliente(ctx, nombre);
     }
     dibujar();
-    // El stream necesita cuadros nuevos para seguir "en vivo".
+    // El stream necesita cuadros nuevos para seguir "en vivo" (y así toma
+    // el cambio de pin).
     const intervalo = window.setInterval(dibujar, 500);
 
     const video = document.createElement("video");

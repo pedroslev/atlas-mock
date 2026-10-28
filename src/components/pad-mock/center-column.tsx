@@ -69,6 +69,10 @@ export function CenterColumn({
   pip,
   onSolapaVideoVisible,
   pedidoSolapaVideo = 0,
+  clienteComparte = false,
+  onAlternarClienteComparte,
+  fijado = "cliente",
+  onFijar,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -86,7 +90,14 @@ export function CenterColumn({
   /** Videollamada: Picture-in-Picture del navegador. */
   pip?: { activo: boolean; alternar: () => void };
   onSolapaVideoVisible?: (visible: boolean) => void;
-  /** Cada vez que cambia, vuelve a la solapa Video. */
+  /** El cliente comparte su pantalla (webcall y videollamada). */
+  clienteComparte?: boolean;
+  onAlternarClienteComparte?: () => void;
+  /** Videollamada: lo que se ve en el recuadro grande. */
+  fijado?: FuenteVideo;
+  onFijar?: (f: FuenteVideo) => void;
+  /** Cada vez que cambia, vuelve a la solapa Video (o a Pantalla del
+   *  cliente, en la webcall). */
   pedidoSolapaVideo?: number;
 }) {
   const t = useT();
@@ -99,16 +110,9 @@ export function CenterColumn({
   // videollamada el chat va en su propia solapa.
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const solapaChat = video && entrante?.chatEnLlamada === true;
-  // El cliente comparte su pantalla (en el mock, con el simulador de abajo).
-  // En la videollamada pasa sola al recuadro grande y el asesor puede fijar
-  // otra cosa con el pin; en la webcall aparece la solapa "Pantalla del
-  // cliente" mientras dure.
-  const [clienteComparte, setClienteComparte] = useState(false);
-  const [fijado, setFijado] = useState<FuenteVideo>("cliente");
-  function alternarClienteComparte() {
-    setClienteComparte(!clienteComparte);
-    setFijado(clienteComparte ? "cliente" : "pantalla");
-  }
+  // El cliente comparte su pantalla (en el mock, con el simulador de abajo;
+  // el estado vive en pad-mock-shell.tsx). En la webcall aparece la solapa
+  // "Pantalla del cliente" mientras dure.
   const solapaPantalla = webcall && clienteComparte;
   const fijas = solapaChat || solapaPantalla ? 2 : 1;
   const [compartiendo, setCompartiendo] = useState(false);
@@ -140,9 +144,11 @@ export function CenterColumn({
   const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
   if (pedidoSolapaVideo !== pedidoAtendido) {
     setPedidoAtendido(pedidoSolapaVideo);
-    setTab("conversacion");
+    setTab(webcall ? "pantalla" : "conversacion");
   }
-  const solapaVideoVisible = video && tab === "conversacion";
+  // La solapa que siguen la ventanita y el Picture-in-Picture: Video en la
+  // videollamada, Pantalla del cliente en la webcall.
+  const solapaVideoVisible = (video && tab === "conversacion") || (solapaPantalla && tab === "pantalla");
   useEffect(() => {
     onSolapaVideoVisible?.(solapaVideoVisible);
   }, [solapaVideoVisible, onSolapaVideoVisible]);
@@ -318,7 +324,7 @@ export function CenterColumn({
               onDejarDeCompartir={() => setCompartiendo(false)}
               clienteComparte={clienteComparte}
               fijado={fijado}
-              onFijar={setFijado}
+              onFijar={onFijar ?? (() => {})}
               pip={pip?.activo ?? false}
               onCerrarPip={() => pip?.alternar()}
               flash={flash}
@@ -352,7 +358,11 @@ export function CenterColumn({
         )}
         {solapaPantalla && entrante && (
           <TabsContent value="pantalla" className="min-h-0 flex-1 overflow-hidden">
-            <PantallaClientePanel nombre={entrante.nombre} />
+            <PantallaClientePanel
+              nombre={entrante.nombre}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
+            />
           </TabsContent>
         )}
         {paginas
@@ -371,7 +381,7 @@ export function CenterColumn({
           {t("padMock.simularComparte.titulo")}
           <button
             type="button"
-            onClick={alternarClienteComparte}
+            onClick={onAlternarClienteComparte}
             className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline"
           >
             <MonitorUp className="size-3.5" />
@@ -395,8 +405,10 @@ export function CenterColumn({
                 ...(video && {
                   esVideo: true,
                   ...(solapaChat && { onCaptura: capturar }),
-                  ...(pip && { pip: pip.activo, onTogglePip: pip.alternar }),
                 }),
+                // Picture-in-Picture: el video en la videollamada; la
+                // pantalla del cliente en la webcall, mientras la comparte.
+                ...(pip && (video || solapaPantalla) && { pip: pip.activo, onTogglePip: pip.alternar }),
               }
             : undefined
         }
