@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { FileText, MessageCircle, Square, Volume2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,7 @@ import type { AdjuntoChat, MensajeChat } from "@/lib/pad-mock/data";
 import { segmentar, tipoDeLinea } from "@/lib/pad-mock/formato-chat";
 import { useLeerEnVozAlta } from "@/lib/pad-mock/voz";
 import { useT } from "@/lib/i18n";
+import { VisorAdjunto } from "@/components/pad-mock/visor-adjunto";
 
 /** El texto de un mensaje sin las marcas de formato, para leerlo en voz alta. */
 function textoPlano(texto: string) {
@@ -61,17 +63,39 @@ function TextoConFormato({ texto }: { texto: string }) {
 }
 
 // Archivo dentro de una burbuja: la imagen se ve en miniatura; el resto,
-// como una ficha con el nombre y el tamaño.
-function AdjuntoEnMensaje({ adjunto, deAgente }: { adjunto: AdjuntoChat; deAgente: boolean }) {
+// como una ficha con el nombre y el tamaño. Al tocarlo se abre en el visor
+// (VisorAdjunto), dentro de Hermes.
+function AdjuntoEnMensaje({
+  adjunto,
+  deAgente,
+  onAbrir,
+}: {
+  adjunto: AdjuntoChat;
+  deAgente: boolean;
+  onAbrir: () => void;
+}) {
+  const t = useT();
   if (adjunto.esImagen && adjunto.url) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={adjunto.url} alt={adjunto.nombre} className="max-h-48 rounded-lg object-cover" />;
+    return (
+      <button
+        type="button"
+        onClick={onAbrir}
+        aria-label={t("padMock.visor.abrir", { nombre: adjunto.nombre })}
+        className="block cursor-zoom-in overflow-hidden rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={adjunto.url} alt={adjunto.nombre} className="max-h-48 object-cover" />
+      </button>
+    );
   }
   return (
-    <div
+    <button
+      type="button"
+      onClick={onAbrir}
+      aria-label={t("padMock.visor.abrir", { nombre: adjunto.nombre })}
       className={cn(
-        "flex items-center gap-2 rounded-lg px-2.5 py-2",
-        deAgente ? "bg-primary-foreground/15" : "bg-background"
+        "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        deAgente ? "bg-primary-foreground/15 hover:bg-primary-foreground/25" : "bg-background hover:bg-background/70"
       )}
     >
       <FileText className="size-5 shrink-0" />
@@ -81,7 +105,7 @@ function AdjuntoEnMensaje({ adjunto, deAgente }: { adjunto: AdjuntoChat; deAgent
           {adjunto.tamano}
         </span>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -94,8 +118,10 @@ function AdjuntoEnMensaje({ adjunto, deAgente }: { adjunto: AdjuntoChat; deAgent
 export function MensajesChat({ mensajes, escuchar = false }: { mensajes: MensajeChat[]; escuchar?: boolean }) {
   const t = useT();
   const voz = useLeerEnVozAlta();
+  const [visor, setVisor] = useState<{ adjunto: AdjuntoChat; deCliente: boolean } | null>(null);
   return (
     <div className="flex flex-col gap-2.5">
+      <VisorAdjunto adjunto={visor?.adjunto ?? null} deCliente={visor?.deCliente ?? false} onClose={() => setVisor(null)} />
       {mensajes.map((m, i) => (
         <div
           key={i}
@@ -112,7 +138,12 @@ export function MensajesChat({ mensajes, escuchar = false }: { mensajes: Mensaje
             {m.adjuntos && m.adjuntos.length > 0 && (
               <div className={cn("flex flex-col gap-1.5", m.texto && "mb-1.5")}>
                 {m.adjuntos.map((a, j) => (
-                  <AdjuntoEnMensaje key={j} adjunto={a} deAgente={m.autor === "agente"} />
+                  <AdjuntoEnMensaje
+                    key={j}
+                    adjunto={a}
+                    deAgente={m.autor === "agente"}
+                    onAbrir={() => setVisor({ adjunto: a, deCliente: m.autor === "cliente" })}
+                  />
                 ))}
               </div>
             )}

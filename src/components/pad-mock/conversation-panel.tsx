@@ -273,7 +273,8 @@ function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechaz
       nombre: f.name,
       tamano: formatoTamano(f.size),
       esImagen,
-      url: esImagen ? URL.createObjectURL(f) : undefined,
+      // Imagen y PDF se pueden ver en el visor (dirección local del archivo).
+      url: esImagen || ext === "pdf" ? URL.createObjectURL(f) : undefined,
     },
   };
 }

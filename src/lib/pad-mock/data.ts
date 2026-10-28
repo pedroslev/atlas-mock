@@ -143,7 +143,7 @@ export type AdjuntoChat = {
   /** Ya formateado, ej. "1,2 MB". */
   tamano: string;
   esImagen: boolean;
-  /** Vista previa de una imagen (solo en el mock: dirección local del archivo). */
+  /** Para verlo en el visor (imagen o PDF; en el mock, dirección local del archivo). */
   url?: string;
 };
 
@@ -227,6 +227,16 @@ export const entrantesMock: InteraccionEntrante[] = [
       { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
       { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
       { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
+      {
+        autor: "cliente",
+        texto: "Te paso el comprobante y una foto de la etiqueta del paquete.",
+        hora: "14:03:12",
+        adjuntos: [
+          { nombre: "etiqueta-envio.jpg", tamano: "820 KB", esImagen: true, url: "/pad-mock/etiqueta-envio.svg" },
+          { nombre: "comprobante-48213.pdf", tamano: "64 KB", esImagen: false, url: "/pad-mock/comprobante-48213.pdf" },
+          { nombre: "detalle-pedido.xlsx", tamano: "18 KB", esImagen: false },
+        ],
+      },
       { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
     ],
   },
