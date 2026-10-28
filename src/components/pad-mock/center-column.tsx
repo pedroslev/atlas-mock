@@ -7,7 +7,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { VentanaFlotanteVideo, VideoPanel, type CapturaVideo } from "@/components/pad-mock/video-panel";
+import { VideoPanel, type CapturaVideo } from "@/components/pad-mock/video-panel";
 import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
@@ -45,7 +45,11 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
 // lugar). El chat queda montado al cambiar de solapa, para no perder lo que
 // se estaba escribiendo. Compartir pantalla, capturas y ventana flotante
-// viven acá porque los usan la barra de controles y la solapa del video.
+// viven acá porque los usan la barra de controles y la solapa del video. El
+// Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
+// porque siguen mientras el asesor está en Inicio o en un acceso rápido: por
+// eso esta columna avisa si la solapa Video está a la vista
+// (onSolapaVideoVisible) y vuelve a ella cuando se lo piden (pedidoSolapaVideo).
 //
 // Llamada interna (interno): sin páginas externas (CRM, tickets, etc.) — no
 // hay cliente sobre el que trabajar.
@@ -61,6 +65,9 @@ export function CenterColumn({
   nombreInterno,
   onSimularForzada,
   onSimularRechazo,
+  pip,
+  onSolapaVideoVisible,
+  pedidoSolapaVideo = 0,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -75,6 +82,11 @@ export function CenterColumn({
   nombreInterno?: string;
   onSimularForzada?: () => void;
   onSimularRechazo?: () => void;
+  /** Videollamada: Picture-in-Picture del navegador. */
+  pip?: { activo: boolean; alternar: () => void };
+  onSolapaVideoVisible?: (visible: boolean) => void;
+  /** Cada vez que cambia, vuelve a la solapa Video. */
+  pedidoSolapaVideo?: number;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -88,7 +100,6 @@ export function CenterColumn({
   const solapaChat = video && entrante?.chatEnLlamada === true;
   const fijas = solapaChat ? 2 : 1;
   const [compartiendo, setCompartiendo] = useState(false);
-  const [ventanaFlotante, setVentanaFlotante] = useState(false);
   const [capturas, setCapturas] = useState<CapturaVideo[]>([]);
   const [flash, setFlash] = useState(false);
   const flashTimer = useRef<number | undefined>(undefined);
@@ -100,6 +111,16 @@ export function CenterColumn({
     flashTimer.current = window.setTimeout(() => setFlash(false), 250);
   }
   const [tab, setTab] = useState("conversacion");
+  const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
+  if (pedidoSolapaVideo !== pedidoAtendido) {
+    setPedidoAtendido(pedidoSolapaVideo);
+    setTab("conversacion");
+  }
+  const solapaVideoVisible = video && tab === "conversacion";
+  useEffect(() => {
+    onSolapaVideoVisible?.(solapaVideoVisible);
+  }, [solapaVideoVisible, onSolapaVideoVisible]);
+  useEffect(() => () => onSolapaVideoVisible?.(false), [onSolapaVideoVisible]);
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
   const now = useNow(true);
@@ -262,8 +283,8 @@ export function CenterColumn({
               nombre={entrante.nombre}
               compartiendo={compartiendo}
               onDejarDeCompartir={() => setCompartiendo(false)}
-              ventanaFlotante={ventanaFlotante}
-              onCerrarVentanaFlotante={() => setVentanaFlotante(false)}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
               capturas={capturas}
               flash={flash}
             />
@@ -316,8 +337,7 @@ export function CenterColumn({
                 onToggleCompartir: () => setCompartiendo((v) => !v),
                 ...(video && {
                   onCaptura: capturar,
-                  ventanaFlotante,
-                  onToggleVentanaFlotante: () => setVentanaFlotante((v) => !v),
+                  ...(pip && { pip: pip.activo, onTogglePip: pip.alternar }),
                 }),
               }
             : undefined
@@ -326,9 +346,6 @@ export function CenterColumn({
         sonando={sonando}
       />
 
-      {video && entrante && ventanaFlotante && (
-        <VentanaFlotanteVideo nombre={entrante.nombre} onCerrar={() => setVentanaFlotante(false)} />
-      )}
     </div>
   );
 }

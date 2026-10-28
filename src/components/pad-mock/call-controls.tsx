@@ -61,7 +61,7 @@ const SHORTCUTS = {
   dialpad: "D",
   compartir: "S",
   captura: "I",
-  ventanaFlotante: "P",
+  pip: "P",
 } as const;
 
 const TECLAS_DIALPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
@@ -187,9 +187,9 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // Webcall y videollamada (llamadaWeb): sin teclado numérico — del otro lado
 // hay una persona en una página web, no un menú de tonos — y con "Compartir
 // pantalla". Videollamada (video), además: "Captura de imagen" (foto del
-// video del cliente, queda en la interacción) y "Ventana flotante" (el video
-// del cliente en una ventana chica, para seguir viéndolo desde otra solapa o
-// pantalla); y sin "Marcar". El estado de estos controles vive en
+// video del cliente, queda en la interacción) y "Picture-in-Picture" (el video
+// del cliente en la ventana flotante del navegador, encima de todo, también
+// fuera del pad); y sin "Marcar". El estado de estos controles vive en
 // CenterColumn, porque también lo muestra la solapa del video.
 //
 // Llamada interna (interno): solo espera, silenciar y cortar — sin
@@ -214,13 +214,13 @@ export function InteractionControls({
   /** Webcall o videollamada. */
   llamadaWeb?: boolean;
   /** Compartir pantalla (webcall y videollamada) y, solo en videollamada,
-   *  captura y ventana flotante. */
+   *  captura y Picture-in-Picture. */
   video?: {
     compartiendo: boolean;
     onToggleCompartir: () => void;
     onCaptura?: () => void;
-    ventanaFlotante?: boolean;
-    onToggleVentanaFlotante?: () => void;
+    pip?: boolean;
+    onTogglePip?: () => void;
   };
   interno?: boolean;
   sonando?: boolean;
@@ -314,10 +314,10 @@ export function InteractionControls({
             video.onCaptura();
           }
           break;
-        case SHORTCUTS.ventanaFlotante.toLowerCase():
-          if (!cortada && video?.onToggleVentanaFlotante) {
+        case SHORTCUTS.pip.toLowerCase():
+          if (!cortada && video?.onTogglePip) {
             e.preventDefault();
-            video.onToggleVentanaFlotante();
+            video.onTogglePip();
           }
           break;
         case SHORTCUTS.marcar.toLowerCase():
@@ -515,20 +515,20 @@ export function InteractionControls({
             onClick={video.onCaptura}
           />
         )}
-        {video?.onToggleVentanaFlotante && (
+        {video?.onTogglePip && (
           <ControlButton
             icon={PictureInPicture2}
             label={
-              video.ventanaFlotante
-                ? t("padMock.callControls.cerrarVentanaFlotante")
-                : t("padMock.callControls.ventanaFlotante")
+              video.pip
+                ? t("padMock.callControls.cerrarPip")
+                : t("padMock.callControls.pip")
             }
-            shortcutKey={SHORTCUTS.ventanaFlotante}
+            shortcutKey={SHORTCUTS.pip}
             isMac={isMac}
-            tone={video.ventanaFlotante ? "active" : "neutral"}
-            pressed={video.ventanaFlotante}
+            tone={video.pip ? "active" : "neutral"}
+            pressed={video.pip}
             disabled={cortada}
-            onClick={video.onToggleVentanaFlotante}
+            onClick={video.onTogglePip}
           />
         )}
 

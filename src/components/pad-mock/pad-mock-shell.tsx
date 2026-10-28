@@ -8,6 +8,7 @@ import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
 import { ChatEntranteAviso, ChatEntrantePanel } from "@/components/pad-mock/chat-entrante";
+import { VentanitaVideo, usePipNavegador } from "@/components/pad-mock/video-panel";
 import { formatDuration } from "@/lib/pad-mock/use-now";
 import {
   accesosRapidosMock,
@@ -356,6 +357,24 @@ export function PadMockShell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [cola, seleccionarFila]);
 
+  // Videollamada en curso (ya atendida). Mientras dura, su video sigue a la
+  // vista aunque el asesor no esté en la solapa Video: dentro del pad, con
+  // la ventanita (VentanitaVideo); fuera del pad, con el Picture-in-Picture
+  // del navegador. Las dos vuelven a la solapa Video.
+  const filaVideo = cola.find((f) => f.canal === "videollamada" && !f.porAceptar);
+  const nombreVideo = filaVideo ? (entrantesMock.find((e) => e.id === filaVideo.entranteId)?.nombre ?? null) : null;
+  const [solapaVideoVisible, setSolapaVideoVisible] = useState(false);
+  const [pedidoSolapaVideo, setPedidoSolapaVideo] = useState(0);
+  const volverAlVideo = useCallback(() => {
+    if (!filaVideo) return;
+    setAccesoAbiertoId(null);
+    // Si ya es la interacción activa, no se toca su espera.
+    if (filaVideo.id === interaccionActivaId) setModo("interaccion");
+    else seleccionarInteraccion(filaVideo.id, filaVideo.retenidaDesde);
+    setPedidoSolapaVideo((n) => n + 1);
+  }, [filaVideo, interaccionActivaId, seleccionarInteraccion]);
+  const pip = usePipNavegador(nombreVideo, volverAlVideo);
+
   const hayInteraccionActiva = interaccionActivaId !== null;
   const accesoActivo = accesosRapidosMock.find((a) => a.id === accesoAbiertoId);
   // Inicio se ve tanto si el agente lo eligió desde el menú como si
@@ -434,6 +453,9 @@ export function PadMockShell() {
               onSimularRechazo={
                 filaActiva?.sonando ? () => rechazarSaliente(filaActiva.id) : undefined
               }
+              pip={pip}
+              onSolapaVideoVisible={setSolapaVideoVisible}
+              pedidoSolapaVideo={pedidoSolapaVideo}
             />
           )}
           {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
@@ -459,6 +481,10 @@ export function PadMockShell() {
           onAceptar={() => aceptarChat(avisoChatFilaId!)}
           onRechazar={() => rechazarChat(avisoChatFilaId!)}
         />
+      )}
+
+      {nombreVideo && !solapaVideoVisible && !pip.activo && (
+        <VentanitaVideo nombre={nombreVideo} onVolver={volverAlVideo} />
       )}
 
       {entrante && (
