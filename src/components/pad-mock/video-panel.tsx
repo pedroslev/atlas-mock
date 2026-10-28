@@ -5,6 +5,7 @@ import { GripHorizontal, Maximize2, PictureInPicture2, Pin, ScreenShare, User } 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { IndicadorHabla } from "@/components/pad-mock/vumetro";
 
 function iniciales(nombre: string) {
   return nombre
@@ -94,8 +95,8 @@ function ContenidoFuente({
   );
 }
 
-// Solapa "Video" de una videollamada: un recuadro grande y, en la esquina,
-// los recuadros chicos del resto — la cámara del asesor (o su pantalla, si
+// Solapa "Video" de una videollamada: un recuadro grande y, apilados arriba
+// a la derecha, los recuadros chicos del resto — la cámara del asesor (o su pantalla, si
 // la está compartiendo) y, cuando el cliente comparte la suya, su cámara o
 // su pantalla. Cada recuadro chico tiene un pin para fijarlo en el grande
 // (el asesor elige qué ver grande: la cámara del cliente, su pantalla si la
@@ -115,6 +116,8 @@ export function VideoPanel({
   pip,
   onCerrarPip,
   flash,
+  habla,
+  asesorSilenciado,
 }: {
   nombre: string;
   compartiendo: boolean;
@@ -127,8 +130,18 @@ export function VideoPanel({
   onCerrarPip: () => void;
   /** Destello de la captura recién sacada. */
   flash: boolean;
+  /** Nivel de voz de cada lado (0 = callado) y si el asesor está silenciado. */
+  habla: { cliente: number; asesor: number };
+  asesorSilenciado: boolean;
 }) {
   const t = useT();
+  // Quién habla: recuadro con borde verde y, en su etiqueta, el micrófono con
+  // el nivel de voz (la pantalla compartida no habla).
+  const nivel = (f: FuenteVideo) => (f === "cliente" ? habla.cliente : f === "asesor" ? habla.asesor : 0);
+  const indicador = (f: FuenteVideo) =>
+    f === "pantalla" ? null : (
+      <IndicadorHabla nivel={nivel(f)} silenciado={f === "asesor" && asesorSilenciado} claro />
+    );
   const fuentes: FuenteVideo[] = clienteComparte ? ["pantalla", "cliente", "asesor"] : ["cliente", "asesor"];
   const etiqueta = (f: FuenteVideo) =>
     f === "cliente"
@@ -150,7 +163,12 @@ export function VideoPanel({
         </div>
       )}
 
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-slate-900">
+      <div
+        className={cn(
+          "relative min-h-0 flex-1 overflow-hidden rounded-xl bg-slate-900 ring-inset transition-shadow",
+          !pip && nivel(fijado) > 0 && "ring-3 ring-success"
+        )}
+      >
         {/* Con el Picture-in-Picture abierto, solo el recuadro grande se
             reemplaza por el aviso: los chicos siguen a la vista, con su pin. */}
         {pip ? (
@@ -161,18 +179,24 @@ export function VideoPanel({
         <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
           <Pin className="size-3" />
           {etiqueta(fijado)}
+          {indicador(fijado)}
         </span>
-        <div className="absolute right-3 bottom-3 flex gap-2">
+        {/* Los recuadros chicos, apilados arriba a la derecha. */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
           {fuentes
             .filter((f) => f !== fijado)
             .map((f) => (
               <div
                 key={f}
-                className="group relative aspect-video w-40 overflow-hidden rounded-lg border border-white/20"
+                className={cn(
+                  "group relative aspect-video w-40 overflow-hidden rounded-lg border border-white/20 transition-shadow",
+                  nivel(f) > 0 && "ring-2 ring-success"
+                )}
               >
                 <ContenidoFuente fuente={f} nombre={nombre} compartiendo={compartiendo} chica />
-                <span className="absolute bottom-1 left-1.5 max-w-[80%] truncate rounded bg-black/40 px-1 text-[0.65rem] text-white">
-                  {etiqueta(f)}
+                <span className="absolute bottom-1 left-1.5 flex max-w-[85%] items-center gap-1 rounded bg-black/40 px-1 text-[0.65rem] text-white">
+                  <span className="truncate">{etiqueta(f)}</span>
+                  {indicador(f)}
                 </span>
                 <button
                   type="button"

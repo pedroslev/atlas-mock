@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Mic,
@@ -206,6 +206,8 @@ export function InteractionControls({
   video,
   interno = false,
   sonando = false,
+  silenciado: silenciadoProp,
+  onToggleSilenciado,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -226,10 +228,18 @@ export function InteractionControls({
   };
   interno?: boolean;
   sonando?: boolean;
+  /** Silenciar controlado desde afuera (CenterColumn lo usa para mostrar
+   *  que el asesor está silenciado al lado de quién habla). Sin esto, es
+   *  local. */
+  silenciado?: boolean;
+  onToggleSilenciado?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
-  const [silenciado, setSilenciado] = useState(false);
+  const [silenciadoLocal, setSilenciadoLocal] = useState(false);
+  const silenciado = silenciadoProp ?? silenciadoLocal;
+  const alternarSilencioLocal = useCallback(() => setSilenciadoLocal((v) => !v), []);
+  const alternarSilencio = onToggleSilenciado ?? alternarSilencioLocal;
   const [marcas, setMarcas] = useState<MarcaAgregada[]>([]);
   const [marcarAbierto, setMarcarAbierto] = useState(false);
   const [marcaSeleccionada, setMarcaSeleccionada] = useState<string | null>(null);
@@ -285,7 +295,7 @@ export function InteractionControls({
           onToggleEspera();
         } else if (!sonando && key === SHORTCUTS.silenciar.toLowerCase()) {
           e.preventDefault();
-          setSilenciado((v) => !v);
+          alternarSilencio();
         }
         return;
       }
@@ -300,7 +310,7 @@ export function InteractionControls({
         case SHORTCUTS.silenciar.toLowerCase():
           if (!cortada && !chat) {
             e.preventDefault();
-            setSilenciado((v) => !v);
+            alternarSilencio();
           }
           break;
         case SHORTCUTS.compartir.toLowerCase():
@@ -347,7 +357,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, esVideo, interno, sonando]);
+  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, esVideo, interno, sonando, alternarSilencio]);
 
   if (interno) {
     return (
@@ -377,7 +387,7 @@ export function InteractionControls({
             tone={silenciado ? "active" : "neutral"}
             pressed={silenciado}
             disabled={sonando}
-            onClick={() => setSilenciado((v) => !v)}
+            onClick={alternarSilencio}
           />
           <ControlButton
             icon={PhoneOff}
@@ -442,7 +452,7 @@ export function InteractionControls({
               tone={silenciado ? "active" : "neutral"}
               pressed={silenciado}
               disabled={cortada}
-              onClick={() => setSilenciado((v) => !v)}
+              onClick={alternarSilencio}
             />
             {!llamadaWeb && (
               <Popover open={dialpadAbierto} onOpenChange={setDialpadAbierto}>

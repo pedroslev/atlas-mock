@@ -7,6 +7,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel, formatoTamano, type AdjuntoExterno } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
+import { IndicadorHabla, useQuienHabla } from "@/components/pad-mock/vumetro";
 import { PantallaClientePanel, VideoPanel, capturarCliente, type FuenteVideo } from "@/components/pad-mock/video-panel";
 import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
@@ -151,6 +152,10 @@ export function CenterColumn({
     }, 250);
   }
   const [tab, setTab] = useState("conversacion");
+  // Quién habla (webcall y videollamada): para que el asesor vea si hay
+  // sonido de cada lado. Silenciar vive acá para mostrarlo al lado.
+  const [silenciado, setSilenciado] = useState(false);
+  const habla = useQuienHabla((webcall || video) && !enEspera, silenciado);
   // Si el cliente deja de compartir con su solapa a la vista, vuelve a la
   // primera.
   if (tab === "pantalla" && !solapaPantalla) setTab("conversacion");
@@ -348,6 +353,8 @@ export function CenterColumn({
               pip={pip?.activo ?? false}
               onCerrarPip={() => pip?.alternar()}
               flash={flash}
+              habla={habla}
+              asesorSilenciado={silenciado}
             />
           ) : pantallaEnPrimera && entrante ? (
             <PantallaClientePanel
@@ -356,17 +363,39 @@ export function CenterColumn({
               onCerrarPip={() => pip?.alternar()}
             />
           ) : (
-            <ConversationPanel
-              tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
-              enEspera={enEspera}
-              mensajesChat={conChat ? entrante?.mensajes : undefined}
-              interno={interno}
-              sonando={sonando}
-              nombreInterno={nombreInterno}
-              onSimularForzada={onSimularForzada}
-              onSimularRechazo={onSimularRechazo}
-              webcall={webcall}
-            />
+            <div className="flex h-full min-h-0 flex-col">
+              {/* Webcall con chat: la llamada no se ve en la solapa (la ocupa
+                  el chat), así que una barra arriba muestra quién habla. */}
+              {webcall && conChat && entrante && (
+                <div className="flex shrink-0 items-center gap-4 border-b border-border px-4 py-2 text-xs">
+                  <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                    <Headset className="size-4" />
+                    {enEspera ? t("padMock.conversationPanel.enEspera") : t("padMock.conversationPanel.webcallEnCurso")}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    {entrante.nombre}
+                    <IndicadorHabla nivel={habla.cliente} />
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    {t("padMock.video.tuCamara")}
+                    <IndicadorHabla nivel={habla.asesor} silenciado={silenciado} />
+                  </span>
+                </div>
+              )}
+              <div className="min-h-0 flex-1">
+                <ConversationPanel
+                  tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+                  enEspera={enEspera}
+                  mensajesChat={conChat ? entrante?.mensajes : undefined}
+                  interno={interno}
+                  sonando={sonando}
+                  nombreInterno={nombreInterno}
+                  onSimularForzada={onSimularForzada}
+                  onSimularRechazo={onSimularRechazo}
+                  webcall={webcall}
+                />
+              </div>
+            </div>
           )}
         </TabsContent>
         {solapaChat && (
@@ -424,6 +453,7 @@ export function CenterColumn({
         onCerrarInteraccion={onCerrarInteraccion}
         chat={chat}
         llamadaWeb={webcall || video}
+        {...((webcall || video) && { silenciado, onToggleSilenciado: () => setSilenciado((v) => !v) })}
         video={
           webcall || video || chat
             ? {
