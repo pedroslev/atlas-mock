@@ -38,6 +38,17 @@ export const padMock: NamespaceDict = {
     "conversationPanel.adjuntar": "Adjuntar archivo",
     "conversationPanel.emoji": "Emojis",
     "conversationPanel.buscarEmoji": "Buscar emoji…",
+    "conversationPanel.formato": "Formato",
+    "conversationPanel.negrita": "Negrita",
+    "conversationPanel.cursiva": "Cursiva",
+    "conversationPanel.tachado": "Tachado",
+    "conversationPanel.lista": "Lista con viñetas",
+    "conversationPanel.listaNumerada": "Lista numerada",
+    "conversationPanel.enlace": "Enlace",
+    "conversationPanel.enlaceTexto": "Texto que se ve",
+    "conversationPanel.enlaceTextoPlaceholder": "Ej: Seguí tu pedido",
+    "conversationPanel.enlaceUrl": "Dirección",
+    "conversationPanel.insertarEnlace": "Insertar enlace",
 
     // Categorías del selector de emojis del chat
     "emojiCat.suggested": "Recientes",

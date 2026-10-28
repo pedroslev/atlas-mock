@@ -4,6 +4,47 @@ import { MessageCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { MensajeChat } from "@/lib/pad-mock/data";
+import { segmentar, tipoDeLinea } from "@/lib/pad-mock/formato-chat";
+
+// Texto de un mensaje con su formato (negrita, cursiva, tachado, enlaces y
+// listas — ver formato-chat.ts).
+function TextoConFormato({ texto }: { texto: string }) {
+  return (
+    <div className="whitespace-pre-wrap">
+      {texto.split("\n").map((linea, i) => {
+        const { tipo, marcador, texto: contenido } = tipoDeLinea(linea);
+        return (
+          <div key={i} className={cn(tipo !== "texto" && "flex gap-1.5 pl-1")}>
+            {tipo !== "texto" && <span aria-hidden>{marcador}</span>}
+            <span>
+              {segmentar(contenido).map((s, j) =>
+                s.url ? (
+                  <a
+                    key={j}
+                    href={s.url}
+                    className="underline underline-offset-2"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {s.texto}
+                  </a>
+                ) : s.negrita ? (
+                  <strong key={j}>{s.texto}</strong>
+                ) : s.cursiva ? (
+                  <em key={j}>{s.texto}</em>
+                ) : s.tachado ? (
+                  <s key={j}>{s.texto}</s>
+                ) : (
+                  <span key={j}>{s.texto}</span>
+                )
+              )}
+              {linea === "" && " "}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // Burbujas de un chat: cliente a la izquierda (gris), asesor a la derecha
 // (azul), cada una con su hora. Las comparten la pantalla de chat en curso
@@ -21,7 +62,7 @@ export function MensajesChat({ mensajes }: { mensajes: MensajeChat[] }) {
                 : "rounded-bl-sm bg-muted text-foreground"
             )}
           >
-            <p>{m.texto}</p>
+            <TextoConFormato texto={m.texto} />
             <p
               className={cn(
                 "mt-0.5 text-right font-mono text-[0.65rem]",

@@ -1,11 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Categories, EmojiStyle } from "emoji-picker-react";
-import { ArrowDown, ChevronsUpDown, FileText, Paperclip, Phone, PhoneOutgoing, SmilePlus } from "lucide-react";
+import {
+  ArrowDown,
+  Bold,
+  CaseSensitive,
+  ChevronsUpDown,
+  FileText,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Paperclip,
+  Phone,
+  PhoneOutgoing,
+  SmilePlus,
+  Strikethrough,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -27,8 +45,14 @@ import { cn } from "@/lib/utils";
 // feature/pad-mock-omnicanal; la franja de Copiloto queda afuera.
 function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
   const t = useT();
+  const hiloRef = useRef<HTMLDivElement>(null);
+  // Cada mensaje nuevo (por ejemplo, uno que acaba de enviar el asesor) deja
+  // el hilo abajo de todo, en lo último.
+  useEffect(() => {
+    hiloRef.current?.scrollTo({ top: hiloRef.current.scrollHeight });
+  }, [mensajes.length]);
   return (
-    <div className="relative flex-1 overflow-y-auto p-4">
+    <div ref={hiloRef} className="relative flex-1 overflow-y-auto p-4">
       <MensajesChat mensajes={mensajes} />
 
       <Button
@@ -162,12 +186,48 @@ function EmojiSelector({ onElegir }: { onElegir: (emoji: string) => void }) {
   );
 }
 
-// Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar, emojis
-// y plantillas en línea, arriba del área de texto.
-function Redactor() {
+// Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar, emojis,
+// formato y plantillas en línea, arriba del área de texto.
+//
+// Formato: un solo botón "Aa", cerrado por defecto, para que el cuadro quede
+// limpio (mismo criterio que Zendesk, que lo esconde detrás de un botón).
+// Abierto, muestra una barra chica con negrita, cursiva, tachado, viñetas,
+// lista numerada y enlace — el mismo conjunto que las plantillas. Ctrl/Cmd+B
+// y Ctrl/Cmd+I dan negrita y cursiva sin abrirla.
+function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
   const t = useT();
   const [texto, setTexto] = useState("");
+  const [formatoAbierto, setFormatoAbierto] = useState(false);
+  const [enlaceAbierto, setEnlaceAbierto] = useState(false);
+  const [enlaceTexto, setEnlaceTexto] = useState("");
+  const [enlaceUrl, setEnlaceUrl] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Selección del cuadro al abrir el enlace: el foco pasa a sus campos.
+  const seleccionEnlaceRef = useRef({ a: 0, b: 0 });
+
+  function enviar() {
+    if (!texto.trim()) return;
+    onEnviar(texto.trim());
+    setTexto("");
+  }
+
+  // Selección a aplicar apenas el cuadro muestra el texto nuevo (sin esperar
+  // un cuadro de animación: si el asesor sigue tipeando rápido, el cursor ya
+  // está en su lugar).
+  const seleccionPendienteRef = useRef<[number, number] | null>(null);
+  useLayoutEffect(() => {
+    const sel = seleccionPendienteRef.current;
+    if (!sel) return;
+    seleccionPendienteRef.current = null;
+    textareaRef.current?.focus();
+    textareaRef.current?.setSelectionRange(sel[0], sel[1]);
+  }, [texto]);
+
+  /** Reemplaza el texto por `nuevo` y deja seleccionado [selA, selB). */
+  function editar(nuevo: string, selA: number, selB: number) {
+    seleccionPendienteRef.current = [selA, selB];
+    setTexto(nuevo);
+  }
 
   // Inserta el emoji donde está el cursor (o reemplaza lo seleccionado) y
   // deja el cursor justo después, para seguir escribiendo.
@@ -175,17 +235,59 @@ function Redactor() {
     const el = textareaRef.current;
     const inicio = el?.selectionStart ?? texto.length;
     const fin = el?.selectionEnd ?? texto.length;
-    setTexto(texto.slice(0, inicio) + emoji + texto.slice(fin));
-    requestAnimationFrame(() => {
-      el?.focus();
-      el?.setSelectionRange(inicio + emoji.length, inicio + emoji.length);
-    });
+    editar(texto.slice(0, inicio) + emoji + texto.slice(fin), inicio + emoji.length, inicio + emoji.length);
   }
 
-  function enviar() {
-    if (!texto.trim()) return;
-    setTexto("");
+  /** Envuelve lo seleccionado con la marca; sin selección, deja el cursor en el medio. */
+  function envolver(marca: string) {
+    const el = textareaRef.current;
+    const a = el?.selectionStart ?? texto.length;
+    const b = el?.selectionEnd ?? texto.length;
+    const nuevo = texto.slice(0, a) + marca + texto.slice(a, b) + marca + texto.slice(b);
+    editar(nuevo, a + marca.length, b + marca.length);
   }
+
+  /** Viñeta ("- ") o número ("N. ", siguiendo la línea anterior) al inicio de la línea actual. */
+  function listar(tipo: "vineta" | "numero") {
+    const a = textareaRef.current?.selectionStart ?? texto.length;
+    const inicioLinea = texto.lastIndexOf("\n", a - 1) + 1;
+    let marca = "- ";
+    if (tipo === "numero") {
+      const anterior = texto.slice(0, inicioLinea).split("\n").at(-2) ?? "";
+      const n = anterior.match(/^(\d+)\. /);
+      marca = `${n ? Number(n[1]) + 1 : 1}. `;
+    }
+    editar(texto.slice(0, inicioLinea) + marca + texto.slice(inicioLinea), a + marca.length, a + marca.length);
+  }
+
+  function abrirEnlace(abrir: boolean) {
+    if (abrir) {
+      const el = textareaRef.current;
+      const a = el?.selectionStart ?? texto.length;
+      const b = el?.selectionEnd ?? texto.length;
+      seleccionEnlaceRef.current = { a, b };
+      setEnlaceTexto(texto.slice(a, b));
+      setEnlaceUrl("");
+    }
+    setEnlaceAbierto(abrir);
+  }
+
+  function insertarEnlace() {
+    const url = enlaceUrl.trim();
+    if (!url) return;
+    const { a, b } = seleccionEnlaceRef.current;
+    const enlace = `[${enlaceTexto.trim() || url}](${url})`;
+    editar(texto.slice(0, a) + enlace + texto.slice(b), a + enlace.length, a + enlace.length);
+    setEnlaceAbierto(false);
+  }
+
+  const botonesFormato = [
+    { icon: Bold, label: t("padMock.conversationPanel.negrita"), atajo: "Ctrl+B", accion: () => envolver("**") },
+    { icon: Italic, label: t("padMock.conversationPanel.cursiva"), atajo: "Ctrl+I", accion: () => envolver("_") },
+    { icon: Strikethrough, label: t("padMock.conversationPanel.tachado"), accion: () => envolver("~~") },
+    { icon: List, label: t("padMock.conversationPanel.lista"), accion: () => listar("vineta") },
+    { icon: ListOrdered, label: t("padMock.conversationPanel.listaNumerada"), accion: () => listar("numero") },
+  ];
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
@@ -199,17 +301,96 @@ function Redactor() {
           <Paperclip className="size-4" />
         </Button>
         <EmojiSelector onElegir={insertarEmoji} />
+        <Button
+          type="button"
+          variant={formatoAbierto ? "secondary" : "outline"}
+          size="icon-sm"
+          aria-pressed={formatoAbierto}
+          aria-label={t("padMock.conversationPanel.formato")}
+          title={t("padMock.conversationPanel.formato")}
+          onClick={() => setFormatoAbierto((v) => !v)}
+        >
+          <CaseSensitive className="size-4" />
+        </Button>
         <PlantillaSelector onElegir={setTexto} />
         <Button size="sm" onClick={enviar} className="shrink-0 gap-1.5">
           {t("padMock.conversationPanel.enviar")}
           <Kbd className="bg-primary-foreground/15 text-primary-foreground">Enter</Kbd>
         </Button>
       </div>
+      {formatoAbierto && (
+        <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5">
+          {botonesFormato.map((b) => (
+            <ActionTooltip key={b.label} label={b.atajo ? `${b.label} (${b.atajo})` : b.label}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={b.label}
+                // Sin robarle el foco al cuadro: así la selección sigue ahí.
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={b.accion}
+              >
+                <b.icon className="size-4" />
+              </Button>
+            </ActionTooltip>
+          ))}
+          <Popover open={enlaceAbierto} onOpenChange={abrirEnlace}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("padMock.conversationPanel.enlace")}
+                title={t("padMock.conversationPanel.enlace")}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <Link2 className="size-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="flex w-72 flex-col gap-3" align="start" side="top">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="chat-enlace-texto">{t("padMock.conversationPanel.enlaceTexto")}</Label>
+                <Input
+                  id="chat-enlace-texto"
+                  value={enlaceTexto}
+                  onChange={(e) => setEnlaceTexto(e.target.value)}
+                  placeholder={t("padMock.conversationPanel.enlaceTextoPlaceholder")}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="chat-enlace-url">{t("padMock.conversationPanel.enlaceUrl")}</Label>
+                <Input
+                  id="chat-enlace-url"
+                  value={enlaceUrl}
+                  onChange={(e) => setEnlaceUrl(e.target.value)}
+                  placeholder="https://"
+                  onKeyDown={(e) => e.key === "Enter" && insertarEnlace()}
+                />
+              </div>
+              <Button type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim()}>
+                {t("padMock.conversationPanel.insertarEnlace")}
+              </Button>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
       <Textarea
         ref={textareaRef}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onKeyDown={(e) => {
+          const mod = e.ctrlKey || e.metaKey;
+          if (mod && !e.altKey && !e.shiftKey && (e.key === "b" || e.key === "B")) {
+            e.preventDefault();
+            envolver("**");
+            return;
+          }
+          if (mod && !e.altKey && !e.shiftKey && (e.key === "i" || e.key === "I")) {
+            e.preventDefault();
+            envolver("_");
+            return;
+          }
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             enviar();
@@ -219,6 +400,22 @@ function Redactor() {
         rows={3}
         className="resize-none"
       />
+    </div>
+  );
+}
+
+// Chat en curso: el hilo arriba y el redactor abajo. Lo que envía el asesor
+// se suma al hilo (con su formato) — en el mock no hay cliente del otro lado.
+function ChatPanel({ mensajesIniciales }: { mensajesIniciales: MensajeChat[] }) {
+  const [mensajes, setMensajes] = useState(mensajesIniciales);
+  function enviar(texto: string) {
+    const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
+    setMensajes((cur) => [...cur, { autor: "agente", texto, hora }]);
+  }
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <HiloChat mensajes={mensajes} />
+      <Redactor onEnviar={enviar} />
     </div>
   );
 }
@@ -255,12 +452,7 @@ export function ConversationPanel({
 }) {
   const t = useT();
   if (mensajesChat) {
-    return (
-      <div className="flex h-full min-h-0 flex-col">
-        <HiloChat mensajes={mensajesChat} />
-        <Redactor />
-      </div>
-    );
+    return <ChatPanel mensajesIniciales={mensajesChat} />;
   }
   if (interno) {
     return (
