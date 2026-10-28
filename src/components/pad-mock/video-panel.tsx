@@ -103,8 +103,8 @@ function ContenidoFuente({
 // destella acá y queda adjunta en el chat (CenterColumn). Los controles
 // (compartir, captura, Picture-in-Picture) están en la barra de abajo, con
 // los de la llamada. La ventanita y el Picture-in-Picture muestran lo
-// fijado en grande; mientras está en el Picture-in-Picture, la solapa lo
-// indica en su lugar.
+// fijado en grande; mientras está en el Picture-in-Picture, el recuadro
+// grande lo indica en su lugar y los chicos siguen igual.
 export function VideoPanel({
   nombre,
   compartiendo,
@@ -157,48 +157,48 @@ export function VideoPanel({
       )}
 
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-slate-900">
+        {/* Con el Picture-in-Picture abierto, solo el recuadro grande se
+            reemplaza por el aviso: los chicos siguen a la vista, con su pin. */}
         {pip ? (
           <EnPip onCerrarPip={onCerrarPip} />
         ) : (
-          <>
-            <ContenidoFuente fuente={fijado} nombre={nombre} compartiendo={compartiendo} chica={false} />
-            <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
-              <Pin className="size-3" />
-              {etiqueta(fijado)}
-            </span>
-            <div className="absolute right-3 bottom-3 flex gap-2">
-              {fuentes
-                .filter((f) => f !== fijado)
-                .map((f) => (
-                  <div
-                    key={f}
-                    className="group relative aspect-video w-40 overflow-hidden rounded-lg border border-white/20"
-                  >
-                    <ContenidoFuente fuente={f} nombre={nombre} compartiendo={compartiendo} chica />
-                    <span className="absolute bottom-1 left-1.5 max-w-[80%] truncate rounded bg-black/40 px-1 text-[0.65rem] text-white">
-                      {etiqueta(f)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onFijar(f)}
-                      aria-label={t("padMock.video.fijar", { fuente: etiqueta(f) })}
-                      title={t("padMock.video.fijar", { fuente: etiqueta(f) })}
-                      className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/50 text-white hover:bg-black/75"
-                    >
-                      <Pin className="size-3.5" />
-                    </button>
-                  </div>
-                ))}
-            </div>
-            <div
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute inset-0 bg-white transition-opacity duration-300",
-                flash ? "opacity-70" : "opacity-0"
-              )}
-            />
-          </>
+          <ContenidoFuente fuente={fijado} nombre={nombre} compartiendo={compartiendo} chica={false} />
         )}
+        <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
+          <Pin className="size-3" />
+          {etiqueta(fijado)}
+        </span>
+        <div className="absolute right-3 bottom-3 flex gap-2">
+          {fuentes
+            .filter((f) => f !== fijado)
+            .map((f) => (
+              <div
+                key={f}
+                className="group relative aspect-video w-40 overflow-hidden rounded-lg border border-white/20"
+              >
+                <ContenidoFuente fuente={f} nombre={nombre} compartiendo={compartiendo} chica />
+                <span className="absolute bottom-1 left-1.5 max-w-[80%] truncate rounded bg-black/40 px-1 text-[0.65rem] text-white">
+                  {etiqueta(f)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onFijar(f)}
+                  aria-label={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                  title={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                  className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/50 text-white hover:bg-black/75"
+                >
+                  <Pin className="size-3.5" />
+                </button>
+              </div>
+            ))}
+        </div>
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-0 bg-white transition-opacity duration-300",
+            flash ? "opacity-70" : "opacity-0"
+          )}
+        />
       </div>
     </div>
   );
