@@ -63,9 +63,10 @@ export function ChatEntranteAviso({
 // El chat, la webcall o la videollamada entrante en el centro de la
 // pantalla — mismo criterio que la llamada entrante de Hermes: quién es, por
 // qué campaña, y los dos botones. Chat: su primer mensaje, Aceptar /
-// Rechazar. Webcall y videollamada: Atender / Rechazar, como una llamada, y
-// si suman chat lo indican (con lo que el cliente ya escribió, si escribió
-// algo).
+// Rechazar. Webcall y videollamada: Atender / Rechazar, como una llamada,
+// sin más: si la cuenta suma chat es configuración que al asesor no le
+// cambia nada para decidir, y qué llega antes de atender (puede haber un
+// IMR antes) queda por definir con el Architect.
 export function ChatEntrantePanel({
   chat,
   onAceptar,
@@ -78,7 +79,7 @@ export function ChatEntrantePanel({
   const t = useT();
   const webcall = chat.canal !== "chat";
   const Icono = chat.canal === "videollamada" ? Video : webcall ? Headset : MessageCircle;
-  const primerMensaje = chat.mensajes.find((m) => m.autor === "cliente");
+  const primerMensaje = webcall ? undefined : chat.mensajes.find((m) => m.autor === "cliente");
   return (
     <div className="flex h-full min-h-0 w-0 flex-1 flex-col items-center justify-center gap-5 bg-background p-6 text-center">
       <span className="relative flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -95,12 +96,6 @@ export function ChatEntrantePanel({
         </span>
         <span className="font-heading text-2xl font-semibold">{chat.nombre}</span>
         <span className="text-sm text-muted-foreground">{chat.campania}</span>
-        {webcall && chat.chatEnLlamada && (
-          <span className="mx-auto mt-1 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            <MessageCircle className="size-3" />
-            {t("padMock.webcallEntrante.conChat")}
-          </span>
-        )}
       </div>
       {primerMensaje && (
         <p className="max-w-md rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-left text-sm leading-relaxed text-foreground">
