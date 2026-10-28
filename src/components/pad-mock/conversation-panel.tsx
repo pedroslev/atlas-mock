@@ -14,6 +14,7 @@ import {
   Link2,
   List,
   ListOrdered,
+  Mic,
   Paperclip,
   Phone,
   PhoneOutgoing,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/command";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { IconoEnCurso, Vumetro } from "@/components/pad-mock/vumetro";
+import { useDictado } from "@/lib/pad-mock/voz";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
 import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
@@ -102,7 +104,7 @@ function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
   return (
     <div className="relative min-h-0 flex-1">
       <div ref={hiloRef} onScroll={actualizarVivo} className="h-full overflow-y-auto p-4">
-        <MensajesChat mensajes={mensajes} />
+        <MensajesChat mensajes={mensajes} escuchar />
       </div>
 
       {fueraDelVivo && (
@@ -344,8 +346,12 @@ function Redactor({
   // Selección del cuadro al abrir el enlace: el foco pasa a sus campos.
   const seleccionEnlaceRef = useRef({ a: 0, b: 0 });
 
+  // Dictar: lo que dice el asesor se va escribiendo en el cuadro.
+  const dictado = useDictado(texto, setTexto);
+
   function enviar() {
     if (!texto.trim() && adjuntos.length === 0) return;
+    dictado.detener();
     onEnviar(texto.trim(), adjuntos);
     setTexto("");
     setAdjuntos([]);
@@ -485,6 +491,25 @@ function Redactor({
         <EmojiSelector onElegir={insertarEmoji} />
         <Button
           type="button"
+          variant={dictado.dictando ? "destructive" : "outline"}
+          size="icon-sm"
+          disabled={!dictado.soportado}
+          aria-pressed={dictado.dictando}
+          aria-label={dictado.dictando ? t("padMock.voz.dejarDeDictar") : t("padMock.voz.dictar")}
+          title={
+            !dictado.soportado
+              ? t("padMock.voz.sinDictado")
+              : dictado.dictando
+                ? t("padMock.voz.dejarDeDictar")
+                : t("padMock.voz.dictar")
+          }
+          onClick={dictado.alternar}
+          className={cn(dictado.dictando && "animate-pulse")}
+        >
+          <Mic className="size-4" />
+        </Button>
+        <Button
+          type="button"
           variant={formatoAbierto ? "secondary" : "outline"}
           size="icon-sm"
           aria-pressed={formatoAbierto}
@@ -556,6 +581,16 @@ function Redactor({
             </PopoverContent>
           </Popover>
         </div>
+      )}
+      {(dictado.dictando || dictado.error) && (
+        <p className={cn("flex items-center gap-1.5 text-xs", dictado.error ? "text-destructive" : "text-muted-foreground")}>
+          <Mic className="size-3.5" />
+          {dictado.error === "permiso"
+            ? t("padMock.voz.sinPermiso")
+            : dictado.error
+              ? t("padMock.voz.errorDictado")
+              : t("padMock.voz.dictando")}
+        </p>
       )}
       {adjuntos.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

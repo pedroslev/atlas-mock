@@ -1,10 +1,24 @@
 "use client";
 
-import { FileText, MessageCircle } from "lucide-react";
+import { FileText, MessageCircle, Square, Volume2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { AdjuntoChat, MensajeChat } from "@/lib/pad-mock/data";
 import { segmentar, tipoDeLinea } from "@/lib/pad-mock/formato-chat";
+import { useLeerEnVozAlta } from "@/lib/pad-mock/voz";
+import { useT } from "@/lib/i18n";
+
+/** El texto de un mensaje sin las marcas de formato, para leerlo en voz alta. */
+function textoPlano(texto: string) {
+  return texto
+    .split("\n")
+    .map((l) =>
+      segmentar(tipoDeLinea(l).texto)
+        .map((s) => s.texto)
+        .join("")
+    )
+    .join(". ");
+}
 
 // Texto de un mensaje con su formato (negrita, cursiva, tachado, enlaces y
 // listas — ver formato-chat.ts).
@@ -74,11 +88,19 @@ function AdjuntoEnMensaje({ adjunto, deAgente }: { adjunto: AdjuntoChat; deAgent
 // Burbujas de un chat: cliente a la izquierda (gris), asesor a la derecha
 // (azul), cada una con su hora. Las comparten la pantalla de chat en curso
 // (conversation-panel.tsx) y el modal de una conversación pasada.
-export function MensajesChat({ mensajes }: { mensajes: MensajeChat[] }) {
+//
+// escuchar (chat en curso): al lado de cada mensaje del cliente con texto,
+// un botón lo lee en voz alta (otra vez, lo detiene). De a uno por vez.
+export function MensajesChat({ mensajes, escuchar = false }: { mensajes: MensajeChat[]; escuchar?: boolean }) {
+  const t = useT();
+  const voz = useLeerEnVozAlta();
   return (
     <div className="flex flex-col gap-2.5">
       {mensajes.map((m, i) => (
-        <div key={i} className={cn("flex", m.autor === "agente" ? "justify-end" : "justify-start")}>
+        <div
+          key={i}
+          className={cn("group flex items-end gap-1", m.autor === "agente" ? "justify-end" : "justify-start")}
+        >
           <div
             className={cn(
               "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
@@ -104,6 +126,20 @@ export function MensajesChat({ mensajes }: { mensajes: MensajeChat[] }) {
               {m.hora}
             </p>
           </div>
+          {escuchar && voz.soportado && m.autor === "cliente" && m.texto && (
+            <button
+              type="button"
+              onClick={() => voz.alternar(i, textoPlano(m.texto))}
+              aria-label={voz.leyendo === i ? t("padMock.voz.detener") : t("padMock.voz.escuchar")}
+              title={voz.leyendo === i ? t("padMock.voz.detener") : t("padMock.voz.escuchar")}
+              className={cn(
+                "flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-opacity hover:bg-muted hover:text-foreground",
+                voz.leyendo === i ? "text-primary opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              )}
+            >
+              {voz.leyendo === i ? <Square className="size-3.5 fill-current" /> : <Volume2 className="size-4" />}
+            </button>
+          )}
         </div>
       ))}
     </div>
