@@ -181,8 +181,9 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // para poder reflejar el mismo tiempo en espera en la fila de la cola del
 // menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
 //
-// Chat: sin espera, silenciar ni teclado numérico (son de la voz); el
-// primer paso del botón de la derecha es "Finalizar chat".
+// Chat: sin espera, silenciar ni teclado numérico (son de la voz); con
+// "Compartir pantalla"; el primer paso del botón de la derecha es
+// "Finalizar chat".
 //
 // Webcall y videollamada (llamadaWeb): sin teclado numérico — del otro lado
 // hay una persona en una página web, no un menú de tonos — y con "Compartir
@@ -213,7 +214,7 @@ export function InteractionControls({
   chat?: boolean;
   /** Webcall o videollamada. */
   llamadaWeb?: boolean;
-  /** Compartir pantalla (webcall y videollamada) y, solo en videollamada,
+  /** Compartir pantalla (chat, webcall y videollamada) y, solo en videollamada,
    *  Picture-in-Picture y — si la cuenta suma chat — captura de imagen. */
   video?: {
     esVideo?: boolean;

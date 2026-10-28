@@ -46,11 +46,12 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // lugar). Webcall: mientras el cliente comparte su pantalla, con chat la
 // segunda solapa fija es "Pantalla del cliente"; sin chat, la pantalla va
 // en la primera. El chat queda montado al cambiar de solapa, para no perder lo que
-// se estaba escribiendo. Compartir pantalla y captura de imagen
-// viven acá porque las usan la barra de controles, la solapa del video y la del chat. El
+// se estaba escribiendo. La captura de imagen vive acá porque la usan la
+// barra de controles, la solapa del video y la del chat. Quién comparte su
+// pantalla (el asesor o el cliente, también en el chat), el
 // Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
-// porque siguen mientras el asesor está en Inicio o en un acceso rápido: por
-// eso esta columna avisa si la solapa Video está a la vista
+// porque siguen al cambiar de interacción, en Inicio o en un acceso rápido:
+// por eso esta columna avisa si la solapa Video está a la vista
 // (onSolapaVideoVisible) y vuelve a ella cuando se lo piden (pedidoSolapaVideo).
 //
 // Llamada interna (interno): sin páginas externas (CRM, tickets, etc.) — no
@@ -70,6 +71,10 @@ export function CenterColumn({
   pip,
   onSolapaVideoVisible,
   pedidoSolapaVideo = 0,
+  pedidoSolapaVideoVisto = 0,
+  onPedidoSolapaVideoVisto,
+  compartiendo = false,
+  onAlternarCompartiendo,
   clienteComparte = false,
   onAlternarClienteComparte,
   fijado = "cliente",
@@ -91,7 +96,10 @@ export function CenterColumn({
   /** Videollamada: Picture-in-Picture del navegador. */
   pip?: { activo: boolean; alternar: () => void };
   onSolapaVideoVisible?: (visible: boolean) => void;
-  /** El cliente comparte su pantalla (webcall y videollamada). */
+  /** El asesor comparte su pantalla (chat, webcall y videollamada). */
+  compartiendo?: boolean;
+  onAlternarCompartiendo?: () => void;
+  /** El cliente comparte su pantalla (chat, webcall y videollamada). */
   clienteComparte?: boolean;
   onAlternarClienteComparte?: () => void;
   /** Videollamada: lo que se ve en el recuadro grande. */
@@ -100,6 +108,9 @@ export function CenterColumn({
   /** Cada vez que cambia, vuelve a la solapa Video (o a Pantalla del
    *  cliente, en la webcall). */
   pedidoSolapaVideo?: number;
+  /** Último pedido de volver a la solapa que ya se atendió. */
+  pedidoSolapaVideoVisto?: number;
+  onPedidoSolapaVideoVisto?: (n: number) => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -112,13 +123,12 @@ export function CenterColumn({
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const solapaChat = video && entrante?.chatEnLlamada === true;
   // El cliente comparte su pantalla (en el mock, con el simulador de abajo;
-  // el estado vive en pad-mock-shell.tsx). En la webcall con chat aparece
+  // el estado vive en pad-mock-shell.tsx). En el chat y la webcall con chat aparece
   // la solapa "Pantalla del cliente" mientras dure; sin chat, la pantalla
   // ocupa la primera solapa en lugar del cuerpo de la llamada.
-  const solapaPantalla = webcall && clienteComparte && conChat;
+  const solapaPantalla = (webcall || chat) && clienteComparte && conChat;
   const pantallaEnPrimera = webcall && clienteComparte && !conChat;
   const fijas = solapaChat || solapaPantalla ? 2 : 1;
-  const [compartiendo, setCompartiendo] = useState(false);
   // Captura de imagen (solo videollamada con chat): destella el video, queda
   // adjunta en el redactor del chat como "Captura-HH:MM" y lleva a la solapa
   // Chat; el asesor decide si la envía o la quita.
@@ -144,11 +154,17 @@ export function CenterColumn({
   // Si el cliente deja de compartir con su solapa a la vista, vuelve a la
   // primera.
   if (tab === "pantalla" && !solapaPantalla) setTab("conversacion");
-  const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
+  // Arranca desde el último pedido ya atendido (no desde el actual): si la
+  // columna se vuelve a armar por un pedido (por ejemplo, "Volver a la
+  // pantalla" desde Inicio), lo atiende igual.
+  const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideoVisto);
   if (pedidoSolapaVideo !== pedidoAtendido) {
     setPedidoAtendido(pedidoSolapaVideo);
     setTab(solapaPantalla ? "pantalla" : "conversacion");
   }
+  useEffect(() => {
+    onPedidoSolapaVideoVisto?.(pedidoAtendido);
+  }, [pedidoAtendido, onPedidoSolapaVideoVisto]);
   // La solapa que siguen la ventanita y el Picture-in-Picture: Video en la
   // videollamada; en la webcall, la que muestra la pantalla del cliente.
   const solapaVideoVisible =
@@ -325,7 +341,7 @@ export function CenterColumn({
             <VideoPanel
               nombre={entrante.nombre}
               compartiendo={compartiendo}
-              onDejarDeCompartir={() => setCompartiendo(false)}
+              onDejarDeCompartir={() => onAlternarCompartiendo?.()}
               clienteComparte={clienteComparte}
               fijado={fijado}
               onFijar={onFijar ?? (() => {})}
@@ -386,7 +402,7 @@ export function CenterColumn({
 
       {/* Solo para probar el mock: que el cliente empiece o deje de
           compartir su pantalla. No es parte de la pantalla. */}
-      {(webcall || video) && (
+      {(webcall || video || chat) && (
         <div className="flex shrink-0 items-center gap-2 border-t border-dashed border-border px-4 py-1.5 text-xs text-muted-foreground">
           {t("padMock.simularComparte.titulo")}
           <button
@@ -408,17 +424,18 @@ export function CenterColumn({
         chat={chat}
         llamadaWeb={webcall || video}
         video={
-          webcall || video
+          webcall || video || chat
             ? {
                 compartiendo,
-                onToggleCompartir: () => setCompartiendo((v) => !v),
+                onToggleCompartir: () => onAlternarCompartiendo?.(),
                 ...(video && {
                   esVideo: true,
                   ...(solapaChat && { onCaptura: capturar }),
                 }),
                 // Picture-in-Picture: el video en la videollamada; la
-                // pantalla del cliente en la webcall, mientras la comparte.
-                ...(pip && (video || (webcall && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
+                // pantalla del cliente en la webcall y el chat, mientras la
+                // comparte.
+                ...(pip && (video || ((webcall || chat) && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
               }
             : undefined
         }

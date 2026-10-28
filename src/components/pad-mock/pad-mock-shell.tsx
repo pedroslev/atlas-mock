@@ -360,37 +360,48 @@ export function PadMockShell() {
   }, [cola, seleccionarFila]);
 
   // Videollamada o webcall en curso (ya atendida; hay una sola a la vez por
-  // la capacidad del asesor). Lo que el asesor mira en ella sigue a la vista
-  // aunque no esté en su solapa: dentro del pad, con la ventanita
-  // (VentanitaVideo); fuera del pad, con el Picture-in-Picture del
-  // navegador. Las dos vuelven a la solapa.
+  // la capacidad del asesor) o, si no hay, el chat cuyo cliente comparte su
+  // pantalla. Lo que el asesor mira en ella sigue a la vista aunque no esté
+  // en su solapa: dentro del pad, con la ventanita (VentanitaVideo); fuera
+  // del pad, con el Picture-in-Picture del navegador. Las dos vuelven a la
+  // solapa.
   // - Videollamada: siempre, con lo fijado en el recuadro grande.
-  // - Webcall: solo mientras el cliente comparte su pantalla, con la pantalla.
-  // Que el cliente comparta y el pin viven acá (no en CenterColumn, que se
+  // - Webcall y chat: solo mientras el cliente comparte su pantalla, con la
+  //   pantalla.
+  // Qué cliente comparte y el pin viven acá (no en CenterColumn, que se
   // vuelve a armar al cambiar de interacción) para que la ventanita y el
-  // Picture-in-Picture los sigan desde cualquier parte del pad.
-  const filaVideo = cola.find((f) => (f.canal === "videollamada" || f.canal === "webcall") && !f.porAceptar);
+  // Picture-in-Picture los sigan desde cualquier parte del pad. En el mock,
+  // de a un cliente por vez: si comparte el de otro chat, deja de compartir
+  // el anterior.
+  const [comparteFilaId, setComparteFilaId] = useState<string | null>(null);
+  // El asesor comparte su pantalla en esta interacción (chat, webcall o
+  // videollamada); también acá para que no se corte al cambiar de interacción.
+  const [asesorComparteFilaId, setAsesorComparteFilaId] = useState<string | null>(null);
+  const filaVideo =
+    cola.find((f) => (f.canal === "videollamada" || f.canal === "webcall") && !f.porAceptar) ??
+    cola.find((f) => f.id === comparteFilaId && !f.porAceptar);
   const filaVideoEsVideo = filaVideo?.canal === "videollamada";
   const nombreVideo = filaVideo ? (entrantesMock.find((e) => e.id === filaVideo.entranteId)?.nombre ?? null) : null;
-  const [clienteComparte, setClienteComparte] = useState(false);
+  const clienteComparte = !!filaVideo && filaVideo.id === comparteFilaId;
   const [fijado, setFijado] = useState<FuenteVideo>("cliente");
   const [filaVideoVista, setFilaVideoVista] = useState(filaVideo?.id);
   if (filaVideo?.id !== filaVideoVista) {
     setFilaVideoVista(filaVideo?.id);
-    setClienteComparte(false);
     setFijado("cliente");
   }
   // Al empezar a compartir, la pantalla pasa sola al recuadro grande; al
   // terminar, si estaba fijada, vuelve la cámara del cliente.
-  function alternarClienteComparte() {
-    if (clienteComparte) setFijado((f) => (f === "pantalla" ? "cliente" : f));
+  function alternarClienteComparte(filaId: string) {
+    const comparte = comparteFilaId === filaId;
+    if (comparte) setFijado((f) => (f === "pantalla" ? "cliente" : f));
     else setFijado("pantalla");
-    setClienteComparte(!clienteComparte);
+    setComparteFilaId(comparte ? null : filaId);
   }
   const sigueALaVista = filaVideoEsVideo || clienteComparte;
   const fuenteALaVista: FuenteVideo = filaVideoEsVideo ? fijado : "pantalla";
   const [solapaVideoVisible, setSolapaVideoVisible] = useState(false);
   const [pedidoSolapaVideo, setPedidoSolapaVideo] = useState(0);
+  const [pedidoSolapaVideoVisto, setPedidoSolapaVideoVisto] = useState(0);
   const volverAlVideo = useCallback(() => {
     if (!filaVideo) return;
     setAccesoAbiertoId(null);
@@ -485,12 +496,18 @@ export function PadMockShell() {
                 filaActiva?.sonando ? () => rechazarSaliente(filaActiva.id) : undefined
               }
               pip={pip}
-              clienteComparte={clienteComparte}
-              onAlternarClienteComparte={alternarClienteComparte}
+              compartiendo={asesorComparteFilaId !== null && asesorComparteFilaId === interaccionActivaId}
+              onAlternarCompartiendo={() =>
+                setAsesorComparteFilaId((cur) => (cur === interaccionActivaId ? null : interaccionActivaId))
+              }
+              clienteComparte={comparteFilaId !== null && comparteFilaId === interaccionActivaId}
+              onAlternarClienteComparte={() => interaccionActivaId && alternarClienteComparte(interaccionActivaId)}
               fijado={fijado}
               onFijar={setFijado}
               onSolapaVideoVisible={setSolapaVideoVisible}
               pedidoSolapaVideo={pedidoSolapaVideo}
+              pedidoSolapaVideoVisto={pedidoSolapaVideoVisto}
+              onPedidoSolapaVideoVisto={setPedidoSolapaVideoVisto}
             />
           )}
           {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
