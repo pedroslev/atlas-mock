@@ -49,6 +49,7 @@ import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
 import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 // Chat: hilo de mensajes arriba (cliente a la izquierda, asesor a la
 // derecha) con "Volver al vivo", y el redactor abajo. Traído de la branch
@@ -230,14 +231,39 @@ function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechaz
   };
 }
 
+// Atajos de formato del redactor — los mismos que usan Slack y Gmail, así el
+// asesor no tiene que aprender nada nuevo. Se comparan por tecla física
+// (code) para que Shift+7 / Shift+8 funcionen igual con teclado en español.
+// Solo actúan con el foco en el cuadro de texto (los atajos de la barra de
+// controles de la interacción se ignoran ahí).
+type AtajoFormato = { shift: boolean; code: string; tecla: string };
+const ATAJOS_FORMATO = {
+  negrita: { shift: false, code: "KeyB", tecla: "B" },
+  cursiva: { shift: false, code: "KeyI", tecla: "I" },
+  tachado: { shift: true, code: "KeyX", tecla: "X" },
+  lista: { shift: true, code: "Digit8", tecla: "8" },
+  listaNumerada: { shift: true, code: "Digit7", tecla: "7" },
+  enlace: { shift: false, code: "KeyK", tecla: "K" },
+} satisfies Record<string, AtajoFormato>;
+
+/** Si la tecla apretada es la del atajo: por tecla física y, si el navegador
+ *  no la informa, por la letra. */
+function esTecla(e: React.KeyboardEvent, a: AtajoFormato) {
+  return e.code ? e.code === a.code : e.key.toLowerCase() === a.tecla.toLowerCase();
+}
+
+function etiquetaAtajo(a: AtajoFormato, isMac: boolean) {
+  return isMac ? `⌘${a.shift ? "⇧" : ""}${a.tecla}` : `Ctrl+${a.shift ? "Shift+" : ""}${a.tecla}`;
+}
+
 // Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar, emojis,
 // formato y plantillas en línea, arriba del área de texto.
 //
 // Formato: un solo botón "Aa", cerrado por defecto, para que el cuadro quede
 // limpio (mismo criterio que Zendesk, que lo esconde detrás de un botón).
 // Abierto, muestra una barra chica con negrita, cursiva, tachado, viñetas,
-// lista numerada y enlace — el mismo conjunto que las plantillas. Ctrl/Cmd+B
-// y Ctrl/Cmd+I dan negrita y cursiva sin abrirla.
+// lista numerada y enlace — el mismo conjunto que las plantillas. Cada una
+// tiene su atajo (ATAJOS_FORMATO), que funciona aunque la barra esté cerrada.
 //
 // Adjuntar: el selector de archivos ya filtra los tipos que se pueden mandar,
 // pero el asesor puede pedirle "todos los archivos" y el tamaño no se puede
@@ -246,6 +272,7 @@ function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechaz
 // cuadro hasta enviar (se puede quitar).
 function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void }) {
   const t = useT();
+  const isMac = useIsMac();
   const [texto, setTexto] = useState("");
   const [adjuntos, setAdjuntos] = useState<AdjuntoChat[]>([]);
   const [rechazados, setRechazados] = useState<ArchivoRechazado[]>([]);
@@ -350,13 +377,30 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
     setEnlaceAbierto(false);
   }
 
-  const botonesFormato = [
-    { icon: Bold, label: t("padMock.conversationPanel.negrita"), atajo: "Ctrl+B", accion: () => envolver("**") },
-    { icon: Italic, label: t("padMock.conversationPanel.cursiva"), atajo: "Ctrl+I", accion: () => envolver("_") },
-    { icon: Strikethrough, label: t("padMock.conversationPanel.tachado"), accion: () => envolver("~~") },
-    { icon: List, label: t("padMock.conversationPanel.lista"), accion: () => listar("vineta") },
-    { icon: ListOrdered, label: t("padMock.conversationPanel.listaNumerada"), accion: () => listar("numero") },
+  const formatos = [
+    { id: "negrita", icon: Bold, label: t("padMock.conversationPanel.negrita"), atajo: ATAJOS_FORMATO.negrita, accion: () => envolver("**") },
+    { id: "cursiva", icon: Italic, label: t("padMock.conversationPanel.cursiva"), atajo: ATAJOS_FORMATO.cursiva, accion: () => envolver("_") },
+    { id: "tachado", icon: Strikethrough, label: t("padMock.conversationPanel.tachado"), atajo: ATAJOS_FORMATO.tachado, accion: () => envolver("~~") },
+    { id: "lista", icon: List, label: t("padMock.conversationPanel.lista"), atajo: ATAJOS_FORMATO.lista, accion: () => listar("vineta") },
+    { id: "listaNumerada", icon: ListOrdered, label: t("padMock.conversationPanel.listaNumerada"), atajo: ATAJOS_FORMATO.listaNumerada, accion: () => listar("numero") },
   ];
+
+  /** Atajo de formato en el cuadro: true si lo atendió. */
+  function atajoFormato(e: React.KeyboardEvent) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
+    const f = formatos.find((x) => esTecla(e, x.atajo) && x.atajo.shift === e.shiftKey);
+    if (f) {
+      f.accion();
+      return true;
+    }
+    if (esTecla(e, ATAJOS_FORMATO.enlace) && !e.shiftKey) {
+      // El enlace se arma en su recuadro, que vive en la barra: la abre.
+      setFormatoAbierto(true);
+      abrirEnlace(true);
+      return true;
+    }
+    return false;
+  }
 
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
@@ -399,8 +443,8 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
       </div>
       {formatoAbierto && (
         <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5">
-          {botonesFormato.map((b) => (
-            <ActionTooltip key={b.label} label={b.atajo ? `${b.label} (${b.atajo})` : b.label}>
+          {formatos.map((b) => (
+            <ActionTooltip key={b.id} label={`${b.label} (${etiquetaAtajo(b.atajo, isMac)})`}>
               <Button
                 type="button"
                 variant="ghost"
@@ -421,7 +465,7 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
                 variant="ghost"
                 size="icon-sm"
                 aria-label={t("padMock.conversationPanel.enlace")}
-                title={t("padMock.conversationPanel.enlace")}
+                title={`${t("padMock.conversationPanel.enlace")} (${etiquetaAtajo(ATAJOS_FORMATO.enlace, isMac)})`}
                 onMouseDown={(e) => e.preventDefault()}
               >
                 <Link2 className="size-4" />
@@ -483,15 +527,8 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onKeyDown={(e) => {
-          const mod = e.ctrlKey || e.metaKey;
-          if (mod && !e.altKey && !e.shiftKey && (e.key === "b" || e.key === "B")) {
+          if (atajoFormato(e)) {
             e.preventDefault();
-            envolver("**");
-            return;
-          }
-          if (mod && !e.altKey && !e.shiftKey && (e.key === "i" || e.key === "I")) {
-            e.preventDefault();
-            envolver("_");
             return;
           }
           if (e.key === "Enter" && !e.shiftKey) {
@@ -538,7 +575,11 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoCha
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>{t("padMock.conversationPanel.entendido")}</AlertDialogAction>
+            {/* Con el foco en "Entendido" al abrir, Enter lo cierra. */}
+            <AlertDialogAction autoFocus className="gap-1.5">
+              {t("padMock.conversationPanel.entendido")}
+              <Kbd className="bg-primary-foreground/15 text-primary-foreground">Enter</Kbd>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
