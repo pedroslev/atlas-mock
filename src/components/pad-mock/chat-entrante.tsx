@@ -3,6 +3,9 @@
 import { Headset, MessageCircle, Phone, PhoneOff, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { Kbd } from "@/components/ui/kbd";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
+import { etiquetaAtender, etiquetaRechazar, useAtajosEntrante } from "@/lib/pad-mock/use-atajos-entrante";
 import type { InteraccionEntrante } from "@/lib/pad-mock/data";
 
 // Chat entrante de una campaña SIN atención forzada: el agente lo acepta o
@@ -25,6 +28,8 @@ export function ChatEntranteAviso({
   onRechazar: () => void;
 }) {
   const t = useT();
+  const isMac = useIsMac();
+  useAtajosEntrante(onAceptar, onRechazar);
   const primerMensaje = chat.mensajes.find((m) => m.autor === "cliente");
   return (
     <div
@@ -50,10 +55,12 @@ export function ChatEntranteAviso({
         <Button type="button" variant="outline" className="flex-1 gap-1.5" onClick={onRechazar}>
           <X className="size-4" />
           {t("padMock.chatEntrante.rechazar")}
+          <Kbd className="ml-1">{etiquetaRechazar(isMac)}</Kbd>
         </Button>
         <Button type="button" className="flex-1 gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAceptar}>
           <MessageCircle className="size-4" />
           {t("padMock.chatEntrante.aceptar")}
+          <Kbd className="ml-1 bg-white/20 text-white">{etiquetaAtender(isMac)}</Kbd>
         </Button>
       </div>
     </div>
@@ -62,8 +69,9 @@ export function ChatEntranteAviso({
 
 // El chat, la webcall o la videollamada entrante en el centro de la
 // pantalla — mismo criterio que la llamada entrante de Hermes: quién es, por
-// qué campaña, y los dos botones. Chat: su primer mensaje, Aceptar /
-// Rechazar. Webcall y videollamada: Atender / Rechazar, como una llamada,
+// qué campaña, y los dos botones (con atajos: useAtajosEntrante). Chat: su
+// primer mensaje, Aceptar / Rechazar. Llamada, webcall y videollamada:
+// Atender / Rechazar,
 // sin más: si la cuenta suma chat es configuración que al asesor no le
 // cambia nada para decidir, y qué llega antes de atender (puede haber un
 // IMR antes) queda por definir con el Architect.
@@ -77,8 +85,12 @@ export function ChatEntrantePanel({
   onRechazar: () => void;
 }) {
   const t = useT();
+  const isMac = useIsMac();
+  useAtajosEntrante(onAceptar, onRechazar);
+  // Llamada, webcall y videollamada se atienden como una llamada.
   const webcall = chat.canal !== "chat";
-  const Icono = chat.canal === "videollamada" ? Video : webcall ? Headset : MessageCircle;
+  const Icono =
+    chat.canal === "videollamada" ? Video : chat.canal === "webcall" ? Headset : webcall ? Phone : MessageCircle;
   const primerMensaje = webcall ? undefined : chat.mensajes.find((m) => m.autor === "cliente");
   return (
     <div className="flex h-full min-h-0 w-0 flex-1 flex-col items-center justify-center gap-5 bg-background p-6 text-center">
@@ -90,7 +102,9 @@ export function ChatEntrantePanel({
         <span className="text-sm text-muted-foreground">
           {chat.canal === "videollamada"
             ? t("padMock.videollamadaEntrante.titulo")
-            : webcall
+            : chat.canal === "llamada"
+              ? t("padMock.llamadaEntrante.titulo")
+              : webcall
               ? t("padMock.webcallEntrante.titulo")
               : t("padMock.chatEntrante.titulo")}
         </span>
@@ -106,6 +120,7 @@ export function ChatEntrantePanel({
         <Button type="button" size="lg" variant="outline" className="min-w-36 gap-1.5" onClick={onRechazar}>
           {webcall ? <PhoneOff className="size-4" /> : <X className="size-4" />}
           {t("padMock.chatEntrante.rechazar")}
+          <Kbd className="ml-1">{etiquetaRechazar(isMac)}</Kbd>
         </Button>
         <Button
           type="button"
@@ -115,6 +130,7 @@ export function ChatEntrantePanel({
         >
           {webcall ? <Phone className="size-4" /> : <MessageCircle className="size-4" />}
           {webcall ? t("padMock.webcallEntrante.atender") : t("padMock.chatEntrante.aceptar")}
+          <Kbd className="ml-1 bg-white/20 text-white">{etiquetaAtender(isMac)}</Kbd>
         </Button>
       </div>
     </div>

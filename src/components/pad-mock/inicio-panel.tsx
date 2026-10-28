@@ -236,7 +236,7 @@ export function InicioPanel({
                     >
                       <Icono className="size-3.5" />
                       {CANAL_LABEL[e.canal]}
-                      {e.canal !== "chat" && (
+                      {(e.canal === "webcall" || e.canal === "videollamada") && (
                         <span className="text-muted-foreground">
                           · {e.chatEnLlamada ? t("padMock.inicio.simularConChat") : t("padMock.inicio.simularSinChat")}
                         </span>

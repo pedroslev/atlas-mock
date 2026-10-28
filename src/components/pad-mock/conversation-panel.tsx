@@ -588,7 +588,8 @@ function Redactor({
             e.preventDefault();
             return;
           }
-          if (e.key === "Enter" && !e.shiftKey) {
+          // Ctrl/Cmd+Enter es aceptar una interacción entrante, no enviar.
+          if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
             enviar();
           }

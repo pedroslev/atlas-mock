@@ -163,6 +163,7 @@ export const padMock: NamespaceDict = {
     "webcallEntrante.sonando": "Sonando",
     "centerColumn.webcall": "Webcall",
     "videollamadaEntrante.titulo": "Videollamada entrante",
+    "llamadaEntrante.titulo": "Llamada entrante",
     "centerColumn.video": "Video",
     "centerColumn.chat": "Chat",
     "video.compartiendo": "Estás compartiendo tu pantalla",

@@ -179,7 +179,7 @@ export const ADJUNTOS_CHAT = {
 // otra solapa al lado.
 export type InteraccionEntrante = {
   id: string;
-  canal: "chat" | "webcall" | "videollamada";
+  canal: "llamada" | "chat" | "webcall" | "videollamada";
   nombre: string;
   campania: string;
   /** Cuenta por la que entra (Olimpo → Cuentas). */
@@ -194,6 +194,27 @@ export type InteraccionEntrante = {
 };
 
 export const entrantesMock: InteraccionEntrante[] = [
+  // Llamadas de cliente (para probar el mock desde Inicio).
+  {
+    id: "ll-1",
+    canal: "llamada",
+    nombre: "Carolina Paz",
+    campania: "Cobranzas Activa PCP",
+    cuenta: "Línea Cobranzas AR",
+    atencionForzada: true,
+    claveHistorial: "carolina-paz",
+    mensajes: [],
+  },
+  {
+    id: "ll-2",
+    canal: "llamada",
+    nombre: "Federico Luna",
+    campania: "Lanzamiento Tarjeta Plus",
+    cuenta: "Línea Ventas",
+    atencionForzada: false,
+    claveHistorial: "federico-luna",
+    mensajes: [],
+  },
   {
     id: "ce-1",
     canal: "chat",
@@ -435,7 +456,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       ],
     },
   ],
-  // Los clientes de entrantesMock (chat, webcall y videollamada) no tienen
+  // Los clientes de entrantesMock (llamada, chat, webcall y videollamada) no tienen
   // historial por ahora, a pedido del PO: su sección queda vacía.
 };
 
