@@ -43,8 +43,9 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 //
 // Videollamada: la solapa fija es "Video" y, si la cuenta suma chat, hay una
 // segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
-// lugar). Webcall: mientras el cliente comparte su pantalla, la segunda
-// solapa fija es "Pantalla del cliente". El chat queda montado al cambiar de solapa, para no perder lo que
+// lugar). Webcall: mientras el cliente comparte su pantalla, con chat la
+// segunda solapa fija es "Pantalla del cliente"; sin chat, la pantalla va
+// en la primera. El chat queda montado al cambiar de solapa, para no perder lo que
 // se estaba escribiendo. Compartir pantalla y captura de imagen
 // viven acá porque las usan la barra de controles, la solapa del video y la del chat. El
 // Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
@@ -111,9 +112,11 @@ export function CenterColumn({
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const solapaChat = video && entrante?.chatEnLlamada === true;
   // El cliente comparte su pantalla (en el mock, con el simulador de abajo;
-  // el estado vive en pad-mock-shell.tsx). En la webcall aparece la solapa
-  // "Pantalla del cliente" mientras dure.
-  const solapaPantalla = webcall && clienteComparte;
+  // el estado vive en pad-mock-shell.tsx). En la webcall con chat aparece
+  // la solapa "Pantalla del cliente" mientras dure; sin chat, la pantalla
+  // ocupa la primera solapa en lugar del cuerpo de la llamada.
+  const solapaPantalla = webcall && clienteComparte && conChat;
+  const pantallaEnPrimera = webcall && clienteComparte && !conChat;
   const fijas = solapaChat || solapaPantalla ? 2 : 1;
   const [compartiendo, setCompartiendo] = useState(false);
   // Captura de imagen (solo videollamada con chat): destella el video, queda
@@ -144,11 +147,12 @@ export function CenterColumn({
   const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
   if (pedidoSolapaVideo !== pedidoAtendido) {
     setPedidoAtendido(pedidoSolapaVideo);
-    setTab(webcall ? "pantalla" : "conversacion");
+    setTab(solapaPantalla ? "pantalla" : "conversacion");
   }
   // La solapa que siguen la ventanita y el Picture-in-Picture: Video en la
-  // videollamada, Pantalla del cliente en la webcall.
-  const solapaVideoVisible = (video && tab === "conversacion") || (solapaPantalla && tab === "pantalla");
+  // videollamada; en la webcall, la que muestra la pantalla del cliente.
+  const solapaVideoVisible =
+    ((video || pantallaEnPrimera) && tab === "conversacion") || (solapaPantalla && tab === "pantalla");
   useEffect(() => {
     onSolapaVideoVisible?.(solapaVideoVisible);
   }, [solapaVideoVisible, onSolapaVideoVisible]);
@@ -329,6 +333,12 @@ export function CenterColumn({
               onCerrarPip={() => pip?.alternar()}
               flash={flash}
             />
+          ) : pantallaEnPrimera && entrante ? (
+            <PantallaClientePanel
+              nombre={entrante.nombre}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
+            />
           ) : (
             <ConversationPanel
               tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
@@ -408,7 +418,7 @@ export function CenterColumn({
                 }),
                 // Picture-in-Picture: el video en la videollamada; la
                 // pantalla del cliente en la webcall, mientras la comparte.
-                ...(pip && (video || solapaPantalla) && { pip: pip.activo, onTogglePip: pip.alternar }),
+                ...(pip && (video || (webcall && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
               }
             : undefined
         }
