@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GripHorizontal, Maximize2, PictureInPicture2, ScreenShare, User } from "lucide-react";
+import { GripHorizontal, Maximize2, MonitorUp, PictureInPicture2, Pin, ScreenShare, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -31,17 +31,86 @@ function ImagenCliente({ nombre, chica = false }: { nombre: string; chica?: bool
   );
 }
 
-// Solapa "Video" de una videollamada: el video del cliente grande, la cámara
-// del asesor chica abajo a la derecha (o su pantalla, si la está
-// compartiendo). La captura de imagen destella acá y queda adjunta en el
-// chat (CenterColumn). Los controles (compartir,
-// captura, Picture-in-Picture) están en la barra de abajo, con los de la
-// llamada. Mientras el video está en el Picture-in-Picture, la solapa lo
-// indica en su lugar.
+// Pantalla que comparte el cliente. En el mock no hay stream: es el dibujo
+// de una página web (la tienda donde el cliente está comprando).
+export function PantallaCliente({ chica = false }: { chica?: boolean }) {
+  return (
+    <div className="absolute inset-0 flex flex-col bg-slate-100 text-slate-500">
+      <div className={cn("flex shrink-0 items-center gap-1 bg-slate-300", chica ? "h-2.5 px-1" : "h-7 px-3")}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className={cn("rounded-full bg-slate-400", chica ? "size-1" : "size-2.5")} />
+        ))}
+        {!chica && (
+          <span className="ml-3 flex-1 truncate rounded bg-white/70 px-2 text-[0.7rem] text-slate-500">
+            tienda.example.com/carrito
+          </span>
+        )}
+      </div>
+      <div className={cn("flex min-h-0 flex-1", chica ? "gap-1 p-1" : "gap-4 p-5")}>
+        <div className="flex flex-1 flex-col gap-[6%]">
+          <div className="h-[10%] w-1/2 rounded bg-slate-300" />
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex h-[18%] items-center gap-[4%] rounded bg-white px-[3%]">
+              <div className="aspect-square h-3/4 rounded bg-slate-200" />
+              <div className="h-1/5 flex-1 rounded bg-slate-200" />
+            </div>
+          ))}
+        </div>
+        <div className="flex w-1/3 flex-col gap-[6%] rounded bg-white p-[3%]">
+          <div className="h-[8%] w-3/4 rounded bg-slate-200" />
+          <div className="h-[8%] w-1/2 rounded bg-slate-200" />
+          <div className="mt-auto h-[14%] rounded bg-sky-500/70" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Lo que puede ir en el recuadro grande de la videollamada. */
+export type FuenteVideo = "cliente" | "pantalla" | "asesor";
+
+function ContenidoFuente({
+  fuente,
+  nombre,
+  compartiendo,
+  chica,
+}: {
+  fuente: FuenteVideo;
+  nombre: string;
+  compartiendo: boolean;
+  chica: boolean;
+}) {
+  if (fuente === "cliente") return <ImagenCliente nombre={nombre} chica={chica} />;
+  if (fuente === "pantalla") return <PantallaCliente chica={chica} />;
+  // Cámara del asesor (o su pantalla, si la está compartiendo).
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-slate-700 text-white/80">
+      {compartiendo ? (
+        <ScreenShare className={chica ? "size-6" : "size-12"} />
+      ) : (
+        <User className={chica ? "size-6" : "size-12"} />
+      )}
+    </div>
+  );
+}
+
+// Solapa "Video" de una videollamada: un recuadro grande y, en la esquina,
+// los recuadros chicos del resto — la cámara del asesor (o su pantalla, si
+// la está compartiendo) y, cuando el cliente comparte la suya, su cámara o
+// su pantalla. Mientras el cliente comparte, cada recuadro chico tiene un
+// pin para fijarlo en el grande (el asesor elige qué ver grande: la
+// pantalla del cliente, su cámara o la propia). La captura de imagen
+// destella acá y queda adjunta en el chat (CenterColumn). Los controles
+// (compartir, captura, Picture-in-Picture) están en la barra de abajo, con
+// los de la llamada. Mientras el video está en el Picture-in-Picture, la
+// solapa lo indica en su lugar.
 export function VideoPanel({
   nombre,
   compartiendo,
   onDejarDeCompartir,
+  clienteComparte,
+  fijado,
+  onFijar,
   pip,
   onCerrarPip,
   flash,
@@ -49,12 +118,23 @@ export function VideoPanel({
   nombre: string;
   compartiendo: boolean;
   onDejarDeCompartir: () => void;
+  clienteComparte: boolean;
+  /** Lo que se ve en el recuadro grande. */
+  fijado: FuenteVideo;
+  onFijar: (f: FuenteVideo) => void;
   pip: boolean;
   onCerrarPip: () => void;
   /** Destello de la captura recién sacada. */
   flash: boolean;
 }) {
   const t = useT();
+  const fuentes: FuenteVideo[] = clienteComparte ? ["pantalla", "cliente", "asesor"] : ["cliente", "asesor"];
+  const etiqueta = (f: FuenteVideo) =>
+    f === "cliente"
+      ? nombre
+      : f === "pantalla"
+        ? t("padMock.video.pantallaDe", { nombre })
+        : t("padMock.video.tuCamara");
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-4">
       {compartiendo && (
@@ -66,6 +146,12 @@ export function VideoPanel({
           <Button size="sm" variant="outline" onClick={onDejarDeCompartir}>
             {t("padMock.video.dejarDeCompartir")}
           </Button>
+        </div>
+      )}
+      {clienteComparte && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+          <MonitorUp className="size-4 text-primary" />
+          {t("padMock.video.clienteComparte", { nombre })}
         </div>
       )}
 
@@ -80,14 +166,36 @@ export function VideoPanel({
           </div>
         ) : (
           <>
-            <ImagenCliente nombre={nombre} />
-            <span className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
-              {nombre}
+            <ContenidoFuente fuente={fijado} nombre={nombre} compartiendo={compartiendo} chica={false} />
+            <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
+              {clienteComparte && <Pin className="size-3" />}
+              {etiqueta(fijado)}
             </span>
-            {/* Cámara del asesor (o su pantalla compartida). */}
-            <div className="absolute right-3 bottom-3 flex aspect-video w-40 items-center justify-center overflow-hidden rounded-lg border border-white/20 bg-slate-700 text-white/80">
-              {compartiendo ? <ScreenShare className="size-6" /> : <User className="size-6" />}
-              <span className="absolute bottom-1 left-1.5 text-[0.65rem]">{t("padMock.video.tuCamara")}</span>
+            <div className="absolute right-3 bottom-3 flex gap-2">
+              {fuentes
+                .filter((f) => f !== fijado)
+                .map((f) => (
+                  <div
+                    key={f}
+                    className="group relative aspect-video w-40 overflow-hidden rounded-lg border border-white/20"
+                  >
+                    <ContenidoFuente fuente={f} nombre={nombre} compartiendo={compartiendo} chica />
+                    <span className="absolute bottom-1 left-1.5 max-w-[80%] truncate rounded bg-black/40 px-1 text-[0.65rem] text-white">
+                      {etiqueta(f)}
+                    </span>
+                    {clienteComparte && (
+                      <button
+                        type="button"
+                        onClick={() => onFijar(f)}
+                        aria-label={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                        title={t("padMock.video.fijar", { fuente: etiqueta(f) })}
+                        className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/50 text-white hover:bg-black/75"
+                      >
+                        <Pin className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
             </div>
             <div
               aria-hidden
@@ -99,7 +207,23 @@ export function VideoPanel({
           </>
         )}
       </div>
+    </div>
+  );
+}
 
+// Solapa "Pantalla del cliente" de una webcall: aparece solo mientras el
+// cliente comparte su pantalla (el resto del tiempo la webcall prioriza el
+// chat, como siempre).
+export function PantallaClientePanel({ nombre }: { nombre: string }) {
+  const t = useT();
+  return (
+    <div className="flex h-full min-h-0 flex-col p-4">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border">
+        <PantallaCliente />
+        <span className="absolute bottom-3 left-3 rounded-md bg-black/50 px-2 py-1 text-xs font-medium text-white">
+          {t("padMock.video.pantallaDe", { nombre })}
+        </span>
+      </div>
     </div>
   );
 }

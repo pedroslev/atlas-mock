@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Headset, Link2, MessageSquareText, Phone, Video } from "lucide-react";
+import { ExternalLink, Headset, Link2, MessageSquareText, MonitorUp, Phone, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel, formatoTamano, type AdjuntoExterno } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { VideoPanel, capturarCliente } from "@/components/pad-mock/video-panel";
+import { PantallaClientePanel, VideoPanel, capturarCliente, type FuenteVideo } from "@/components/pad-mock/video-panel";
 import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
@@ -43,7 +43,8 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 //
 // Videollamada: la solapa fija es "Video" y, si la cuenta suma chat, hay una
 // segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
-// lugar). El chat queda montado al cambiar de solapa, para no perder lo que
+// lugar). Webcall: mientras el cliente comparte su pantalla, la segunda
+// solapa fija es "Pantalla del cliente". El chat queda montado al cambiar de solapa, para no perder lo que
 // se estaba escribiendo. Compartir pantalla y captura de imagen
 // viven acá porque las usan la barra de controles, la solapa del video y la del chat. El
 // Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
@@ -98,7 +99,18 @@ export function CenterColumn({
   // videollamada el chat va en su propia solapa.
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const solapaChat = video && entrante?.chatEnLlamada === true;
-  const fijas = solapaChat ? 2 : 1;
+  // El cliente comparte su pantalla (en el mock, con el simulador de abajo).
+  // En la videollamada pasa sola al recuadro grande y el asesor puede fijar
+  // otra cosa con el pin; en la webcall aparece la solapa "Pantalla del
+  // cliente" mientras dure.
+  const [clienteComparte, setClienteComparte] = useState(false);
+  const [fijado, setFijado] = useState<FuenteVideo>("cliente");
+  function alternarClienteComparte() {
+    setClienteComparte(!clienteComparte);
+    setFijado(clienteComparte ? "cliente" : "pantalla");
+  }
+  const solapaPantalla = webcall && clienteComparte;
+  const fijas = solapaChat || solapaPantalla ? 2 : 1;
   const [compartiendo, setCompartiendo] = useState(false);
   // Captura de imagen (solo videollamada con chat): destella el video, queda
   // adjunta en el redactor del chat como "Captura-HH:MM" y lleva a la solapa
@@ -122,6 +134,9 @@ export function CenterColumn({
     }, 250);
   }
   const [tab, setTab] = useState("conversacion");
+  // Si el cliente deja de compartir con su solapa a la vista, vuelve a la
+  // primera.
+  if (tab === "pantalla" && !solapaPantalla) setTab("conversacion");
   const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideo);
   if (pedidoSolapaVideo !== pedidoAtendido) {
     setPedidoAtendido(pedidoSolapaVideo);
@@ -163,7 +178,7 @@ export function CenterColumn({
         return;
       }
       if (idx === 1 && fijas === 2) {
-        setTab("chat");
+        setTab(solapaPantalla ? "pantalla" : "chat");
         return;
       }
       const p = paginas[idx - fijas];
@@ -176,7 +191,7 @@ export function CenterColumn({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paginas, fijas]);
+  }, [paginas, fijas, solapaPantalla]);
 
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
@@ -257,6 +272,13 @@ export function CenterColumn({
               <Kbd className="ml-1">{shortcutMod} 2</Kbd>
             </TabsTrigger>
           )}
+          {solapaPantalla && (
+            <TabsTrigger value="pantalla" className="flex-none gap-2 px-4 py-3 text-sm">
+              <MonitorUp className="size-5" />
+              {t("padMock.centerColumn.pantallaCliente")}
+              <Kbd className="ml-1">{shortcutMod} 2</Kbd>
+            </TabsTrigger>
+          )}
           {paginas.map((p, i) =>
             p.modo === "pestana" ? (
               // Solo externa ("blank"): no es una solapa seleccionable — un
@@ -294,6 +316,9 @@ export function CenterColumn({
               nombre={entrante.nombre}
               compartiendo={compartiendo}
               onDejarDeCompartir={() => setCompartiendo(false)}
+              clienteComparte={clienteComparte}
+              fijado={fijado}
+              onFijar={setFijado}
               pip={pip?.activo ?? false}
               onCerrarPip={() => pip?.alternar()}
               flash={flash}
@@ -325,6 +350,11 @@ export function CenterColumn({
             />
           </TabsContent>
         )}
+        {solapaPantalla && entrante && (
+          <TabsContent value="pantalla" className="min-h-0 flex-1 overflow-hidden">
+            <PantallaClientePanel nombre={entrante.nombre} />
+          </TabsContent>
+        )}
         {paginas
           .filter((p) => p.modo === "embebido")
           .map((p) => (
@@ -333,6 +363,22 @@ export function CenterColumn({
             </TabsContent>
           ))}
       </Tabs>
+
+      {/* Solo para probar el mock: que el cliente empiece o deje de
+          compartir su pantalla. No es parte de la pantalla. */}
+      {(webcall || video) && (
+        <div className="flex shrink-0 items-center gap-2 border-t border-dashed border-border px-4 py-1.5 text-xs text-muted-foreground">
+          {t("padMock.simularComparte.titulo")}
+          <button
+            type="button"
+            onClick={alternarClienteComparte}
+            className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline"
+          >
+            <MonitorUp className="size-3.5" />
+            {clienteComparte ? t("padMock.simularComparte.termina") : t("padMock.simularComparte.empieza")}
+          </button>
+        </div>
+      )}
 
       <InteractionControls
         tipificaciones={tipificaciones}
