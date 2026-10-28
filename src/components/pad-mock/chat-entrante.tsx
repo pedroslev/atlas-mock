@@ -1,9 +1,9 @@
 "use client";
 
-import { MessageCircle, X } from "lucide-react";
+import { Headset, MessageCircle, Phone, PhoneOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import type { ChatEntrante } from "@/lib/pad-mock/data";
+import type { InteraccionEntrante } from "@/lib/pad-mock/data";
 
 // Chat entrante de una campaña SIN atención forzada: el agente lo acepta o
 // lo rechaza (y el sistema se lo deriva a otro agente). Con atención forzada
@@ -20,7 +20,7 @@ export function ChatEntranteAviso({
   onAceptar,
   onRechazar,
 }: {
-  chat: ChatEntrante;
+  chat: InteraccionEntrante;
   onAceptar: () => void;
   onRechazar: () => void;
 }) {
@@ -60,30 +60,42 @@ export function ChatEntranteAviso({
   );
 }
 
-// El chat entrante en el centro de la pantalla — mismo criterio que la
-// llamada entrante de Hermes: quién escribe, por qué campaña, qué escribió, y
-// Aceptar / Rechazar.
+// El chat o la webcall entrante en el centro de la pantalla — mismo criterio
+// que la llamada entrante de Hermes: quién es, por qué campaña, y los dos
+// botones. Chat: su primer mensaje, Aceptar / Rechazar. Webcall: Atender /
+// Rechazar, como una llamada, y si suma chat lo indica (con lo que el cliente
+// ya escribió, si escribió algo).
 export function ChatEntrantePanel({
   chat,
   onAceptar,
   onRechazar,
 }: {
-  chat: ChatEntrante;
+  chat: InteraccionEntrante;
   onAceptar: () => void;
   onRechazar: () => void;
 }) {
   const t = useT();
+  const webcall = chat.canal === "webcall";
+  const Icono = webcall ? Headset : MessageCircle;
   const primerMensaje = chat.mensajes.find((m) => m.autor === "cliente");
   return (
     <div className="flex h-full min-h-0 w-0 flex-1 flex-col items-center justify-center gap-5 bg-background p-6 text-center">
       <span className="relative flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/20" />
-        <MessageCircle className="size-7" />
+        <Icono className="size-7" />
       </span>
       <div className="flex flex-col gap-1">
-        <span className="text-sm text-muted-foreground">{t("padMock.chatEntrante.titulo")}</span>
+        <span className="text-sm text-muted-foreground">
+          {webcall ? t("padMock.webcallEntrante.titulo") : t("padMock.chatEntrante.titulo")}
+        </span>
         <span className="font-heading text-2xl font-semibold">{chat.nombre}</span>
         <span className="text-sm text-muted-foreground">{chat.campania}</span>
+        {webcall && chat.chatEnLlamada && (
+          <span className="mx-auto mt-1 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <MessageCircle className="size-3" />
+            {t("padMock.webcallEntrante.conChat")}
+          </span>
+        )}
       </div>
       {primerMensaje && (
         <p className="max-w-md rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-left text-sm leading-relaxed text-foreground">
@@ -92,7 +104,7 @@ export function ChatEntrantePanel({
       )}
       <div className="flex gap-3">
         <Button type="button" size="lg" variant="outline" className="min-w-36 gap-1.5" onClick={onRechazar}>
-          <X className="size-4" />
+          {webcall ? <PhoneOff className="size-4" /> : <X className="size-4" />}
           {t("padMock.chatEntrante.rechazar")}
         </Button>
         <Button
@@ -101,8 +113,8 @@ export function ChatEntrantePanel({
           className="min-w-36 gap-1.5 bg-success text-white hover:bg-success/90"
           onClick={onAceptar}
         >
-          <MessageCircle className="size-4" />
-          {t("padMock.chatEntrante.aceptar")}
+          {webcall ? <Phone className="size-4" /> : <MessageCircle className="size-4" />}
+          {webcall ? t("padMock.webcallEntrante.atender") : t("padMock.chatEntrante.aceptar")}
         </Button>
       </div>
     </div>

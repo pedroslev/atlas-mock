@@ -216,6 +216,9 @@ export type Cuenta = {
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
   workflow?: Workflow;
+  // Solo webcall: además del audio, cliente y asesor se escriben por chat en
+  // la misma pantalla de la llamada.
+  chatEnLlamada?: boolean;
   // Capacidad del asesor: cada uno tiene 100. Voz, webcall y videollamada ocupan los 100
   // (una a la vez) y no lo piden. En chat el tenant define el cupo y el máximo
   // de simultáneas, y el resto se deriva:
@@ -566,6 +569,17 @@ export const cuentas: Cuenta[] = [
     descripcion: "Llamada de voz por web (solo audio) desde el portal del cliente, sin carrier",
     tipo: "Webcall",
     identificador: "Webcall Soporte",
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
+    id: "acc-webcall-2",
+    nombre: "Webcall Ventas",
+    descripcion: "Llamada web con chat desde la tienda online, para mandar links y comprobantes",
+    tipo: "Webcall",
+    identificador: "Webcall Ventas",
+    chatEnLlamada: true,
     interactionValue: 100,
     provisioning: 1,
     provisioningLock: 100,

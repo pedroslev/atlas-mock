@@ -7,6 +7,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Phone,
+  Headset,
   MessageCircle,
   MessageSquareText,
   Smartphone,
@@ -22,10 +23,11 @@ import {
 // whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
 // aparecen en historial y en el armado de campañas salientes. "chat" sí
 // tiene su pantalla (conversation-panel.tsx).
-export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
+export type CanalMock = "llamada" | "webcall" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
   llamada: Phone,
+  webcall: Headset,
   chat: MessageCircle,
   whatsapp: Smartphone,
   mail: Mail,
@@ -34,6 +36,7 @@ export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
 
 export const CANAL_LABEL: Record<CanalMock, string> = {
   llamada: "Llamada",
+  webcall: "Webcall",
   chat: "Chat",
   whatsapp: "WhatsApp",
   mail: "Mail",
@@ -51,7 +54,7 @@ export type CampaniaSaliente = { id: string; nombre: string; cuentas: CuentaSali
 
 // Solo cuentas de llamada: es el único canal en el que el agente inicia la
 // interacción (el chat siempre lo inicia el cliente — ver
-// chatsEntrantesMock). camp-4 (Soporte técnico) solo atiende chats, así que
+// entrantesMock). camp-4 (Soporte técnico) solo atiende chats, así que
 // no figura acá — sigue en campaniasAgenteMock ("Mi turno").
 export const campaniasSalientesMock: CampaniaSaliente[] = [
   {
@@ -112,9 +115,9 @@ export type FilaCola = {
   retenidaDesde?: number;
   /** Momento en que arrancó — para la duración que queda en el historial. */
   iniciadaEn?: number;
-  /** Chat: id en chatsEntrantesMock. */
-  chatId?: string;
-  /** Chat entrante sin atención forzada que el agente todavía no aceptó. */
+  /** Chat o webcall: id en entrantesMock. */
+  entranteId?: string;
+  /** Entrante sin atención forzada que el agente todavía no aceptó/atendió. */
   porAceptar?: boolean;
 };
 
@@ -158,27 +161,39 @@ export const ADJUNTOS_CHAT = {
   archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "txt"], maxMB: 100 },
 };
 
-// Chats que el sistema le deriva al agente (el chat siempre lo inicia el
-// cliente). Cada uno viene de una campaña, y su "Atención forzada"
-// (Olimpo → Config. operativa) decide cómo llega: activada, entra directo a
-// las interacciones en curso; desactivada, aparece un aviso para aceptarlo.
+// Interacciones que el sistema le deriva al agente: chats y webcalls (las
+// dos las inicia siempre el cliente). Cada una viene de una campaña, y su
+// "Atención forzada" (Olimpo → Config. operativa) decide cómo llega:
+// activada, entra directo a las interacciones en curso; desactivada, se
+// ofrece para aceptar (chat) o atender (webcall).
 // En la ficha del cliente no hay teléfono: se muestra el nombre que dejó al
-// iniciar el chat.
-export type ChatEntrante = {
+// iniciar el chat o la llamada web.
+// Webcall: se maneja como una llamada (mismos controles). Si su cuenta tiene
+// "Chat durante la llamada" (Olimpo → Cuentas), la solapa de la llamada
+// muestra además el chat, igual que la pantalla de chat.
+export type InteraccionEntrante = {
   id: string;
+  canal: "chat" | "webcall";
   nombre: string;
   campania: string;
+  /** Cuenta por la que entra (Olimpo → Cuentas). */
+  cuenta: string;
   atencionForzada: boolean;
+  /** Webcall: la cuenta suma chat durante la llamada. */
+  chatEnLlamada?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
+  /** Lo conversado por chat hasta que llega al agente. */
   mensajes: MensajeChat[];
 };
 
-export const chatsEntrantesMock: ChatEntrante[] = [
+export const entrantesMock: InteraccionEntrante[] = [
   {
     id: "ce-1",
+    canal: "chat",
     nombre: "Nicolás Aguirre",
     campania: "Soporte técnico Nivel 1",
+    cuenta: "Chat web Soporte",
     atencionForzada: true,
     claveHistorial: "nicolas-aguirre",
     mensajes: [
@@ -190,13 +205,39 @@ export const chatsEntrantesMock: ChatEntrante[] = [
   },
   {
     id: "ce-2",
+    canal: "chat",
     nombre: "Sofía Medina",
     campania: "Ventas Online",
+    cuenta: "Chat web Ventas",
     atencionForzada: false,
     claveHistorial: "sofia-medina",
     mensajes: [
       { autor: "cliente", texto: "Hola! Quería saber si la tarjeta Plus tiene costo de mantenimiento.", hora: "15:10:04" },
     ],
+  },
+  {
+    id: "wc-1",
+    canal: "webcall",
+    nombre: "Lucía Fernández",
+    campania: "Ventas Online",
+    cuenta: "Webcall Ventas",
+    atencionForzada: false,
+    chatEnLlamada: true,
+    claveHistorial: "lucia-fernandez",
+    mensajes: [
+      { autor: "cliente", texto: "Hola, los llamo desde la tienda. Les escribo acá el número de pedido: #50771.", hora: "16:21:40" },
+    ],
+  },
+  {
+    id: "wc-2",
+    canal: "webcall",
+    nombre: "Martín Sosa",
+    campania: "Soporte técnico Nivel 1",
+    cuenta: "Webcall Soporte",
+    atencionForzada: true,
+    chatEnLlamada: false,
+    claveHistorial: "martin-sosa",
+    mensajes: [],
   },
 ];
 
@@ -359,7 +400,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       ],
     },
   ],
-  // Historial de los clientes de chatsEntrantesMock.
+  // Historial de los clientes de entrantesMock.
   "nicolas-aguirre": [
     {
       id: "h-n1",

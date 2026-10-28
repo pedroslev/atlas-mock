@@ -83,6 +83,10 @@ export const cuentas: NamespaceDict = {
     "capacidad.sinLugar": "No pueden ser más chats simultáneos que el cupo.",
     "tipo.videollamada": "Videollamada",
     "tipo.webcall": "Webcall (llamada web)",
+    "webcall.titulo": "Llamada web",
+    "webcall.chatEnLlamada": "Chat durante la llamada",
+    "webcall.chatEnLlamadaDesc":
+      "Además del audio, el cliente y el asesor se pueden escribir y mandar archivos, en la misma pantalla de la llamada. Apagado, la llamada web es solo audio, como una llamada telefónica.",
     "col.uso": "Uso",
 
     "flujo.inicio": "Inicio de interacción",
@@ -258,6 +262,10 @@ export const cuentas: NamespaceDict = {
     "capacidad.sinLugar": "Simultaneous chats cannot exceed the quota.",
     "tipo.videollamada": "Video call",
     "tipo.webcall": "Webcall (web call)",
+    "webcall.titulo": "Web call",
+    "webcall.chatEnLlamada": "Chat during the call",
+    "webcall.chatEnLlamadaDesc":
+      "Besides audio, the customer and the agent can message each other and send files, on the same call screen. When off, the web call is audio only, like a phone call.",
     "col.uso": "Usage",
 
     "flujo.inicio": "Interaction start",

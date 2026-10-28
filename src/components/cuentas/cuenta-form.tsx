@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowEditor } from "@/components/workflow/workflow-editor";
@@ -36,6 +37,7 @@ export function CuentaForm({
   const t = useT();
   const [uso, setUso] = useState<TipoUso | undefined>(cuenta?.uso);
   const [tipo, setTipo] = useState<TipoCuenta>((cuenta?.tipo as TipoCuenta) ?? "Llamada");
+  const [chatEnLlamada, setChatEnLlamada] = useState(cuenta?.chatEnLlamada ?? false);
 
   // Capacidad del asesor (solo chat). Una cuenta nueva arranca con 3 chats y el
   // 60% de la capacidad, o lo que quede libre si otras cuentas ya reservaron.
@@ -126,6 +128,25 @@ export function CuentaForm({
               onChange={(c) => setCapacidad((prev) => ({ ...prev, ...c }))}
             />
           </div>
+        )}
+
+        {/* Webcall: el chat durante la llamada es de la cuenta, porque define
+            qué ve el cliente en la web (solo audio, o audio y chat). */}
+        {tipo === "Webcall" && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>{t("cuentas.webcall.titulo")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <label htmlFor="chat-en-llamada" className="flex items-start justify-between gap-4">
+                <span className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">{t("cuentas.webcall.chatEnLlamada")}</span>
+                  <span className="text-xs text-muted-foreground">{t("cuentas.webcall.chatEnLlamadaDesc")}</span>
+                </span>
+                <Switch id="chat-en-llamada" checked={chatEnLlamada} onCheckedChange={setChatEnLlamada} />
+              </label>
+            </CardContent>
+          </Card>
         )}
 
         {telefonia && (

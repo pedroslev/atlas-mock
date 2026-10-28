@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Link2, MessageSquareText, Phone } from "lucide-react";
+import { ExternalLink, Headset, Link2, MessageSquareText, Phone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
 import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { paginasExternas, type ChatEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
+import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -21,7 +21,8 @@ const ICONO_PAGINA_EXTERNA = Link2;
 const SIN_PAGINAS: PaginaExterna[] = [];
 
 // Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
-// "Llamada" con ícono de teléfono, o "Conversación" en un chat. Las
+// "Llamada" con ícono de teléfono, "Conversación" en un chat o "Webcall" con
+// ícono de auricular. Las
 // demás son páginas externas configurables, embebidas o "pestaña aparte"
 // (§4.2). w-full en TabsList para que la línea de abajo llegue hasta el
 // borde con la columna de contexto, no solo hasta donde terminan las
@@ -47,7 +48,7 @@ export function CenterColumn({
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
-  chatEntrante,
+  entrante,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -59,8 +60,8 @@ export function CenterColumn({
   holdStartedAt: number | null;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
-  /** Chat en curso; sin esto, es una llamada. */
-  chatEntrante?: ChatEntrante;
+  /** Chat o webcall en curso; sin esto, es una llamada. */
+  entrante?: InteraccionEntrante;
   interno?: boolean;
   sonando?: boolean;
   /** Nombre del otro agente en una llamada interna. */
@@ -70,7 +71,11 @@ export function CenterColumn({
 }) {
   const t = useT();
   const isMac = useIsMac();
-  const chat = chatEntrante !== undefined;
+  const chat = entrante?.canal === "chat";
+  const webcall = entrante?.canal === "webcall";
+  // La solapa muestra el chat en un chat y en una webcall cuya cuenta suma
+  // chat durante la llamada; si no, el cuerpo de una llamada.
+  const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const [tab, setTab] = useState("conversacion");
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
@@ -158,12 +163,20 @@ export function CenterColumn({
             value="conversacion"
             className="sticky left-0 z-10 flex-none gap-2 bg-background! py-3 pr-4 pl-7 text-sm"
           >
-            {chat ? <MessageSquareText className="size-5" /> : <Phone className="size-5" />}
+            {chat ? (
+              <MessageSquareText className="size-5" />
+            ) : webcall ? (
+              <Headset className="size-5" />
+            ) : (
+              <Phone className="size-5" />
+            )}
             {chat
               ? t("padMock.centerColumn.conversacion")
-              : interno
-                ? t("padMock.llamadaInterna.titulo")
-                : t("padMock.centerColumn.llamada")}
+              : webcall
+                ? t("padMock.centerColumn.webcall")
+                : interno
+                  ? t("padMock.llamadaInterna.titulo")
+                  : t("padMock.centerColumn.llamada")}
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",
@@ -209,7 +222,7 @@ export function CenterColumn({
           <ConversationPanel
             tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
             enEspera={enEspera}
-            mensajesChat={chatEntrante?.mensajes}
+            mensajesChat={conChat ? entrante?.mensajes : undefined}
             interno={interno}
             sonando={sonando}
             nombreInterno={nombreInterno}
