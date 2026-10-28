@@ -341,17 +341,18 @@ export function VentanitaVideo({
   onVolver: () => void;
 }) {
   const t = useT();
-  // Distancia al borde inferior derecho de la pantalla: arranca por encima
-  // del redactor del chat y de la barra de controles.
-  const [pos, setPos] = useState({ right: 24, bottom: 220 });
-  const arrastre = useRef<{ x: number; y: number; right: number; bottom: number } | null>(null);
+  // Distancia al borde superior derecho de la pantalla: arranca arriba a la
+  // derecha, debajo del encabezado y de la fila de solapas (para no tapar
+  // el botón que pliega la columna de contexto).
+  const [pos, setPos] = useState({ right: 24, top: 136 });
+  const arrastre = useRef<{ x: number; y: number; right: number; top: number } | null>(null);
   const volver = webcall ? t("padMock.video.volverALaPantalla") : t("padMock.video.volverAlVideo");
 
   return (
     <div
       role="dialog"
       aria-label={webcall ? t("padMock.video.ventanitaPantalla") : t("padMock.video.ventanita")}
-      style={{ right: pos.right, bottom: pos.bottom }}
+      style={{ right: pos.right, top: pos.top }}
       className="fixed z-50 w-64 overflow-hidden rounded-xl border border-border bg-card shadow-xl"
     >
       <div
@@ -365,7 +366,7 @@ export function VentanitaVideo({
           if (!a) return;
           setPos({
             right: Math.max(0, a.right - (e.clientX - a.x)),
-            bottom: Math.max(0, a.bottom - (e.clientY - a.y)),
+            top: Math.max(0, a.top + (e.clientY - a.y)),
           });
         }}
         onPointerUp={() => {
