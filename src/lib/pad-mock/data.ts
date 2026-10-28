@@ -435,31 +435,8 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       ],
     },
   ],
-  // Historial de los clientes de entrantesMock.
-  "nicolas-aguirre": [
-    {
-      id: "h-n1",
-      fecha: "02/08/2026",
-      canal: "chat",
-      estado: "Derivado a nivel 2",
-      resumen: "Pedido llegado incompleto: falta un producto.",
-      agente: "Julián Ferreyra",
-      tipificacion: "Deriva a Logística",
-      tipificacionDescripcion: "El caso lo tiene que resolver el equipo de Logística.",
-      bookmarks: ["Reclamo activo"],
-      resumenIA:
-        "El cliente recibió su pedido sin uno de los productos. Se derivó a Logística para el reenvío.",
-      duracion: "6:48",
-      hilo: [],
-      conversacion: [
-        { autor: "cliente", texto: "Hola, me llegó el pedido #47102 pero falta la funda.", hora: "16:20:11" },
-        { autor: "agente", texto: "Hola Nicolás, lamento la molestia. ¿Me confirmás que el resto llegó bien?", hora: "16:20:49" },
-        { autor: "cliente", texto: "Sí, todo lo demás está.", hora: "16:21:30" },
-        { autor: "agente", texto: "Listo, ya le pasé el caso a Logística para que te reenvíen la funda. Te van a escribir por mail.", hora: "16:23:02" },
-        { autor: "cliente", texto: "Buenísimo, gracias.", hora: "16:23:15" },
-      ],
-    },
-  ],
+  // Los clientes de entrantesMock (chat, webcall y videollamada) no tienen
+  // historial por ahora, a pedido del PO: su sección queda vacía.
 };
 
 // --- Tipificación -----------------------------------------------------------

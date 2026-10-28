@@ -95,6 +95,7 @@ export const padMock: NamespaceDict = {
     // ContextColumn
     "contextColumn.cliente": "Cliente",
     "contextColumn.historial": "Historial",
+    "contextColumn.historialVacio": "Sin interacciones anteriores.",
     "contextColumn.expandirContexto": "Expandir contexto",
     "contextColumn.contexto": "Contexto",
     "contextColumn.colapsarContexto": "Colapsar contexto",
