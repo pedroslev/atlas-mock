@@ -175,7 +175,6 @@ export const padMock: NamespaceDict = {
     "video.pantallaDe": "Pantalla de {nombre}",
     "video.volverALaPantalla": "Volver a la pantalla",
     "video.ventanitaPantalla": "Pantalla del cliente",
-    "video.clienteComparte": "{nombre} está compartiendo su pantalla",
     "video.fijar": "Fijar en el recuadro grande: {fuente}",
     "centerColumn.pantallaCliente": "Pantalla del cliente",
     "simularComparte.titulo": "Solo para probar el mock:",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GripHorizontal, Maximize2, MonitorUp, PictureInPicture2, Pin, ScreenShare, User } from "lucide-react";
+import { GripHorizontal, Maximize2, PictureInPicture2, Pin, ScreenShare, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -147,12 +147,6 @@ export function VideoPanel({
           <Button size="sm" variant="outline" onClick={onDejarDeCompartir}>
             {t("padMock.video.dejarDeCompartir")}
           </Button>
-        </div>
-      )}
-      {clienteComparte && (
-        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-          <MonitorUp className="size-4 text-primary" />
-          {t("padMock.video.clienteComparte", { nombre })}
         </div>
       )}
 
