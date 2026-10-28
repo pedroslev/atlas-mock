@@ -1,9 +1,9 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import { FileText, MessageCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { MensajeChat } from "@/lib/pad-mock/data";
+import type { AdjuntoChat, MensajeChat } from "@/lib/pad-mock/data";
 import { segmentar, tipoDeLinea } from "@/lib/pad-mock/formato-chat";
 
 // Texto de un mensaje con su formato (negrita, cursiva, tachado, enlaces y
@@ -46,6 +46,31 @@ function TextoConFormato({ texto }: { texto: string }) {
   );
 }
 
+// Archivo dentro de una burbuja: la imagen se ve en miniatura; el resto,
+// como una ficha con el nombre y el tamaño.
+function AdjuntoEnMensaje({ adjunto, deAgente }: { adjunto: AdjuntoChat; deAgente: boolean }) {
+  if (adjunto.esImagen && adjunto.url) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={adjunto.url} alt={adjunto.nombre} className="max-h-48 rounded-lg object-cover" />;
+  }
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg px-2.5 py-2",
+        deAgente ? "bg-primary-foreground/15" : "bg-background"
+      )}
+    >
+      <FileText className="size-5 shrink-0" />
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-sm font-medium">{adjunto.nombre}</span>
+        <span className={cn("text-[0.65rem]", deAgente ? "text-primary-foreground/70" : "text-muted-foreground")}>
+          {adjunto.tamano}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // Burbujas de un chat: cliente a la izquierda (gris), asesor a la derecha
 // (azul), cada una con su hora. Las comparten la pantalla de chat en curso
 // (conversation-panel.tsx) y el modal de una conversación pasada.
@@ -62,7 +87,14 @@ export function MensajesChat({ mensajes }: { mensajes: MensajeChat[] }) {
                 : "rounded-bl-sm bg-muted text-foreground"
             )}
           >
-            <TextoConFormato texto={m.texto} />
+            {m.adjuntos && m.adjuntos.length > 0 && (
+              <div className={cn("flex flex-col gap-1.5", m.texto && "mb-1.5")}>
+                {m.adjuntos.map((a, j) => (
+                  <AdjuntoEnMensaje key={j} adjunto={a} deAgente={m.autor === "agente"} />
+                ))}
+              </div>
+            )}
+            {m.texto && <TextoConFormato texto={m.texto} />}
             <p
               className={cn(
                 "mt-0.5 text-right font-mono text-[0.65rem]",

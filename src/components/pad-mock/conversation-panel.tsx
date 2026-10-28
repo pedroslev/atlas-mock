@@ -18,12 +18,22 @@ import {
   PhoneOutgoing,
   SmilePlus,
   Strikethrough,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -36,7 +46,7 @@ import {
 } from "@/components/ui/command";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
-import { plantillasMensaje, type MensajeChat } from "@/lib/pad-mock/data";
+import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -186,6 +196,40 @@ function EmojiSelector({ onElegir }: { onElegir: (emoji: string) => void }) {
   );
 }
 
+const EXTENSIONES_IMAGEN = ADJUNTOS_CHAT.imagen.extensiones;
+const EXTENSIONES_ARCHIVO = ADJUNTOS_CHAT.archivo.extensiones;
+// Filtro del selector de archivos del sistema: muestra solo los tipos que se
+// pueden mandar (los demás aparecen deshabilitados u ocultos).
+const ACCEPT_ADJUNTOS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_ARCHIVO].map((e) => `.${e}`).join(",");
+
+function formatoTamano(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
+type ArchivoRechazado = { nombre: string; motivo: "tipo" | "tamano"; maxMB?: number };
+
+/** Revisa tipo y tamaño de un archivo elegido. */
+function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechazado } {
+  const ext = f.name.includes(".") ? f.name.split(".").pop()!.toLowerCase() : "";
+  const esImagen = EXTENSIONES_IMAGEN.includes(ext);
+  if (!esImagen && !EXTENSIONES_ARCHIVO.includes(ext)) {
+    return { rechazo: { nombre: f.name, motivo: "tipo" } };
+  }
+  const maxMB = esImagen ? ADJUNTOS_CHAT.imagen.maxMB : ADJUNTOS_CHAT.archivo.maxMB;
+  if (f.size > maxMB * 1024 * 1024) {
+    return { rechazo: { nombre: f.name, motivo: "tamano", maxMB } };
+  }
+  return {
+    ok: {
+      nombre: f.name,
+      tamano: formatoTamano(f.size),
+      esImagen,
+      url: esImagen ? URL.createObjectURL(f) : undefined,
+    },
+  };
+}
+
 // Redactor: Enter envía (Shift+Enter hace salto de línea); adjuntar, emojis,
 // formato y plantillas en línea, arriba del área de texto.
 //
@@ -194,9 +238,18 @@ function EmojiSelector({ onElegir }: { onElegir: (emoji: string) => void }) {
 // Abierto, muestra una barra chica con negrita, cursiva, tachado, viñetas,
 // lista numerada y enlace — el mismo conjunto que las plantillas. Ctrl/Cmd+B
 // y Ctrl/Cmd+I dan negrita y cursiva sin abrirla.
-function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
+//
+// Adjuntar: el selector de archivos ya filtra los tipos que se pueden mandar,
+// pero el asesor puede pedirle "todos los archivos" y el tamaño no se puede
+// filtrar antes; por eso, al elegir, se revisa de nuevo y lo que no se puede
+// mandar se avisa en un diálogo. Lo que sí, queda como ficha arriba del
+// cuadro hasta enviar (se puede quitar).
+function Redactor({ onEnviar }: { onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void }) {
   const t = useT();
   const [texto, setTexto] = useState("");
+  const [adjuntos, setAdjuntos] = useState<AdjuntoChat[]>([]);
+  const [rechazados, setRechazados] = useState<ArchivoRechazado[]>([]);
+  const archivoRef = useRef<HTMLInputElement>(null);
   const [formatoAbierto, setFormatoAbierto] = useState(false);
   const [enlaceAbierto, setEnlaceAbierto] = useState(false);
   const [enlaceTexto, setEnlaceTexto] = useState("");
@@ -206,9 +259,25 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
   const seleccionEnlaceRef = useRef({ a: 0, b: 0 });
 
   function enviar() {
-    if (!texto.trim()) return;
-    onEnviar(texto.trim());
+    if (!texto.trim() && adjuntos.length === 0) return;
+    onEnviar(texto.trim(), adjuntos);
     setTexto("");
+    setAdjuntos([]);
+  }
+
+  function elegirArchivos(files: FileList | null) {
+    if (!files) return;
+    const aceptados: AdjuntoChat[] = [];
+    const conProblema: ArchivoRechazado[] = [];
+    for (const f of Array.from(files)) {
+      const r = revisarArchivo(f);
+      if ("ok" in r) aceptados.push(r.ok);
+      else conProblema.push(r.rechazo);
+    }
+    setAdjuntos((cur) => [...cur, ...aceptados]);
+    setRechazados(conProblema);
+    // Para poder volver a elegir el mismo archivo.
+    if (archivoRef.current) archivoRef.current.value = "";
   }
 
   // Selección a aplicar apenas el cuadro muestra el texto nuevo (sin esperar
@@ -292,11 +361,21 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3">
       <div className="flex items-center gap-1.5">
+        <input
+          ref={archivoRef}
+          type="file"
+          multiple
+          accept={ACCEPT_ADJUNTOS}
+          className="hidden"
+          onChange={(e) => elegirArchivos(e.target.files)}
+        />
         <Button
+          type="button"
           variant="outline"
           size="icon-sm"
           aria-label={t("padMock.conversationPanel.adjuntar")}
           title={t("padMock.conversationPanel.adjuntar")}
+          onClick={() => archivoRef.current?.click()}
         >
           <Paperclip className="size-4" />
         </Button>
@@ -375,6 +454,30 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
           </Popover>
         </div>
       )}
+      {adjuntos.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {adjuntos.map((a, i) => (
+            <span key={i} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs">
+              {a.esImagen && a.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={a.url} alt="" className="size-5 rounded object-cover" />
+              ) : (
+                <FileText className="size-3.5 text-muted-foreground" />
+              )}
+              <span className="max-w-48 truncate font-medium">{a.nombre}</span>
+              <span className="text-muted-foreground">{a.tamano}</span>
+              <button
+                type="button"
+                aria-label={t("padMock.conversationPanel.quitarAdjunto", { nombre: a.nombre })}
+                onClick={() => setAdjuntos((cur) => cur.filter((_, j) => j !== i))}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="size-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       <Textarea
         ref={textareaRef}
         value={texto}
@@ -400,6 +503,45 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
         rows={3}
         className="resize-none"
       />
+
+      <AlertDialog open={rechazados.length > 0} onOpenChange={(o) => !o && setRechazados([])}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {rechazados.length === 1
+                ? t("padMock.conversationPanel.adjuntoRechazadoTitulo")
+                : t("padMock.conversationPanel.adjuntosRechazadosTitulo", { n: rechazados.length })}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="flex flex-col gap-3">
+                <ul className="flex flex-col gap-1.5">
+                  {rechazados.map((r, i) => (
+                    <li key={i} className="flex flex-col">
+                      <span className="font-medium text-foreground">{r.nombre}</span>
+                      <span>
+                        {r.motivo === "tipo"
+                          ? t("padMock.conversationPanel.adjuntoTipoNoSoportado")
+                          : t("padMock.conversationPanel.adjuntoMuyGrande", { mb: r.maxMB ?? 0 })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs">
+                  {t("padMock.conversationPanel.adjuntosPermitidos", {
+                    imagenes: EXTENSIONES_IMAGEN.map((e) => e.toUpperCase()).join(", "),
+                    mbImagen: ADJUNTOS_CHAT.imagen.maxMB,
+                    archivos: EXTENSIONES_ARCHIVO.map((e) => e.toUpperCase()).join(", "),
+                    mbArchivo: ADJUNTOS_CHAT.archivo.maxMB,
+                  })}
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>{t("padMock.conversationPanel.entendido")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -408,9 +550,12 @@ function Redactor({ onEnviar }: { onEnviar: (texto: string) => void }) {
 // se suma al hilo (con su formato) — en el mock no hay cliente del otro lado.
 function ChatPanel({ mensajesIniciales }: { mensajesIniciales: MensajeChat[] }) {
   const [mensajes, setMensajes] = useState(mensajesIniciales);
-  function enviar(texto: string) {
+  function enviar(texto: string, adjuntos: AdjuntoChat[]) {
     const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
-    setMensajes((cur) => [...cur, { autor: "agente", texto, hora }]);
+    setMensajes((cur) => [
+      ...cur,
+      { autor: "agente", texto, hora, adjuntos: adjuntos.length > 0 ? adjuntos : undefined },
+    ]);
   }
   return (
     <div className="flex h-full min-h-0 flex-col">

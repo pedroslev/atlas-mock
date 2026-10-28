@@ -132,7 +132,31 @@ export const clienteMock = {
 
 // --- Chat (pantalla de chat) -----------------------------------------------
 // "hora" en formato hora:minuto:segundo.
-export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
+export type AdjuntoChat = {
+  nombre: string;
+  /** Ya formateado, ej. "1,2 MB". */
+  tamano: string;
+  esImagen: boolean;
+  /** Vista previa de una imagen (solo en el mock: dirección local del archivo). */
+  url?: string;
+};
+
+export type MensajeChat = {
+  autor: "cliente" | "agente";
+  texto: string;
+  hora: string;
+  adjuntos?: AdjuntoChat[];
+};
+
+// Archivos que se pueden mandar por chat: los mismos tipos que ya acepta
+// Atlas en los mensajes con imagen o archivo de los flujos
+// (producto/funcionalidades/mensajes-enriquecidos). Los tamaños máximos son
+// los de esa misma definición y quedan a confirmar con el Architect para el
+// chat.
+export const ADJUNTOS_CHAT = {
+  imagen: { extensiones: ["jpg", "jpeg", "png"], maxMB: 5 },
+  archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "txt"], maxMB: 100 },
+};
 
 // Chats que el sistema le deriva al agente (el chat siempre lo inicia el
 // cliente). Cada uno viene de una campaña, y su "Atención forzada"

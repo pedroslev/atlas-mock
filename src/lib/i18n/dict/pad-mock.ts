@@ -49,6 +49,14 @@ export const padMock: NamespaceDict = {
     "conversationPanel.enlaceTextoPlaceholder": "Ej: Seguí tu pedido",
     "conversationPanel.enlaceUrl": "Dirección",
     "conversationPanel.insertarEnlace": "Insertar enlace",
+    "conversationPanel.quitarAdjunto": "Quitar {nombre}",
+    "conversationPanel.adjuntoRechazadoTitulo": "Este archivo no se puede enviar",
+    "conversationPanel.adjuntosRechazadosTitulo": "{n} archivos no se pueden enviar",
+    "conversationPanel.adjuntoTipoNoSoportado": "El tipo de archivo no se puede mandar por chat.",
+    "conversationPanel.adjuntoMuyGrande": "Pesa más de {mb} MB.",
+    "conversationPanel.adjuntosPermitidos":
+      "Se pueden mandar imágenes {imagenes} de hasta {mbImagen} MB y archivos {archivos} de hasta {mbArchivo} MB.",
+    "conversationPanel.entendido": "Entendido",
 
     // Categorías del selector de emojis del chat
     "emojiCat.suggested": "Recientes",
