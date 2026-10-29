@@ -344,7 +344,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Atención forzada — Permite que la llamada o el chat entrante se atienda automáticamente, sin que el agente tenga que aceptarlo. Aplica a «Inbound» (llamadas entrantes), «Discador Predictivo» (llamadas salientes que el sistema marca automáticamente) y «Chat». En un chat, con la opción activada el chat entra directo a las interacciones en curso del agente; desactivada, al agente le aparece un aviso y lo tiene que aceptar. Por defecto: activado.",
+              "Atención forzada — Permite que la llamada, el chat, la webcall o la videollamada entrante se atienda automáticamente, sin que el agente tenga que aceptarlo. Aplica a «Inbound» (llamadas entrantes), «Discador Predictivo» (llamadas salientes que el sistema marca automáticamente), «Chat», «Webcall» y «Videollamada». Con la opción activada, la interacción entra directo a las interacciones en curso del agente; desactivada, al agente le aparece un aviso y la tiene que aceptar (o atender). Por defecto: activado.",
             ],
           },
         ],
