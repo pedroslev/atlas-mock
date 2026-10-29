@@ -10,6 +10,7 @@ import {
   ChevronsUpDown,
   FileText,
   Headset,
+  Video,
   Italic,
   Link2,
   List,
@@ -688,10 +689,13 @@ function Redactor({
 function ChatPanel({
   mensajesIniciales,
   adjuntoNuevo,
+  finalizada = false,
 }: {
   mensajesIniciales: MensajeChat[];
   adjuntoNuevo?: AdjuntoExterno;
+  finalizada?: boolean;
 }) {
+  const t = useT();
   const [mensajes, setMensajes] = useState(mensajesIniciales);
   function enviar(texto: string, adjuntos: AdjuntoChat[]) {
     const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
@@ -703,7 +707,15 @@ function ChatPanel({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <HiloChat mensajes={mensajes} />
-      <Redactor onEnviar={enviar} adjuntoNuevo={adjuntoNuevo} />
+      {/* Terminado (Finalizar chat o Cortar), ya no se puede escribir:
+          solo queda tipificar y cerrar. */}
+      {finalizada ? (
+        <p className="shrink-0 border-t border-border px-4 py-3 text-center text-sm text-muted-foreground">
+          {t("padMock.conversationPanel.chatFinalizado")}
+        </p>
+      ) : (
+        <Redactor onEnviar={enviar} adjuntoNuevo={adjuntoNuevo} />
+      )}
     </div>
   );
 }
@@ -731,6 +743,8 @@ export function ConversationPanel({
   onSimularRechazo,
   adjuntoNuevo,
   webcall = false,
+  videollamada = false,
+  finalizada = false,
 }: {
   tiempo: string;
   enEspera: boolean;
@@ -745,10 +759,15 @@ export function ConversationPanel({
   webcall?: boolean;
   /** Chat: adjunto que se suma al redactor (captura de la videollamada). */
   adjuntoNuevo?: AdjuntoExterno;
+  /** Videollamada terminada (ícono de cámara y "Videollamada finalizada"). */
+  videollamada?: boolean;
+  /** Después de Cortar o Finalizar chat: sin vúmetro ni redactor, con el
+   *  cronómetro quieto. */
+  finalizada?: boolean;
 }) {
   const t = useT();
   if (mensajesChat) {
-    return <ChatPanel mensajesIniciales={mensajesChat} adjuntoNuevo={adjuntoNuevo} />;
+    return <ChatPanel mensajesIniciales={mensajesChat} adjuntoNuevo={adjuntoNuevo} finalizada={finalizada} />;
   }
   if (interno) {
     return (
@@ -796,23 +815,29 @@ export function ConversationPanel({
   }
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 p-4 text-center text-muted-foreground">
-      <IconoEnCurso icono={webcall ? Headset : Phone} activo={!enEspera} />
+      <IconoEnCurso icono={videollamada ? Video : webcall ? Headset : Phone} activo={!enEspera && !finalizada} finalizada={finalizada} />
       <p className="text-sm">
-        {enEspera
-          ? t("padMock.conversationPanel.enEspera")
-          : webcall
-            ? t("padMock.conversationPanel.webcallEnCurso")
-            : t("padMock.conversationPanel.llamadaEnCurso")}
+        {finalizada
+          ? videollamada
+            ? t("padMock.conversationPanel.videollamadaFinalizada")
+            : webcall
+              ? t("padMock.conversationPanel.webcallFinalizada")
+              : t("padMock.conversationPanel.llamadaFinalizada")
+          : enEspera
+            ? t("padMock.conversationPanel.enEspera")
+            : webcall
+              ? t("padMock.conversationPanel.webcallEnCurso")
+              : t("padMock.conversationPanel.llamadaEnCurso")}
       </p>
       <span
         className={cn(
           "font-mono text-2xl font-bold tabular-nums",
-          enEspera ? "text-warning" : "text-foreground"
+          enEspera && !finalizada ? "text-warning" : "text-foreground"
         )}
       >
         {tiempo}
       </span>
-      <Vumetro activo={!enEspera} />
+      {!finalizada && <Vumetro activo={!enEspera} />}
     </div>
   );
 }

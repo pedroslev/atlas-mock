@@ -208,6 +208,8 @@ export function InteractionControls({
   sonando = false,
   silenciado: silenciadoProp,
   onToggleSilenciado,
+  cortada: cortadaProp,
+  onCortar,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -233,6 +235,11 @@ export function InteractionControls({
    *  local. */
   silenciado?: boolean;
   onToggleSilenciado?: () => void;
+  /** Cortada controlada desde afuera (pad-mock-shell.tsx la usa para que la
+   *  pantalla muestre que terminó y se apaguen la ventanita y el
+   *  Picture-in-Picture). Sin esto, es local. */
+  cortada?: boolean;
+  onCortar?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -249,7 +256,12 @@ export function InteractionControls({
   // Flujo a pedido: Corto → tipifico → recién ahí se habilita Cerrar
   // interacción. El botón de la derecha es el mismo, cambia
   // de rol según "cortada".
-  const [cortada, setCortada] = useState(false);
+  const [cortadaLocal, setCortadaLocal] = useState(false);
+  const cortada = cortadaProp ?? cortadaLocal;
+  const setCortada = useCallback(
+    (v: boolean) => (onCortar && v ? onCortar() : setCortadaLocal(v)),
+    [onCortar]
+  );
   const esVideo = !!video?.esVideo;
   const [tipSeleccionada, setTipSeleccionada] = useState(tipificaciones[0]?.id);
 
@@ -357,7 +369,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, esVideo, interno, sonando, alternarSilencio]);
+  }, [cortada, setCortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, esVideo, interno, sonando, alternarSilencio]);
 
   if (interno) {
     return (

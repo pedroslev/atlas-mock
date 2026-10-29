@@ -80,6 +80,8 @@ export function CenterColumn({
   onAlternarClienteComparte,
   fijado = "cliente",
   onFijar,
+  finalizada = false,
+  onFinalizar,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
@@ -112,6 +114,10 @@ export function CenterColumn({
   /** Último pedido de volver a la solapa que ya se atendió. */
   pedidoSolapaVideoVisto?: number;
   onPedidoSolapaVideoVisto?: (n: number) => void;
+  /** Después de Cortar o Finalizar chat (vive en pad-mock-shell.tsx, que
+   *  apaga la ventanita, el Picture-in-Picture y lo compartido). */
+  finalizada?: boolean;
+  onFinalizar?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -155,7 +161,7 @@ export function CenterColumn({
   // Quién habla (webcall y videollamada): para que el asesor vea si hay
   // sonido de cada lado. Silenciar vive acá para mostrarlo al lado.
   const [silenciado, setSilenciado] = useState(false);
-  const habla = useQuienHabla((webcall || video) && !enEspera, silenciado);
+  const habla = useQuienHabla((webcall || video) && !enEspera && !finalizada, silenciado);
   // Si el cliente deja de compartir con su solapa a la vista, vuelve a la
   // primera.
   if (tab === "pantalla" && !solapaPantalla) setTab("conversacion");
@@ -180,7 +186,8 @@ export function CenterColumn({
   useEffect(() => () => onSolapaVideoVisible?.(false), [onSolapaVideoVisible]);
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
-  const now = useNow(true);
+  // Terminada, el cronómetro queda quieto.
+  const now = useNow(!finalizada);
   const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
   const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
 
@@ -292,7 +299,7 @@ export function CenterColumn({
                 enEspera ? "text-warning" : "text-foreground"
               )}
             >
-              {sonando ? "—" : formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              {sonando ? "—" : formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
             </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
@@ -342,7 +349,14 @@ export function CenterColumn({
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
-          {video && entrante ? (
+          {video && entrante && finalizada ? (
+            <ConversationPanel
+              tiempo={formatDuration(elapsedTotal)}
+              enEspera={false}
+              videollamada
+              finalizada
+            />
+          ) : video && entrante ? (
             <VideoPanel
               nombre={entrante.nombre}
               compartiendo={compartiendo}
@@ -370,7 +384,11 @@ export function CenterColumn({
                 <div className="flex shrink-0 items-center gap-4 border-b border-border px-4 py-2 text-xs">
                   <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
                     <Headset className="size-4" />
-                    {enEspera ? t("padMock.conversationPanel.enEspera") : t("padMock.conversationPanel.webcallEnCurso")}
+                    {finalizada
+                      ? t("padMock.conversationPanel.webcallFinalizada")
+                      : enEspera
+                        ? t("padMock.conversationPanel.enEspera")
+                        : t("padMock.conversationPanel.webcallEnCurso")}
                   </span>
                   <span className="flex items-center gap-1.5">
                     {entrante.nombre}
@@ -384,7 +402,7 @@ export function CenterColumn({
               )}
               <div className="min-h-0 flex-1">
                 <ConversationPanel
-                  tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+                  tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
                   enEspera={enEspera}
                   mensajesChat={conChat ? entrante?.mensajes : undefined}
                   interno={interno}
@@ -393,6 +411,7 @@ export function CenterColumn({
                   onSimularForzada={onSimularForzada}
                   onSimularRechazo={onSimularRechazo}
                   webcall={webcall}
+                  finalizada={finalizada}
                 />
               </div>
             </div>
@@ -405,10 +424,11 @@ export function CenterColumn({
             className="min-h-0 flex-1 overflow-hidden data-[state=inactive]:hidden"
           >
             <ConversationPanel
-              tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
               enEspera={enEspera}
               mensajesChat={entrante?.mensajes}
               adjuntoNuevo={captura}
+              finalizada={finalizada}
             />
           </TabsContent>
         )}
@@ -432,7 +452,7 @@ export function CenterColumn({
 
       {/* Solo para probar el mock: que el cliente empiece o deje de
           compartir su pantalla. No es parte de la pantalla. */}
-      {(webcall || video || chat) && (
+      {(webcall || video || chat) && !finalizada && (
         <div className="flex shrink-0 items-center gap-2 border-t border-dashed border-border px-4 py-1.5 text-xs text-muted-foreground">
           {t("padMock.simularComparte.titulo")}
           <button
@@ -472,6 +492,7 @@ export function CenterColumn({
         }
         interno={interno}
         sonando={sonando}
+        {...(!interno && onFinalizar && { cortada: finalizada, onCortar: onFinalizar })}
       />
 
     </div>

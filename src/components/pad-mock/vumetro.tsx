@@ -54,12 +54,25 @@ export function Vumetro({ activo }: { activo: boolean }) {
 
 // Ícono de la llamada en curso con un halo que late mientras está activa
 // (en espera, quieto).
-export function IconoEnCurso({ icono: Icono, activo }: { icono: LucideIcon; activo: boolean }) {
+export function IconoEnCurso({
+  icono: Icono,
+  activo,
+  finalizada = false,
+}: {
+  icono: LucideIcon;
+  activo: boolean;
+  /** Terminada: en gris (en espera, amarillo). */
+  finalizada?: boolean;
+}) {
   return (
     <span
       className={cn(
         "relative flex size-16 items-center justify-center rounded-full",
-        activo ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+        finalizada
+          ? "bg-muted text-muted-foreground"
+          : activo
+            ? "bg-success/10 text-success"
+            : "bg-warning/10 text-warning"
       )}
     >
       {activo && (

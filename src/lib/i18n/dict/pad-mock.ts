@@ -33,6 +33,10 @@ export const padMock: NamespaceDict = {
     // ConversationPanel
     "conversationPanel.llamadaEnCurso": "Llamada en curso",
     "conversationPanel.webcallEnCurso": "Webcall en curso",
+    "conversationPanel.llamadaFinalizada": "Llamada finalizada",
+    "conversationPanel.webcallFinalizada": "Webcall finalizada",
+    "conversationPanel.videollamadaFinalizada": "Videollamada finalizada",
+    "conversationPanel.chatFinalizado": "El chat terminó. Elegí la tipificación y cerrá la interacción.",
     "conversationPanel.enEspera": "En espera",
     "visor.abrir": "Abrir {nombre}",
     "visor.delCliente": "Lo mandó el cliente",

@@ -377,9 +377,14 @@ export function PadMockShell() {
   // El asesor comparte su pantalla en esta interacción (chat, webcall o
   // videollamada); también acá para que no se corte al cambiar de interacción.
   const [asesorComparteFilaId, setAsesorComparteFilaId] = useState<string | null>(null);
+  // Interacciones ya cortadas (o con el chat finalizado) que esperan la
+  // tipificación para cerrarse: muestran que terminaron, dejan de compartir
+  // y no tienen ventanita ni Picture-in-Picture.
+  const [finalizadas, setFinalizadas] = useState<string[]>([]);
   const filaVideo =
-    cola.find((f) => (f.canal === "videollamada" || f.canal === "webcall") && !f.porAceptar) ??
-    cola.find((f) => f.id === comparteFilaId && !f.porAceptar);
+    cola.find(
+      (f) => (f.canal === "videollamada" || f.canal === "webcall") && !f.porAceptar && !finalizadas.includes(f.id)
+    ) ?? cola.find((f) => f.id === comparteFilaId && !f.porAceptar);
   const filaVideoEsVideo = filaVideo?.canal === "videollamada";
   const nombreVideo = filaVideo ? (entrantesMock.find((e) => e.id === filaVideo.entranteId)?.nombre ?? null) : null;
   const clienteComparte = !!filaVideo && filaVideo.id === comparteFilaId;
@@ -396,6 +401,11 @@ export function PadMockShell() {
     if (comparte) setFijado((f) => (f === "pantalla" ? "cliente" : f));
     else setFijado("pantalla");
     setComparteFilaId(comparte ? null : filaId);
+  }
+  function finalizar(filaId: string) {
+    setFinalizadas((cur) => (cur.includes(filaId) ? cur : [...cur, filaId]));
+    if (comparteFilaId === filaId) setComparteFilaId(null);
+    if (asesorComparteFilaId === filaId) setAsesorComparteFilaId(null);
   }
   const sigueALaVista = filaVideoEsVideo || clienteComparte;
   const fuenteALaVista: FuenteVideo = filaVideoEsVideo ? fijado : "pantalla";
@@ -508,6 +518,8 @@ export function PadMockShell() {
               pedidoSolapaVideo={pedidoSolapaVideo}
               pedidoSolapaVideoVisto={pedidoSolapaVideoVisto}
               onPedidoSolapaVideoVisto={setPedidoSolapaVideoVisto}
+              finalizada={interaccionActivaId !== null && finalizadas.includes(interaccionActivaId)}
+              onFinalizar={() => interaccionActivaId && finalizar(interaccionActivaId)}
             />
           )}
           {/* Llamada interna: no hay cliente, así que no se muestra el contexto. */}
