@@ -3,6 +3,9 @@
 import { Phone, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { Kbd } from "@/components/ui/kbd";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
+import { etiquetaAtender, etiquetaRechazar, useAtajosEntrante } from "@/lib/pad-mock/use-atajos-entrante";
 import type { AgenteDirectorio } from "@/lib/pad-mock/data";
 
 // Aviso de llamada interna entrante — igual que una llamada normal: muestra
@@ -18,6 +21,8 @@ export function LlamadaInternaEntrante({
   onRechazar: () => void;
 }) {
   const t = useT();
+  const isMac = useIsMac();
+  useAtajosEntrante(onAtender, onRechazar);
   return (
     <div
       role="alertdialog"
@@ -38,10 +43,12 @@ export function LlamadaInternaEntrante({
         <Button type="button" variant="outline" className="flex-1 gap-1.5" onClick={onRechazar}>
           <PhoneOff className="size-4" />
           {t("padMock.llamadaInterna.rechazar")}
+          <Kbd className="ml-1">{etiquetaRechazar(isMac)}</Kbd>
         </Button>
         <Button type="button" className="flex-1 gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAtender}>
           <Phone className="size-4" />
           {t("padMock.llamadaInterna.atender")}
+          <Kbd className="ml-1 bg-white/20 text-white">{etiquetaAtender(isMac)}</Kbd>
         </Button>
       </div>
     </div>

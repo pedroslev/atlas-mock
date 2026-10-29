@@ -344,7 +344,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Atención forzada — Permite que la llamada sea atendida automáticamente sin intervención del agente. Aplica a «Inbound» (llamadas entrantes) y «Discador Predictivo» (llamadas salientes que el sistema marca automáticamente). Por defecto: activado.",
+              "Atención forzada — Permite que la llamada, el chat, la webcall o la videollamada entrante se atienda automáticamente, sin que el agente tenga que aceptarlo. Aplica a «Inbound» (llamadas entrantes), «Discador Predictivo» (llamadas salientes que el sistema marca automáticamente), «Chat», «Webcall» y «Videollamada». Con la opción activada, la interacción entra directo a las interacciones en curso del agente; desactivada, al agente le aparece un aviso y la tiene que aceptar (o atender). Por defecto: activado.",
             ],
           },
         ],
@@ -899,7 +899,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Forced answer — Allows the call to be answered automatically without agent intervention. Applies to «Inbound» (incoming calls) and «Predictive Dialer» (outgoing calls dialed automatically by the system). Default: on.",
+              "Forced answer — Allows an incoming call or chat to be answered automatically, without the agent having to accept it. Applies to «Inbound» (incoming calls), «Predictive Dialer» (outgoing calls dialed automatically by the system) and «Chat». For a chat, when on, the chat goes straight into the agent's ongoing interactions; when off, the agent gets a notice and has to accept it. Default: on.",
             ],
           },
         ],

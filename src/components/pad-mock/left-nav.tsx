@@ -154,7 +154,7 @@ export function LeftNav({
                   activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
                 )}
               >
-                <Icon className="size-4" />
+                <Icon className={cn("size-4", f.porAceptar && "animate-pulse text-primary")} />
               </button>
             );
           })}
@@ -270,9 +270,14 @@ export function LeftNav({
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
                 )}
               >
-                <Icon className="size-3.5 shrink-0" />
+                <Icon className={cn("size-3.5 shrink-0", f.porAceptar && "animate-pulse text-primary")} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
+                  {f.porAceptar && (
+                    <span className="truncate text-[0.65rem] font-medium text-primary">
+                      {f.canal !== "chat" ? t("padMock.webcallEntrante.sonando") : t("padMock.chatEntrante.porAceptar")}
+                    </span>
+                  )}
                   {f.interno && (
                     <span className="truncate text-[0.65rem] text-muted-foreground">
                       {f.sonando ? "Llamando…" : t("padMock.llamadaInterna.titulo")}

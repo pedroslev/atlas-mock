@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { NuevaInteraccionForm } from "@/components/pad-mock/nueva-interaccion-form";
 import { LlamadaInternaDirectorio } from "@/components/pad-mock/llamada-interna-directorio";
+import { ConversacionChatDialog } from "@/components/pad-mock/conversacion-chat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 import {
@@ -23,6 +25,7 @@ import {
   type CampaniaSaliente,
   type CuentaSaliente,
   type HistorialAgenteEntrada,
+  type InteraccionEntrante,
 } from "@/lib/pad-mock/data";
 
 // Pantalla de inicio del pad — se ve al entrar (sin interacción activa) y,
@@ -48,6 +51,8 @@ export function InicioPanel({
   onContactar,
   onLlamarInterno,
   onSimularEntrante,
+  entrantesSimulables = [],
+  onSimularEntranteCliente,
   historial,
 }: {
   estadoAgenteId: string;
@@ -58,6 +63,10 @@ export function InicioPanel({
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
   onSimularEntrante: () => void;
+  /** Botones temporales del mock: cada interacción que el sistema puede
+   *  derivar, y si hoy podría llegar (capacidad del asesor). */
+  entrantesSimulables?: { entrante: InteraccionEntrante; disponible: boolean }[];
+  onSimularEntranteCliente?: (id: string) => void;
   /** Vive en pad-mock-shell.tsx: las llamadas internas que terminan se suman acá. */
   historial: HistorialAgenteEntrada[];
 }) {
@@ -68,11 +77,14 @@ export function InicioPanel({
   const now = useNow(true);
   const cronometro = formatDuration(Math.max(0, Math.floor((now - estadoAgenteDesde) / 1000)));
 
+  const [conversacionId, setConversacionId] = useState<string | null>(null);
+
   const columnasHistorial = useMemo<MRT_ColumnDef<HistorialAgenteEntrada>[]>(
     () => [
       {
         id: "canal",
         header: t("padMock.inicio.colCanal"),
+        size: 140,
         accessorFn: (h) => CANAL_LABEL[h.canal],
         filterVariant: "select",
         Cell: ({ row }) => {
@@ -88,6 +100,7 @@ export function InicioPanel({
       {
         id: "fecha",
         header: t("padMock.inicio.colFecha"),
+        size: 150,
         accessorFn: (h) => `${h.fecha} ${h.hora}`,
         Cell: ({ row }) => (
           <span className="flex flex-col font-mono text-xs tabular-nums">
@@ -121,6 +134,7 @@ export function InicioPanel({
       {
         accessorKey: "duracion",
         header: t("padMock.inicio.colDuracion"),
+        size: 130,
         Cell: ({ cell }) => (
           <span className="font-mono text-xs tabular-nums">{cell.getValue<string>()}</span>
         ),
@@ -135,12 +149,37 @@ export function InicioPanel({
             <Badge variant="neutral">{cell.getValue<string>()}</Badge>
           ),
       },
+      {
+        // Solo los chats: abre lo conversado en un modal.
+        id: "conversacion",
+        header: "",
+        size: 150,
+        enableSorting: false,
+        enableColumnFilter: false,
+        enableColumnActions: false,
+        Cell: ({ row }) =>
+          row.original.canal === "chat" && row.original.conversacion ? (
+            <button
+              type="button"
+              onClick={() => setConversacionId(row.original.id)}
+              className="flex items-center gap-1 text-xs font-medium whitespace-nowrap text-primary hover:underline"
+            >
+              <MessageCircle className="size-3.5" />
+              {t("padMock.historial.verConversacion")}
+            </button>
+          ) : null,
+      },
     ],
     [t]
   );
+  const conversacion = historial.find((h) => h.id === conversacionId);
 
   return (
-    <div className="h-full min-h-0 w-full flex-1 overflow-y-auto bg-muted/30">
+    // min-w-0: sin esto, el ancho natural del historial (la tabla) estira el
+    // panel más allá del espacio que deja el menú, y la pantalla queda
+    // recortada a la derecha. Con min-w-0 el panel se ajusta y la tabla
+    // scrollea adentro si no entra.
+    <div className="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto bg-muted/30">
       <div className="flex w-full flex-col gap-8 p-6 sm:p-8">
         <div className="flex w-full flex-col gap-6">
           {/* 1. Datos del agente — nombre, estado y cronómetro. Sin saludo
@@ -171,6 +210,49 @@ export function InicioPanel({
               <Button size="sm" onClick={() => onEstadoAgenteChange("disponible")}>
                 {t("padMock.inicio.pasarADisponible")}
               </Button>
+            </div>
+          )}
+
+          {/* Solo para probar el mock (a pedido del PO): hace llegar cada
+              tipo de interacción sin tener que cambiar de estado. No es
+              parte de la pantalla. Deshabilitado si la capacidad del asesor
+              no lo permite (una llamada, webcall o videollamada en curso). */}
+          {onSimularEntranteCliente && entrantesSimulables.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border p-3">
+              <span className="text-xs font-medium text-muted-foreground">{t("padMock.inicio.simularTitulo")}</span>
+              <div className="flex flex-wrap gap-2">
+                {entrantesSimulables.map(({ entrante: e, disponible: puede }) => {
+                  const Icono = CANAL_ICON[e.canal];
+                  return (
+                    <Button
+                      key={e.id}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!puede}
+                      title={puede ? undefined : t("padMock.inicio.simularOcupado")}
+                      onClick={() => onSimularEntranteCliente(e.id)}
+                      className="gap-1.5"
+                    >
+                      <Icono className="size-3.5" />
+                      {CANAL_LABEL[e.canal]}
+                      {(e.canal === "webcall" || e.canal === "videollamada") && (
+                        <span className="text-muted-foreground">
+                          · {e.chatEnLlamada ? t("padMock.inicio.simularConChat") : t("padMock.inicio.simularSinChat")}
+                        </span>
+                      )}
+                      <span className="text-muted-foreground">
+                        ·{" "}
+                        {e.atencionForzada
+                          ? t("padMock.inicio.simularForzada")
+                          : e.canal === "chat"
+                            ? t("padMock.inicio.simularNoForzadaChat")
+                            : t("padMock.inicio.simularNoForzada")}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -258,6 +340,14 @@ export function InicioPanel({
               muiTableContainerProps: { sx: {} },
             }}
           />
+          {conversacion?.conversacion && (
+            <ConversacionChatDialog
+              open
+              onOpenChange={(o) => !o && setConversacionId(null)}
+              titulo={`${t("padMock.historial.chat")} · ${conversacion.fecha} ${conversacion.hora} · ${conversacion.nombreCliente ?? conversacion.numeroCliente}`}
+              mensajes={conversacion.conversacion}
+            />
+          )}
         </div>
       </div>
     </div>

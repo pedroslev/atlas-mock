@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ExternalLink, Link2, Phone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink, Headset, Link2, MessageSquareText, MonitorUp, Phone, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Kbd } from "@/components/ui/kbd";
-import { ConversationPanel } from "@/components/pad-mock/conversation-panel";
+import { ConversationPanel, formatoTamano, type AdjuntoExterno } from "@/components/pad-mock/conversation-panel";
 import { ExternalPagePanel } from "@/components/pad-mock/external-page-panel";
 import { InteractionControls } from "@/components/pad-mock/call-controls";
-import { paginasExternas, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
+import { IndicadorHabla, useQuienHabla } from "@/components/pad-mock/vumetro";
+import { PantallaClientePanel, VideoPanel, capturarCliente, type FuenteVideo } from "@/components/pad-mock/video-panel";
+import { paginasExternas, type InteraccionEntrante, type PaginaExterna, type Tipificacion } from "@/lib/pad-mock/data";
 import { ALTO_CABECERA_COLUMNA } from "@/lib/pad-mock/layout";
 import { useT } from "@/lib/i18n";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -20,8 +22,9 @@ import { cn } from "@/lib/utils";
 const ICONO_PAGINA_EXTERNA = Link2;
 const SIN_PAGINAS: PaginaExterna[] = [];
 
-// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — solo
-// "Llamada" por ahora (a pedido, el canal chat se retiró de esta fase). Las
+// Brief §4 — el centro nunca se colapsa. Solapa fija (no se cierra) — dice
+// "Llamada" con ícono de teléfono, "Conversación" en un chat o "Webcall" con
+// ícono de auricular. Las
 // demás son páginas externas configurables, embebidas o "pestaña aparte"
 // (§4.2). w-full en TabsList para que la línea de abajo llegue hasta el
 // borde con la columna de contexto, no solo hasta donde terminan las
@@ -39,6 +42,19 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // mismo "número = posición" que Alt+N en la cola, con un modificador extra
 // para no chocar con ese atajo ni con nada del navegador.
 //
+// Videollamada: la solapa fija es "Video" y, si la cuenta suma chat, hay una
+// segunda solapa fija "Chat" (Ctrl/Cmd+Alt+2; las páginas externas corren un
+// lugar). Webcall: mientras el cliente comparte su pantalla, con chat la
+// segunda solapa fija es "Pantalla del cliente"; sin chat, la pantalla va
+// en la primera. El chat queda montado al cambiar de solapa, para no perder lo que
+// se estaba escribiendo. La captura de imagen vive acá porque la usan la
+// barra de controles, la solapa del video y la del chat. Quién comparte su
+// pantalla (el asesor o el cliente, también en el chat), el
+// Picture-in-Picture y la ventanita del video viven en pad-mock-shell.tsx,
+// porque siguen al cambiar de interacción, en Inicio o en un acceso rápido:
+// por eso esta columna avisa si la solapa Video está a la vista
+// (onSolapaVideoVisible) y vuelve a ella cuando se lo piden (pedidoSolapaVideo).
+//
 // Llamada interna (interno): sin páginas externas (CRM, tickets, etc.) — no
 // hay cliente sobre el que trabajar.
 export function CenterColumn({
@@ -47,30 +63,132 @@ export function CenterColumn({
   holdStartedAt,
   onToggleEspera,
   onCerrarInteraccion,
+  entrante,
   interno = false,
   sonando = false,
   nombreInterno,
   onSimularForzada,
   onSimularRechazo,
+  pip,
+  onSolapaVideoVisible,
+  pedidoSolapaVideo = 0,
+  pedidoSolapaVideoVisto = 0,
+  onPedidoSolapaVideoVisto,
+  compartiendo = false,
+  onAlternarCompartiendo,
+  clienteComparte = false,
+  onAlternarClienteComparte,
+  fijado = "cliente",
+  onFijar,
+  finalizada = false,
+  onFinalizar,
 }: {
   tipificaciones: Tipificacion[];
   enEspera: boolean;
   holdStartedAt: number | null;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
+  /** Chat o webcall en curso; sin esto, es una llamada. */
+  entrante?: InteraccionEntrante;
   interno?: boolean;
   sonando?: boolean;
   /** Nombre del otro agente en una llamada interna. */
   nombreInterno?: string;
   onSimularForzada?: () => void;
   onSimularRechazo?: () => void;
+  /** Videollamada: Picture-in-Picture del navegador. */
+  pip?: { activo: boolean; alternar: () => void };
+  onSolapaVideoVisible?: (visible: boolean) => void;
+  /** El asesor comparte su pantalla (webcall y videollamada). */
+  compartiendo?: boolean;
+  onAlternarCompartiendo?: () => void;
+  /** El cliente comparte su pantalla (webcall y videollamada). */
+  clienteComparte?: boolean;
+  onAlternarClienteComparte?: () => void;
+  /** Videollamada: lo que se ve en el recuadro grande. */
+  fijado?: FuenteVideo;
+  onFijar?: (f: FuenteVideo) => void;
+  /** Cada vez que cambia, vuelve a la solapa Video (o a Pantalla del
+   *  cliente, en la webcall). */
+  pedidoSolapaVideo?: number;
+  /** Último pedido de volver a la solapa que ya se atendió. */
+  pedidoSolapaVideoVisto?: number;
+  onPedidoSolapaVideoVisto?: (n: number) => void;
+  /** Después de Cortar o Finalizar chat (vive en pad-mock-shell.tsx, que
+   *  apaga la ventanita, el Picture-in-Picture y lo compartido). */
+  finalizada?: boolean;
+  onFinalizar?: () => void;
 }) {
   const t = useT();
   const isMac = useIsMac();
+  const chat = entrante?.canal === "chat";
+  const webcall = entrante?.canal === "webcall";
+  const video = entrante?.canal === "videollamada";
+  // La solapa muestra el chat en un chat y en una webcall cuya cuenta suma
+  // chat durante la llamada; si no, el cuerpo de una llamada. En la
+  // videollamada el chat va en su propia solapa.
+  const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
+  const solapaChat = video && entrante?.chatEnLlamada === true;
+  // El cliente comparte su pantalla (en el mock, con el simulador de abajo;
+  // el estado vive en pad-mock-shell.tsx). En la webcall con chat aparece
+  // la solapa "Pantalla del cliente" mientras dure; sin chat, la pantalla
+  // ocupa la primera solapa en lugar del cuerpo de la llamada. El chat solo
+  // no comparte pantalla: no tiene Room.
+  const solapaPantalla = webcall && clienteComparte && conChat;
+  const pantallaEnPrimera = webcall && clienteComparte && !conChat;
+  const fijas = solapaChat || solapaPantalla ? 2 : 1;
+  // Captura de imagen (solo videollamada con chat): destella el video, queda
+  // adjunta en el redactor del chat como "Captura-HH:MM" y lleva a la solapa
+  // Chat; el asesor decide si la envía o la quita.
+  const [captura, setCaptura] = useState<AdjuntoExterno | undefined>();
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<number | undefined>(undefined);
+  function capturar() {
+    if (!entrante) return;
+    const hora = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const { url, bytes } = capturarCliente(entrante.nombre);
+    setCaptura((cur) => ({
+      id: (cur?.id ?? 0) + 1,
+      adjunto: { nombre: `Captura-${hora}`, tamano: formatoTamano(bytes), esImagen: true, url },
+    }));
+    setFlash(true);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => {
+      setFlash(false);
+      setTab("chat");
+    }, 250);
+  }
   const [tab, setTab] = useState("conversacion");
+  // Quién habla (webcall y videollamada): para que el asesor vea si hay
+  // sonido de cada lado. Silenciar vive acá para mostrarlo al lado.
+  const [silenciado, setSilenciado] = useState(false);
+  const habla = useQuienHabla((webcall || video) && !enEspera && !finalizada, silenciado);
+  // Si el cliente deja de compartir con su solapa a la vista, vuelve a la
+  // primera.
+  if (tab === "pantalla" && !solapaPantalla) setTab("conversacion");
+  // Arranca desde el último pedido ya atendido (no desde el actual): si la
+  // columna se vuelve a armar por un pedido (por ejemplo, "Volver a la
+  // pantalla" desde Inicio), lo atiende igual.
+  const [pedidoAtendido, setPedidoAtendido] = useState(pedidoSolapaVideoVisto);
+  if (pedidoSolapaVideo !== pedidoAtendido) {
+    setPedidoAtendido(pedidoSolapaVideo);
+    setTab(solapaPantalla ? "pantalla" : "conversacion");
+  }
+  useEffect(() => {
+    onPedidoSolapaVideoVisto?.(pedidoAtendido);
+  }, [pedidoAtendido, onPedidoSolapaVideoVisto]);
+  // La solapa que siguen la ventanita y el Picture-in-Picture: Video en la
+  // videollamada; en la webcall, la que muestra la pantalla del cliente.
+  const solapaVideoVisible =
+    ((video || pantallaEnPrimera) && tab === "conversacion") || (solapaPantalla && tab === "pantalla");
+  useEffect(() => {
+    onSolapaVideoVisible?.(solapaVideoVisible);
+  }, [solapaVideoVisible, onSolapaVideoVisible]);
+  useEffect(() => () => onSolapaVideoVisible?.(false), [onSolapaVideoVisible]);
   const [startedAt] = useState(() => Date.now());
   const paginas = interno ? SIN_PAGINAS : paginasExternas;
-  const now = useNow(true);
+  // Terminada, el cronómetro queda quieto.
+  const now = useNow(!finalizada);
   const elapsedTotal = Math.max(0, Math.floor((now - startedAt) / 1000));
   const elapsedHold = holdStartedAt ? Math.max(0, Math.floor((now - holdStartedAt) / 1000)) : 0;
 
@@ -89,7 +207,7 @@ export function CenterColumn({
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx > paginas.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx >= paginas.length + fijas) return;
       e.preventDefault();
       // Posición 1 = Llamada/Conversación (siempre una solapa). Del resto,
       // las "pestana" (solo externas) no se seleccionan — abren su link
@@ -98,7 +216,11 @@ export function CenterColumn({
         setTab("conversacion");
         return;
       }
-      const p = paginas[idx - 1];
+      if (idx === 1 && fijas === 2) {
+        setTab(solapaPantalla ? "pantalla" : "chat");
+        return;
+      }
+      const p = paginas[idx - fijas];
       if (!p) return;
       if (p.modo === "pestana") {
         window.open(p.url, "_blank", "noopener,noreferrer");
@@ -108,7 +230,7 @@ export function CenterColumn({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paginas]);
+  }, [paginas, fijas, solapaPantalla]);
 
   const shortcutMod = isMac ? "⌘⌥" : "Ctrl Alt";
 
@@ -154,18 +276,48 @@ export function CenterColumn({
             value="conversacion"
             className="sticky left-0 z-10 flex-none gap-2 bg-background! py-3 pr-4 pl-7 text-sm"
           >
-            <Phone className="size-5" />
-            {interno ? t("padMock.llamadaInterna.titulo") : t("padMock.centerColumn.llamada")}
+            {chat ? (
+              <MessageSquareText className="size-5" />
+            ) : video ? (
+              <Video className="size-5" />
+            ) : webcall ? (
+              <Headset className="size-5" />
+            ) : (
+              <Phone className="size-5" />
+            )}
+            {chat
+              ? t("padMock.centerColumn.conversacion")
+              : video
+                ? t("padMock.centerColumn.video")
+                : webcall
+                ? t("padMock.centerColumn.webcall")
+                : interno
+                  ? t("padMock.llamadaInterna.titulo")
+                  : t("padMock.centerColumn.llamada")}
             <span
               className={cn(
                 "font-mono text-sm font-bold tabular-nums",
                 enEspera ? "text-warning" : "text-foreground"
               )}
             >
-              {sonando ? "—" : formatDuration(enEspera ? elapsedHold : elapsedTotal)}
+              {sonando ? "—" : formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
             </span>
             <Kbd className="ml-1">{shortcutMod} 1</Kbd>
           </TabsTrigger>
+          {solapaChat && (
+            <TabsTrigger value="chat" className="flex-none gap-2 px-4 py-3 text-sm">
+              <MessageSquareText className="size-5" />
+              {t("padMock.centerColumn.chat")}
+              <Kbd className="ml-1">{shortcutMod} 2</Kbd>
+            </TabsTrigger>
+          )}
+          {solapaPantalla && (
+            <TabsTrigger value="pantalla" className="flex-none gap-2 px-4 py-3 text-sm">
+              <MonitorUp className="size-5" />
+              {t("padMock.centerColumn.pantallaCliente")}
+              <Kbd className="ml-1">{shortcutMod} 2</Kbd>
+            </TabsTrigger>
+          )}
           {paginas.map((p, i) =>
             p.modo === "pestana" ? (
               // Solo externa ("blank"): no es una solapa seleccionable — un
@@ -182,7 +334,7 @@ export function CenterColumn({
                 {p.nombre}
                 <ExternalLink className="size-3.5 text-muted-foreground" />
                 <Kbd className="ml-1">
-                  {shortcutMod} {i + 2}
+                  {shortcutMod} {i + 1 + fijas}
                 </Kbd>
               </button>
             ) : (
@@ -190,7 +342,7 @@ export function CenterColumn({
                 <ICONO_PAGINA_EXTERNA className="size-5" />
                 {p.nombre}
                 <Kbd className="ml-1">
-                  {shortcutMod} {i + 2}
+                  {shortcutMod} {i + 1 + fijas}
                 </Kbd>
               </TabsTrigger>
             )
@@ -198,16 +350,98 @@ export function CenterColumn({
         </TabsList>
 
         <TabsContent value="conversacion" className="min-h-0 flex-1 overflow-hidden">
-          <ConversationPanel
-            tiempo={formatDuration(enEspera ? elapsedHold : elapsedTotal)}
-            enEspera={enEspera}
-            interno={interno}
-            sonando={sonando}
-            nombreInterno={nombreInterno}
-            onSimularForzada={onSimularForzada}
-            onSimularRechazo={onSimularRechazo}
-          />
+          {video && entrante && finalizada ? (
+            <ConversationPanel
+              tiempo={formatDuration(elapsedTotal)}
+              enEspera={false}
+              videollamada
+              finalizada
+            />
+          ) : video && entrante ? (
+            <VideoPanel
+              nombre={entrante.nombre}
+              compartiendo={compartiendo}
+              onDejarDeCompartir={() => onAlternarCompartiendo?.()}
+              clienteComparte={clienteComparte}
+              fijado={fijado}
+              onFijar={onFijar ?? (() => {})}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
+              flash={flash}
+              habla={habla}
+              asesorSilenciado={silenciado}
+            />
+          ) : pantallaEnPrimera && entrante ? (
+            <PantallaClientePanel
+              nombre={entrante.nombre}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
+            />
+          ) : (
+            <div className="flex h-full min-h-0 flex-col">
+              {/* Webcall con chat: la llamada no se ve en la solapa (la ocupa
+                  el chat), así que una barra arriba muestra quién habla. */}
+              {webcall && conChat && entrante && (
+                <div className="flex shrink-0 items-center gap-4 border-b border-border px-4 py-2 text-xs">
+                  <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                    <Headset className="size-4" />
+                    {finalizada
+                      ? t("padMock.conversationPanel.webcallFinalizada")
+                      : enEspera
+                        ? t("padMock.conversationPanel.enEspera")
+                        : t("padMock.conversationPanel.webcallEnCurso")}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    {entrante.nombre}
+                    <IndicadorHabla nivel={habla.cliente} />
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    {t("padMock.video.tuCamara")}
+                    <IndicadorHabla nivel={habla.asesor} silenciado={silenciado} />
+                  </span>
+                </div>
+              )}
+              <div className="min-h-0 flex-1">
+                <ConversationPanel
+                  tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
+                  enEspera={enEspera}
+                  mensajesChat={conChat ? entrante?.mensajes : undefined}
+                  interno={interno}
+                  sonando={sonando}
+                  nombreInterno={nombreInterno}
+                  onSimularForzada={onSimularForzada}
+                  onSimularRechazo={onSimularRechazo}
+                  webcall={webcall}
+                  finalizada={finalizada}
+                />
+              </div>
+            </div>
+          )}
         </TabsContent>
+        {solapaChat && (
+          <TabsContent
+            value="chat"
+            forceMount
+            className="min-h-0 flex-1 overflow-hidden data-[state=inactive]:hidden"
+          >
+            <ConversationPanel
+              tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
+              enEspera={enEspera}
+              mensajesChat={entrante?.mensajes}
+              adjuntoNuevo={captura}
+              finalizada={finalizada}
+            />
+          </TabsContent>
+        )}
+        {solapaPantalla && entrante && (
+          <TabsContent value="pantalla" className="min-h-0 flex-1 overflow-hidden">
+            <PantallaClientePanel
+              nombre={entrante.nombre}
+              pip={pip?.activo ?? false}
+              onCerrarPip={() => pip?.alternar()}
+            />
+          </TabsContent>
+        )}
         {paginas
           .filter((p) => p.modo === "embebido")
           .map((p) => (
@@ -217,14 +451,49 @@ export function CenterColumn({
           ))}
       </Tabs>
 
+      {/* Solo para probar el mock: que el cliente empiece o deje de
+          compartir su pantalla. No es parte de la pantalla. */}
+      {(webcall || video) && !finalizada && (
+        <div className="flex shrink-0 items-center gap-2 border-t border-dashed border-border px-4 py-1.5 text-xs text-muted-foreground">
+          {t("padMock.simularComparte.titulo")}
+          <button
+            type="button"
+            onClick={onAlternarClienteComparte}
+            className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline"
+          >
+            <MonitorUp className="size-3.5" />
+            {clienteComparte ? t("padMock.simularComparte.termina") : t("padMock.simularComparte.empieza")}
+          </button>
+        </div>
+      )}
+
       <InteractionControls
         tipificaciones={tipificaciones}
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}
         onCerrarInteraccion={onCerrarInteraccion}
+        chat={chat}
+        llamadaWeb={webcall || video}
+        {...((webcall || video) && { silenciado, onToggleSilenciado: () => setSilenciado((v) => !v) })}
+        video={
+          webcall || video
+            ? {
+                compartiendo,
+                onToggleCompartir: () => onAlternarCompartiendo?.(),
+                ...(video && {
+                  ...(solapaChat && { onCaptura: capturar }),
+                }),
+                // Picture-in-Picture: el video en la videollamada; la
+                // pantalla del cliente en la webcall, mientras la comparte.
+                ...(pip && (video || (webcall && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
+              }
+            : undefined
+        }
         interno={interno}
         sonando={sonando}
+        {...(!interno && onFinalizar && { cortada: finalizada, onCortar: onFinalizar })}
       />
+
     </div>
   );
 }
