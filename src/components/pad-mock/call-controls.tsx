@@ -181,8 +181,8 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // para poder reflejar el mismo tiempo en espera en la fila de la cola del
 // menú izquierdo (LeftNav) y en el cronómetro de arriba mientras dura.
 //
-// Chat: sin espera, silenciar ni teclado numérico (son de la voz); con
-// "Compartir pantalla"; el primer paso del botón de la derecha es
+// Chat: sin espera, silenciar, teclado numérico (son de la voz) ni
+// "Compartir pantalla" (el chat no tiene Room); el primer paso del botón de la derecha es
 // "Finalizar chat".
 //
 // Webcall y videollamada (llamadaWeb): sin teclado numérico — del otro lado
@@ -190,7 +190,7 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // pantalla". Videollamada (video), además: "Captura de imagen" (foto del
 // video del cliente, queda en la interacción) y "Picture-in-Picture" (el video
 // del cliente en la ventana flotante del navegador, encima de todo, también
-// fuera del pad); y sin "Marcar". El estado de estos controles vive en
+// fuera del pad). El estado de estos controles vive en
 // CenterColumn, porque también lo muestra la solapa del video.
 //
 // Llamada interna (interno): solo espera, silenciar y cortar — sin
@@ -218,10 +218,9 @@ export function InteractionControls({
   chat?: boolean;
   /** Webcall o videollamada. */
   llamadaWeb?: boolean;
-  /** Compartir pantalla (chat, webcall y videollamada) y, solo en videollamada,
+  /** Compartir pantalla (webcall y videollamada) y, solo en videollamada,
    *  Picture-in-Picture y — si la cuenta suma chat — captura de imagen. */
   video?: {
-    esVideo?: boolean;
     compartiendo: boolean;
     onToggleCompartir: () => void;
     onCaptura?: () => void;
@@ -262,7 +261,6 @@ export function InteractionControls({
     (v: boolean) => (onCortar && v ? onCortar() : setCortadaLocal(v)),
     [onCortar]
   );
-  const esVideo = !!video?.esVideo;
   const [tipSeleccionada, setTipSeleccionada] = useState(tipificaciones[0]?.id);
 
   function cerrarMarcar(next: boolean) {
@@ -344,7 +342,7 @@ export function InteractionControls({
           }
           break;
         case SHORTCUTS.marcar.toLowerCase():
-          if (!cortada && !esVideo) {
+          if (!cortada) {
             e.preventDefault();
             setMarcarAbierto(true);
           }
@@ -369,7 +367,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, setCortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, esVideo, interno, sonando, alternarSilencio]);
+  }, [cortada, setCortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, interno, sonando, alternarSilencio]);
 
   if (interno) {
     return (
@@ -555,63 +553,61 @@ export function InteractionControls({
           />
         )}
 
-        {!esVideo && (
-          <Popover open={marcarAbierto} onOpenChange={cerrarMarcar}>
-            <PopoverTrigger asChild>
-              <div>
-                <ControlButton
-                  icon={Bookmark}
-                  label={t("padMock.callControls.marcar")}
-                  shortcutKey={SHORTCUTS.marcar}
-                  isMac={isMac}
-                  tone="neutral"
-                  disabled={cortada}
-                  onClick={() => setMarcarAbierto(true)}
-                />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-0">
-              {/* Mismo patrón que TipificacionSelector: buscador + ítem con
-                  ícono "i" de descripción — a pedido, también acá. */}
-              <Command>
-                <CommandInput placeholder={t("padMock.callControls.buscarMarca")} />
-                <CommandList>
-                  <CommandEmpty>{t("padMock.callControls.sinResultados")}</CommandEmpty>
-                  <CommandGroup>
-                    {marcasDisponibles.map((m) => (
-                      <CommandItem
-                        key={m.id}
-                        value={m.nombre}
-                        onSelect={() => setMarcaSeleccionada(m.id)}
-                      >
-                        <Check className={cn(marcaSeleccionada === m.id ? "opacity-100" : "opacity-0")} />
-                        <span className="flex-1">{m.nombre}</span>
-                        <InfoHint>{m.descripcion}</InfoHint>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-              <div className="border-t border-border p-1.5">
-                <Textarea
-                  value={comentarioMarca}
-                  onChange={(e) => setComentarioMarca(e.target.value)}
-                  placeholder={t("padMock.callControls.comentarioPlaceholder")}
-                  rows={2}
-                  className="resize-none text-xs"
-                />
-                <Button
-                  size="sm"
-                  className="mt-1.5 w-full"
-                  disabled={!marcaSeleccionada}
-                  onClick={agregarMarca}
-                >
-                  {t("padMock.callControls.agregarMarca")}
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
+        <Popover open={marcarAbierto} onOpenChange={cerrarMarcar}>
+          <PopoverTrigger asChild>
+            <div>
+              <ControlButton
+                icon={Bookmark}
+                label={t("padMock.callControls.marcar")}
+                shortcutKey={SHORTCUTS.marcar}
+                isMac={isMac}
+                tone="neutral"
+                disabled={cortada}
+                onClick={() => setMarcarAbierto(true)}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-64 p-0">
+            {/* Mismo patrón que TipificacionSelector: buscador + ítem con
+                ícono "i" de descripción — a pedido, también acá. */}
+            <Command>
+              <CommandInput placeholder={t("padMock.callControls.buscarMarca")} />
+              <CommandList>
+                <CommandEmpty>{t("padMock.callControls.sinResultados")}</CommandEmpty>
+                <CommandGroup>
+                  {marcasDisponibles.map((m) => (
+                    <CommandItem
+                      key={m.id}
+                      value={m.nombre}
+                      onSelect={() => setMarcaSeleccionada(m.id)}
+                    >
+                      <Check className={cn(marcaSeleccionada === m.id ? "opacity-100" : "opacity-0")} />
+                      <span className="flex-1">{m.nombre}</span>
+                      <InfoHint>{m.descripcion}</InfoHint>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+            <div className="border-t border-border p-1.5">
+              <Textarea
+                value={comentarioMarca}
+                onChange={(e) => setComentarioMarca(e.target.value)}
+                placeholder={t("padMock.callControls.comentarioPlaceholder")}
+                rows={2}
+                className="resize-none text-xs"
+              />
+              <Button
+                size="sm"
+                className="mt-1.5 w-full"
+                disabled={!marcaSeleccionada}
+                onClick={agregarMarca}
+              >
+                {t("padMock.callControls.agregarMarca")}
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Flujo de dos pasos a pedido: primero cortar, después tipificar,
             y recién ahí el mismo botón cierra la interacción de verdad

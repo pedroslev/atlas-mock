@@ -143,6 +143,8 @@ export type AdjuntoChat = {
   /** Ya formateado, ej. "1,2 MB". */
   tamano: string;
   esImagen: boolean;
+  /** Nota de voz o archivo de audio: se escucha en la burbuja, sin abrir el visor. */
+  esAudio?: boolean;
   /** Para verlo en el visor (imagen o PDF; en el mock, dirección local del archivo). */
   url?: string;
 };
@@ -154,14 +156,13 @@ export type MensajeChat = {
   adjuntos?: AdjuntoChat[];
 };
 
-// Archivos que se pueden mandar por chat: los mismos tipos que ya acepta
-// Atlas en los mensajes con imagen o archivo de los flujos
-// (producto/funcionalidades/mensajes-enriquecidos). Los tamaños máximos son
-// los de esa misma definición y quedan a confirmar con el Architect para el
-// chat.
+// Archivos que se pueden mandar por chat: por ahora los comunes (imágenes,
+// documentos, planillas, texto y audios); nada ejecutable. Qué tipos y qué
+// pesos permite cada campaña se define después, en su parametrización.
 export const ADJUNTOS_CHAT = {
-  imagen: { extensiones: ["jpg", "jpeg", "png"], maxMB: 5 },
-  archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "txt"], maxMB: 100 },
+  imagen: { extensiones: ["jpg", "jpeg", "png", "gif", "webp"], maxMB: 5 },
+  archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt"], maxMB: 100 },
+  audio: { extensiones: ["mp3", "wav", "ogg", "m4a", "aac", "webm"], maxMB: 100 },
 };
 
 // Interacciones que el sistema le deriva al agente: chats, webcalls y
@@ -233,6 +234,7 @@ export const entrantesMock: InteraccionEntrante[] = [
         hora: "14:03:12",
         adjuntos: [
           { nombre: "etiqueta-envio.jpg", tamano: "820 KB", esImagen: true, url: "/pad-mock/etiqueta-envio.svg" },
+          { nombre: "Nota-de-voz-14:03.webm", tamano: "48 KB", esImagen: false, esAudio: true },
           { nombre: "comprobante-48213.pdf", tamano: "64 KB", esImagen: false, url: "/pad-mock/comprobante-48213.pdf" },
           { nombre: "detalle-pedido.xlsx", tamano: "18 KB", esImagen: false },
         ],
@@ -628,8 +630,7 @@ export type EstadoDirectorio = {
 export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
   disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
   "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
-  // Propuesta del PO, a confirmar con Pedro: estado propio para distinguir
-  // una llamada interna de una llamada productiva.
+  // Estado propio para distinguir una llamada interna de una llamada productiva.
   "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false },
   acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
   "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },

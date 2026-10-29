@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 // - Escuchar un mensaje (texto a voz): speechSynthesis.
 // - Dictar la respuesta (voz a texto): SpeechRecognition (Chrome y Edge;
 //   Safari con permisos; Firefox no lo tiene).
-// Dónde se procesa la voz en el producto real (el navegador o un servicio
-// externo, por los datos del cliente) queda por definir con el Architect.
+// La voz se procesa en el navegador, sin servicios externos.
+// - Notas de voz (grabar un audio para mandar por chat): MediaRecorder.
 
 type Reconocimiento = {
   lang: string;
@@ -109,4 +109,76 @@ export function useLeerEnVozAlta() {
   }
 
   return { soportado, leyendo, alternar };
+}
+
+/** Nota de voz: graba con el micrófono y devuelve el audio como adjunto. */
+export function useGrabacionAudio(alTerminar: (archivo: File) => void) {
+  const [soportado, setSoportado] = useState(false);
+  const [grabando, setGrabando] = useState(false);
+  const [error, setError] = useState<"permiso" | "fallo" | null>(null);
+  const grabador = useRef<MediaRecorder | null>(null);
+  const alTerminarRef = useRef(alTerminar);
+  useEffect(() => {
+    alTerminarRef.current = alTerminar;
+  }, [alTerminar]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSoportado(typeof MediaRecorder !== "undefined" && !!navigator.mediaDevices?.getUserMedia);
+    return () => {
+      if (grabador.current?.state === "recording") grabador.current.stop();
+    };
+  }, []);
+
+  async function empezar() {
+    setError(null);
+    try {
+      const flujo = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(flujo);
+      const trozos: Blob[] = [];
+      rec.ondataavailable = (e) => trozos.push(e.data);
+      rec.onstop = () => {
+        flujo.getTracks().forEach((p) => p.stop());
+        setGrabando(false);
+        grabador.current = null;
+        const hora = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+        alTerminarRef.current(new File(trozos, `Nota-de-voz-${hora}.webm`, { type: "audio/webm" }));
+      };
+      grabador.current = rec;
+      rec.start();
+      setGrabando(true);
+    } catch (e) {
+      setError(e instanceof DOMException && e.name === "NotAllowedError" ? "permiso" : "fallo");
+    }
+  }
+
+  function detener() {
+    if (grabador.current?.state === "recording") grabador.current.stop();
+  }
+
+  return { soportado, grabando, error, alternar: () => (grabando ? detener() : void empezar()), detener };
+}
+
+/** Audio de muestra (un tono de 3 s) para las notas de voz del cliente que
+ *  trae el mock: no hay archivo real del otro lado. */
+export function urlAudioDemo(): string {
+  const tasa = 8000;
+  const muestras = tasa * 3;
+  const buf = new ArrayBuffer(44 + muestras * 2);
+  const v = new DataView(buf);
+  const txt = (o: number, s: string) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  txt(0, "RIFF");
+  v.setUint32(4, 36 + muestras * 2, true);
+  txt(8, "WAVEfmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, tasa, true);
+  v.setUint32(28, tasa * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  txt(36, "data");
+  v.setUint32(40, muestras * 2, true);
+  for (let i = 0; i < muestras; i++) v.setInt16(44 + i * 2, Math.sin((2 * Math.PI * 440 * i) / tasa) * 3000, true);
+  return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
 }

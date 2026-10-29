@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { OpenQuestion } from "@/components/pad-mock/open-question";
 import {
   ESTADOS_DIRECTORIO,
   agentesDirectorioMock,
@@ -100,15 +99,6 @@ export function LlamadaInternaDirectorio({
           <p className="text-xs text-muted-foreground">{t("padMock.llamadaInterna.soloDisponibles")}</p>
         </>
       )}
-
-      <OpenQuestion>
-        ¿El agente puede iniciar una llamada interna estando en pausa o en ACW, o también tiene que
-        estar en Disponible?
-      </OpenQuestion>
-      <OpenQuestion>
-        A confirmar con Pedro: estado propio &quot;En llamada interna&quot;, para diferenciarla de una
-        llamada productiva.
-      </OpenQuestion>
 
       <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
         {onSimularEntrante && (

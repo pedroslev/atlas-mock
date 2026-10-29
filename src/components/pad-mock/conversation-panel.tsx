@@ -15,6 +15,7 @@ import {
   Link2,
   List,
   ListOrdered,
+  AudioLines,
   Mic,
   Paperclip,
   Phone,
@@ -49,7 +50,7 @@ import {
 } from "@/components/ui/command";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { IconoEnCurso, Vumetro } from "@/components/pad-mock/vumetro";
-import { useDictado } from "@/lib/pad-mock/voz";
+import { useDictado, useGrabacionAudio } from "@/lib/pad-mock/voz";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
 import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
 import { useT } from "@/lib/i18n";
@@ -245,9 +246,10 @@ function EmojiSelector({ onElegir }: { onElegir: (emoji: string) => void }) {
 
 const EXTENSIONES_IMAGEN = ADJUNTOS_CHAT.imagen.extensiones;
 const EXTENSIONES_ARCHIVO = ADJUNTOS_CHAT.archivo.extensiones;
+const EXTENSIONES_AUDIO = ADJUNTOS_CHAT.audio.extensiones;
 // Filtro del selector de archivos del sistema: muestra solo los tipos que se
 // pueden mandar (los demás aparecen deshabilitados u ocultos).
-const ACCEPT_ADJUNTOS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_ARCHIVO].map((e) => `.${e}`).join(",");
+const ACCEPT_ADJUNTOS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_ARCHIVO, ...EXTENSIONES_AUDIO].map((e) => `.${e}`).join(",");
 
 export function formatoTamano(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -262,10 +264,15 @@ type ArchivoRechazado = { nombre: string; motivo: "tipo" | "tamano"; maxMB?: num
 function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechazado } {
   const ext = f.name.includes(".") ? f.name.split(".").pop()!.toLowerCase() : "";
   const esImagen = EXTENSIONES_IMAGEN.includes(ext);
-  if (!esImagen && !EXTENSIONES_ARCHIVO.includes(ext)) {
+  const esAudio = EXTENSIONES_AUDIO.includes(ext);
+  if (!esImagen && !esAudio && !EXTENSIONES_ARCHIVO.includes(ext)) {
     return { rechazo: { nombre: f.name, motivo: "tipo" } };
   }
-  const maxMB = esImagen ? ADJUNTOS_CHAT.imagen.maxMB : ADJUNTOS_CHAT.archivo.maxMB;
+  const maxMB = esImagen
+    ? ADJUNTOS_CHAT.imagen.maxMB
+    : esAudio
+      ? ADJUNTOS_CHAT.audio.maxMB
+      : ADJUNTOS_CHAT.archivo.maxMB;
   if (f.size > maxMB * 1024 * 1024) {
     return { rechazo: { nombre: f.name, motivo: "tamano", maxMB } };
   }
@@ -274,8 +281,9 @@ function revisarArchivo(f: File): { ok: AdjuntoChat } | { rechazo: ArchivoRechaz
       nombre: f.name,
       tamano: formatoTamano(f.size),
       esImagen,
-      // Imagen y PDF se pueden ver en el visor (dirección local del archivo).
-      url: esImagen || ext === "pdf" ? URL.createObjectURL(f) : undefined,
+      esAudio,
+      // Imagen, PDF y audio se pueden ver o escuchar (dirección local del archivo).
+      url: esImagen || esAudio || ext === "pdf" ? URL.createObjectURL(f) : undefined,
     },
   };
 }
@@ -351,9 +359,16 @@ function Redactor({
   // Dictar: lo que dice el asesor se va escribiendo en el cuadro.
   const dictado = useDictado(texto, setTexto);
 
+  // Nota de voz: al terminar de grabar, queda como adjunto para enviar.
+  const grabacion = useGrabacionAudio((archivo) => {
+    const r = revisarArchivo(archivo);
+    if ("ok" in r) setAdjuntos((cur) => [...cur, r.ok]);
+  });
+
   function enviar() {
     if (!texto.trim() && adjuntos.length === 0) return;
     dictado.detener();
+    grabacion.detener();
     onEnviar(texto.trim(), adjuntos);
     setTexto("");
     setAdjuntos([]);
@@ -512,6 +527,26 @@ function Redactor({
         </Button>
         <Button
           type="button"
+          variant={grabacion.grabando ? "destructive" : "outline"}
+          size="icon-sm"
+          disabled={!grabacion.soportado}
+          aria-pressed={grabacion.grabando}
+          data-testid="chat-grabar-nota-de-voz"
+          aria-label={grabacion.grabando ? t("padMock.voz.dejarDeGrabar") : t("padMock.voz.grabar")}
+          title={
+            !grabacion.soportado
+              ? t("padMock.voz.sinGrabacion")
+              : grabacion.grabando
+                ? t("padMock.voz.dejarDeGrabar")
+                : t("padMock.voz.grabar")
+          }
+          onClick={grabacion.alternar}
+          className={cn(grabacion.grabando && "animate-pulse")}
+        >
+          <AudioLines className="size-4" />
+        </Button>
+        <Button
+          type="button"
           variant={formatoAbierto ? "secondary" : "outline"}
           size="icon-sm"
           aria-pressed={formatoAbierto}
@@ -594,6 +629,16 @@ function Redactor({
               : t("padMock.voz.dictando")}
         </p>
       )}
+      {(grabacion.grabando || grabacion.error) && (
+        <p className={cn("flex items-center gap-1.5 text-xs", grabacion.error ? "text-destructive" : "text-muted-foreground")}>
+          <AudioLines className="size-3.5" />
+          {grabacion.error === "permiso"
+            ? t("padMock.voz.sinPermisoGrabar")
+            : grabacion.error
+              ? t("padMock.voz.errorGrabar")
+              : t("padMock.voz.grabando")}
+        </p>
+      )}
       {adjuntos.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {adjuntos.map((a, i) => (
@@ -601,6 +646,8 @@ function Redactor({
               {a.esImagen && a.url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={a.url} alt="" className="size-5 rounded object-cover" />
+              ) : a.esAudio ? (
+                <AudioLines className="size-3.5 text-muted-foreground" />
               ) : (
                 <FileText className="size-3.5 text-muted-foreground" />
               )}
@@ -666,6 +713,8 @@ function Redactor({
                     mbImagen: ADJUNTOS_CHAT.imagen.maxMB,
                     archivos: EXTENSIONES_ARCHIVO.map((e) => e.toUpperCase()).join(", "),
                     mbArchivo: ADJUNTOS_CHAT.archivo.maxMB,
+                    audios: EXTENSIONES_AUDIO.map((e) => e.toUpperCase()).join(", "),
+                    mbAudio: ADJUNTOS_CHAT.audio.maxMB,
                   })}
                 </p>
               </div>

@@ -99,10 +99,10 @@ export function CenterColumn({
   /** Videollamada: Picture-in-Picture del navegador. */
   pip?: { activo: boolean; alternar: () => void };
   onSolapaVideoVisible?: (visible: boolean) => void;
-  /** El asesor comparte su pantalla (chat, webcall y videollamada). */
+  /** El asesor comparte su pantalla (webcall y videollamada). */
   compartiendo?: boolean;
   onAlternarCompartiendo?: () => void;
-  /** El cliente comparte su pantalla (chat, webcall y videollamada). */
+  /** El cliente comparte su pantalla (webcall y videollamada). */
   clienteComparte?: boolean;
   onAlternarClienteComparte?: () => void;
   /** Videollamada: lo que se ve en el recuadro grande. */
@@ -130,10 +130,11 @@ export function CenterColumn({
   const conChat = chat || (webcall && entrante?.chatEnLlamada === true);
   const solapaChat = video && entrante?.chatEnLlamada === true;
   // El cliente comparte su pantalla (en el mock, con el simulador de abajo;
-  // el estado vive en pad-mock-shell.tsx). En el chat y la webcall con chat aparece
+  // el estado vive en pad-mock-shell.tsx). En la webcall con chat aparece
   // la solapa "Pantalla del cliente" mientras dure; sin chat, la pantalla
-  // ocupa la primera solapa en lugar del cuerpo de la llamada.
-  const solapaPantalla = (webcall || chat) && clienteComparte && conChat;
+  // ocupa la primera solapa en lugar del cuerpo de la llamada. El chat solo
+  // no comparte pantalla: no tiene Room.
+  const solapaPantalla = webcall && clienteComparte && conChat;
   const pantallaEnPrimera = webcall && clienteComparte && !conChat;
   const fijas = solapaChat || solapaPantalla ? 2 : 1;
   // Captura de imagen (solo videollamada con chat): destella el video, queda
@@ -452,7 +453,7 @@ export function CenterColumn({
 
       {/* Solo para probar el mock: que el cliente empiece o deje de
           compartir su pantalla. No es parte de la pantalla. */}
-      {(webcall || video || chat) && !finalizada && (
+      {(webcall || video) && !finalizada && (
         <div className="flex shrink-0 items-center gap-2 border-t border-dashed border-border px-4 py-1.5 text-xs text-muted-foreground">
           {t("padMock.simularComparte.titulo")}
           <button
@@ -475,18 +476,16 @@ export function CenterColumn({
         llamadaWeb={webcall || video}
         {...((webcall || video) && { silenciado, onToggleSilenciado: () => setSilenciado((v) => !v) })}
         video={
-          webcall || video || chat
+          webcall || video
             ? {
                 compartiendo,
                 onToggleCompartir: () => onAlternarCompartiendo?.(),
                 ...(video && {
-                  esVideo: true,
                   ...(solapaChat && { onCaptura: capturar }),
                 }),
                 // Picture-in-Picture: el video en la videollamada; la
-                // pantalla del cliente en la webcall y el chat, mientras la
-                // comparte.
-                ...(pip && (video || ((webcall || chat) && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
+                // pantalla del cliente en la webcall, mientras la comparte.
+                ...(pip && (video || (webcall && clienteComparte)) && { pip: pip.activo, onTogglePip: pip.alternar }),
               }
             : undefined
         }

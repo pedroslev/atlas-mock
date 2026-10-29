@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FileText, MessageCircle, Square, Volume2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { AdjuntoChat, MensajeChat } from "@/lib/pad-mock/data";
 import { segmentar, tipoDeLinea } from "@/lib/pad-mock/formato-chat";
-import { useLeerEnVozAlta } from "@/lib/pad-mock/voz";
+import { urlAudioDemo, useLeerEnVozAlta } from "@/lib/pad-mock/voz";
 import { useT } from "@/lib/i18n";
 import { VisorAdjunto } from "@/components/pad-mock/visor-adjunto";
 
@@ -75,6 +75,22 @@ function AdjuntoEnMensaje({
   onAbrir: () => void;
 }) {
   const t = useT();
+  // Nota de voz: se escucha en la burbuja. Sin archivo real (las del cliente
+  // en el mock), suena un tono de muestra.
+  const urlAudio = useMemo(
+    () => (adjunto.esAudio ? (adjunto.url ?? urlAudioDemo()) : undefined),
+    [adjunto.esAudio, adjunto.url]
+  );
+  if (adjunto.esAudio) {
+    return (
+      <div data-testid="chat-adjunto-audio" className="flex flex-col gap-0.5">
+        <audio controls src={urlAudio} className="h-9 max-w-full" aria-label={adjunto.nombre} />
+        <span className={cn("text-[0.65rem]", deAgente ? "text-primary-foreground/70" : "text-muted-foreground")}>
+          {adjunto.nombre} · {adjunto.tamano}
+        </span>
+      </div>
+    );
+  }
   if (adjunto.esImagen && adjunto.url) {
     return (
       <button

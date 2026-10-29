@@ -58,6 +58,12 @@ export const padMock: NamespaceDict = {
     "voz.sinDictado": "Este navegador no permite dictar.",
     "voz.sinPermiso": "No se puede dictar: falta el permiso del micrófono.",
     "voz.errorDictado": "No se pudo dictar. Probá de nuevo.",
+    "voz.grabar": "Grabar una nota de voz",
+    "voz.dejarDeGrabar": "Dejar de grabar",
+    "voz.grabando": "Grabando… al terminar, la nota de voz queda lista para enviar.",
+    "voz.sinGrabacion": "Este navegador no permite grabar audio.",
+    "voz.sinPermisoGrabar": "No se puede grabar: falta el permiso del micrófono.",
+    "voz.errorGrabar": "No se pudo grabar. Probá de nuevo.",
     "conversationPanel.volverAlVivo": "Volver al vivo",
     "conversationPanel.plantillas": "Plantillas de mensajes…",
     "conversationPanel.buscarPlantilla": "Buscar plantilla…",
@@ -81,7 +87,7 @@ export const padMock: NamespaceDict = {
     "conversationPanel.adjuntoTipoNoSoportado": "El tipo de archivo no se puede mandar por chat.",
     "conversationPanel.adjuntoMuyGrande": "Pesa más de {mb} MB.",
     "conversationPanel.adjuntosPermitidos":
-      "Se pueden mandar imágenes {imagenes} de hasta {mbImagen} MB y archivos {archivos} de hasta {mbArchivo} MB.",
+      "Se pueden mandar imágenes {imagenes} de hasta {mbImagen} MB, archivos {archivos} de hasta {mbArchivo} MB y audios {audios} de hasta {mbAudio} MB.",
     "conversationPanel.entendido": "Entendido",
 
     // Categorías del selector de emojis del chat
