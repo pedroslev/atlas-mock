@@ -25,6 +25,7 @@ import {
   type CampaniaSaliente,
   type CuentaSaliente,
   type HistorialAgenteEntrada,
+  type InteraccionEntrante,
 } from "@/lib/pad-mock/data";
 
 // Pantalla de inicio del pad — se ve al entrar (sin interacción activa) y,
@@ -50,6 +51,8 @@ export function InicioPanel({
   onContactar,
   onLlamarInterno,
   onSimularEntrante,
+  entrantesSimulables = [],
+  onSimularEntranteCliente,
   historial,
 }: {
   estadoAgenteId: string;
@@ -60,6 +63,10 @@ export function InicioPanel({
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
   onSimularEntrante: () => void;
+  /** Botones temporales del mock: cada interacción que el sistema puede
+   *  derivar, y si hoy podría llegar (capacidad del asesor). */
+  entrantesSimulables?: { entrante: InteraccionEntrante; disponible: boolean }[];
+  onSimularEntranteCliente?: (id: string) => void;
   /** Vive en pad-mock-shell.tsx: las llamadas internas que terminan se suman acá. */
   historial: HistorialAgenteEntrada[];
 }) {
@@ -203,6 +210,49 @@ export function InicioPanel({
               <Button size="sm" onClick={() => onEstadoAgenteChange("disponible")}>
                 {t("padMock.inicio.pasarADisponible")}
               </Button>
+            </div>
+          )}
+
+          {/* Solo para probar el mock (a pedido del PO): hace llegar cada
+              tipo de interacción sin tener que cambiar de estado. No es
+              parte de la pantalla. Deshabilitado si la capacidad del asesor
+              no lo permite (una llamada, webcall o videollamada en curso). */}
+          {onSimularEntranteCliente && entrantesSimulables.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border p-3">
+              <span className="text-xs font-medium text-muted-foreground">{t("padMock.inicio.simularTitulo")}</span>
+              <div className="flex flex-wrap gap-2">
+                {entrantesSimulables.map(({ entrante: e, disponible: puede }) => {
+                  const Icono = CANAL_ICON[e.canal];
+                  return (
+                    <Button
+                      key={e.id}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!puede}
+                      title={puede ? undefined : t("padMock.inicio.simularOcupado")}
+                      onClick={() => onSimularEntranteCliente(e.id)}
+                      className="gap-1.5"
+                    >
+                      <Icono className="size-3.5" />
+                      {CANAL_LABEL[e.canal]}
+                      {(e.canal === "webcall" || e.canal === "videollamada") && (
+                        <span className="text-muted-foreground">
+                          · {e.chatEnLlamada ? t("padMock.inicio.simularConChat") : t("padMock.inicio.simularSinChat")}
+                        </span>
+                      )}
+                      <span className="text-muted-foreground">
+                        ·{" "}
+                        {e.atencionForzada
+                          ? t("padMock.inicio.simularForzada")
+                          : e.canal === "chat"
+                            ? t("padMock.inicio.simularNoForzadaChat")
+                            : t("padMock.inicio.simularNoForzada")}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           )}
 

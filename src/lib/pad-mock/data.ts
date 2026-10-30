@@ -7,6 +7,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Phone,
+  Headset,
+  Video,
   MessageCircle,
   MessageSquareText,
   Smartphone,
@@ -22,10 +24,12 @@ import {
 // whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
 // aparecen en historial y en el armado de campañas salientes. "chat" sí
 // tiene su pantalla (conversation-panel.tsx).
-export type CanalMock = "llamada" | "chat" | "whatsapp" | "mail" | "sms";
+export type CanalMock = "llamada" | "webcall" | "videollamada" | "chat" | "whatsapp" | "mail" | "sms";
 
 export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
   llamada: Phone,
+  webcall: Headset,
+  videollamada: Video,
   chat: MessageCircle,
   whatsapp: Smartphone,
   mail: Mail,
@@ -34,6 +38,8 @@ export const CANAL_ICON: Record<CanalMock, LucideIcon> = {
 
 export const CANAL_LABEL: Record<CanalMock, string> = {
   llamada: "Llamada",
+  webcall: "Webcall",
+  videollamada: "Videollamada",
   chat: "Chat",
   whatsapp: "WhatsApp",
   mail: "Mail",
@@ -51,7 +57,7 @@ export type CampaniaSaliente = { id: string; nombre: string; cuentas: CuentaSali
 
 // Solo cuentas de llamada: es el único canal en el que el agente inicia la
 // interacción (el chat siempre lo inicia el cliente — ver
-// chatsEntrantesMock). camp-4 (Soporte técnico) solo atiende chats, así que
+// entrantesMock). camp-4 (Soporte técnico) solo atiende chats, así que
 // no figura acá — sigue en campaniasAgenteMock ("Mi turno").
 export const campaniasSalientesMock: CampaniaSaliente[] = [
   {
@@ -112,9 +118,9 @@ export type FilaCola = {
   retenidaDesde?: number;
   /** Momento en que arrancó — para la duración que queda en el historial. */
   iniciadaEn?: number;
-  /** Chat: id en chatsEntrantesMock. */
-  chatId?: string;
-  /** Chat entrante sin atención forzada que el agente todavía no aceptó. */
+  /** Chat, webcall o videollamada: id en entrantesMock. */
+  entranteId?: string;
+  /** Entrante sin atención forzada que el agente todavía no aceptó/atendió. */
   porAceptar?: boolean;
 };
 
@@ -132,35 +138,96 @@ export const clienteMock = {
 
 // --- Chat (pantalla de chat) -----------------------------------------------
 // "hora" en formato hora:minuto:segundo.
-export type MensajeChat = { autor: "cliente" | "agente"; texto: string; hora: string };
+export type AdjuntoChat = {
+  nombre: string;
+  /** Ya formateado, ej. "1,2 MB". */
+  tamano: string;
+  esImagen: boolean;
+  /** Nota de voz o archivo de audio: se escucha en la burbuja, sin abrir el visor. */
+  esAudio?: boolean;
+  /** Para verlo en el visor (imagen o PDF; en el mock, dirección local del archivo). */
+  url?: string;
+};
 
-// Chats que el sistema le deriva al agente (el chat siempre lo inicia el
-// cliente). Cada uno viene de una campaña, y su "Atención forzada"
-// (Olimpo → Config. operativa) decide cómo llega: activada, entra directo a
-// las interacciones en curso; desactivada, aparece un aviso para aceptarlo.
+export type MensajeChat = {
+  autor: "cliente" | "agente";
+  texto: string;
+  hora: string;
+  adjuntos?: AdjuntoChat[];
+};
+
+// Archivos que se pueden mandar por chat: por ahora los comunes (imágenes,
+// documentos, planillas, texto y audios); nada ejecutable. Qué tipos y qué
+// pesos permite cada campaña se define después, en su parametrización.
+export const ADJUNTOS_CHAT = {
+  imagen: { extensiones: ["jpg", "jpeg", "png", "gif", "webp"], maxMB: 5 },
+  archivo: { extensiones: ["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt"], maxMB: 100 },
+  audio: { extensiones: ["mp3", "wav", "ogg", "m4a", "aac", "webm"], maxMB: 100 },
+};
+
+// Interacciones que el sistema le deriva al agente: chats, webcalls y
+// videollamadas (las inicia siempre el cliente). Cada una viene de una campaña, y su
+// "Atención forzada" (Olimpo → Config. operativa) decide cómo llega:
+// activada, entra directo a las interacciones en curso; desactivada, se
+// ofrece para aceptar (chat) o atender (webcall y videollamada).
 // En la ficha del cliente no hay teléfono: se muestra el nombre que dejó al
-// iniciar el chat.
-export type ChatEntrante = {
+// iniciar el chat o la llamada web.
+// Webcall: se maneja como una llamada (mismos controles). Si su cuenta tiene
+// "Chat durante la llamada" (Olimpo → Cuentas), la solapa de la llamada
+// muestra además el chat, igual que la pantalla de chat.
+// Videollamada: mismos controles que la webcall, más los de video. El video
+// va en su solapa y, si la cuenta tiene "Chat durante la llamada", el chat en
+// otra solapa al lado.
+export type InteraccionEntrante = {
   id: string;
+  canal: "llamada" | "chat" | "webcall" | "videollamada";
   nombre: string;
   campania: string;
+  /** Cuenta por la que entra (Olimpo → Cuentas). */
+  cuenta: string;
   atencionForzada: boolean;
+  /** Webcall o videollamada: la cuenta suma chat durante la llamada. */
+  chatEnLlamada?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
   /**
    * Datos conocidos del cliente, con las claves de las variables de plantilla
    * (cliente.nombre…). Lo que no está acá no se puede resolver y el redactor
-   * lo marca como [NOMBRE]; vacío si el cliente no está identificado.
+   * lo marca como [NOMBRE]; vacío (o sin definir) si el cliente no está identificado.
    */
-  datosCliente: Record<string, string>;
+  datosCliente?: Record<string, string>;
+  /** Lo conversado por chat hasta que llega al agente. */
   mensajes: MensajeChat[];
 };
 
-export const chatsEntrantesMock: ChatEntrante[] = [
+export const entrantesMock: InteraccionEntrante[] = [
+  // Llamadas de cliente (para probar el mock desde Inicio).
+  {
+    id: "ll-1",
+    canal: "llamada",
+    nombre: "Carolina Paz",
+    campania: "Cobranzas Activa PCP",
+    cuenta: "Línea Cobranzas AR",
+    atencionForzada: true,
+    claveHistorial: "carolina-paz",
+    mensajes: [],
+  },
+  {
+    id: "ll-2",
+    canal: "llamada",
+    nombre: "Federico Luna",
+    campania: "Lanzamiento Tarjeta Plus",
+    cuenta: "Línea Ventas",
+    atencionForzada: false,
+    claveHistorial: "federico-luna",
+    mensajes: [],
+  },
   {
     id: "ce-1",
+    canal: "chat",
     nombre: "Nicolás Aguirre",
     campania: "Soporte técnico Nivel 1",
+    cuenta: "Chat web Soporte",
     atencionForzada: true,
     claveHistorial: "nicolas-aguirre",
     // Identificado, pero sin email ni documento cargados.
@@ -169,13 +236,26 @@ export const chatsEntrantesMock: ChatEntrante[] = [
       { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
       { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
       { autor: "cliente", texto: "Sí, es el #48213.", hora: "14:03:05" },
+      {
+        autor: "cliente",
+        texto: "Te paso el comprobante y una foto de la etiqueta del paquete.",
+        hora: "14:03:12",
+        adjuntos: [
+          { nombre: "etiqueta-envio.jpg", tamano: "820 KB", esImagen: true, url: "/pad-mock/etiqueta-envio.svg" },
+          { nombre: "Nota-de-voz-14:03.webm", tamano: "48 KB", esImagen: false, esAudio: true },
+          { nombre: "comprobante-48213.pdf", tamano: "64 KB", esImagen: false, url: "/pad-mock/comprobante-48213.pdf" },
+          { nombre: "detalle-pedido.xlsx", tamano: "18 KB", esImagen: false },
+        ],
+      },
       { autor: "agente", texto: "Genial, dejame revisarlo un segundo...", hora: "14:03:19" },
     ],
   },
   {
     id: "ce-2",
+    canal: "chat",
     nombre: "Sofía Medina",
     campania: "Ventas Online",
+    cuenta: "Chat web Ventas",
     atencionForzada: false,
     claveHistorial: "sofia-medina",
     datosCliente: { "cliente.nombre": "Sofía", "cliente.apellido": "Medina", "cliente.email": "sofia.medina@mail.com" },
@@ -184,9 +264,61 @@ export const chatsEntrantesMock: ChatEntrante[] = [
     ],
   },
   {
+    id: "wc-1",
+    canal: "webcall",
+    nombre: "Lucía Fernández",
+    campania: "Ventas Online",
+    cuenta: "Webcall Ventas",
+    atencionForzada: false,
+    chatEnLlamada: true,
+    claveHistorial: "lucia-fernandez",
+    datosCliente: { "cliente.nombre": "Lucía", "cliente.apellido": "Fernández", "cliente.email": "lucia.fernandez@mail.com" },
+    mensajes: [
+      { autor: "cliente", texto: "Hola, los llamo desde la tienda. Les escribo acá el número de pedido: #50771.", hora: "16:21:40" },
+    ],
+  },
+  {
+    id: "wc-2",
+    canal: "webcall",
+    nombre: "Martín Sosa",
+    campania: "Soporte técnico Nivel 1",
+    cuenta: "Webcall Soporte",
+    atencionForzada: true,
+    chatEnLlamada: false,
+    claveHistorial: "martin-sosa",
+    mensajes: [],
+  },
+  {
+    id: "vc-1",
+    canal: "videollamada",
+    nombre: "Valentina Ruiz",
+    campania: "Ventas Online",
+    cuenta: "Videollamada Ventas",
+    atencionForzada: false,
+    chatEnLlamada: true,
+    claveHistorial: "valentina-ruiz",
+    datosCliente: { "cliente.nombre": "Valentina", "cliente.apellido": "Ruiz" },
+    mensajes: [
+      { autor: "cliente", texto: "Hola! Quiero ver el modelo de heladera que tienen en promoción.", hora: "17:05:12" },
+    ],
+  },
+  {
+    id: "vc-2",
+    canal: "videollamada",
+    nombre: "Diego Romero",
+    campania: "Soporte técnico Nivel 1",
+    cuenta: "Videollamada Asesoría",
+    atencionForzada: true,
+    chatEnLlamada: false,
+    claveHistorial: "diego-romero",
+    mensajes: [],
+  },
+  {
     id: "ce-3",
+    canal: "chat",
     nombre: "Visitante web",
     campania: "Soporte técnico Nivel 1",
+    cuenta: "Chat web Soporte",
     atencionForzada: false,
     claveHistorial: "visitante-web",
     // Cliente sin identificar: ningún dato del cliente se puede resolver.
@@ -196,6 +328,11 @@ export const chatsEntrantesMock: ChatEntrante[] = [
     ],
   },
 ];
+
+// Llamada, webcall y videollamada ocupan al asesor entero (Olimpo → Cuentas).
+export function ocupaAlAsesorEntero(canal: CanalMock) {
+  return canal === "llamada" || canal === "webcall" || canal === "videollamada";
+}
 
 // Plantillas de mensajes del redactor. "descripcion" alimenta el ícono "i"
 // de ayuda del selector (hover).
@@ -356,31 +493,8 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       ],
     },
   ],
-  // Historial de los clientes de chatsEntrantesMock.
-  "nicolas-aguirre": [
-    {
-      id: "h-n1",
-      fecha: "02/08/2026",
-      canal: "chat",
-      estado: "Derivado a nivel 2",
-      resumen: "Pedido llegado incompleto: falta un producto.",
-      agente: "Julián Ferreyra",
-      tipificacion: "Deriva a Logística",
-      tipificacionDescripcion: "El caso lo tiene que resolver el equipo de Logística.",
-      bookmarks: ["Reclamo activo"],
-      resumenIA:
-        "El cliente recibió su pedido sin uno de los productos. Se derivó a Logística para el reenvío.",
-      duracion: "6:48",
-      hilo: [],
-      conversacion: [
-        { autor: "cliente", texto: "Hola, me llegó el pedido #47102 pero falta la funda.", hora: "16:20:11" },
-        { autor: "agente", texto: "Hola Nicolás, lamento la molestia. ¿Me confirmás que el resto llegó bien?", hora: "16:20:49" },
-        { autor: "cliente", texto: "Sí, todo lo demás está.", hora: "16:21:30" },
-        { autor: "agente", texto: "Listo, ya le pasé el caso a Logística para que te reenvíen la funda. Te van a escribir por mail.", hora: "16:23:02" },
-        { autor: "cliente", texto: "Buenísimo, gracias.", hora: "16:23:15" },
-      ],
-    },
-  ],
+  // Los clientes de entrantesMock (llamada, chat, webcall y videollamada) no tienen
+  // historial por ahora, a pedido del PO: su sección queda vacía.
 };
 
 // --- Tipificación -----------------------------------------------------------
@@ -541,8 +655,7 @@ export type EstadoDirectorio = {
 export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
   disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
   "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
-  // Propuesta del PO, a confirmar con Pedro: estado propio para distinguir
-  // una llamada interna de una llamada productiva.
+  // Estado propio para distinguir una llamada interna de una llamada productiva.
   "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false },
   acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
   "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },

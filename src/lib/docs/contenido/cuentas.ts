@@ -43,8 +43,8 @@ export const contenido: ContenidoPagina = {
             items: [
               "Telefonía SIP — La línea telefónica de siempre, con un número al que llaman tus clientes. Pide definir el «Uso de la línea» (si recibe llamadas, si las origina o ambas), qué número ve el destinatario y el número. Una llamada ocupa al asesor completo. La solapa «Flujo» solo aparece si la línea recibe llamadas.",
               "Chat — Conversación de texto. Pide la «Capacidad del asesor»: cuántos chats a la vez atiende cada asesor y qué parte de su capacidad reserva la cuenta. No tiene línea ni uso. La solapa «Flujo» siempre está, porque el cliente es quien inicia el chat.",
-              "Videollamada — No tiene línea, uso ni capacidad: ocupa al asesor completo, igual que una llamada. La solapa «Flujo» siempre está.",
-              "Webcall (llamada web) — Llamada de voz desde la web, sin línea telefónica. Tampoco tiene línea, uso ni capacidad, y ocupa al asesor completo. La solapa «Flujo» siempre está.",
+              "Videollamada — No tiene línea, uso ni capacidad: ocupa al asesor completo, igual que una llamada. La solapa «Flujo» siempre está. Con «Chat durante la llamada» activado, además del video, el cliente y el asesor se escriben y se mandan archivos durante la videollamada; apagado (por defecto), es solo video y audio.",
+              "Webcall (llamada web) — Llamada de voz desde la web, sin línea telefónica. Tampoco tiene línea, uso ni capacidad, y ocupa al asesor completo. La solapa «Flujo» siempre está. Con «Chat durante la llamada» activado, además del audio, el cliente y el asesor se escriben y se mandan archivos en la misma pantalla de la llamada; apagado (por defecto), es solo audio.",
             ],
           },
           {
@@ -111,7 +111,7 @@ export const contenido: ContenidoPagina = {
               "En «Cuentas», tocá «Nueva cuenta».",
               "En la solapa «General», escribí el «Nombre» y, si querés, la «Descripción».",
               "Elegí el «Tipo» de cuenta. Mirá bien esta elección: después no se puede cambiar.",
-              "Completá lo que pide el tipo: «Capacidad del asesor» en chat, «Uso de la línea» en telefonía. Videollamada y webcall no piden nada más.",
+              "Completá lo que pide el tipo: «Capacidad del asesor» en chat, «Uso de la línea» en telefonía y, en webcall y videollamada, si suman «Chat durante la llamada».",
               "Si la cuenta recibe interacciones, abrí la solapa «Flujo» y armá el flujo de atención.",
               "Tocá «Crear cuenta».",
             ],
@@ -336,8 +336,8 @@ export const contenido: ContenidoPagina = {
             items: [
               "SIP telephony — The usual phone line, with a number your customers call. It asks you to define the «Line usage» (whether it receives calls, places them, or both), what the other party sees, and the number. A call takes up the whole agent. The «Workflow» tab only appears if the line receives calls.",
               "Chat — Text conversation. It asks for the «Agent capacity»: how many chats at once each agent handles and what share of their capacity the account reserves. It has no line or usage. The «Workflow» tab is always there, because the customer is the one who starts the chat.",
-              "Video call — It has no line, usage or capacity: it takes up the whole agent, like a call. The «Workflow» tab is always there.",
-              "Webcall (web call) — Voice call from the web, with no phone line. It also has no line, usage or capacity, and takes up the whole agent. The «Workflow» tab is always there.",
+              "Video call — It has no line, usage or capacity: it takes up the whole agent, like a call. The «Workflow» tab is always there. With «Chat during the call» on, besides video the customer and the agent message each other and send files during the video call; off (the default), it is video and audio only.",
+              "Webcall (web call) — Voice call from the web, with no phone line. It also has no line, usage or capacity, and takes up the whole agent. The «Workflow» tab is always there. With «Chat during the call» on, besides audio the customer and the agent message each other and send files on the same call screen; off (the default), it is audio only.",
             ],
           },
           {
@@ -404,7 +404,7 @@ export const contenido: ContenidoPagina = {
               "In «Accounts», click «New account».",
               "In the «General» tab, write the «Name» and, if you want, the «Description».",
               "Choose the account «Type». Think it through: it cannot be changed afterwards.",
-              "Fill in what the type asks for: «Agent capacity» in chat, «Line usage» in telephony. Video call and webcall ask for nothing else.",
+              "Fill in what the type asks for: «Agent capacity» in chat, «Line usage» in telephony and, in webcall and video call, whether they add «Chat during the call».",
               "If the account receives interactions, open the «Workflow» tab and build the handling flow.",
               "Click «Create account».",
             ],

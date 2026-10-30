@@ -222,6 +222,9 @@ export type Cuenta = {
   modoSalida?: ModoDeSalida;
   lineaSalida?: string;
   workflow?: Workflow;
+  // Solo webcall y videollamada: además del audio (o del video), cliente y
+  // asesor se escriben por chat durante la llamada.
+  chatEnLlamada?: boolean;
   // Capacidad del asesor: cada uno tiene 100. Voz, webcall y videollamada ocupan los 100
   // (una a la vez) y no lo piden. En chat el tenant define el cupo y el máximo
   // de simultáneas, y el resto se deriva:
@@ -661,11 +664,33 @@ export const cuentas: Cuenta[] = [
     provisioningLock: 100,
   },
   {
+    id: "acc-video-2",
+    nombre: "Videollamada Ventas",
+    descripcion: "Videollamada con chat desde la tienda online, para mostrar productos y mandar comprobantes",
+    tipo: "Videollamada",
+    identificador: "Videollamada Ventas",
+    chatEnLlamada: true,
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
     id: "acc-webcall-1",
     nombre: "Webcall Soporte",
     descripcion: "Llamada de voz por web (solo audio) desde el portal del cliente, sin carrier",
     tipo: "Webcall",
     identificador: "Webcall Soporte",
+    interactionValue: 100,
+    provisioning: 1,
+    provisioningLock: 100,
+  },
+  {
+    id: "acc-webcall-2",
+    nombre: "Webcall Ventas",
+    descripcion: "Llamada web con chat desde la tienda online, para mandar links y comprobantes",
+    tipo: "Webcall",
+    identificador: "Webcall Ventas",
+    chatEnLlamada: true,
     interactionValue: 100,
     provisioning: 1,
     provisioningLock: 100,
@@ -900,6 +925,16 @@ export const plantillas: Plantilla[] = [
     activa: true,
   },
   {
+    id: "pl-comprobante",
+    nombre: "Enviar comprobante",
+    descripcion: "Manda el comprobante del pedido como archivo, entre dos textos.",
+    canales: ["chat", "whatsapp"],
+    contenido:
+      "Te paso el comprobante, {{cliente.nombre}}:\n[[archivo:comprobante-48213.pdf]]\nCualquier duda, escribime por acá.",
+    adjuntos: [{ id: "adj-comprobante", nombre: "comprobante-48213.pdf", tamano: "96 KB" }],
+    activa: true,
+  },
+  {
     id: "pl-demora",
     nombre: "Aviso de demora",
     descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
@@ -977,7 +1012,7 @@ export const plantillaGrupos: PlantillaGrupo[] = [
     id: "pg-atencion",
     nombre: "Atención al cliente",
     descripcion: "Saludo, pedido de datos y cierre para consultas generales.",
-    plantillaIds: ["pl-saludo", "pl-datos", "pl-contacto", "pl-demora", "pl-cierre"],
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-contacto", "pl-comprobante", "pl-demora", "pl-cierre"],
   },
   {
     id: "pg-email-comercial",

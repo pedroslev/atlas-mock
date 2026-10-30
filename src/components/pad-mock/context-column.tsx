@@ -265,6 +265,9 @@ export function ContextColumn({
           onToggle={() => toggle("historial")}
         >
           <div className="flex flex-col gap-1.5">
+            {historial.length === 0 && (
+              <p className="text-xs text-muted-foreground">{t("padMock.contextColumn.historialVacio")}</p>
+            )}
             {historialVisible.map((h) => (
               <HistorialItem
                 key={h.id}
