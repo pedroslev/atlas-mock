@@ -7,6 +7,7 @@ import {
   type TipoRender,
 } from "@/lib/mock-data";
 import { aTextoPlano, segmentar, tipoDeLinea } from "@/lib/plantillas";
+import { enlaceMarkdownValido } from "@/lib/esquemas-url";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +39,16 @@ export function MensajeRenderizado({
             {tipo !== "texto" && <span aria-hidden>{marcador}</span>}
             <span>
               {segmentos.map((s, j) =>
-                s.url ? (
+                // Un enlace con esquema no permitido (javascript:, data:…) no se
+                // dibuja como enlace: queda como texto.
+                s.url && enlaceMarkdownValido(s.url) ? (
                   // Chat web y email muestran el enlace con su texto; en WhatsApp y
                   // los canales planos sale "texto (url)" (ver aFormatoChat).
                   <a key={j} href={s.url} className="underline underline-offset-2" onClick={(e) => e.preventDefault()}>
                     {s.texto}
                   </a>
+                ) : s.url ? (
+                  <span key={j}>{s.texto}</span>
                 ) : s.negrita ? (
                   <strong key={j}>{s.texto}</strong>
                 ) : s.cursiva ? (

@@ -44,6 +44,9 @@ export const contenido: ContenidoPagina = {
               "Asunto — Solo para email. Puede llevar variables.",
               "Formato del cuerpo — Solo en email: texto plano (por defecto) o HTML. Con HTML, el cuadro de texto es el código del cuerpo, en dos pestañas: «HTML» (el contenido del cuerpo) y «CSS» (los estilos). Al elegir HTML la barra lateral se cierra y la vista previa se agranda; con «Escritorio» y «Móvil» ves el correo a 600 y a 375 píxeles. La vista previa no ejecuta scripts.",
               "Mensaje — El texto, en mensajería, con la barra de formato (negrita, cursiva, tachado, lista, lista numerada, enlace y emoji) y los botones «Insertar variable» e «Insertar archivo». En SMS es texto plano, sin barra de formato ni archivos. En email no hay barra de formato: se escribe en texto plano o en HTML y los archivos van adjuntos.",
+              "Largo del mensaje — Debajo del cuadro hay un contador por cada canal marcado, con el texto ya con las variables de ejemplo: Chat, WhatsApp y Telegram 4.096 caracteres; Instagram 1.000 bytes (un acento ocupa 2 y un emoji 4); Facebook 2.000; TikTok 6.000; X y LinkedIn 10.000. En SMS se cuentan segmentos (160 caracteres, o 153 por segmento si hay más de uno; con acentos como «á» o con emojis pasa a 70 y 67), hasta 10. Si un canal se pasa, el contador se pone en rojo con «excede en N», y no se puede guardar hasta recortar el texto o desmarcar ese canal. El email no tiene tope.",
+              "Validación del email — En una plantilla de email con HTML, el panel «Validación» avisa de lo que impide guardar: etiquetas como script, iframe o form, atributos como onclick, enlaces con esquemas no permitidos, CSS con @import o expression(), y etiquetas, comillas o llaves sin cerrar. También avisa, sin bloquear, de estilos que muchos clientes de correo no soportan (position, float, flex, grid), imágenes sin texto alternativo y anchos de más de 600 px. Tocá un problema para ir a su línea. La vista previa siempre limpia el HTML y el CSS antes de mostrarlos.",
+              "Enlace — En mensajería, el enlace debe empezar con http://, https://, mailto: o tel:.",
               "Archivos — «Insertar archivo» abre el selector de archivos de tu equipo y deja el archivo dentro del texto, donde está el cursor. En chat sale como mensaje aparte en ese punto (texto, archivo, texto); en email va adjunto; SMS no los admite.",
             ],
           },
@@ -56,7 +59,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Si el cliente no tiene ese dato, la variable queda visible en el mensaje tal cual, igual que la ves en el editor, y Hermes avisa al asesor, que la completa a mano antes de enviar.",
+              "Si el cliente no tiene ese dato, la variable queda visible en el mensaje tal cual, igual que la ves en el editor, y Hermes la reemplaza por el nombre del dato entre corchetes, por ejemplo [NOMBRE] o [EMAIL], lo avisa sobre el cuadro de mensaje (con una ayuda al pasar por encima de cada uno) y no deja enviar hasta que el asesor lo completa a mano. Hermes tampoco deja enviar un mensaje que pase el límite del chat (4.096 caracteres).",
           },
         ],
       },

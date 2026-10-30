@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowDown, Info, Paperclip, Phone, PhoneOutgoing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,11 +20,17 @@ import {
 } from "@/components/pad-mock/selector-plantillas";
 import { AdjuntosChips } from "@/components/plantillas/mensaje-renderizado";
 import type { MensajeChat } from "@/lib/pad-mock/data";
+import { contarParaCanal } from "@/lib/limites-canal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getPlantilla, type AdjuntoPlantilla, type CanalPlantilla } from "@/lib/mock-data";
 import {
-  nombreVariable,
+  marcadorFaltante,
   renderizarParaCanal,
-  variablesUsadas,
+  variablesPendientes,
   type DatosVariables,
 } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
@@ -68,17 +74,18 @@ const GRUPO_PLANTILLAS_MOCK = "pg-atencion";
 const PLANTILLA_DEFAULT_CHAT_MOCK = "pl-saludo";
 const CANAL: CanalPlantilla = "chat";
 
-function Redactor({ nombreCliente }: { nombreCliente?: string }) {
+function Redactor({ datosCliente }: { datosCliente?: DatosVariables }) {
   const t = useT();
-  const datos: DatosVariables = useMemo(() => {
-    const [nombre, ...resto] = (nombreCliente ?? "").split(" ");
-    return {
-      "cliente.nombre": nombre,
-      "cliente.apellido": resto.join(" "),
+  // Los datos del cliente son los que se conocen (pueden faltar o no haber
+  // cliente identificado); campaña y asesor son fijos en el mock.
+  const datos: DatosVariables = useMemo(
+    () => ({
+      ...datosCliente,
       "campania.nombre": "Soporte técnico Nivel 1",
       "asesor.nombre": "Ana",
-    };
-  }, [nombreCliente]);
+    }),
+    [datosCliente]
+  );
 
   const precargada = useMemo(() => {
     const p = getPlantilla(PLANTILLA_DEFAULT_CHAT_MOCK);
@@ -92,9 +99,18 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
   const [aviso, setAviso] = useState<"precargada" | null>(precargada ? "precargada" : null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [pendiente, setPendiente] = useState<PlantillaElegida | null>(null);
-  // Una variable sin dato queda visible en el texto ({{cliente.nombre}}); mientras
-  // quede alguna, no se puede enviar: el asesor la completa a mano.
-  const sinDato = variablesUsadas(texto);
+  // Una variable sin dato queda como [NOMBRE] en el texto; mientras quede
+  // alguna, no se puede enviar: el asesor la completa a mano y el chip desaparece.
+  const sinDato = variablesPendientes(texto, datos);
+  // El tooltip del primer chip se abre solo la primera vez que se carga una
+  // plantilla con faltantes; después solo con hover o foco.
+  const [tooltipAbierto, setTooltipAbierto] = useState<string | null>(
+    precargada?.sinDato[0] ?? null
+  );
+  const tooltipYaMostrado = useRef(precargada ? precargada.sinDato.length > 0 : false);
+  // El texto ya resuelto no puede pasar el límite del canal (4096 en chat).
+  const conteo = contarParaCanal(CANAL, texto);
+  const excedido = conteo?.tipo === "limite" && conteo.excedido ? conteo : null;
 
   function aplicar(elegida: PlantillaElegida, modo: "insertar" | "reemplazar") {
     setTexto((prev) =>
@@ -106,6 +122,10 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
     ]);
     setAviso(null);
     setPendiente(null);
+    if (elegida.sinDato.length > 0 && !tooltipYaMostrado.current) {
+      tooltipYaMostrado.current = true;
+      setTooltipAbierto(elegida.sinDato[0]);
+    }
   }
 
   function elegir(elegida: PlantillaElegida) {
@@ -116,7 +136,7 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
   }
 
   function enviar() {
-    if (!texto.trim() || sinDato.length > 0) return;
+    if (!texto.trim() || sinDato.length > 0 || excedido) return;
     setTexto("");
     setAdjuntos([]);
     setAviso(null);
@@ -144,7 +164,7 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
         <Button
           size="sm"
           onClick={enviar}
-          disabled={!texto.trim() || sinDato.length > 0}
+          disabled={!texto.trim() || sinDato.length > 0 || excedido !== null}
           className="shrink-0 gap-1.5"
         >
           {t("padMock.conversationPanel.enviar")}
@@ -158,11 +178,39 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
         </p>
       )}
       {sinDato.length > 0 && (
-        <p className="flex items-center gap-1.5 text-xs text-warning">
+        <div
+          className="flex flex-wrap items-center gap-1.5 text-xs text-warning"
+          data-testid="hermes-variables-faltantes"
+        >
           <AlertTriangle className="size-3.5 shrink-0" />
-          {t("plantillas.selector.sinDato", {
-            variables: sinDato.map((v) => nombreVariable(v, t)).join(", "),
-          })}
+          <span>{t("plantillas.selector.faltanDatos")}</span>
+          {sinDato.map((clave) => (
+            <Tooltip
+              key={clave}
+              open={tooltipAbierto === clave}
+              onOpenChange={(abierto) =>
+                setTooltipAbierto((actual) => (abierto ? clave : actual === clave ? null : actual))
+              }
+            >
+              <TooltipTrigger asChild>
+                {/* Botón para que el chip también reciba foco de teclado. */}
+                <button
+                  type="button"
+                  data-testid={`hermes-variable-faltante-${clave}`}
+                  className="rounded-md bg-warning/15 px-1.5 py-0.5 font-mono text-warning focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  {marcadorFaltante(clave)}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("plantillas.selector.faltanteTooltip")}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      )}
+      {excedido && (
+        <p className="flex items-center gap-1.5 text-xs text-destructive" data-testid="hermes-limite-aviso">
+          <AlertTriangle className="size-3.5 shrink-0" />
+          {t("plantillas.selector.excedeLimite", { max: excedido.max, usado: excedido.usado })}
         </p>
       )}
       <Textarea
@@ -245,7 +293,7 @@ export function ConversationPanel({
   tiempo,
   enEspera,
   mensajesChat,
-  nombreCliente,
+  datosCliente,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -256,8 +304,8 @@ export function ConversationPanel({
   enEspera: boolean;
   /** Chat: lo conversado hasta ahora. Sin esto, es una llamada. */
   mensajesChat?: MensajeChat[];
-  /** Chat: nombre con el que el cliente inició la conversación. */
-  nombreCliente?: string;
+  /** Chat: datos conocidos del cliente (claves de variable); vacío si no está identificado. */
+  datosCliente?: DatosVariables;
   interno?: boolean;
   sonando?: boolean;
   nombreInterno?: string;
@@ -269,7 +317,7 @@ export function ConversationPanel({
     return (
       <div className="flex h-full min-h-0 flex-col">
         <HiloChat mensajes={mensajesChat} />
-        <Redactor nombreCliente={nombreCliente} />
+        <Redactor datosCliente={datosCliente} />
       </div>
     );
   }

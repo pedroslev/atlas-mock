@@ -82,7 +82,11 @@ import {
   type OrigenVariable,
   type VariablePlantilla,
 } from "@/lib/plantillas";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { contarParaCanal, type ConteoCanal, MAX_SEGMENTOS_SMS } from "@/lib/limites-canal";
+import { validarEmail, resumirHallazgos, type Hallazgo } from "@/lib/validar-email";
+import { escaparHtml, sanearCss, sanearHtml } from "@/lib/sanear-email";
+import { enlaceMarkdownValido } from "@/lib/esquemas-url";
 import { cn } from "@/lib/utils";
 import { useAutocompletadoVariables } from "@/components/plantillas/autocompletado-variables";
 import { componerEmail } from "@/lib/componer-email";
@@ -181,7 +185,84 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     setAbierto(false);
     return () => setAbierto(abierto);
   }, [modoHtml]);
-  const puedeConfirmar = nombre.trim() !== "" && canales.length > 0;
+  // Validación del HTML/CSS (solo email con cuerpo HTML).
+  const hallazgos = useMemo(
+    () => (modoHtml ? validarEmail(contenido, cuerpoCss) : []),
+    [modoHtml, contenido, cuerpoCss]
+  );
+  const { errores, avisos } = resumirHallazgos(hallazgos);
+
+  // Contador por canal: se cuenta el texto con las variables en su valor de
+  // ejemplo, sin las marcas de archivo y con el Markdown crudo. Email no tiene tope.
+  const { locale } = useLocale();
+  const formatoNumero = useMemo(
+    () => new Intl.NumberFormat(locale === "es" ? "es-AR" : locale),
+    [locale]
+  );
+  const textoContado = useMemo(
+    () => quitarArchivos(resolverVariables(contenido, datosEjemplo).texto),
+    [contenido]
+  );
+  const limites = useMemo(
+    () =>
+      esEmail
+        ? []
+        : canales.flatMap((canal) => {
+            const conteo = contarParaCanal(canal, textoContado);
+            return conteo ? [{ canal, conteo }] : [];
+          }),
+    [esEmail, canales, textoContado]
+  );
+  const excedidos = limites.filter((l) => l.conteo.excedido);
+  const nombresExcedidos = excedidos.map((l) => t(`plantillas.canal.${l.canal}`)).join(", ");
+
+  // Guardar queda bloqueado por canales excedidos o por errores del HTML/CSS.
+  const razonBloqueo =
+    excedidos.length > 0
+      ? t("plantillas.bloqueo.limites", { canales: nombresExcedidos })
+      : errores > 0
+        ? t("plantillas.bloqueo.errores", { n: errores })
+        : null;
+  const puedeConfirmar = nombre.trim() !== "" && canales.length > 0 && razonBloqueo === null;
+
+  /** Texto de la insignia de un canal (ej. "WhatsApp 1.020 / 4.096"). */
+  function textoLimite(canal: CanalPlantilla, c: ConteoCanal) {
+    const n = (v: number) => formatoNumero.format(v);
+    if (c.tipo === "sms") {
+      const base = t(c.segmentos === 1 ? "plantillas.limites.smsUno" : "plantillas.limites.sms", {
+        segmentos: c.segmentos,
+        caracteres: n(c.caracteres),
+        codificacion: c.codificacion,
+      });
+      return c.excedido
+        ? base +
+            t("plantillas.limites.smsMax", { max: MAX_SEGMENTOS_SMS }) +
+            t("plantillas.limites.excede", { n: n(c.exceso) })
+        : base;
+    }
+    const base = t(c.unidad === "bytes" ? "plantillas.limites.badgeBytes" : "plantillas.limites.badge", {
+      canal: t(`plantillas.canal.${canal}`),
+      usado: n(c.usado),
+      max: n(c.max),
+    });
+    return c.excedido ? base + t("plantillas.limites.excede", { n: n(c.exceso) }) : base;
+  }
+
+  /** Lleva el cursor al comienzo de la línea de un hallazgo (en su pestaña). */
+  function irALinea(h: Hallazgo) {
+    setCuerpoTab(h.origen);
+    // Se espera al render para que el cuadro ya muestre el texto de esa pestaña.
+    setTimeout(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const fuente = h.origen === "css" ? cuerpoCss : contenido;
+      const inicio = fuente.split("\n").slice(0, h.linea - 1).join("\n").length + (h.linea > 1 ? 1 : 0);
+      el.focus();
+      el.setSelectionRange(inicio, inicio);
+      const alto = parseFloat(getComputedStyle(el).lineHeight) || 20;
+      el.scrollTop = Math.max(0, (h.linea - 3) * alto);
+    }, 50);
+  }
 
   // --- Barra de formato: opera sobre la selección del textarea -------------
   function envolver(marca: string) {
@@ -225,8 +306,11 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     setEnlaceOpen(true);
   }
 
+  // El esquema del enlace tiene que ser http, https, mailto o tel.
+  const enlaceInvalido = enlaceUrl.trim() !== "" && !enlaceMarkdownValido(enlaceUrl.trim());
+
   function insertarEnlace() {
-    if (!enlaceUrl.trim()) return;
+    if (!enlaceUrl.trim() || enlaceInvalido) return;
     insertarEnCursor(`[${enlaceTexto.trim() || enlaceUrl.trim()}](${enlaceUrl.trim()})`);
     setEnlaceOpen(false);
   }
@@ -363,14 +447,29 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
             <Button variant="outline" asChild>
               <Link href="/plantillas">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild disabled={!puedeConfirmar}>
-              <Link href="/plantillas" aria-disabled={!puedeConfirmar}>
+            <Button asChild disabled={!puedeConfirmar} className={cn(!puedeConfirmar && "cursor-not-allowed opacity-50")}>
+              <Link
+                href="/plantillas"
+                aria-disabled={!puedeConfirmar}
+                data-testid="plantilla-guardar"
+                title={razonBloqueo ?? undefined}
+                onClick={(e) => {
+                  if (!puedeConfirmar) e.preventDefault();
+                }}
+              >
                 {initial ? t("common.acciones.guardar") : t("plantillas.crearPlantilla")}
               </Link>
             </Button>
           </>
         }
       />
+
+      {razonBloqueo && (
+        <p className="flex items-center gap-1.5 text-sm text-destructive" data-testid="plantilla-guardar-razon">
+          <AlertTriangle className="size-4 shrink-0" />
+          {razonBloqueo}
+        </p>
+      )}
 
       <Tabs
         value={paso}
@@ -606,10 +705,16 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                             onChange={(e) => setEnlaceUrl(e.target.value)}
                             placeholder="https://"
                             onKeyDown={(e) => e.key === "Enter" && insertarEnlace()}
+                            aria-invalid={enlaceInvalido}
                           />
+                          {enlaceInvalido && (
+                            <p className="text-xs text-destructive" data-testid="plantilla-enlace-error">
+                              {t("plantillas.editor.enlaceEsquemaInvalido")}
+                            </p>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">{t("plantillas.editor.enlaceAyuda")}</p>
-                        <Button type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim()}>
+                        <Button type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim() || enlaceInvalido}>
                           {t("plantillas.editor.insertarEnlace")}
                         </Button>
                       </PopoverContent>
@@ -750,6 +855,87 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                   </div>
                 </div>
 
+                {/* Contador por canal: uno por cada canal marcado (email no tiene tope). */}
+                {limites.length > 0 && (
+                  <div className="flex flex-col gap-1.5" data-testid="plantilla-limites">
+                    <div className="flex flex-wrap gap-1.5">
+                      {limites.map(({ canal, conteo }) => (
+                        <span
+                          key={canal}
+                          data-testid={`plantilla-limite-${canal}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs",
+                            conteo.excedido
+                              ? "border-destructive/40 bg-destructive/10 text-destructive"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {conteo.excedido && <AlertTriangle className="size-3 shrink-0" />}
+                          {textoLimite(canal, conteo)}
+                        </span>
+                      ))}
+                    </div>
+                    {excedidos.length > 0 && (
+                      <p className="text-xs text-destructive" role="alert" data-testid="plantilla-limites-aviso">
+                        {t("plantillas.limites.aviso", { canales: nombresExcedidos })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Validación del HTML y el CSS del email. */}
+                {modoHtml && (
+                  <div className="flex flex-col gap-1.5 rounded-md border p-2" data-testid="plantilla-validacion-panel">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium">{t("plantillas.validacion.titulo")}</span>
+                      <span
+                        data-testid="plantilla-validacion-resumen"
+                        className={cn(
+                          "rounded-md px-1.5 py-0.5",
+                          errores > 0
+                            ? "bg-destructive/10 text-destructive"
+                            : avisos > 0
+                              ? "bg-warning/15 text-warning"
+                              : "bg-success/15 text-success"
+                        )}
+                      >
+                        {hallazgos.length === 0
+                          ? t("plantillas.validacion.sinProblemas")
+                          : t("plantillas.validacion.resumen", { errores, avisos })}
+                      </span>
+                      {hallazgos.length > 0 && (
+                        <span className="text-muted-foreground">{t("plantillas.validacion.ayudaClick")}</span>
+                      )}
+                    </div>
+                    {hallazgos.length > 0 && (
+                      <ul className="flex max-h-32 flex-col gap-0.5 overflow-y-auto">
+                        {hallazgos.map((h, i) => (
+                          <li key={`${h.codigo}-${h.origen}-${h.linea}-${i}`}>
+                            <button
+                              type="button"
+                              data-testid="plantilla-validacion-item"
+                              data-nivel={h.nivel}
+                              onClick={() => irALinea(h)}
+                              className="flex w-full items-start gap-1.5 rounded-sm px-1 py-0.5 text-left text-xs hover:bg-muted"
+                            >
+                              <AlertTriangle
+                                className={cn(
+                                  "mt-0.5 size-3 shrink-0",
+                                  h.nivel === "error" ? "text-destructive" : "text-warning"
+                                )}
+                              />
+                              <span className="flex-1">{t(`plantillas.val.${h.codigo}`, h.datos ?? {})}</span>
+                              <span className="shrink-0 text-muted-foreground">
+                                {h.origen.toUpperCase()} · {t("plantillas.validacion.linea", { n: h.linea })}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
                 {/* Archivos: están en el texto; acá, la lista para quitarlos */}
                 {adjuntos.length > 0 && (
                   <div className="flex flex-col gap-1.5">
@@ -822,6 +1008,12 @@ function VistaPrevia({
   const asuntoResuelto = resolverVariables(asunto, datosEjemplo).texto;
   const partes = partesChat(texto);
   const sinArchivos = quitarArchivos(texto);
+  // Email HTML: los datos se escapan al reemplazar las variables (un dato no
+  // puede inyectar marcado) y HTML y CSS se sanean SIEMPRE antes de mostrarse.
+  const documentoEmail = componerEmail(
+    sanearHtml(quitarArchivos(resolverVariables(contenido, datosEjemplo, { transformar: escaparHtml }).texto)),
+    sanearCss(cuerpoCss)
+  );
   // Una solapa por tipo de render presente: chat y redes, email, SMS.
   const tipos: TipoRender[] = TIPOS_RENDER.filter((tipo) =>
     canales.some((c) => tipoRenderDeCanal(c) === tipo)
@@ -912,7 +1104,7 @@ function VistaPrevia({
                     <iframe
                       title={t("plantillas.render.email")}
                       sandbox=""
-                      srcDoc={componerEmail(sinArchivos, cuerpoCss)}
+                      srcDoc={documentoEmail}
                       style={{ width: ancho === "movil" ? 375 : 600 }}
                       className="h-full max-w-full rounded-sm border-0 bg-white"
                       data-testid="plantilla-preview-email-html"

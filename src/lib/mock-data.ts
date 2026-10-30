@@ -890,6 +890,16 @@ export const plantillas: Plantilla[] = [
     activa: true,
   },
   {
+    id: "pl-contacto",
+    nombre: "Confirmar datos de contacto",
+    descripcion: "Pide confirmar el email y el documento que figuran en la ficha.",
+    canales: ["chat", "whatsapp"],
+    contenido:
+      "{{cliente.nombre}}, ¿seguimos en contacto por {{cliente.email}}? Confirmame también tu documento ({{cliente.numero_identificacion}}).",
+    adjuntos: [],
+    activa: true,
+  },
+  {
     id: "pl-demora",
     nombre: "Aviso de demora",
     descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
@@ -931,6 +941,18 @@ export const plantillas: Plantilla[] = [
     activa: true,
   },
   {
+    id: "pl-prueba-validacion",
+    nombre: "Prueba de validación (no usar)",
+    descripcion: "Solo para ver los errores del validador de email: trae un script, un evento onclick y una etiqueta sin cerrar.",
+    canales: ["email"],
+    asunto: "Prueba de validación",
+    bodyFormat: "html",
+    contenido: "<p>Hola {{cliente.nombre}}, mirá esta oferta.</p>\n<script>alert('hola')</script>\n<a href=\"javascript:alert(1)\" onclick=\"robar()\">Aceptar</a>\n<div><p>Texto con una etiqueta sin cerrar",
+    cuerpoCss: "@import url(http://sitio.ejemplo/estilos.css);\n.a { color: red; ",
+    adjuntos: [],
+    activa: true,
+  },
+  {
     id: "pl-confirmacion-email",
     nombre: "Confirmación de pago (email, texto plano)",
     descripcion: "Confirma un pago recibido, en texto plano.",
@@ -955,13 +977,13 @@ export const plantillaGrupos: PlantillaGrupo[] = [
     id: "pg-atencion",
     nombre: "Atención al cliente",
     descripcion: "Saludo, pedido de datos y cierre para consultas generales.",
-    plantillaIds: ["pl-saludo", "pl-datos", "pl-demora", "pl-cierre"],
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-contacto", "pl-demora", "pl-cierre"],
   },
   {
     id: "pg-email-comercial",
     nombre: "Email comercial",
     descripcion: "Correos con diseño y en texto plano para propuestas y confirmaciones.",
-    plantillaIds: ["pl-propuesta", "pl-bienvenida-email", "pl-confirmacion-email"],
+    plantillaIds: ["pl-propuesta", "pl-bienvenida-email", "pl-confirmacion-email", "pl-prueba-validacion"],
   },
 ];
 

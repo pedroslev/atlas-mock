@@ -147,6 +147,12 @@ export type ChatEntrante = {
   atencionForzada: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
+  /**
+   * Datos conocidos del cliente, con las claves de las variables de plantilla
+   * (cliente.nombre…). Lo que no está acá no se puede resolver y el redactor
+   * lo marca como [NOMBRE]; vacío si el cliente no está identificado.
+   */
+  datosCliente: Record<string, string>;
   mensajes: MensajeChat[];
 };
 
@@ -157,6 +163,8 @@ export const chatsEntrantesMock: ChatEntrante[] = [
     campania: "Soporte técnico Nivel 1",
     atencionForzada: true,
     claveHistorial: "nicolas-aguirre",
+    // Identificado, pero sin email ni documento cargados.
+    datosCliente: { "cliente.nombre": "Nicolás", "cliente.apellido": "Aguirre", "cliente.telefono": "+54 9 11 5000-1234" },
     mensajes: [
       { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
       { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
@@ -170,8 +178,21 @@ export const chatsEntrantesMock: ChatEntrante[] = [
     campania: "Ventas Online",
     atencionForzada: false,
     claveHistorial: "sofia-medina",
+    datosCliente: { "cliente.nombre": "Sofía", "cliente.apellido": "Medina", "cliente.email": "sofia.medina@mail.com" },
     mensajes: [
       { autor: "cliente", texto: "Hola! Quería saber si la tarjeta Plus tiene costo de mantenimiento.", hora: "15:10:04" },
+    ],
+  },
+  {
+    id: "ce-3",
+    nombre: "Visitante web",
+    campania: "Soporte técnico Nivel 1",
+    atencionForzada: false,
+    claveHistorial: "visitante-web",
+    // Cliente sin identificar: ningún dato del cliente se puede resolver.
+    datosCliente: {},
+    mensajes: [
+      { autor: "cliente", texto: "Buenas, ¿alguien me puede ayudar con una consulta?", hora: "15:40:21" },
     ],
   },
 ];

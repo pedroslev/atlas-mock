@@ -156,16 +156,51 @@ export const datosEjemplo: DatosVariables = Object.fromEntries(
  */
 export function resolverVariables(
   texto: string,
-  datos: DatosVariables
+  datos: DatosVariables,
+  opciones: {
+    /** Transforma cada dato antes de insertarlo (p. ej. escapar HTML). */
+    transformar?: (dato: string) => string;
+    /** Qué poner cuando falta el dato (por defecto, la marca tal cual). */
+    faltante?: (clave: string, marca: string) => string;
+  } = {}
 ): { texto: string; sinDato: string[] } {
   const sinDato: string[] = [];
   const resultado = texto.replace(RE_VARIABLE, (marca, clave: string) => {
     const dato = datos[clave];
-    if (dato !== undefined && dato !== "") return dato;
+    if (dato !== undefined && dato !== "") return opciones.transformar ? opciones.transformar(dato) : dato;
     if (!sinDato.includes(clave)) sinDato.push(clave);
-    return marca;
+    return opciones.faltante ? opciones.faltante(clave, marca) : marca;
   });
   return { texto: resultado, sinDato };
+}
+
+/**
+ * Marcador que reemplaza a una variable que no se pudo resolver en Hermes:
+ * el nombre del campo en mayúsculas y sin acentos, entre corchetes
+ * ([NOMBRE], [NUMERO DE IDENTIFICACION]). Los datos del cliente salen sin el
+ * prefijo "cliente."; campaña y asesor conservan su grupo ([CAMPANIA NOMBRE]).
+ */
+export function marcadorFaltante(clave: string): string {
+  const campo = variablesPlantilla.find((v) => v.clave === clave)?.nombre;
+  const base = campo ?? (clave.startsWith(PREFIJO_CLIENTE) ? clave.slice(PREFIJO_CLIENTE.length) : clave);
+  const limpio = base
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_.]+/g, " ")
+    .trim()
+    .toUpperCase();
+  return `[${limpio}]`;
+}
+
+/**
+ * Variables que siguen pendientes en un texto de Hermes: las que `datos` no
+ * puede resolver y cuyo marcador ([NOMBRE]) todavía está literal en el texto.
+ * Al reemplazarlo a mano, deja de estar pendiente.
+ */
+export function variablesPendientes(texto: string, datos: DatosVariables): string[] {
+  return variablesPlantilla
+    .filter((v) => !datos[v.clave] && texto.includes(marcadorFaltante(v.clave)))
+    .map((v) => v.clave);
 }
 
 /** Quita las marcas de archivo (email y SMS: el archivo no va en el texto). */
@@ -258,7 +293,10 @@ export function renderizarParaCanal(
   canal: CanalPlantilla,
   datos: DatosVariables
 ) {
-  const { texto, sinDato } = resolverVariables(plantilla.contenido, datos);
+  // En Hermes lo que no se puede resolver queda como [NOMBRE] (ver marcadorFaltante).
+  const { texto, sinDato } = resolverVariables(plantilla.contenido, datos, {
+    faltante: (clave) => marcadorFaltante(clave),
+  });
   const tipo = tipoRenderDeCanal(canal);
   if (tipo === "sms") return { texto: aTextoPlano(quitarArchivos(texto)), sinDato };
   if (tipo === "plano") return { texto: aTextoPlano(texto.replace(RE_ARCHIVO, "📎 $1")), sinDato };
