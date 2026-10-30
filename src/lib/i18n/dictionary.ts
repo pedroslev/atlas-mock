@@ -6,6 +6,7 @@ import { campanias } from "@/lib/i18n/dict/campanias";
 import { cuentas } from "@/lib/i18n/dict/cuentas";
 import { clasificaciones } from "@/lib/i18n/dict/clasificaciones";
 import { marcas } from "@/lib/i18n/dict/marcas";
+import { plantillas } from "@/lib/i18n/dict/plantillas";
 import { feriados } from "@/lib/i18n/dict/feriados";
 import { listas } from "@/lib/i18n/dict/listas";
 import { usuarios } from "@/lib/i18n/dict/usuarios";
@@ -31,6 +32,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   cuentas,
   clasificaciones,
   marcas,
+  plantillas,
   feriados,
   listas,
   usuarios,

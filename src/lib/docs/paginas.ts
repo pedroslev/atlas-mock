@@ -6,6 +6,7 @@ import { contenido as clientes } from "@/lib/docs/contenido/clientes";
 import { contenido as cuentas } from "@/lib/docs/contenido/cuentas";
 import { contenido as clasificaciones } from "@/lib/docs/contenido/clasificaciones";
 import { contenido as marcas } from "@/lib/docs/contenido/marcas";
+import { contenido as plantillas } from "@/lib/docs/contenido/plantillas";
 import { contenido as feriados } from "@/lib/docs/contenido/feriados";
 import { contenido as listasDeExclusion } from "@/lib/docs/contenido/listas-de-exclusion";
 import { contenido as usuarios } from "@/lib/docs/contenido/usuarios";
@@ -23,6 +24,7 @@ export const PAGINAS: Record<string, ContenidoPagina> = {
   workflows,
   clasificaciones,
   marcas,
+  plantillas,
   feriados,
   "listas-de-exclusion": listasDeExclusion,
   usuarios,
@@ -37,7 +39,7 @@ export const PAGINAS: Record<string, ContenidoPagina> = {
 export const CATEGORIAS: { id: string; paginas: string[] }[] = [
   { id: "primeros-pasos", paginas: ["inicio"] },
   { id: "operacion", paginas: ["campanias", "clientes", "cuentas", "workflows"] },
-  { id: "clasificacion", paginas: ["clasificaciones", "marcas"] },
+  { id: "clasificacion", paginas: ["clasificaciones", "marcas", "plantillas"] },
   { id: "calendario", paginas: ["feriados", "listas-de-exclusion"] },
   { id: "personas", paginas: ["usuarios", "grupos-y-roles", "estados-auxiliares"] },
   { id: "configuracion", paginas: ["claves-api"] },

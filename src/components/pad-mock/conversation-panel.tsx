@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Categories, EmojiStyle } from "emoji-picker-react";
 import {
+  AlertTriangle,
   ArrowDown,
   Bold,
   CaseSensitive,
-  ChevronsUpDown,
   FileText,
   Headset,
+  Info,
   Video,
   Italic,
   Link2,
@@ -38,21 +39,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Kbd } from "@/components/ui/kbd";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { InfoHint } from "@/components/pad-mock/info-hint";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SelectorPlantillas, type PlantillaElegida } from "@/components/pad-mock/selector-plantillas";
+import { AdjuntosChips } from "@/components/plantillas/mensaje-renderizado";
 import { IconoEnCurso, Vumetro } from "@/components/pad-mock/vumetro";
 import { useDictado, useGrabacionAudio } from "@/lib/pad-mock/voz";
 import { MensajesChat } from "@/components/pad-mock/conversacion-chat";
-import { ADJUNTOS_CHAT, plantillasMensaje, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
+import { ADJUNTOS_CHAT, type AdjuntoChat, type MensajeChat } from "@/lib/pad-mock/data";
+import { getPlantilla, type AdjuntoPlantilla, type CanalPlantilla } from "@/lib/mock-data";
+import { contarParaCanal } from "@/lib/limites-canal";
+import {
+  marcadorFaltante,
+  renderizarParaCanal,
+  variablesPendientes,
+  type DatosVariables,
+} from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
@@ -122,56 +133,6 @@ function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
         </Button>
       )}
     </div>
-  );
-}
-
-// Selector de plantillas — combobox con buscador (mismo patrón que
-// Tipificación), cada opción con su "i" de descripción al hover.
-function PlantillaSelector({ onElegir }: { onElegir: (texto: string) => void }) {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          size="sm"
-          className="min-w-0 flex-1 justify-between font-normal"
-        >
-          <span className="flex min-w-0 items-center gap-1.5 truncate">
-            <FileText className="size-3.5 shrink-0 text-muted-foreground" />
-            <span className="truncate">{t("padMock.conversationPanel.plantillas")}</span>
-          </span>
-          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="start">
-        <Command>
-          <CommandInput placeholder={t("padMock.conversationPanel.buscarPlantilla")} />
-          <CommandList>
-            <CommandEmpty>{t("padMock.callControls.sinResultados")}</CommandEmpty>
-            <CommandGroup>
-              {plantillasMensaje.map((p) => (
-                <CommandItem
-                  key={p.id}
-                  value={p.nombre}
-                  onSelect={() => {
-                    onElegir(p.texto);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="flex-1">{p.nombre}</span>
-                  <InfoHint>{p.descripcion}</InfoHint>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -328,18 +289,138 @@ function etiquetaAtajo(a: AtajoFormato, isMac: boolean) {
 // mandar se avisa en un diálogo. Lo que sí, queda como ficha arriba del
 // cuadro hasta enviar (se puede quitar).
 //
+// Plantillas (ATLAS-1191): el selector lista las del grupo de plantillas de
+// la campaña para este canal. Escribir "/" con el cuadro vacío lo abre. Al
+// elegir una, el texto entra con las variables ya resueltas con los datos
+// del cliente (lo que no se pudo resolver queda como [NOMBRE]) y los
+// archivos como líneas "📎 nombre"; al enviar, cada archivo sale como mensaje
+// aparte en ese punto. Si ya había texto, el asesor elige Insertar o
+// Reemplazar. La plantilla por defecto de la campaña (chat) viene precargada.
+// Mock: grupo y plantilla por defecto fijos (los de la campaña de ejemplo).
+//
 // adjuntoNuevo: un adjunto que llega de afuera (la captura de imagen de la
 // videollamada); cada id nuevo se suma a las fichas, igual que uno elegido.
+// MOCK: grupo de plantillas y plantilla por defecto fijos (los de la campaña de ejemplo) y
+// los datos de campaña y asesor escritos a mano.
+// REAL: salen de la campaña de la interacción (grupo heredado campaña←proyecto, plantilla por
+// defecto del canal; ListAgentCampaigns) y del agente logueado.
+const GRUPO_PLANTILLAS_MOCK = "pg-atencion";
+const PLANTILLA_DEFAULT_CHAT_MOCK = "pl-saludo";
+const CANAL_PLANTILLAS: CanalPlantilla = "chat";
+
+// MOCK: el envío en tramos agrega los mensajes al hilo local y los archivos de la plantilla solo
+// llevan nombre y tamaño.
+// REAL: cada tramo de texto y cada archivo es un Send de atlas-iris, en orden; el archivo de la
+// plantilla se baja con GetAssetReadURL y se sube por el flujo de adjuntos del chat.
+/**
+ * Parte lo que se envía en tramos: cada archivo de la plantilla ("📎 nombre")
+ * corta el texto y sale como mensaje propio en ese punto (texto, archivo,
+ * texto). Los adjuntos manuales van con el último texto. Sin archivos de
+ * plantilla, es un solo tramo (igual que antes).
+ */
+function tramosDeEnvio(
+  texto: string,
+  deLaPlantilla: AdjuntoPlantilla[],
+  manuales: AdjuntoChat[]
+): { texto: string; adjuntos: AdjuntoChat[] }[] {
+  const tramos: { texto: string; adjuntos: AdjuntoChat[] }[] = [];
+  let actual: string[] = [];
+  const cerrarTexto = () => {
+    const t = actual.join("\n").trim();
+    if (t) tramos.push({ texto: t, adjuntos: [] });
+    actual = [];
+  };
+  for (const linea of texto.split("\n")) {
+    const nombre = /^📎 (.+)$/.exec(linea.trim())?.[1];
+    const archivo = nombre ? deLaPlantilla.find((a) => a.nombre === nombre) : undefined;
+    if (archivo) {
+      cerrarTexto();
+      tramos.push({ texto: "", adjuntos: [{ nombre: archivo.nombre, tamano: archivo.tamano, esImagen: false }] });
+    } else actual.push(linea);
+  }
+  cerrarTexto();
+  if (manuales.length > 0) {
+    const ultimoTexto = [...tramos].reverse().find((t) => t.texto);
+    if (ultimoTexto) ultimoTexto.adjuntos.push(...manuales);
+    else tramos.push({ texto: "", adjuntos: manuales });
+  }
+  return tramos;
+}
+
 function Redactor({
   onEnviar,
   adjuntoNuevo,
+  datosCliente,
 }: {
   onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void;
   adjuntoNuevo?: AdjuntoExterno;
+  /** Datos conocidos del cliente (claves de variable); lo que falta queda como [NOMBRE]. */
+  datosCliente?: DatosVariables;
 }) {
   const t = useT();
   const isMac = useIsMac();
-  const [texto, setTexto] = useState("");
+  // Los datos del cliente son los que se conocen (pueden faltar o no haber
+  // cliente identificado); campaña y asesor son fijos en el mock.
+  const datos: DatosVariables = useMemo(
+    () => ({
+      ...datosCliente,
+      "campania.nombre": "Soporte técnico Nivel 1",
+      "asesor.nombre": "Ana",
+    }),
+    [datosCliente]
+  );
+  const precargada = useMemo(() => {
+    const p = getPlantilla(PLANTILLA_DEFAULT_CHAT_MOCK);
+    return p ? { plantilla: p, ...renderizarParaCanal(p, CANAL_PLANTILLAS, datos) } : null;
+    // Solo al abrir el redactor: la plantilla por defecto viene precargada una vez.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // MOCK: el texto de la plantilla por defecto se resuelve acá con los datos conocidos.
+  // REAL: el backend entrega la plantilla por defecto ya resuelta y la lista de variables
+  // faltantes; lo que falta se marca [NOMBRE] y bloquea Enviar hasta completarlo a mano.
+  const [texto, setTexto] = useState(precargada?.texto ?? "");
+  // Archivos de las plantillas elegidas (salen como mensaje aparte al enviar).
+  const [adjuntosPlantilla, setAdjuntosPlantilla] = useState<AdjuntoPlantilla[]>(
+    precargada?.plantilla.adjuntos ?? []
+  );
+  const [aviso, setAviso] = useState<"precargada" | null>(precargada ? "precargada" : null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [pendiente, setPendiente] = useState<PlantillaElegida | null>(null);
+  // Una variable sin dato queda como [NOMBRE] en el texto; mientras quede
+  // alguna, no se puede enviar: el asesor la completa a mano y el chip desaparece.
+  const sinDato = variablesPendientes(texto, datos);
+  // El tooltip del primer chip se abre solo la primera vez que se carga una
+  // plantilla con faltantes; después solo con hover o foco.
+  const [tooltipAbierto, setTooltipAbierto] = useState<string | null>(precargada?.sinDato[0] ?? null);
+  const tooltipYaMostrado = useRef(precargada ? precargada.sinDato.length > 0 : false);
+  // El texto ya resuelto no puede pasar el límite del canal (4096 en chat).
+  const conteo = contarParaCanal(CANAL_PLANTILLAS, texto);
+  const excedido = conteo?.tipo === "limite" && conteo.excedido ? conteo : null;
+  const envioBloqueado = sinDato.length > 0 || excedido !== null;
+
+  function aplicarPlantilla(elegida: PlantillaElegida, modo: "insertar" | "reemplazar") {
+    setTexto((prev) =>
+      modo === "reemplazar" || prev.trim() === "" ? elegida.texto : `${prev.trimEnd()}\n\n${elegida.texto}`
+    );
+    setAdjuntosPlantilla((prev) => [
+      ...prev,
+      ...elegida.plantilla.adjuntos.filter((a) => !prev.some((x) => x.id === a.id)),
+    ]);
+    setAviso(null);
+    setPendiente(null);
+    if (elegida.sinDato.length > 0 && !tooltipYaMostrado.current) {
+      tooltipYaMostrado.current = true;
+      setTooltipAbierto(elegida.sinDato[0]);
+    }
+  }
+
+  function elegirPlantilla(elegida: PlantillaElegida) {
+    // Con el cuadro vacío (o solo con la precargada sin tocar) reemplaza
+    // directo; con texto del asesor, pregunta.
+    if (texto.trim() === "" || aviso === "precargada") aplicarPlantilla(elegida, "reemplazar");
+    else setPendiente(elegida);
+  }
+
   const [adjuntos, setAdjuntos] = useState<AdjuntoChat[]>([]);
   const [adjuntoNuevoVisto, setAdjuntoNuevoVisto] = useState(adjuntoNuevo?.id);
   if (adjuntoNuevo && adjuntoNuevo.id !== adjuntoNuevoVisto) {
@@ -366,12 +447,18 @@ function Redactor({
   });
 
   function enviar() {
-    if (!texto.trim() && adjuntos.length === 0) return;
+    if (!texto.trim() && adjuntos.length === 0 && adjuntosPlantilla.length === 0) return;
+    // Con variables sin completar o pasado del límite del canal, no se envía.
+    if (envioBloqueado) return;
     dictado.detener();
     grabacion.detener();
-    onEnviar(texto.trim(), adjuntos);
+    for (const tramo of tramosDeEnvio(texto.trim(), adjuntosPlantilla, adjuntos)) {
+      onEnviar(tramo.texto, tramo.adjuntos);
+    }
     setTexto("");
     setAdjuntos([]);
+    setAdjuntosPlantilla([]);
+    setAviso(null);
   }
 
   function elegirArchivos(files: FileList | null) {
@@ -556,8 +643,15 @@ function Redactor({
         >
           <CaseSensitive className="size-4" />
         </Button>
-        <PlantillaSelector onElegir={setTexto} />
-        <Button size="sm" onClick={enviar} className="shrink-0 gap-1.5">
+        <SelectorPlantillas
+          grupoId={GRUPO_PLANTILLAS_MOCK}
+          canal={CANAL_PLANTILLAS}
+          datos={datos}
+          open={selectorOpen}
+          onOpenChange={setSelectorOpen}
+          onElegir={elegirPlantilla}
+        />
+        <Button size="sm" onClick={enviar} disabled={envioBloqueado} className="shrink-0 gap-1.5">
           {t("padMock.conversationPanel.enviar")}
           <Kbd className="bg-primary-foreground/15 text-primary-foreground">Enter</Kbd>
         </Button>
@@ -639,6 +733,48 @@ function Redactor({
               : t("padMock.voz.grabando")}
         </p>
       )}
+      {aviso === "precargada" && (
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Info className="size-3.5 shrink-0" />
+          {t("plantillas.selector.precargada")}
+        </p>
+      )}
+      {sinDato.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-1.5 text-xs text-warning"
+          data-testid="hermes-variables-faltantes"
+        >
+          <AlertTriangle className="size-3.5 shrink-0" />
+          <span>{t("plantillas.selector.faltanDatos")}</span>
+          {sinDato.map((clave) => (
+            <Tooltip
+              key={clave}
+              open={tooltipAbierto === clave}
+              onOpenChange={(abierto) =>
+                setTooltipAbierto((actual) => (abierto ? clave : actual === clave ? null : actual))
+              }
+            >
+              <TooltipTrigger asChild>
+                {/* Botón para que el chip también reciba foco de teclado. */}
+                <button
+                  type="button"
+                  data-testid={`hermes-variable-faltante-${clave}`}
+                  className="rounded-md bg-warning/15 px-1.5 py-0.5 font-mono text-warning focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  {marcadorFaltante(clave)}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("plantillas.selector.faltanteTooltip")}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      )}
+      {excedido && (
+        <p className="flex items-center gap-1.5 text-xs text-destructive" data-testid="hermes-limite-aviso">
+          <AlertTriangle className="size-3.5 shrink-0" />
+          {t("plantillas.selector.excedeLimite", { max: excedido.max, usado: excedido.usado })}
+        </p>
+      )}
       {adjuntos.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {adjuntos.map((a, i) => (
@@ -668,8 +804,17 @@ function Redactor({
       <Textarea
         ref={textareaRef}
         value={texto}
-        onChange={(e) => setTexto(e.target.value)}
+        onChange={(e) => {
+          setTexto(e.target.value);
+          if (aviso === "precargada") setAviso(null);
+        }}
         onKeyDown={(e) => {
+          // "/" con el cuadro vacío abre el selector de plantillas.
+          if (e.key === "/" && texto.trim() === "") {
+            e.preventDefault();
+            setSelectorOpen(true);
+            return;
+          }
           if (atajoFormato(e)) {
             e.preventDefault();
             return;
@@ -680,10 +825,52 @@ function Redactor({
             enviar();
           }
         }}
-        placeholder={t("padMock.conversationPanel.placeholder")}
+        placeholder={`${t("padMock.conversationPanel.placeholder")} · ${t("plantillas.selector.atajo")}`}
         rows={3}
         className="resize-none"
       />
+
+      {adjuntosPlantilla.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">{t("plantillas.selector.adjuntoAgregado")}</span>
+          <AdjuntosChips
+            adjuntos={adjuntosPlantilla}
+            onQuitar={(id) => setAdjuntosPlantilla((prev) => prev.filter((a) => a.id !== id))}
+          />
+        </div>
+      )}
+
+      <Dialog open={pendiente !== null} onOpenChange={(open) => !open && setPendiente(null)}>
+        {/* Reemplazar es el camino más común: Enter lo hace; Shift+Enter
+            inserta debajo (como Shift+Enter agrega una línea en el cuadro);
+            Esc cancela. */}
+        <DialogContent
+          className="sm:max-w-md"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" || !pendiente) return;
+            e.preventDefault();
+            aplicarPlantilla(pendiente, e.shiftKey ? "insertar" : "reemplazar");
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t("plantillas.selector.reemplazarTitulo")}</DialogTitle>
+            <DialogDescription>{t("plantillas.selector.reemplazarDescripcion")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => pendiente && aplicarPlantilla(pendiente, "insertar")}>
+              {t("plantillas.selector.insertar")}
+              <KbdGroup>
+                <Kbd>⇧</Kbd>
+                <Kbd>↵</Kbd>
+              </KbdGroup>
+            </Button>
+            <Button autoFocus onClick={() => pendiente && aplicarPlantilla(pendiente, "reemplazar")}>
+              {t("plantillas.selector.reemplazar")}
+              <Kbd className="bg-primary-foreground/20 text-primary-foreground">↵</Kbd>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={rechazados.length > 0} onOpenChange={(o) => !o && setRechazados([])}>
         <AlertDialogContent>
@@ -738,10 +925,12 @@ function Redactor({
 function ChatPanel({
   mensajesIniciales,
   adjuntoNuevo,
+  datosCliente,
   finalizada = false,
 }: {
   mensajesIniciales: MensajeChat[];
   adjuntoNuevo?: AdjuntoExterno;
+  datosCliente?: DatosVariables;
   finalizada?: boolean;
 }) {
   const t = useT();
@@ -763,7 +952,7 @@ function ChatPanel({
           {t("padMock.conversationPanel.chatFinalizado")}
         </p>
       ) : (
-        <Redactor onEnviar={enviar} adjuntoNuevo={adjuntoNuevo} />
+        <Redactor onEnviar={enviar} adjuntoNuevo={adjuntoNuevo} datosCliente={datosCliente} />
       )}
     </div>
   );
@@ -785,6 +974,7 @@ export function ConversationPanel({
   tiempo,
   enEspera,
   mensajesChat,
+  datosCliente,
   interno = false,
   sonando = false,
   nombreInterno,
@@ -799,6 +989,8 @@ export function ConversationPanel({
   enEspera: boolean;
   /** Chat: lo conversado hasta ahora. Sin esto, es una llamada. */
   mensajesChat?: MensajeChat[];
+  /** Chat: datos conocidos del cliente (claves de variable); vacío si no está identificado. */
+  datosCliente?: DatosVariables;
   interno?: boolean;
   sonando?: boolean;
   nombreInterno?: string;
@@ -816,7 +1008,12 @@ export function ConversationPanel({
 }) {
   const t = useT();
   if (mensajesChat) {
-    return <ChatPanel mensajesIniciales={mensajesChat} adjuntoNuevo={adjuntoNuevo} finalizada={finalizada} />;
+    return <ChatPanel
+        mensajesIniciales={mensajesChat}
+        adjuntoNuevo={adjuntoNuevo}
+        datosCliente={datosCliente}
+        finalizada={finalizada}
+      />;
   }
   if (interno) {
     return (

@@ -406,6 +406,7 @@ export function CenterColumn({
                   tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
                   enEspera={enEspera}
                   mensajesChat={conChat ? entrante?.mensajes : undefined}
+                  datosCliente={entrante?.datosCliente}
                   interno={interno}
                   sonando={sonando}
                   nombreInterno={nombreInterno}
@@ -428,6 +429,7 @@ export function CenterColumn({
               tiempo={formatDuration(enEspera && !finalizada ? elapsedHold : elapsedTotal)}
               enEspera={enEspera}
               mensajesChat={entrante?.mensajes}
+              datosCliente={entrante?.datosCliente}
               adjuntoNuevo={captura}
               finalizada={finalizada}
             />

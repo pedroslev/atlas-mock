@@ -190,6 +190,15 @@ export type InteraccionEntrante = {
   chatEnLlamada?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
+  // MOCK: los datos del cliente están escritos en cada entrante de ejemplo.
+  // REAL: los obtiene olimpo-api con GetCustomer, filtrados por el permiso Ver de la ficha del
+  // grupo de trabajo del agente, y llegan al front vía hermes-worker; este campo desaparece.
+  /**
+   * Datos conocidos del cliente, con las claves de las variables de plantilla
+   * (cliente.nombre…). Lo que no está acá no se puede resolver y el redactor
+   * lo marca como [NOMBRE]; vacío (o sin definir) si el cliente no está identificado.
+   */
+  datosCliente?: Record<string, string>;
   /** Lo conversado por chat hasta que llega al agente. */
   mensajes: MensajeChat[];
 };
@@ -224,6 +233,8 @@ export const entrantesMock: InteraccionEntrante[] = [
     cuenta: "Chat web Soporte",
     atencionForzada: true,
     claveHistorial: "nicolas-aguirre",
+    // Identificado, pero sin email ni documento cargados.
+    datosCliente: { "cliente.nombre": "Nicolás", "cliente.apellido": "Aguirre", "cliente.telefono": "+54 9 11 5000-1234" },
     mensajes: [
       { autor: "cliente", texto: "Hola, buenas tardes 👋 Quería consultar por el envío de mi pedido, todavía no me llegó.", hora: "14:02:11" },
       { autor: "agente", texto: "¡Hola Nicolás! Ya te ayudo. ¿Me pasás el número de pedido, por favor?", hora: "14:02:38" },
@@ -250,6 +261,7 @@ export const entrantesMock: InteraccionEntrante[] = [
     cuenta: "Chat web Ventas",
     atencionForzada: false,
     claveHistorial: "sofia-medina",
+    datosCliente: { "cliente.nombre": "Sofía", "cliente.apellido": "Medina", "cliente.email": "sofia.medina@mail.com" },
     mensajes: [
       { autor: "cliente", texto: "Hola! Quería saber si la tarjeta Plus tiene costo de mantenimiento.", hora: "15:10:04" },
     ],
@@ -263,6 +275,7 @@ export const entrantesMock: InteraccionEntrante[] = [
     atencionForzada: false,
     chatEnLlamada: true,
     claveHistorial: "lucia-fernandez",
+    datosCliente: { "cliente.nombre": "Lucía", "cliente.apellido": "Fernández", "cliente.email": "lucia.fernandez@mail.com" },
     mensajes: [
       { autor: "cliente", texto: "Hola, los llamo desde la tienda. Les escribo acá el número de pedido: #50771.", hora: "16:21:40" },
     ],
@@ -287,6 +300,7 @@ export const entrantesMock: InteraccionEntrante[] = [
     atencionForzada: false,
     chatEnLlamada: true,
     claveHistorial: "valentina-ruiz",
+    datosCliente: { "cliente.nombre": "Valentina", "cliente.apellido": "Ruiz" },
     mensajes: [
       { autor: "cliente", texto: "Hola! Quiero ver el modelo de heladera que tienen en promoción.", hora: "17:05:12" },
     ],
@@ -301,6 +315,20 @@ export const entrantesMock: InteraccionEntrante[] = [
     chatEnLlamada: false,
     claveHistorial: "diego-romero",
     mensajes: [],
+  },
+  {
+    id: "ce-3",
+    canal: "chat",
+    nombre: "Visitante web",
+    campania: "Soporte técnico Nivel 1",
+    cuenta: "Chat web Soporte",
+    atencionForzada: false,
+    claveHistorial: "visitante-web",
+    // Cliente sin identificar: ningún dato del cliente se puede resolver.
+    datosCliente: {},
+    mensajes: [
+      { autor: "cliente", texto: "Buenas, ¿alguien me puede ayudar con una consulta?", hora: "15:40:21" },
+    ],
   },
 ];
 

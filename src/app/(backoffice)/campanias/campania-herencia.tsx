@@ -24,9 +24,18 @@ import {
   getMarcadoresDeGrupo,
   getFeriado,
   getListaExclusion,
+  plantillaGrupos,
+  getPlantillasDeGrupo,
 } from "@/lib/mock-data";
+import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
 
-type Grupo = "clasificacion" | "bookmarks" | "feriados" | "exclusion" | null;
+type Grupo =
+  | "clasificacion"
+  | "bookmarks"
+  | "plantillas"
+  | "feriados"
+  | "exclusion"
+  | null;
 
 // Campos de herencia de una campaña: cada uno es un Combobox "asignar por
 // referencia" (nunca edita el contenido del grupo) más un botón "Ver" que
@@ -37,12 +46,18 @@ export function CampaniaHerencia({
   nombreProyecto,
   initialGrupoClasificacionId,
   initialGrupoBookmarksId,
+  initialGrupoPlantillasId,
+  initialPlantillaDefaultChatId,
+  initialPlantillaDefaultEmailId,
   initialFeriadosId,
   initialListaExclusionId,
 }: {
   nombreProyecto?: string;
   initialGrupoClasificacionId?: string;
   initialGrupoBookmarksId?: string;
+  initialGrupoPlantillasId?: string;
+  initialPlantillaDefaultChatId?: string;
+  initialPlantillaDefaultEmailId?: string;
   initialFeriadosId?: string;
   initialListaExclusionId?: string;
 }) {
@@ -53,6 +68,28 @@ export function CampaniaHerencia({
   const [grupoBookmarksId, setGrupoBookmarksId] = useState(
     initialGrupoBookmarksId
   );
+  // Plantillas de mensajes (ATLAS-1191): un grupo por campaña + una plantilla
+  // por defecto por canal escrito, elegida entre las del grupo. Cambiar de
+  // grupo limpia los defaults, que ya no pertenecen a él.
+  const [grupoPlantillasId, setGrupoPlantillasIdRaw] = useState(
+    initialGrupoPlantillasId
+  );
+  const [plantillaChatId, setPlantillaChatId] = useState(
+    initialPlantillaDefaultChatId
+  );
+  const [plantillaEmailId, setPlantillaEmailId] = useState(
+    initialPlantillaDefaultEmailId
+  );
+  function setGrupoPlantillasId(id: string | undefined) {
+    setGrupoPlantillasIdRaw(id);
+    setPlantillaChatId(undefined);
+    setPlantillaEmailId(undefined);
+  }
+  const plantillasDelGrupo = getPlantillasDeGrupo(grupoPlantillasId ?? "").filter(
+    (p) => p.activa
+  );
+  const plantillasChat = plantillasDelGrupo.filter((p) => p.canales.includes("chat"));
+  const plantillasEmail = plantillasDelGrupo.filter((p) => p.canales.includes("email"));
   const [feriadosId, setFeriadosId] = useState(initialFeriadosId);
   const [listaExclusionId, setListaExclusionId] = useState(
     initialListaExclusionId
@@ -117,6 +154,76 @@ export function CampaniaHerencia({
                 <Eye />
               </Button>
             </ActionTooltip>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="grupo-plantillas">{t("plantillas.campania.grupo")}</Label>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+            <EntityCombobox
+              id="grupo-plantillas"
+              items={plantillaGrupos}
+              value={grupoPlantillasId}
+              onChange={setGrupoPlantillasId}
+              placeholder={heredaCopy}
+              searchPlaceholder={t("plantillas.campania.buscarGrupo")}
+              emptyLabel={t("plantillas.campania.vacioGrupo")}
+            />
+            <ActionTooltip label={t("plantillas.campania.ver")}>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled={!grupoPlantillasId}
+                onClick={() => setVerGrupo("plantillas")}
+              >
+                <Eye />
+              </Button>
+            </ActionTooltip>
+          </div>
+          <div className="mt-1 flex flex-col gap-2 rounded-lg border p-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">
+                {t("plantillas.campania.defaultTitulo")}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {grupoPlantillasId
+                  ? t("plantillas.campania.defaultAyuda")
+                  : t("plantillas.campania.elegirGrupoPrimero")}
+              </span>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="plantilla-chat" className="text-xs text-muted-foreground">
+                  {t("plantillas.campania.defaultChat")}
+                </Label>
+                <EntityCombobox
+                  id="plantilla-chat"
+                  items={plantillasChat}
+                  value={plantillaChatId}
+                  onChange={setPlantillaChatId}
+                  placeholder={t("plantillas.campania.sinDefault")}
+                  searchPlaceholder={t("plantillas.campania.buscarDefault")}
+                  emptyLabel={t("plantillas.campania.vacioDefault")}
+                  className={!grupoPlantillasId ? "pointer-events-none opacity-50" : undefined}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="plantilla-email" className="text-xs text-muted-foreground">
+                  {t("plantillas.campania.defaultEmail")}
+                </Label>
+                <EntityCombobox
+                  id="plantilla-email"
+                  items={plantillasEmail}
+                  value={plantillaEmailId}
+                  onChange={setPlantillaEmailId}
+                  placeholder={t("plantillas.campania.sinDefault")}
+                  searchPlaceholder={t("plantillas.campania.buscarDefault")}
+                  emptyLabel={t("plantillas.campania.vacioDefault")}
+                  className={!grupoPlantillasId ? "pointer-events-none opacity-50" : undefined}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -232,6 +339,44 @@ export function CampaniaHerencia({
                         {m.descripcion}
                       </span>
                     )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {verGrupo === "plantillas" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {t("plantillas.campania.dialogo", {
+                    nombre:
+                      plantillaGrupos.find((g) => g.id === grupoPlantillasId)
+                        ?.nombre ?? "",
+                  })}
+                </DialogTitle>
+                <DialogDescription>
+                  {t("plantillas.campania.soloLectura")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+                {getPlantillasDeGrupo(grupoPlantillasId ?? "").map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex flex-col gap-1 rounded-md border px-3 py-2 text-sm"
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{p.nombre}</span>
+                      {!p.activa && (
+                        <Badge variant="secondary">{t("common.comunes.inactivo")}</Badge>
+                      )}
+                    </span>
+                    {p.descripcion && (
+                      <span className="text-xs text-muted-foreground">
+                        {p.descripcion}
+                      </span>
+                    )}
+                    <CanalBadges canales={p.canales} />
                   </div>
                 ))}
               </div>

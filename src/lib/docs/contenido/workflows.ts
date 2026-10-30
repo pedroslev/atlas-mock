@@ -279,6 +279,10 @@ export const contenido: ContenidoPagina = {
             "texto": "No reintenta: lo que pasa cuando falla lo decide quien arma el flujo, conectando Error y Sin respuesta."
           },
           {
+            "tipo": "p",
+            "texto": "Probar la consulta — Con el botón de reproducir del encabezado del nodo abrís un panel para probar la consulta antes de publicar el flujo. Completás un valor de prueba para cada variable, ves cómo queda la consulta con esos valores y, al enviarla, ves qué respuesta llegó, por qué salida seguiría el flujo y el contenido de la respuesta. Tocando un campo de la respuesta se copia su nombre, listo para usarlo en Condición, Según valor o Calcular. Ojo: la prueba va al servicio real, así que con POST, PUT, PATCH o DELETE te pide confirmar antes. Solo se pueden consultar direcciones https de internet, no direcciones internas de tu red. Los valores de prueba no se guardan en el flujo."
+          },
+          {
             "tipo": "sub",
             "texto": "Opciones"
           },
@@ -675,6 +679,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "It does not retry: what happens on failure is up to whoever builds the flow, by connecting Error and No response."
+          },
+          {
+            "tipo": "p",
+            "texto": "Testing the request — The play button in the node header opens a panel to test the request before you publish the flow. You enter a test value for each variable, see how the request looks with those values and, when you send it, see what response came back, which exit the flow would take and the content of the response. Clicking a field of the response copies its name, ready to use in Condition, Switch or Calculate. Be careful: the test goes to the real service, so with POST, PUT, PATCH or DELETE it asks you to confirm first. Only https addresses on the internet can be queried, not internal addresses of your network. Test values are not saved in the flow."
           },
           {
             "tipo": "sub",

@@ -158,6 +158,16 @@ export type Campania = {
   businessHours?: BusinessHours;
   grupoClasificacionId?: string;
   grupoBookmarksId?: string;
+  // Plantillas de mensajes (ATLAS-1191): un grupo por campaña, igual que
+  // clasificaciones y marcas, y una plantilla por defecto por canal escrito
+  // que Hermes precarga al abrir la conversación.
+  // MOCK: el grupo y las plantillas por defecto de la campaña están en los datos de ejemplo.
+  // REAL: el grupo de plantillas se hereda campaña←proyecto (igual que el grupo de
+  // clasificaciones) y se entrega a Hermes con ListAgentCampaigns; la plantilla por defecto
+  // por canal debe pertenecer al grupo y ser de ese canal.
+  grupoPlantillasId?: string;
+  plantillaDefaultChatId?: string;
+  plantillaDefaultEmailId?: string;
   feriadosId?: string;
   listaExclusionId?: string;
   outboundAccountIds: string[];
@@ -275,6 +285,97 @@ export type MarcadorGrupo = {
   id: string;
   nombre: string;
   marcadorIds: string[];
+};
+
+// Plantillas de mensajes (ATLAS-1191, relevamiento/plantillas-de-mensajes):
+// catálogo del tenant + grupos asignables a campañas, mismo modelo que
+// clasificaciones y marcas. El contenido se escribe una vez con formato
+// básico (**negrita**, _cursiva_, listas con "- ") y variables {{clave}};
+// Atlas lo adapta a lo que soporta cada canal.
+// Canales escritos: los tipos de cuenta de texto (todo menos Teléfono).
+export type CanalPlantilla =
+  | "chat"
+  | "whatsapp"
+  | "email"
+  | "sms"
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "x"
+  | "telegram"
+  | "linkedin";
+
+// Canales de mensajería: se combinan entre sí. Email y SMS van siempre solos
+// (el SMS no admite formato y el email se escribe en texto plano o en HTML).
+export const CANALES_MENSAJERIA: CanalPlantilla[] = [
+  "chat",
+  "whatsapp",
+  "instagram",
+  "facebook",
+  "tiktok",
+  "x",
+  "telegram",
+  "linkedin",
+];
+
+export const CANALES_PLANTILLA: CanalPlantilla[] = [
+  "chat",
+  "whatsapp",
+  "email",
+  "sms",
+  "instagram",
+  "facebook",
+  "tiktok",
+  "x",
+  "telegram",
+  "linkedin",
+];
+
+/**
+ * Cómo se ve el mensaje según el canal:
+ * - chat: chat web, WhatsApp y Telegram admiten formato (negrita, cursiva,
+ *   tachado, listas); los enlaces van con la dirección completa.
+ * - plano: Instagram, Facebook, TikTok, X y LinkedIn no admiten formato en
+ *   sus mensajes: sale solo el texto (y los archivos como mensaje aparte).
+ * - email: formato completo y enlaces con texto.
+ * - sms: solo texto, sin archivos.
+ */
+export type TipoRender = "chat" | "plano" | "email" | "sms";
+export const TIPOS_RENDER: TipoRender[] = ["chat", "plano", "email", "sms"];
+export function tipoRenderDeCanal(canal: CanalPlantilla): TipoRender {
+  if (canal === "email" || canal === "sms") return canal;
+  if (canal === "chat" || canal === "whatsapp" || canal === "telegram") return "chat";
+  return "plano";
+}
+
+// Las variables de la plantilla (catálogo y permisos) viven en lib/plantillas.ts.
+
+export type AdjuntoPlantilla = { id: string; nombre: string; tamano: string };
+
+/** Formato del cuerpo de un email: texto plano o código HTML. */
+export type FormatoCuerpo = "texto" | "html";
+
+export type Plantilla = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  canales: CanalPlantilla[];
+  /** Solo email. */
+  asunto?: string;
+  /** Solo email: cómo se interpreta `contenido` (por defecto texto plano). */
+  bodyFormat?: FormatoCuerpo;
+  /** Solo email con cuerpo HTML: el CSS se carga aparte y se compone con el HTML. */
+  cuerpoCss?: string;
+  contenido: string;
+  adjuntos: AdjuntoPlantilla[];
+  activa: boolean;
+};
+
+export type PlantillaGrupo = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  plantillaIds: string[];
 };
 
 // holidays.holidays (JSONB): [{ date, description }] — cada fecha no laborable
@@ -434,6 +535,9 @@ export const campanias: Campania[] = [
     usuariosAsignados: ["ag-1", "ag-2", "ag-3"],
     grupoClasificacionId: "cg-cobranzas",
     grupoBookmarksId: "bg-cobranzas",
+    grupoPlantillasId: "pg-cobranzas",
+    plantillaDefaultChatId: "pl-saludo",
+    plantillaDefaultEmailId: "pl-propuesta",
     feriadosId: "fer-ar",
     listaExclusionId: "dnc-1",
     outboundAccountIds: ["acc-1"],
@@ -779,6 +883,155 @@ export const marcadorGrupos: MarcadorGrupo[] = [
   { id: "bg-general", nombre: "General", marcadorIds: ["mk-3"] },
 ];
 
+// MOCK: plantillas de ejemplo en memoria (incluye un email HTML+CSS de muestra y uno de prueba de
+// validación que NO debe usarse).
+// REAL: tabla message_templates de olimpo-api (por tenant): nombre, descripción, activa, canales,
+// asunto (email), body_format, contenido, css (email) y adjuntos. El HTML se guarda ya saneado.
+export const plantillas: Plantilla[] = [
+  {
+    id: "pl-saludo",
+    nombre: "Saludo inicial",
+    descripcion: "Para abrir la conversación cuando todavía no se sabe el motivo de contacto.",
+    canales: [...CANALES_MENSAJERIA],
+    contenido:
+      "¡Hola {{cliente.nombre}}! Soy {{asesor.nombre}}. ¿En qué te puedo ayudar hoy?",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-datos",
+    nombre: "Pedir más datos",
+    descripcion: "Cuando falta un dato puntual para seguir la gestión.",
+    canales: ["chat", "whatsapp"],
+    contenido:
+      "Para poder ayudarte mejor, ¿me confirmás estos datos?\n1. Número de cliente\n2. Últimos 4 dígitos del documento",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-propuesta",
+    nombre: "Propuesta de pago",
+    descripcion: "Envía las condiciones de la propuesta con el detalle adjunto.",
+    canales: ["email"],
+    asunto: "Tu propuesta de pago",
+    bodyFormat: "html",
+    contenido:
+      "<p>{{cliente.nombre}}, te dejo la <strong>propuesta de pago</strong> que conversamos. Las condiciones completas están en el archivo adjunto.</p>\n[[archivo:propuesta-de-pago.pdf]]\n<p><em>Tiene validez hasta el último día hábil del mes.</em> Las condiciones generales están en <a href=\"https://www.ejemplo.com/condiciones\">nuestro sitio</a>.</p>",
+    adjuntos: [
+      { id: "adj-1", nombre: "propuesta-de-pago.pdf", tamano: "180 KB" },
+    ],
+    activa: true,
+  },
+  {
+    id: "pl-contacto",
+    nombre: "Confirmar datos de contacto",
+    descripcion: "Pide confirmar el email y el documento que figuran en la ficha.",
+    canales: ["chat", "whatsapp"],
+    contenido:
+      "{{cliente.nombre}}, ¿seguimos en contacto por {{cliente.email}}? Confirmame también tu documento ({{cliente.numero_identificacion}}).",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-comprobante",
+    nombre: "Enviar comprobante",
+    descripcion: "Manda el comprobante del pedido como archivo, entre dos textos.",
+    canales: ["chat", "whatsapp"],
+    contenido:
+      "Te paso el comprobante, {{cliente.nombre}}:\n[[archivo:comprobante-48213.pdf]]\nCualquier duda, escribime por acá.",
+    adjuntos: [{ id: "adj-comprobante", nombre: "comprobante-48213.pdf", tamano: "96 KB" }],
+    activa: true,
+  },
+  {
+    id: "pl-demora",
+    nombre: "Aviso de demora",
+    descripcion: "Cuando el asesor tiene que consultar y el cliente va a esperar.",
+    canales: ["chat", "whatsapp"],
+    contenido: "Dame un minuto que lo reviso y te confirmo, {{cliente.nombre}}.",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-cierre",
+    nombre: "Cierre de conversación",
+    descripcion: "Para cerrar de forma prolija una vez resuelta la consulta, antes de tipificar.",
+    canales: [...CANALES_MENSAJERIA],
+    contenido:
+      "Perfecto, quedó todo resuelto. ¡Gracias por tu tiempo! Cualquier cosa, escribinos a este mismo número.",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-recordatorio",
+    nombre: "Recordatorio de vencimiento",
+    descripcion: "Mensaje corto de recordatorio, pensado para SMS.",
+    canales: ["sms"],
+    contenido:
+      "{{cliente.nombre}}, tu cuota vence pronto. Si ya pagaste, ignorá este mensaje.",
+    adjuntos: [],
+    activa: false,
+  },
+  {
+    id: "pl-bienvenida-email",
+    nombre: "Bienvenida con propuesta (email)",
+    descripcion: "Email con diseño: propuesta de pago con tres destacados y botón para aceptarla.",
+    canales: ["email"],
+    asunto: "{{cliente.nombre}}, tu propuesta de pago está lista",
+    bodyFormat: "html",
+    contenido: "<!-- Preheader: texto que ve la bandeja de entrada junto al asunto; oculto en el cuerpo -->\n<div class=\"em-preheader\">Armamos una propuesta a tu medida, con el detalle de cuotas y fechas.</div>\n\n<table role=\"presentation\" class=\"em-fondo\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n  <tr>\n    <td align=\"center\" class=\"em-fondo-celda\">\n\n      <!-- Contenedor de 600px -->\n      <table role=\"presentation\" class=\"em-contenedor\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n\n        <!-- Cabecera -->\n        <tr>\n          <td class=\"em-cabecera\" align=\"left\">\n            <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tr>\n                <td class=\"em-logo\" align=\"center\">A</td>\n                <td class=\"em-marca\">Atlas</td>\n              </tr>\n            </table>\n            <h1 class=\"em-titulo\">Tu propuesta de pago está lista</h1>\n            <p class=\"em-subtitulo\">{{campania.nombre}}</p>\n          </td>\n        </tr>\n\n        <!-- Saludo y mensaje principal -->\n        <tr>\n          <td class=\"em-cuerpo\">\n            <p class=\"em-saludo\">Hola {{cliente.nombre}},</p>\n            <p class=\"em-texto\">Gracias por tu tiempo. Revisamos tu situación y preparamos una propuesta pensada para que puedas ponerte al día sin sobresaltos. Estos son los puntos principales:</p>\n          </td>\n        </tr>\n\n        <!-- Tres destacados: en móvil se apilan -->\n        <tr>\n          <td class=\"em-destacados-celda\">\n            <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tr>\n                <td class=\"em-destacado em-col\" width=\"33%\" valign=\"top\">\n                  <p class=\"em-destacado-numero\">12</p>\n                  <p class=\"em-destacado-texto\">cuotas fijas, sin sorpresas</p>\n                </td>\n                <td class=\"em-destacado em-col\" width=\"33%\" valign=\"top\">\n                  <p class=\"em-destacado-numero\">0%</p>\n                  <p class=\"em-destacado-texto\">de interés adicional</p>\n                </td>\n                <td class=\"em-destacado em-col\" width=\"33%\" valign=\"top\">\n                  <p class=\"em-destacado-numero\">30</p>\n                  <p class=\"em-destacado-texto\">días para aceptarla</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n\n        <!-- Botón de llamada a la acción (a prueba de clientes de correo: tabla + enlace con padding) -->\n        <tr>\n          <td class=\"em-cuerpo\" align=\"center\">\n            <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tr>\n                <td class=\"em-boton-celda\" align=\"center\">\n                  <a class=\"em-boton\" href=\"https://www.ejemplo.com/propuesta\" target=\"_blank\">Ver y aceptar la propuesta</a>\n                </td>\n              </tr>\n            </table>\n            <p class=\"em-nota\">Si el botón no funciona, copiá este enlace en tu navegador: https://www.ejemplo.com/propuesta</p>\n          </td>\n        </tr>\n\n        <!-- Firma -->\n        <tr>\n          <td class=\"em-cuerpo\">\n            <p class=\"em-texto\">Cualquier duda, respondé este correo y lo vemos juntos.</p>\n            <p class=\"em-firma\">\n              Un saludo,<br>\n              <strong>{{asesor.nombre}}</strong><br>\n              <span class=\"em-firma-detalle\">Equipo de {{campania.nombre}}</span>\n            </p>\n          </td>\n        </tr>\n\n        <!-- Pie legal -->\n        <tr>\n          <td class=\"em-pie\">\n            <p class=\"em-legal\">Recibís este correo porque sos cliente y tenés una gestión abierta con nosotros. Esta propuesta es personal y no es transferible. Las condiciones pueden cambiar si no se acepta dentro del plazo indicado.</p>\n            <p class=\"em-legal\"><a class=\"em-baja\" href=\"https://www.ejemplo.com/baja\">Dejar de recibir estos correos</a></p>\n          </td>\n        </tr>\n\n      </table>\n    </td>\n  </tr>\n</table>",
+    cuerpoCss: "/* ===== Base ===== */\n/* Tipografía web-safe: se ve igual en todos los clientes de correo. */\nbody {\n  margin: 0;\n  padding: 0;\n  background-color: #f1f4f9;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #1f2937;\n  -webkit-text-size-adjust: 100%;\n}\ntable { border-collapse: collapse; }\np { margin: 0; }\na { color: #1d4ed8; }\n\n/* ===== Preheader (oculto en el cuerpo, visible en la bandeja) ===== */\n.em-preheader {\n  display: none;\n  max-height: 0;\n  overflow: hidden;\n  opacity: 0;\n  font-size: 1px;\n  line-height: 1px;\n  color: #f1f4f9;\n}\n\n/* ===== Fondo y contenedor ===== */\n.em-fondo { background-color: #f1f4f9; }\n.em-fondo-celda { padding: 24px 12px; }\n.em-contenedor {\n  /* Ancho fluido con tope de 600px: en pantallas chicas se ajusta solo. */\n  width: 100% !important;\n  max-width: 600px;\n  background-color: #ffffff;\n  border-radius: 12px;\n  overflow: hidden;\n}\n\n/* ===== Cabecera: color sólido de base y degradé como mejora ===== */\n.em-cabecera {\n  background-color: #1d4ed8;\n  background-image: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);\n  padding: 32px 32px 28px 32px;\n  color: #ffffff;\n}\n.em-logo {\n  width: 36px;\n  height: 36px;\n  border-radius: 8px;\n  background-color: #ffffff;\n  color: #1d4ed8;\n  font-size: 20px;\n  font-weight: bold;\n  line-height: 36px;\n}\n.em-marca {\n  padding-left: 10px;\n  font-size: 18px;\n  font-weight: bold;\n  letter-spacing: 0.5px;\n  color: #ffffff;\n}\n.em-titulo {\n  margin: 24px 0 6px 0;\n  font-size: 26px;\n  line-height: 32px;\n  color: #ffffff;\n}\n.em-subtitulo {\n  font-size: 14px;\n  color: #dbeafe;\n}\n\n/* ===== Cuerpo ===== */\n.em-cuerpo { padding: 24px 32px 8px 32px; }\n.em-saludo {\n  font-size: 18px;\n  font-weight: bold;\n  margin-bottom: 12px;\n}\n.em-texto {\n  font-size: 15px;\n  line-height: 24px;\n  margin-bottom: 12px;\n}\n\n/* ===== Destacados ===== */\n.em-destacados-celda { padding: 8px 32px 8px 32px; }\n.em-destacado {\n  background-color: #eff6ff;\n  border: 6px solid #ffffff;\n  border-radius: 10px;\n  padding: 16px 8px;\n  text-align: center;\n}\n.em-destacado-numero {\n  font-size: 28px;\n  font-weight: bold;\n  color: #1d4ed8;\n}\n.em-destacado-texto {\n  font-size: 13px;\n  line-height: 18px;\n  color: #475569;\n}\n\n/* ===== Botón (tabla + enlace con padding) ===== */\n.em-boton-celda {\n  background-color: #1d4ed8;\n  border-radius: 8px;\n}\n.em-boton {\n  display: inline-block;\n  padding: 14px 28px;\n  font-size: 16px;\n  font-weight: bold;\n  color: #ffffff;\n  text-decoration: none;\n}\n.em-nota {\n  margin-top: 12px;\n  font-size: 12px;\n  line-height: 18px;\n  color: #64748b;\n}\n\n/* ===== Firma ===== */\n.em-firma {\n  font-size: 15px;\n  line-height: 22px;\n  margin-top: 8px;\n  margin-bottom: 8px;\n}\n.em-firma-detalle { color: #64748b; font-size: 13px; }\n\n/* ===== Pie ===== */\n.em-pie {\n  background-color: #f8fafc;\n  border-top: 1px solid #e2e8f0;\n  padding: 20px 32px;\n}\n.em-legal {\n  font-size: 11px;\n  line-height: 16px;\n  color: #64748b;\n  margin-bottom: 8px;\n}\n.em-baja { color: #64748b; }\n\n/* ===== Móvil: los destacados se apilan y se achican los márgenes ===== */\n@media only screen and (max-width: 480px) {\n  .em-fondo-celda { padding: 0; }\n  .em-contenedor { border-radius: 0; }\n  .em-cabecera { padding: 24px 20px; }\n  .em-titulo { font-size: 22px; line-height: 28px; }\n  .em-cuerpo { padding: 20px 20px 4px 20px; }\n  .em-destacados-celda { padding: 4px 20px; }\n  .em-col { display: block; width: 100% !important; box-sizing: border-box; }\n  .em-pie { padding: 16px 20px; }\n}\n\n/* ===== Modo oscuro ===== */\n@media (prefers-color-scheme: dark) {\n  body, .em-fondo { background-color: #0f172a !important; }\n  .em-contenedor { background-color: #1e293b !important; }\n  .em-cuerpo, .em-destacados-celda { color: #e2e8f0; }\n  .em-destacado { background-color: #0f172a; border-color: #1e293b; }\n  .em-destacado-numero { color: #93c5fd; }\n  .em-destacado-texto, .em-nota, .em-firma-detalle { color: #94a3b8; }\n  .em-boton-celda { background-color: #3b82f6; }\n  .em-pie { background-color: #0f172a; border-top-color: #334155; }\n  .em-legal, .em-baja { color: #94a3b8; }\n  a { color: #93c5fd; }\n}",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-prueba-validacion",
+    nombre: "Prueba de validación (no usar)",
+    descripcion: "Solo para ver los errores del validador de email: trae un script, un evento onclick y una etiqueta sin cerrar.",
+    canales: ["email"],
+    asunto: "Prueba de validación",
+    bodyFormat: "html",
+    contenido: "<p>Hola {{cliente.nombre}}, mirá esta oferta.</p>\n<script>alert('hola')</script>\n<a href=\"javascript:alert(1)\" onclick=\"robar()\">Aceptar</a>\n<div><p>Texto con una etiqueta sin cerrar",
+    cuerpoCss: "@import url(http://sitio.ejemplo/estilos.css);\n.a { color: red; ",
+    adjuntos: [],
+    activa: true,
+  },
+  {
+    id: "pl-confirmacion-email",
+    nombre: "Confirmación de pago (email, texto plano)",
+    descripcion: "Confirma un pago recibido, en texto plano.",
+    canales: ["email"],
+    asunto: "Recibimos tu pago, {{cliente.nombre}}",
+    bodyFormat: "texto",
+    contenido:
+      "Hola {{cliente.nombre}},\n\nConfirmamos que recibimos tu pago. Ya está acreditado en tu cuenta.\n\nUn saludo,\n{{asesor.nombre}}",
+    adjuntos: [],
+    activa: true,
+  },
+];
+
+// MOCK: grupos de ejemplo con sus plantillas por id.
+// REAL: tabla message_template_groups y su relación muchos a muchos con las plantillas, en olimpo-api.
+export const plantillaGrupos: PlantillaGrupo[] = [
+  {
+    id: "pg-cobranzas",
+    nombre: "Cobranzas",
+    descripcion: "Mensajes de gestión de deuda y propuestas de pago.",
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-propuesta", "pl-demora", "pl-cierre", "pl-recordatorio"],
+  },
+  {
+    id: "pg-atencion",
+    nombre: "Atención al cliente",
+    descripcion: "Saludo, pedido de datos y cierre para consultas generales.",
+    plantillaIds: ["pl-saludo", "pl-datos", "pl-contacto", "pl-comprobante", "pl-demora", "pl-cierre"],
+  },
+  {
+    id: "pg-email-comercial",
+    nombre: "Email comercial",
+    descripcion: "Correos con diseño y en texto plano para propuestas y confirmaciones.",
+    plantillaIds: ["pl-propuesta", "pl-bienvenida-email", "pl-confirmacion-email", "pl-prueba-validacion"],
+  },
+];
+
 export const feriados: Feriado[] = [
   {
     id: "fer-ar",
@@ -1039,6 +1292,20 @@ export function getMarcadoresDeGrupo(grupoId: string) {
   const grupo = getMarcadorGrupo(grupoId);
   if (!grupo) return [];
   return marcadores.filter((m) => grupo.marcadorIds.includes(m.id));
+}
+
+export function getPlantilla(id: string) {
+  return plantillas.find((p) => p.id === id);
+}
+
+export function getPlantillaGrupo(id: string) {
+  return plantillaGrupos.find((g) => g.id === id);
+}
+
+export function getPlantillasDeGrupo(grupoId: string) {
+  const grupo = getPlantillaGrupo(grupoId);
+  if (!grupo) return [];
+  return plantillas.filter((p) => grupo.plantillaIds.includes(p.id));
 }
 
 export function getFeriado(id: string) {
