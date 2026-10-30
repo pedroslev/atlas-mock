@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/select";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useT } from "@/lib/i18n";
+import { ProbarConsultaHttp } from "@/components/workflow/probar-consulta-http";
 
 // Los macroestados del editor: la derivación a campaña, el primer set de la
 // Fase 1 — PLAY, COLLECT, IF y CASE — y las herramientas HTTP y Calcular
@@ -83,6 +84,7 @@ function NodoMacroestado({
   resumen,
   children,
   salidas,
+  accionesExtra,
 }: {
   icono: ReactNode;
   tituloPorDefecto: string;
@@ -96,6 +98,8 @@ function NodoMacroestado({
   resumen?: string;
   children: ReactNode;
   salidas?: ReactNode;
+  // Acciones propias del macroestado, junto a la «i» del encabezado (ej. Probar).
+  accionesExtra?: ReactNode;
 }) {
   const t = useT();
   const [editando, setEditando] = useState(false);
@@ -156,6 +160,7 @@ function NodoMacroestado({
           )}
         </span>
         <span className="flex shrink-0 items-center">
+          {accionesExtra}
           {/* Va a la documentación en otra pestaña: el flujo es estado local
               y navegar en la misma lo perdería. */}
           <ActionTooltip label={t("cuentas.flujo.ayuda")}>
@@ -1351,6 +1356,19 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
       ayuda="consulta-http"
       data={data}
       resumen={data.url && `${metodo} ${data.url}`}
+      accionesExtra={
+        <ProbarConsultaHttp
+          nodoId={id}
+          config={{
+            metodo,
+            url: data.url ?? "",
+            encabezados: encabezados.map((h) => ({ nombre: h.nombre, valor: h.valor })),
+            cuerpo: data.cuerpo ?? "",
+          }}
+          variableGuardado={data.variable}
+          timeoutSeg={data.timeoutSeg ?? 5}
+        />
+      }
       salidas={
         <>
           <Salida id="success" etiqueta={t("cuentas.flujo.salida.success")} />
