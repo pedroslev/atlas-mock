@@ -1,7 +1,7 @@
 import { Paperclip } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
-  CANALES_PLANTILLA,
+  CANALES_MENSAJERIA,
   type AdjuntoPlantilla,
   type CanalPlantilla,
   type TipoRender,
@@ -63,11 +63,11 @@ export function MensajeRenderizado({
   );
 }
 
-// Con todos los canales marcados muestra un solo chip "Todos los canales".
+// Con los ocho canales de mensajería (y nada más) muestra un solo chip "Toda la mensajería".
 export function CanalBadges({ canales }: { canales: CanalPlantilla[] }) {
   const t = useT();
-  if (CANALES_PLANTILLA.every((c) => canales.includes(c))) {
-    return <Badge variant="outline">{t("plantillas.canal.todos")}</Badge>;
+  if (CANALES_MENSAJERIA.every((c) => canales.includes(c)) && canales.length === CANALES_MENSAJERIA.length) {
+    return <Badge variant="outline" data-testid="plantilla-chip-toda-mensajeria">{t("plantillas.canal.todaMensajeria")}</Badge>;
   }
   return (
     <span className="flex flex-wrap gap-1">

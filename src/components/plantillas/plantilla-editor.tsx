@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -24,7 +24,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -52,11 +60,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
-  CANALES_PLANTILLA,
+  CANALES_MENSAJERIA,
   TIPOS_RENDER,
   tipoRenderDeCanal,
   type AdjuntoPlantilla,
   type CanalPlantilla,
+  type FormatoCuerpo,
   type Plantilla,
   type TipoRender,
 } from "@/lib/mock-data";
@@ -74,6 +83,9 @@ import {
   type VariablePlantilla,
 } from "@/lib/plantillas";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import { useAutocompletadoVariables } from "@/components/plantillas/autocompletado-variables";
+import { componerEmail } from "@/lib/componer-email";
 import {
   AdjuntosChips,
   MensajeRenderizado,
@@ -118,8 +130,13 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   const [descripcion, setDescripcion] = useState(initial?.descripcion ?? "");
   const [activa, setActiva] = useState(initial?.activa ?? true);
   const [canales, setCanales] = useState<CanalPlantilla[]>(
-    initial?.canales ?? [...CANALES_PLANTILLA]
+    initial?.canales ?? [...CANALES_MENSAJERIA]
   );
+  // Solo email: el cuerpo es texto plano (por defecto) o código HTML.
+  const [bodyFormat, setBodyFormat] = useState<FormatoCuerpo>(initial?.bodyFormat ?? "texto");
+  // Solo email con cuerpo HTML: el CSS se carga aparte, en su propia pestaña.
+  const [cuerpoCss, setCuerpoCss] = useState(initial?.cuerpoCss ?? "");
+  const [cuerpoTab, setCuerpoTab] = useState<"html" | "css">("html");
   const [asunto, setAsunto] = useState(initial?.asunto ?? "");
   const [contenido, setContenido] = useState(initial?.contenido ?? "");
   const [adjuntos, setAdjuntos] = useState<AdjuntoPlantilla[]>(
@@ -142,6 +159,28 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     () => variablesUsadas(contenido, canales.includes("email") ? asunto : ""),
     [contenido, asunto, canales]
   );
+  // Tipo de plantilla según los canales elegidos: define qué herramientas
+  // tiene el mensaje (barra de formato, archivos, formato del cuerpo).
+  const esEmail = canales.includes("email");
+  const esSms = canales.includes("sms");
+  const esMensajeria = !esEmail && !esSms;
+  // Email con cuerpo HTML: el editor pasa a un modo ancho con vista previa grande
+  // y se cierra la barra lateral de la app para dar lugar.
+  const modoHtml = esEmail && bodyFormat === "html";
+  const editandoCss = modoHtml && cuerpoTab === "css";
+  const { open: sidebarAbierto, setOpen: setSidebarAbierto } = useSidebar();
+  const sidebarRef = useRef({ abierto: sidebarAbierto, setAbierto: setSidebarAbierto });
+  useEffect(() => {
+    sidebarRef.current = { abierto: sidebarAbierto, setAbierto: setSidebarAbierto };
+  });
+  useEffect(() => {
+    if (!modoHtml) return;
+    // Se guarda el estado previo y se restaura al salir del modo (cambiar a
+    // texto plano o dejar el editor); el usuario puede reabrirla a mano.
+    const { abierto, setAbierto } = sidebarRef.current;
+    setAbierto(false);
+    return () => setAbierto(abierto);
+  }, [modoHtml]);
   const puedeConfirmar = nombre.trim() !== "" && canales.length > 0;
 
   // --- Barra de formato: opera sobre la selección del textarea -------------
@@ -249,9 +288,33 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     );
   }
 
+  // Email y SMS van solos: al marcarlos quedan como único canal (se desmarca lo demás solo, nada se deshabilita). Los canales
+  // de mensajería se combinan entre sí (se mantiene el orden de la lista).
   function toggleCanal(canal: CanalPlantilla, on: boolean) {
-    setCanales((prev) =>
-      on ? CANALES_PLANTILLA.filter((c) => c === canal || prev.includes(c)) : prev.filter((c) => c !== canal)
+    setCanales((prev) => {
+      if (!on) return prev.filter((c) => c !== canal);
+      if (canal === "email" || canal === "sms") return [canal];
+      return CANALES_MENSAJERIA.filter((c) => c === canal || prev.includes(c));
+    });
+  }
+
+  // Botón alternador del grupo de mensajería: tilda los ocho (y desmarca
+  // Email/SMS) o, si ya están los ocho, los destilda.
+  const todaMensajeria = CANALES_MENSAJERIA.every((c) => canales.includes(c));
+  function toggleTodaMensajeria() {
+    setCanales(todaMensajeria ? [] : [...CANALES_MENSAJERIA]);
+  }
+
+  function checkboxCanal(canal: CanalPlantilla) {
+    return (
+      <label key={canal} className="flex items-center gap-2 text-sm">
+        <Checkbox
+          data-testid={`plantilla-canal-${canal}`}
+          checked={canales.includes(canal)}
+          onCheckedChange={(v) => toggleCanal(canal, v === true)}
+        />
+        {t(`plantillas.canal.${canal}`)}
+      </label>
     );
   }
 
@@ -268,6 +331,24 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     for (const v of variablesVisiblesPara(usuarioActualId)) grupos[v.origen].push(v);
     return grupos;
   }, []);
+
+  // Autocompletado al escribir el prefijo del cliente: usa las mismas variables
+  // (ya filtradas por el permiso Ver) que "Insertar variable" ofrece en los
+  // grupos "Cliente ·". Una instancia para el mensaje y otra para el asunto.
+  const variablesCliente = useMemo(
+    () => [...porOrigen.clienteBasicos, ...porOrigen.clienteContacto, ...porOrigen.clienteAdicional],
+    [porOrigen]
+  );
+  const autoMensaje = useAutocompletadoVariables({
+    setValor: setContenido,
+    variables: variablesCliente,
+    // Que "Insertar variable" siga insertando donde quedó el cursor.
+    alElegir: (cursor) => (cursorRef.current = { a: cursor, b: cursor }),
+  });
+  const autoAsunto = useAutocompletadoVariables({
+    setValor: setAsunto,
+    variables: variablesCliente,
+  });
 
   return (
     // min-h-0 + flex-1: el editor ocupa el alto del <main> y nunca lo desborda;
@@ -342,16 +423,32 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("plantillas.editor.canales")}</Label>
-                <div className="flex flex-wrap items-center gap-4">
-                  {CANALES_PLANTILLA.map((canal) => (
-                    <label key={canal} className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={canales.includes(canal)}
-                        onCheckedChange={(v) => toggleCanal(canal, v === true)}
-                      />
-                      {t(`plantillas.canal.${canal}`)}
-                    </label>
-                  ))}
+                {/* Tres grupos: Email y SMS (solos) y mensajería (combinable). */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t("plantillas.editor.grupoSolos")}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-4" data-testid="plantilla-canales-solos">
+                    {checkboxCanal("email")}
+                    {checkboxCanal("sms")}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t("plantillas.editor.grupoMensajeria")}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      onClick={toggleTodaMensajeria}
+                      data-testid="plantilla-canales-mensajeria-toggle-todos"
+                    >
+                      {todaMensajeria ? t("plantillas.editor.destildarTodos") : t("plantillas.editor.tildarTodos")}
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4" data-testid="plantilla-canales-mensajeria">
+                    {CANALES_MENSAJERIA.map(checkboxCanal)}
+                  </div>
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {canales.length === 0
@@ -373,22 +470,61 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         <TabsContent value="mensaje" className="min-h-0 flex-1">
           {/* Ocupa el alto disponible: lo que no entra se desplaza dentro de
               cada recuadro, nunca la página. */}
-          <div className="grid h-full gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]">
+          <div
+            className={cn(
+              "grid h-full gap-4",
+              // En modo HTML la vista previa pasa a ~60% del ancho.
+              modoHtml
+                ? "lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+                : "lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)]"
+            )}
+          >
             <Card className="min-h-0 min-w-0">
               <CardHeader>
                 <CardTitle>{t("plantillas.editor.contenido")}</CardTitle>
                 <CardDescription>{t("plantillas.editor.contenidoAyuda")}</CardDescription>
               </CardHeader>
               <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-                {canales.includes("email") && (
+                {esEmail && (
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="pl-asunto">{t("plantillas.editor.asunto")}</Label>
-                    <Input
-                      id="pl-asunto"
-                      value={asunto}
-                      onChange={(e) => setAsunto(e.target.value)}
-                      placeholder={t("plantillas.editor.placeholderAsunto")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="pl-asunto"
+                        data-testid="plantilla-asunto"
+                        value={asunto}
+                        onChange={(e) => {
+                          setAsunto(e.target.value);
+                          autoAsunto.evaluar(e.currentTarget);
+                        }}
+                        onSelect={(e) => autoAsunto.evaluar(e.currentTarget)}
+                        onKeyDown={autoAsunto.onKeyDown}
+                        onBlur={autoAsunto.cerrar}
+                        autoComplete="off"
+                        placeholder={t("plantillas.editor.placeholderAsunto")}
+                      />
+                      {autoAsunto.lista}
+                    </div>
+                  </div>
+                )}
+
+                {/* Solo email: el cuerpo es texto plano o código HTML. */}
+                {esEmail && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="pl-formato-cuerpo">{t("plantillas.editor.formatoCuerpo")}</Label>
+                    <Select value={bodyFormat} onValueChange={(v) => setBodyFormat(v as FormatoCuerpo)}>
+                      <SelectTrigger id="pl-formato-cuerpo" className="w-48" data-testid="plantilla-formato-cuerpo">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="texto" data-testid="plantilla-formato-cuerpo-texto">
+                          {t("plantillas.editor.formatoTexto")}
+                        </SelectItem>
+                        <SelectItem value="html" data-testid="plantilla-formato-cuerpo-html">
+                          {t("plantillas.editor.formatoHtml")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
 
@@ -397,7 +533,23 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     recuadro. */}
                 <div className="flex flex-1 flex-col gap-1.5">
                   <Label htmlFor="pl-contenido">{t("plantillas.editor.texto")}</Label>
-                  <div className="flex flex-wrap items-center gap-1">
+                  {modoHtml && (
+                    <Tabs value={cuerpoTab} onValueChange={(v) => setCuerpoTab(v as "html" | "css")}>
+                      <TabsList>
+                        <TabsTrigger value="html" data-testid="plantilla-cuerpo-tab-html">
+                          {t("plantillas.editor.cuerpoHtml")}
+                        </TabsTrigger>
+                        <TabsTrigger value="css" data-testid="plantilla-cuerpo-tab-css">
+                          {t("plantillas.editor.cuerpoCss")}
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  )}
+                  {/* En la pestaña CSS no hay nada que insertar: sin barra. */}
+                  <div className={cn("flex flex-wrap items-center gap-1", editandoCss && "hidden")}>
+                    {/* Barra de formato: solo en mensajería (SMS y email no la tienen). */}
+                    {esMensajeria && (
+                      <>
                     <ActionTooltip label={t("plantillas.editor.negrita")}>
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("**")}>
                         <Bold className="size-4" />
@@ -462,6 +614,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         </Button>
                       </PopoverContent>
                     </Popover>
+                      </>
+                    )}
                     <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
                       <PopoverTrigger asChild>
                         <Button
@@ -539,10 +693,18 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    <Button type="button" variant="outline" size="sm" onClick={insertarArchivo}>
-                      <Paperclip className="size-4" />
-                      {t("plantillas.editor.insertarArchivo")}
-                    </Button>
+                    {!esSms && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={insertarArchivo}
+                        data-testid="plantilla-insertar-archivo"
+                      >
+                        <Paperclip className="size-4" />
+                        {t("plantillas.editor.insertarArchivo")}
+                      </Button>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -551,21 +713,41 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                       onChange={(e) => archivosElegidos(e.target.files)}
                     />
                   </div>
-                  <Textarea
-                    ref={textareaRef}
-                    id="pl-contenido"
-                    value={contenido}
-                    onChange={(e) => setContenido(e.target.value)}
-                    onSelect={(e) =>
-                      (cursorRef.current = {
-                        a: e.currentTarget.selectionStart,
-                        b: e.currentTarget.selectionEnd,
-                      })
-                    }
-                    placeholder={t("plantillas.editor.placeholderContenido")}
-                    className="min-h-[14rem] flex-1 resize-none font-mono text-sm"
-                    autoFocus={paso === "mensaje"}
-                  />
+                  <div className="relative flex flex-1 flex-col">
+                    <Textarea
+                      ref={textareaRef}
+                      id="pl-contenido"
+                      value={editandoCss ? cuerpoCss : contenido}
+                      onChange={(e) => {
+                        if (editandoCss) return setCuerpoCss(e.target.value);
+                        setContenido(e.target.value);
+                        autoMensaje.evaluar(e.currentTarget);
+                      }}
+                      onKeyDown={editandoCss ? undefined : autoMensaje.onKeyDown}
+                      onBlur={autoMensaje.cerrar}
+                      onSelect={(e) => {
+                        // El cursor guardado es el del HTML (donde se insertan variables y archivos).
+                        // En CSS no hay variables: sin autocompletado.
+                        if (editandoCss) return;
+                        autoMensaje.evaluar(e.currentTarget);
+                        cursorRef.current = {
+                          a: e.currentTarget.selectionStart,
+                          b: e.currentTarget.selectionEnd,
+                        };
+                      }}
+                      placeholder={
+                        editandoCss
+                          ? t("plantillas.editor.placeholderCss")
+                          : modoHtml
+                            ? t("plantillas.editor.placeholderHtml")
+                            : t("plantillas.editor.placeholderContenido")
+                      }
+                      data-testid={editandoCss ? "plantilla-cuerpo-css" : "plantilla-contenido"}
+                      className="min-h-[14rem] flex-1 resize-none font-mono text-sm"
+                      autoFocus={paso === "mensaje"}
+                    />
+                    {!editandoCss && autoMensaje.lista}
+                  </div>
                 </div>
 
                 {/* Archivos: están en el texto; acá, la lista para quitarlos */}
@@ -596,7 +778,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                 <CardTitle>{t("plantillas.editor.vistaPrevia")}</CardTitle>
                 <CardDescription>{t("plantillas.editor.vistaPreviaAyuda")}</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-0 flex-1 overflow-y-auto">
+              <CardContent className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 {canales.length === 0 ? (
                   <p className="text-sm text-muted-foreground">{t("plantillas.editor.sinCanales")}</p>
                 ) : (
@@ -605,6 +787,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     asunto={asunto}
                     contenido={contenido}
                     adjuntos={adjuntos}
+                    bodyFormat={bodyFormat}
+                    cuerpoCss={cuerpoCss}
                   />
                 )}
               </CardContent>
@@ -621,12 +805,18 @@ function VistaPrevia({
   asunto,
   contenido,
   adjuntos,
+  bodyFormat,
+  cuerpoCss,
 }: {
   canales: CanalPlantilla[];
   asunto: string;
   contenido: string;
   adjuntos: AdjuntoPlantilla[];
+  bodyFormat: FormatoCuerpo;
+  cuerpoCss: string;
 }) {
+  // Ancho del iframe del email HTML: escritorio (600px) o móvil (375px), para ver el responsive.
+  const [ancho, setAncho] = useState<"escritorio" | "movil">("escritorio");
   const t = useT();
   const texto = resolverVariables(contenido, datosEjemplo).texto;
   const asuntoResuelto = resolverVariables(asunto, datosEjemplo).texto;
@@ -638,7 +828,7 @@ function VistaPrevia({
   );
 
   return (
-    <Tabs key={tipos.join(",")} defaultValue={tipos[0]} className="gap-3">
+    <Tabs key={tipos.join(",")} defaultValue={tipos[0]} className="min-h-0 flex-1 gap-3">
       <TabsList>
         {tipos.map((tipo) => (
           <TabsTrigger key={tipo} value={tipo}>
@@ -647,7 +837,7 @@ function VistaPrevia({
         ))}
       </TabsList>
       {tipos.map((canal) => (
-        <TabsContent key={canal} value={canal}>
+        <TabsContent key={canal} value={canal} className="min-h-0 flex-1">
           {contenido.trim() === "" ? (
             <p className="text-sm text-muted-foreground">
               {t("plantillas.editor.vistaPreviaVacia")}
@@ -684,14 +874,58 @@ function VistaPrevia({
               )}
             </div>
           ) : canal === "email" ? (
-            <div className="flex flex-col gap-2 rounded-lg border p-3">
+            <div className="flex h-full flex-col gap-2 rounded-lg border p-3">
               {asuntoResuelto && (
                 <div className="border-b pb-2 text-sm">
                   <span className="text-muted-foreground">{t("plantillas.editor.asuntoPreview")}: </span>
                   <span className="font-medium">{asuntoResuelto}</span>
                 </div>
               )}
-              <MensajeRenderizado texto={sinArchivos} canal="email" />
+              {bodyFormat === "html" ? (
+                // HTML del email: va en un iframe con sandbox vacío (sin
+                // scripts, sin formularios, sin navegación), así que el código
+                // del cuadro nunca se ejecuta en esta página.
+                <>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant={ancho === "escritorio" ? "secondary" : "outline"}
+                      onClick={() => setAncho("escritorio")}
+                      data-testid="plantilla-preview-ancho-escritorio"
+                    >
+                      {t("plantillas.editor.anchoEscritorio")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant={ancho === "movil" ? "secondary" : "outline"}
+                      onClick={() => setAncho("movil")}
+                      data-testid="plantilla-preview-ancho-movil"
+                    >
+                      {t("plantillas.editor.anchoMovil")}
+                    </Button>
+                  </div>
+                  {/* Fondo gris de "escritorio"; el iframe toma el ancho real, así
+                      las @media del correo responden al alternador. */}
+                  <div className="flex min-h-80 flex-1 justify-center rounded-md bg-muted p-2">
+                    <iframe
+                      title={t("plantillas.render.email")}
+                      sandbox=""
+                      srcDoc={componerEmail(sinArchivos, cuerpoCss)}
+                      style={{ width: ancho === "movil" ? 375 : 600 }}
+                      className="h-full max-w-full rounded-sm border-0 bg-white"
+                      data-testid="plantilla-preview-email-html"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("plantillas.editor.htmlPreviewAyuda")}</p>
+                </>
+              ) : (
+                // Texto plano: se muestra tal cual, sin interpretar formato.
+                <div className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="plantilla-preview-email-texto">
+                  {sinArchivos}
+                </div>
+              )}
               {adjuntos.length > 0 && (
                 <div className="flex flex-col gap-2 border-t pt-2">
                   <AdjuntosChips adjuntos={adjuntos} />

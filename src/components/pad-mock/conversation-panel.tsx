@@ -73,10 +73,10 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
   const datos: DatosVariables = useMemo(() => {
     const [nombre, ...resto] = (nombreCliente ?? "").split(" ");
     return {
-      nombre,
-      apellido: resto.join(" "),
-      campania: "Soporte técnico Nivel 1",
-      asesor: "Ana",
+      "cliente.nombre": nombre,
+      "cliente.apellido": resto.join(" "),
+      "campania.nombre": "Soporte técnico Nivel 1",
+      "asesor.nombre": "Ana",
     };
   }, [nombreCliente]);
 
@@ -92,9 +92,7 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
   const [aviso, setAviso] = useState<"precargada" | null>(precargada ? "precargada" : null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [pendiente, setPendiente] = useState<PlantillaElegida | null>(null);
-  const [favoritas, setFavoritas] = useState<string[]>(["pl-datos"]);
-  const [usos, setUsos] = useState<Record<string, number>>({ "pl-cierre": 4, "pl-demora": 2 });
-  // Una variable sin dato queda visible en el texto ({{nombre}}); mientras
+  // Una variable sin dato queda visible en el texto ({{cliente.nombre}}); mientras
   // quede alguna, no se puede enviar: el asesor la completa a mano.
   const sinDato = variablesUsadas(texto);
 
@@ -107,7 +105,6 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
       ...elegida.plantilla.adjuntos.filter((a) => !prev.some((x) => x.id === a.id)),
     ]);
     setAviso(null);
-    setUsos((prev) => ({ ...prev, [elegida.plantilla.id]: (prev[elegida.plantilla.id] ?? 0) + 1 }));
     setPendiente(null);
   }
 
@@ -143,11 +140,6 @@ function Redactor({ nombreCliente }: { nombreCliente?: string }) {
           open={selectorOpen}
           onOpenChange={setSelectorOpen}
           onElegir={elegir}
-          favoritas={favoritas}
-          onToggleFavorita={(id) =>
-            setFavoritas((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
-          }
-          usos={usos}
         />
         <Button
           size="sm"

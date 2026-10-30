@@ -17,14 +17,20 @@ import { camposCliente, clientes, permisoCampo } from "@/lib/mock-clientes";
 //   líneas que empiezan con "- " (lista) o "1. " (lista numerada)
 //   [texto](url)  enlace: con texto en chat web y email; en WhatsApp y los
 //                 canales planos sale "texto (url)"
-//   {{clave}}     variable (ver variablesPlantilla en mock-data)
+//   {{cliente.campo}} {{campania.nombre}} {{asesor.nombre}}  variables (ver
+//                 variablesPlantilla más abajo); los datos del cliente siempre
+//                 empiezan con "cliente."
 //   emojis: se escriben tal cual, funcionan en todos los canales
 //   [[archivo:nombre.pdf]]  un archivo de la plantilla, en su propia línea.
 //     En chat/WhatsApp se envía como mensaje aparte en ese punto (texto,
 //     archivo, texto); en email el texto es el cuerpo y el archivo va
 //     adjunto; SMS no admite archivos y se envía solo el texto.
 
-const RE_VARIABLE = /\{\{\s*([a-zA-Z]+)\s*\}\}/g;
+// Las claves admiten letras, números, guion bajo y punto (cliente.nombre).
+const RE_VARIABLE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
+
+/** Prefijo canónico de toda variable con dato de cliente. */
+export const PREFIJO_CLIENTE = "cliente.";
 
 // --- Catálogo de variables ---------------------------------------------------
 //
@@ -53,7 +59,12 @@ export type VariablePlantilla = {
   campoId?: string;
 };
 
+// Clave (sin el prefijo "cliente.") de cada campo de la ficha. Los campos de
+// información adicional usan un nombre corto en vez de su id interno.
 const CLAVE_POR_CAMPO: Record<string, string> = {
+  tipoDoc: "tipo_identificacion",
+  nroDoc: "numero_identificacion",
+  idExterno: "id_externo",
   "campo-producto": "producto",
   "campo-cuenta": "cuenta",
   "campo-deuda": "deuda",
@@ -87,14 +98,14 @@ export const variablesPlantilla: VariablePlantilla[] = [
   ...camposCliente
     .filter((c) => c.grupo !== "etiquetas" && c.tipo !== "redes")
     .map((c) => ({
-      clave: CLAVE_POR_CAMPO[c.id] ?? c.id,
+      clave: PREFIJO_CLIENTE + (CLAVE_POR_CAMPO[c.id] ?? c.id),
       origen: ORIGEN_POR_GRUPO[c.grupo],
       nombre: c.nombre,
       ejemplo: ejemploDeCampo(c.id, c.nombre),
       campoId: c.id,
     })),
-  { clave: "campania", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
-  { clave: "asesor", origen: "asesor", ejemplo: "Ana" },
+  { clave: "campania.nombre", origen: "campania", ejemplo: "Cobranzas Activa PCP" },
+  { clave: "asesor.nombre", origen: "asesor", ejemplo: "Ana" },
 ];
 
 /** Las variables que puede usar un usuario: lo que su grupo ve en la ficha. */
@@ -139,7 +150,7 @@ export const datosEjemplo: DatosVariables = Object.fromEntries(
 
 /**
  * Reemplaza las variables por el dato real. Si el dato falta, la variable
- * queda visible tal cual ({{nombre}}), igual que en el editor, y se devuelve
+ * queda visible tal cual ({{cliente.nombre}}), igual que en el editor, y se devuelve
  * en `sinDato`: nunca se envía un mensaje con una variable sin resolver, así
  * que el redactor avisa y el asesor la completa a mano.
  */

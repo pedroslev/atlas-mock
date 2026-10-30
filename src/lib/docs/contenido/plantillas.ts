@@ -31,7 +31,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en email, chat web y WhatsApp va con negrita, cursiva, tachado, listas y enlaces; en SMS y en las redes sociales va solo el texto. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente («Chat y WhatsApp», «Redes», «Email», «SMS»), mientras lo escribís.",
+              "La pantalla tiene dos partes: «Datos» (nombre, descripción, si está activa y en qué canales se ofrece) y «Mensaje» (el texto, las variables y los archivos). El mensaje se escribe una vez y Atlas lo adapta a lo que admite cada canal: en chat web y WhatsApp va con negrita, cursiva, tachado, listas y enlaces; en SMS y en las redes sociales va solo el texto; el email es texto plano o HTML. La vista previa queda al lado del mensaje y muestra cómo lo recibe el cliente («Chat y WhatsApp», «Redes», «Email», «SMS»), mientras lo escribís.",
           },
           { tipo: "sub", texto: "Campos" },
           {
@@ -40,9 +40,10 @@ export const contenido: ContenidoPagina = {
               "Nombre — Lo que busca el asesor en el selector.",
               "Descripción — Cuándo conviene usarla. El asesor la ve debajo del nombre.",
               "Activa — Inactiva no se ofrece al asesor, pero no se pierde.",
-              "Canales en los que se ofrece — Los canales escritos: Chat, WhatsApp, Email, SMS y las redes sociales. Desmarcá los que no correspondan: una firma larga, por ejemplo, solo en email; una plantilla con imágenes, no en SMS.",
+              "Canales en los que se ofrece — Tres grupos: Email (solo), SMS (solo) y mensajería (Chat, WhatsApp, Instagram, Facebook, TikTok, X, Telegram y LinkedIn), que se combinan entre sí. Al marcar Email o SMS se desmarcan los demás canales solos; al marcar uno de mensajería se desmarcan Email y SMS. En mensajería, el botón «Tildar todos» / «Destildar todos» marca o desmarca los ocho a la vez. Una plantilla nueva nace con toda la mensajería marcada.",
               "Asunto — Solo para email. Puede llevar variables.",
-              "Mensaje — El texto, con la barra de formato (negrita, cursiva, tachado, lista, lista numerada, enlace y emoji) y los botones «Insertar variable» e «Insertar archivo». La barra tiene solo lo que WhatsApp, el chat web y el email muestran los tres; lo que solo entiende el email (colores, títulos, tablas) queda afuera para que el mismo mensaje sirva en todos los canales.",
+              "Formato del cuerpo — Solo en email: texto plano (por defecto) o HTML. Con HTML, el cuadro de texto es el código del cuerpo, en dos pestañas: «HTML» (el contenido del cuerpo) y «CSS» (los estilos). Al elegir HTML la barra lateral se cierra y la vista previa se agranda; con «Escritorio» y «Móvil» ves el correo a 600 y a 375 píxeles. La vista previa no ejecuta scripts.",
+              "Mensaje — El texto, en mensajería, con la barra de formato (negrita, cursiva, tachado, lista, lista numerada, enlace y emoji) y los botones «Insertar variable» e «Insertar archivo». En SMS es texto plano, sin barra de formato ni archivos. En email no hay barra de formato: se escribe en texto plano o en HTML y los archivos van adjuntos.",
               "Archivos — «Insertar archivo» abre el selector de archivos de tu equipo y deja el archivo dentro del texto, donde está el cursor. En chat sale como mensaje aparte en ese punto (texto, archivo, texto); en email va adjunto; SMS no los admite.",
             ],
           },
@@ -50,7 +51,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Una variable es un dato que Atlas completa solo al cargar la plantilla: el nombre del cliente, su deuda, el nombre de la campaña, el del asesor. Se eligen de la lista «Insertar variable», agrupadas por origen (datos básicos, formas de contacto e información adicional del cliente; campaña; asesor); no hace falta escribir nada a mano. Las variables del cliente son los campos de su ficha, y ves solo los que tu grupo de trabajo puede ver en «Ficha del cliente».",
+              "Una variable es un dato que Atlas completa solo al cargar la plantilla: el nombre del cliente, su deuda, el nombre de la campaña, el del asesor. Se eligen de la lista «Insertar variable», agrupadas por origen (datos básicos, formas de contacto e información adicional del cliente; campaña; asesor); también podés escribir «cliente.» (o «client.» si usás Atlas en inglés o catalán) al comienzo de una palabra, en el asunto o en el mensaje, y elegir de la lista que aparece, que se filtra mientras seguís escribiendo (flechas para moverte, Enter o Tab para elegir, Esc para cerrar). Todas quedan escritas como «{{cliente.nombre}}», «{{campania.nombre}}» o «{{asesor.nombre}}». Las variables del cliente son los campos de su ficha, y ves solo los que tu grupo de trabajo puede ver en «Ficha del cliente».",
           },
           {
             tipo: "p",
@@ -88,7 +89,7 @@ export const contenido: ContenidoPagina = {
             tipo: "pasos",
             items: [
               "En el cuadro de mensaje, escribe «/» (con el cuadro vacío) o toca el botón «Plantillas».",
-              "Busca por nombre o por una palabra del mensaje. Arriba ve sus favoritas (estrella) y las que más usa.",
+              "Busca por nombre o por una palabra del mensaje. Ve las plantillas del grupo de la campaña, con su descripción y la cantidad de archivos.",
               "Elige una: el texto entra con los datos del cliente ya puestos y los archivos en su lugar, que al enviar salen como mensaje aparte. Si ya había texto escrito, elige entre «Insertar debajo» o «Reemplazar»: Enter reemplaza, Shift+Enter inserta debajo.",
               "Ajusta lo que quiera y envía con Enter.",
             ],
