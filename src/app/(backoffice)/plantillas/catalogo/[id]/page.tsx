@@ -1,3 +1,6 @@
+// MOCK: busca la plantilla en los datos de ejemplo.
+// REAL: GET de la plantilla a olimpo-api (404 si no existe o es de otro tenant).
+
 import { notFound } from "next/navigation";
 import { plantillas, getPlantilla } from "@/lib/mock-data";
 import { PlantillaEditor } from "@/components/plantillas/plantilla-editor";

@@ -1,5 +1,8 @@
 "use client";
 
+// MOCK: el nombre y la descripción del grupo se editan en memoria.
+// REAL: PATCH del grupo en message_template_groups (olimpo-api).
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";

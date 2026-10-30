@@ -1,3 +1,6 @@
+// MOCK: busca el grupo en los datos de ejemplo.
+// REAL: GET del grupo a olimpo-api (404 si no existe o es de otro tenant).
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";

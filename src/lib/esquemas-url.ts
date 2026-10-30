@@ -1,3 +1,6 @@
+// MOCK: decide en el navegador si una URL es aceptable (http, https, mailto, tel o data:image).
+// REAL: el servidor repite la misma regla al guardar y al enviar; no se confía en el front.
+
 // Helpers compartidos por el validador y el sanitizador de email, y por los
 // enlaces de Markdown: decidir si una URL tiene un esquema permitido.
 

@@ -1,3 +1,7 @@
+// MOCK: validación del HTML/CSS en el navegador para mostrar el panel y bloquear Guardar.
+// REAL: olimpo-api valida y rechaza al guardar con los mismos criterios (la autoridad es el
+// servidor); el front no es una barrera de seguridad.
+
 import { decodificarEntidades, esquemaDe, ESQUEMAS_ENLACE, imagenDataPermitida } from "@/lib/esquemas-url";
 
 // Validador del HTML y el CSS de un email (plantillas con cuerpo HTML).

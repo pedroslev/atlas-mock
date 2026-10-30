@@ -1,3 +1,7 @@
+// MOCK: lógica de UI pura, sin datos.
+// REAL: igual en producción; no depende del backend. Los prefijos por idioma salen de i18n y
+// el prefijo canónico "cliente." vale siempre.
+
 // Utilidades puras del autocompletado de variables de cliente en el editor de
 // plantillas: detectar qué se está escribiendo y calcular dónde mostrar la lista.
 

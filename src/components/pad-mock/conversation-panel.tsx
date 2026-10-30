@@ -300,10 +300,18 @@ function etiquetaAtajo(a: AtajoFormato, isMac: boolean) {
 //
 // adjuntoNuevo: un adjunto que llega de afuera (la captura de imagen de la
 // videollamada); cada id nuevo se suma a las fichas, igual que uno elegido.
+// MOCK: grupo de plantillas y plantilla por defecto fijos (los de la campaña de ejemplo) y
+// los datos de campaña y asesor escritos a mano.
+// REAL: salen de la campaña de la interacción (grupo heredado campaña←proyecto, plantilla por
+// defecto del canal; ListAgentCampaigns) y del agente logueado.
 const GRUPO_PLANTILLAS_MOCK = "pg-atencion";
 const PLANTILLA_DEFAULT_CHAT_MOCK = "pl-saludo";
 const CANAL_PLANTILLAS: CanalPlantilla = "chat";
 
+// MOCK: el envío en tramos agrega los mensajes al hilo local y los archivos de la plantilla solo
+// llevan nombre y tamaño.
+// REAL: cada tramo de texto y cada archivo es un Send de atlas-iris, en orden; el archivo de la
+// plantilla se baja con GetAssetReadURL y se sube por el flujo de adjuntos del chat.
 /**
  * Parte lo que se envía en tramos: cada archivo de la plantilla ("📎 nombre")
  * corta el texto y sale como mensaje propio en ese punto (texto, archivo,
@@ -367,6 +375,9 @@ function Redactor({
     // Solo al abrir el redactor: la plantilla por defecto viene precargada una vez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // MOCK: el texto de la plantilla por defecto se resuelve acá con los datos conocidos.
+  // REAL: el backend entrega la plantilla por defecto ya resuelta y la lista de variables
+  // faltantes; lo que falta se marca [NOMBRE] y bloquea Enviar hasta completarlo a mano.
   const [texto, setTexto] = useState(precargada?.texto ?? "");
   // Archivos de las plantillas elegidas (salen como mensaje aparte al enviar).
   const [adjuntosPlantilla, setAdjuntosPlantilla] = useState<AdjuntoPlantilla[]>(

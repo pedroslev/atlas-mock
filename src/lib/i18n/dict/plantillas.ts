@@ -1,3 +1,6 @@
+// MOCK: textos de la interfaz de plantillas en los 4 idiomas.
+// REAL: igual; viven en el diccionario de i18n del front, no hay endpoint.
+
 import type { NamespaceDict } from "@/lib/i18n/dict/types";
 
 // Plantillas de mensajes (ATLAS-1191): catálogo del tenant + grupos que las

@@ -1,3 +1,8 @@
+// MOCK: dibuja la vista previa de cada canal en el navegador (formato, listas, enlaces).
+// REAL: cada canal convierte el Markdown a su formato al enviar (WhatsApp, chat, redes, SMS, email);
+// el servidor rechaza al guardar los enlaces con esquema no permitido, y el front nunca interpreta
+// HTML crudo de un mensaje.
+
 import { Paperclip } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {

@@ -1,5 +1,10 @@
 "use client";
 
+// MOCK: lista las plantillas y los grupos de datos de ejemplo (mock-data.ts); crear, editar o
+// eliminar no persiste.
+// REAL: tablas message_templates y message_template_groups de olimpo-api (CRUD con permiso de
+// edición, aislado por tenant); eliminar una plantilla la quita también de todos los grupos.
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";

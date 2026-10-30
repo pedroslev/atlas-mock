@@ -1,7 +1,13 @@
 // Lógica pura de "Probar la Consulta HTTP" del editor de flujo: detectar las
 // variables, resolver la consulta con los valores de prueba (mismas reglas de
 // codificación y escape que el flujo real), validar lo que bloquea el envío y
-// simular la respuesta. No toca la red: en el mock la respuesta es simulada.
+// elegir la respuesta simulada.
+//
+// MOCK: todo se resuelve y valida en el navegador y la respuesta es simulada.
+// REAL: las validaciones de este archivo son un adelanto de UX; la autoridad es
+// el servidor (olimpo-api y atlas-roomagent), que repite cada regla (https,
+// hosts internos, saltos de línea, JSON) y no confía en lo que valida el front.
+// El front solo arma el pedido y muestra el resultado.
 
 export type EncabezadoHttp = { nombre: string; valor: string };
 export type ConfigHttp = {
@@ -68,6 +74,9 @@ export type ConsultaResuelta = {
   errores: ErrorConsulta[];
 };
 
+// MOCK: lista de direcciones bloqueadas escrita a mano, sin resolver DNS.
+// REAL: el servidor valida también la IP a la que resuelve el host (DNS rebinding,
+// redirecciones) al conectar; mirar solo el nombre no alcanza.
 /** ¿La dirección es interna, privada, local o de metadatos? (no se puede consultar). */
 export function hostBloqueado(hostname: string): boolean {
   const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
@@ -184,7 +193,6 @@ export function llenadaPor(variable: string, declaradas: Set<string>): boolean {
 
 // --- Respuesta simulada -----------------------------------------------------
 
-export type Simulacion = "exito" | "404" | "500" | "timeout" | "conexion" | "grande";
 export type SalidaHttp = "success" | "error" | "timeout";
 
 export type RespuestaSimulada = {
@@ -196,42 +204,40 @@ export type RespuestaSimulada = {
   motivo?: "conexion" | "grande" | "timeout";
 };
 
-/** Cuerpo verosímil de una respuesta exitosa según lo que pide la URL. */
-export function cuerpoPorDefecto(url: string): string {
-  const u = url.toLowerCase();
-  if (u.includes("saldo") || u.includes("balance")) {
-    return JSON.stringify({ documento: "28456789", saldo: 1520.5, moneda: "ARS", vencimiento: "2026-11-15" }, null, 2);
-  }
-  if (u.includes("pedido") || u.includes("order")) {
-    return JSON.stringify({ pedido: "48213", estado: "En camino", items: [{ id: "A-1", cantidad: 2 }, { id: "B-7", cantidad: 1 }] }, null, 2);
-  }
-  return JSON.stringify({ ok: true, mensaje: "Consulta resuelta" }, null, 2);
-}
+const HEADERS_JSON = { "content-type": "application/json", "cache-control": "no-store" };
 
-/** Respuesta simulada para el modo elegido; `cuerpoExito` es el JSON editable del caso Éxito. */
-export function simularRespuesta(sim: Simulacion, cuerpoExito: string): RespuestaSimulada {
-  const headers = { "content-type": "application/json", "cache-control": "no-store" };
-  switch (sim) {
-    case "exito": {
-      let body: unknown = cuerpoExito;
-      try {
-        body = JSON.parse(cuerpoExito);
-      } catch {
-        /* cuerpo no JSON: queda como texto */
-      }
-      return { salida: "success", status: 200, headers, body };
-    }
-    case "404":
-      return { salida: "error", status: 404, headers, body: { error: "No encontrado" } };
-    case "500":
-      return { salida: "error", status: 500, headers, body: { error: "Error interno del servicio" } };
-    case "timeout":
-      return { salida: "timeout", headers: {}, motivo: "timeout" };
-    case "conexion":
-      return { salida: "error", headers: {}, motivo: "conexion" };
-    case "grande":
-      return { salida: "error", status: 200, headers: { ...headers, "content-length": "73400" }, motivo: "grande" };
-  }
+// MOCK: respuestas hardcodeadas, una de cada tipo; cada "Enviar consulta" elige
+// una al azar. No se hace ninguna llamada de red.
+// REAL: la consulta la ejecuta atlas-roomagent (RPC TestHttpRequest del servicio
+// ChatWorkflow), pedida por olimpo-api en POST /api/workflows/http-test, con las
+// mismas reglas de seguridad que el flujo (solo https, sin redirecciones, tope de
+// 64 KiB, espera máxima de 25 s, sin reintentos). Devuelve {salida, status,
+// duración, encabezados, cuerpo}; nada de eso se guarda ni se loguea.
+export const RESPUESTAS_SIMULADAS: RespuestaSimulada[] = [
+  {
+    salida: "success",
+    status: 200,
+    headers: HEADERS_JSON,
+    body: {
+      documento: "28456789",
+      saldo: 1520.5,
+      estado: "Activo",
+      items: [
+        { id: "A-1", concepto: "Cuota 3", monto: 820.5 },
+        { id: "B-7", concepto: "Cuota 4", monto: 700 },
+      ],
+    },
+  },
+  { salida: "error", status: 404, headers: HEADERS_JSON, body: { error: "No encontrado" } },
+  { salida: "error", status: 500, headers: HEADERS_JSON, body: { error: "Error interno del servicio" } },
+  { salida: "timeout", headers: {}, motivo: "timeout" },
+  { salida: "error", headers: {}, motivo: "conexion" },
+  { salida: "error", status: 200, headers: { ...HEADERS_JSON, "content-length": "73400" }, motivo: "grande" },
+];
+
+/** Una respuesta simulada al azar (uniforme). */
+export function elegirRespuestaSimulada(): RespuestaSimulada {
+  return RESPUESTAS_SIMULADAS[Math.floor(Math.random() * RESPUESTAS_SIMULADAS.length)];
 }
 
 /** Rutas de un cuerpo: `respuesta.body.saldo`, con índices `respuesta.body.items[0].id`. */

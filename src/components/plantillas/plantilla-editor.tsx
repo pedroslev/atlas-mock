@@ -1,5 +1,12 @@
 "use client";
 
+// MOCK: Crear/Guardar no persiste (navega al listado); el contador, la validación y el saneo
+// corren en el navegador; los archivos elegidos solo registran nombre y tamaño.
+// REAL: olimpo-api valida al guardar y rechaza con el motivo (límites por canal, canales
+// combinables, validación del HTML/CSS de email), guarda el HTML ya saneado y el envío vuelve a
+// sanear. Los archivos se suben por el flujo de adjuntos (storage del tenant). El front solo adelanta
+// los avisos para que quien edita los vea antes.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {

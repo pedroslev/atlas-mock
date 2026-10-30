@@ -5,15 +5,7 @@ import { useEdges, useNodes } from "@xyflow/react";
 import { AlertTriangle, Check, ChevronRight, Copy, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,25 +23,28 @@ import { cn } from "@/lib/utils";
 import {
   METODOS_QUE_MODIFICAN,
   comoCurl,
-  cuerpoPorDefecto,
+  elegirRespuestaSimulada,
   llenadaPor,
   resolverConsulta,
   rutaHija,
-  simularRespuesta,
   tipoDeValor,
   variablesAnteriores,
   variablesDeConsulta,
   type ConfigHttp,
   type RespuestaSimulada,
   type SalidaHttp,
-  type Simulacion,
 } from "@/lib/probar-http";
 
 // "Probar consulta HTTP": panel lateral del nodo Consulta HTTP. Usa la
 // configuración del nodo tal como está en el editor (sin guardar ni publicar).
-// Los valores de prueba y el historial viven solo en el estado React del
-// editor: no van al documento del flujo ni a localStorage.
-// En el mock la respuesta es SIMULADA: un selector elige el resultado.
+//
+// MOCK: los valores de prueba y el historial viven en el estado React del nodo y
+// la respuesta es una de las simuladas (ver RESPUESTAS_SIMULADAS).
+// REAL: los valores y el historial NUNCA se guardan (ni en el flujo ni en
+// localStorage ni en logs). El envío es POST /api/workflows/http-test de
+// olimpo-api; devuelve 403 si el usuario no puede editar flujos (el mock no tiene
+// permisos) y 429 al pasar de 10 pruebas por minuto por usuario (el mock no lo
+// aplica).
 
 type Prueba = {
   id: number;
@@ -62,7 +57,6 @@ type Prueba = {
 
 type Resultado = { respuesta: RespuestaSimulada; duracionMs: number };
 
-const SIMULACIONES: Simulacion[] = ["exito", "404", "500", "timeout", "conexion", "grande"];
 const SALIDAS: SalidaHttp[] = ["success", "error", "timeout"];
 const MAX_HISTORIAL = 5;
 
@@ -88,11 +82,11 @@ export function ProbarConsultaHttp({
   const t = useT();
   const [abierto, setAbierto] = useState(false);
   const [valores, setValores] = useState<Record<string, string>>({});
-  const [simulacion, setSimulacion] = useState<Simulacion>("exito");
-  const [cuerpoSimulado, setCuerpoSimulado] = useState<string | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
+  // MOCK: historial y valores de prueba solo en memoria del editor.
+  // REAL: igual, jamás se persisten; se pierden al cerrar el editor.
   const [historial, setHistorial] = useState<Prueba[]>([]);
   const [copiado, setCopiado] = useState<string | null>(null);
   const [curlCopiado, setCurlCopiado] = useState(false);
@@ -109,7 +103,6 @@ export function ProbarConsultaHttp({
   const resuelta = useMemo(() => resolverConsulta(config, valores), [config, valores]);
   const bloqueada = resuelta.errores.length > 0;
   const nombreVariable = variableGuardado?.trim() || "respuesta";
-  const cuerpoExito = cuerpoSimulado ?? cuerpoPorDefecto(config.url);
 
   const textoError = (e: { codigo: string; datos?: Record<string, string> }) =>
     t(`cuentas.flujo.probar.error.${e.codigo}`, e.datos ?? {});
@@ -127,10 +120,11 @@ export function ProbarConsultaHttp({
     setConfirmando(false);
     setEnviando(true);
     setResultado(null);
-    // Demora simulada de 300 a 900 ms.
+    // MOCK: demora simulada de 300 a 900 ms y respuesta al azar.
+    // REAL: la duración es la medida por atlas-roomagent; el front no mide ni inventa nada.
     const demora = 300 + Math.round(Math.random() * 600);
     window.setTimeout(() => {
-      const respuesta = simularRespuesta(simulacion, cuerpoExito);
+      const respuesta = elegirRespuestaSimulada();
       setResultado({ respuesta, duracionMs: respuesta.salida === "timeout" ? timeoutSeg * 1000 : demora });
       setEnviando(false);
       setHistorial((h) =>
@@ -150,7 +144,9 @@ export function ProbarConsultaHttp({
     }, demora);
   }
 
-  // Con POST, PUT, PATCH y DELETE puede modificar datos reales: pide confirmar.
+  // MOCK: la confirmación es solo de UX.
+  // REAL: con POST, PUT, PATCH y DELETE la prueba puede crear o modificar datos
+  // reales del servicio del tenant, por eso se pide confirmar antes de enviar; GET va directo.
   function pedirEnvio() {
     if (METODOS_QUE_MODIFICAN.includes(config.metodo)) setConfirmando(true);
     else ejecutar();
@@ -277,37 +273,6 @@ export function ProbarConsultaHttp({
 
             {/* Enviar consulta ------------------------------------------------ */}
             <section className="flex flex-col gap-2">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="http-simulacion" className="text-xs">
-                  {t("cuentas.flujo.probar.simulacion")}
-                </Label>
-                <Select value={simulacion} onValueChange={(v) => setSimulacion(v as Simulacion)}>
-                  <SelectTrigger id="http-simulacion" size="sm" data-testid="workflow-http-simulacion">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SIMULACIONES.map((s) => (
-                      <SelectItem key={s} value={s} data-testid={`workflow-http-simulacion-${s}`}>
-                        {t(`cuentas.flujo.probar.sim.${s}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {simulacion === "exito" && (
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="http-cuerpo-simulado" className="text-xs">
-                    {t("cuentas.flujo.probar.sim.cuerpo")}
-                  </Label>
-                  <Textarea
-                    id="http-cuerpo-simulado"
-                    className="min-h-24 font-mono text-xs"
-                    value={cuerpoExito}
-                    data-testid="workflow-http-cuerpo-simulado"
-                    onChange={(e) => setCuerpoSimulado(e.target.value)}
-                  />
-                </div>
-              )}
               <p className="text-xs text-muted-foreground">{t("cuentas.flujo.probar.aviso")}</p>
               <Button
                 type="button"

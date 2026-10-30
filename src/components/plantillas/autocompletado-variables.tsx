@@ -1,5 +1,11 @@
 "use client";
 
+// MOCK: las variables salen del catálogo local filtrado por el grupo de trabajo del usuario de ejemplo.
+// REAL: olimpo-api entrega las variables de cliente ya filtradas por el permiso Ver del grupo de
+// trabajo (campos de la ficha). El front guarda SIEMPRE el marcador canónico {{cliente.<clave>}}
+// aunque el usuario haya escrito el prefijo del idioma (client., cliente.); el servidor resuelve
+// los marcadores al enviar.
+
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";

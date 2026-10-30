@@ -190,6 +190,9 @@ export type InteraccionEntrante = {
   chatEnLlamada?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
+  // MOCK: los datos del cliente están escritos en cada entrante de ejemplo.
+  // REAL: los obtiene olimpo-api con GetCustomer, filtrados por el permiso Ver de la ficha del
+  // grupo de trabajo del agente, y llegan al front vía hermes-worker; este campo desaparece.
   /**
    * Datos conocidos del cliente, con las claves de las variables de plantilla
    * (cliente.nombre…). Lo que no está acá no se puede resolver y el redactor

@@ -1,3 +1,6 @@
+// MOCK: ayuda de la sección Plantillas de mensajes.
+// REAL: igual; es contenido de documentación del front, no hay endpoint.
+
 import type { ContenidoPagina } from "@/lib/docs/tipos";
 
 // Plantillas de mensajes: catálogo, grupos, editor y uso desde Hermes.

@@ -1,3 +1,7 @@
+// MOCK: arma el documento del email para la vista previa del editor.
+// REAL: el servicio que envía el email compone el documento con el HTML y el CSS ya saneados al
+// guardar y los vuelve a sanear al enviar; este helper no se envía a ningún lado.
+
 // Arma el documento final de un email con cuerpo HTML a partir de las dos
 // partes que se cargan por separado en el editor: el HTML y el CSS. La vista
 // previa usa SIEMPRE este documento, así lo que se ve es lo que se enviaría.

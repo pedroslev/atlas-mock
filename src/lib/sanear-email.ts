@@ -1,3 +1,7 @@
+// MOCK: sanea solo para la vista previa (más iframe con sandbox vacío).
+// REAL: olimpo-api guarda el HTML/CSS ya saneado con una lista blanca equivalente y el envío del
+// email vuelve a sanear; al reemplazar variables se escapan los datos del cliente.
+
 import { esquemaDe, ESQUEMAS_ENLACE, imagenDataPermitida, decodificarEntidades } from "@/lib/esquemas-url";
 import { ETIQUETAS_VOID } from "@/lib/validar-email";
 

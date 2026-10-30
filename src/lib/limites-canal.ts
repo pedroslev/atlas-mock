@@ -1,3 +1,7 @@
+// MOCK: la tabla de límites está escrita en el front y solo avisa.
+// REAL: la tabla de límites por canal es configuración de olimpo-api y se valida al guardar la
+// plantilla y al enviar (Hermes); el front solo muestra el contador. SMS cuenta segmentos GSM-7/UCS-2.
+
 import type { CanalPlantilla } from "@/lib/mock-data";
 
 // Límites de largo de mensaje por canal, para el contador del editor de

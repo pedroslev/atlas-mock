@@ -1,5 +1,11 @@
 "use client";
 
+// MOCK: lista las plantillas del grupo de la campaña de ejemplo (datos locales) y arma la vista previa
+// en el navegador con los datos del cliente ya conocidos.
+// REAL: Hermes obtiene las plantillas de la campaña del agente (grupo de la campaña, con herencia
+// campaña←proyecto; ListAgentCampaigns) y solo las activas del canal. Los datos del cliente los
+// resuelve el backend; el front solo muestra el resultado y el marcador [NOMBRE] de lo que falta.
+
 import { useMemo } from "react";
 import { FileText, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";

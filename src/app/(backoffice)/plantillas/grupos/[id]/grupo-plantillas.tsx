@@ -1,5 +1,9 @@
 "use client";
 
+// MOCK: agregar y quitar plantillas del grupo cambia solo el estado local.
+// REAL: la pertenencia plantilla↔grupo es una relación muchos a muchos en olimpo-api; quitar una
+// plantilla del grupo no la elimina del catálogo.
+
 import { useState } from "react";
 import Link from "next/link";
 import { Plus, X, Check } from "lucide-react";

@@ -161,6 +161,10 @@ export type Campania = {
   // Plantillas de mensajes (ATLAS-1191): un grupo por campaña, igual que
   // clasificaciones y marcas, y una plantilla por defecto por canal escrito
   // que Hermes precarga al abrir la conversación.
+  // MOCK: el grupo y las plantillas por defecto de la campaña están en los datos de ejemplo.
+  // REAL: el grupo de plantillas se hereda campaña←proyecto (igual que el grupo de
+  // clasificaciones) y se entrega a Hermes con ListAgentCampaigns; la plantilla por defecto
+  // por canal debe pertenecer al grupo y ser de ese canal.
   grupoPlantillasId?: string;
   plantillaDefaultChatId?: string;
   plantillaDefaultEmailId?: string;
@@ -533,7 +537,7 @@ export const campanias: Campania[] = [
     grupoBookmarksId: "bg-cobranzas",
     grupoPlantillasId: "pg-cobranzas",
     plantillaDefaultChatId: "pl-saludo",
-    plantillaDefaultEmailId: "pl-saludo",
+    plantillaDefaultEmailId: "pl-propuesta",
     feriadosId: "fer-ar",
     listaExclusionId: "dnc-1",
     outboundAccountIds: ["acc-1"],
@@ -879,6 +883,10 @@ export const marcadorGrupos: MarcadorGrupo[] = [
   { id: "bg-general", nombre: "General", marcadorIds: ["mk-3"] },
 ];
 
+// MOCK: plantillas de ejemplo en memoria (incluye un email HTML+CSS de muestra y uno de prueba de
+// validación que NO debe usarse).
+// REAL: tabla message_templates de olimpo-api (por tenant): nombre, descripción, activa, canales,
+// asunto (email), body_format, contenido, css (email) y adjuntos. El HTML se guarda ya saneado.
 export const plantillas: Plantilla[] = [
   {
     id: "pl-saludo",
@@ -1001,6 +1009,8 @@ export const plantillas: Plantilla[] = [
   },
 ];
 
+// MOCK: grupos de ejemplo con sus plantillas por id.
+// REAL: tabla message_template_groups y su relación muchos a muchos con las plantillas, en olimpo-api.
 export const plantillaGrupos: PlantillaGrupo[] = [
   {
     id: "pg-cobranzas",

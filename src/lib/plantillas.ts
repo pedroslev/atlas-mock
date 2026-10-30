@@ -1,3 +1,9 @@
+// MOCK: el catálogo de variables y sus valores de ejemplo salen de datos locales; resolver las
+// variables y los marcadores [NOMBRE] se hace en el navegador.
+// REAL: el backend resuelve las variables al enviar con los datos reales: cliente = GetCustomer
+// (olimpo-api) filtrado por el permiso Ver de la ficha del grupo de trabajo, vía hermes-worker;
+// campaña y asesor de su contexto. Lo que no se puede resolver llega al front como faltante.
+
 import {
   agentes,
   gruposTrabajo,
