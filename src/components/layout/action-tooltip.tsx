@@ -33,7 +33,7 @@ export function ActionTooltip({
 }) {
   const isMac = useIsMac();
   const activos = useAtajosActivos();
-  const teclas = atajo && activos ? [ATAJOS[atajo].etiqueta(isMac)] : shortcut;
+  const teclas = atajo && activos ? [ATAJOS[atajo].etiqueta(isMac), ...(shortcut ?? [])] : shortcut;
   return (
     <Tooltip>
       {/* Solo si hay atajo: un undefined acá pisaría el del Button de adentro. */}

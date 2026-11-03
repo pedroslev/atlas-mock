@@ -4,7 +4,7 @@ import { etiquetaAtender, etiquetaRechazar } from "@/lib/pad-mock/use-atajos-ent
 // Hermes para confirmar y descartar, y Ctrl/Cmd+Alt+letra para el resto (la
 // familia que Hermes usa para no chocar con el navegador). Quedan afuera a
 // propósito las letras que Chrome o macOS ya usan con Cmd+Alt (B, C, D, F, H, I,
-// J, M, U y W) y los signos que cambian de lugar según el teclado.
+// J, M, U y W) y los signos que cambian de lugar según el teclado (el punto y la coma, no).
 // Una misma combinación puede repetirse en pantallas distintas si nunca conviven
 // (Cmd+Alt+S descarga errores en el importador y abre filtros en un listado).
 // - `enCampo`: funciona con el foco en un campo de texto.

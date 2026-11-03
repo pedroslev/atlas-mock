@@ -55,10 +55,12 @@ function filaDe(el: HTMLElement) {
   return el.closest("tr, li, [data-fila]") ?? el.parentElement;
 }
 
-// Con un modal abierto solo vale lo que está adentro de él. Un menú o un
-// desplegable abiertos se quedan con el teclado.
+// Con un modal abierto solo vale lo que está adentro de él. Un menú, un
+// desplegable o el tour abiertos se quedan con el teclado.
 function capaActiva(): ParentNode | null {
-  const desplegables = document.querySelectorAll<HTMLElement>('[role="menu"], [role="listbox"]');
+  const desplegables = document.querySelectorAll<HTMLElement>(
+    '[role="menu"], [role="listbox"], .driver-popover',
+  );
   if (Array.from(desplegables).some(visible)) return null;
   const capas = document.querySelectorAll(
     '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-capa-atajos]',
@@ -81,7 +83,11 @@ function activar(boton: HTMLElement) {
 
 // Qué botón responde. Si se repite en la pantalla, el más cercano al foco; si
 // el foco no define uno solo, ninguno: nunca se elige al azar.
-function resolver(nombre: NombreAtajo, capa: ParentNode, activo: Element | null) {
+function resolver(nombre: NombreAtajo, capa: ParentNode, enfocado: Element | null) {
+  // Un nodo del flujo seleccionado tiene el foco afuera de su fila.
+  const activo = enfocado?.matches(".react-flow__node")
+    ? enfocado.querySelector("[data-fila]")
+    : enfocado;
   const candidatos = Array.from(
     capa.querySelectorAll<HTMLElement>(`[data-atajo="${nombre}"]`),
   ).filter(visible);
@@ -100,7 +106,7 @@ function resolver(nombre: NombreAtajo, capa: ParentNode, activo: Element | null)
   const resto = candidatos.filter((b) => !b.hasAttribute("data-atajo-fila"));
   if (resto.length <= 1) return resto[0] ?? null;
 
-  for (let el = activo?.parentElement; el; el = el.parentElement) {
+  for (let el = activo as Element | null; el; el = el.parentElement) {
     const cercanos = resto.filter((b) => el!.contains(b));
     if (cercanos.length === 1) return cercanos[0];
     if (cercanos.length > 1) return null;

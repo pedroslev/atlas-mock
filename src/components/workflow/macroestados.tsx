@@ -145,7 +145,11 @@ function NodoMacroestado({
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
-                if (e.key === "Escape") setEditando(false);
+                if (e.key === "Escape") {
+                  // El flujo en pantalla completa no debe salir con este Esc.
+                  e.preventDefault();
+                  setEditando(false);
+                }
               }}
             />
           ) : (

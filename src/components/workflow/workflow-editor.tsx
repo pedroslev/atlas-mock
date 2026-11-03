@@ -757,11 +757,13 @@ export function WorkflowEditor({
   useEffect(() => {
     if (!fullscreen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFullscreen(false);
+      // Primero se cierra lo que esté abierto arriba del lienzo: un modal, un
+      // desplegable, el cambio de título o una conexión a medio hacer.
+      if (e.key === "Escape" && !e.defaultPrevented && !pendiente) setFullscreen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [fullscreen]);
+  }, [fullscreen, pendiente]);
 
   const conFueraDeHorario = useMemo(() => nodosConFueraDeHorario(nodes, edges), [nodes, edges]);
 
@@ -1051,12 +1053,8 @@ export function WorkflowEditor({
                   : "cuentas.flujo.pantallaCompleta"
               )}
               shortcut={fullscreen ? ["Esc"] : undefined}
+              atajo="pantallaCompleta"
             >
-              <ActionTooltip label={t(
-                  fullscreen
-                    ? "cuentas.flujo.salirPantallaCompleta"
-                    : "cuentas.flujo.pantallaCompleta"
-                )} atajo="pantallaCompleta">
               <Button
                 type="button"
                 variant="outline"
@@ -1071,7 +1069,6 @@ export function WorkflowEditor({
               >
                 {fullscreen ? <Minimize2 /> : <Maximize2 />}
               </Button>
-              </ActionTooltip>
             </ActionTooltip>
           </Panel>
         </ReactFlow>
