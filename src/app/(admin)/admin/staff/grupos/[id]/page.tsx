@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
 import { PermissionGroupEditor } from "@/components/admin/staff/permission-group-editor";
-import { getGroup, permissionGroups } from "@/lib/mock-staff";
+import { seedGroups } from "@/lib/mock-staff";
 
+// Solo se pre-generan los grupos de ejemplo; los creados en la sesión se
+// resuelven al pedirlos y el editor los lee del store en memoria.
 export function generateStaticParams() {
-  return permissionGroups.map((g) => ({ id: g.id }));
+  return seedGroups.map((g) => ({ id: g.id }));
 }
 
 export default async function EditarGrupoPage({
@@ -12,6 +13,5 @@ export default async function EditarGrupoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!getGroup(id)) notFound();
   return <PermissionGroupEditor groupId={id} />;
 }

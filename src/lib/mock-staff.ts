@@ -102,6 +102,8 @@ export function withImpliedRead(keys: Iterable<string>): Set<string> {
 export type ClusterScope = "all" | string[];
 
 // --- grupos de permisos --------------------------------------------------
+// Son la SEMILLA del store en memoria (lib/staff-store.ts): ahí se crean,
+// editan y borran; este archivo no se muta.
 export type PermissionGroup = {
   id: string;
   name: string;
@@ -119,7 +121,7 @@ const soporte = [
   "zeus.impersonation.execute",
 ];
 
-export const permissionGroups: PermissionGroup[] = [
+export const seedGroups: PermissionGroup[] = [
   {
     id: "grp-admin",
     name: "Administrador de Zeus",
@@ -164,10 +166,6 @@ export const permissionGroups: PermissionGroup[] = [
   },
 ];
 
-export function getGroup(id: string): PermissionGroup | undefined {
-  return permissionGroups.find((g) => g.id === id);
-}
-
 // --- personas del directorio y su estado en Zeus -------------------------
 export type StaffStatus =
   | "no-habilitado"
@@ -202,7 +200,7 @@ export type StaffUser = {
 
 const SYNC = "03/11/2026 06:00";
 
-export const directoryUsers: StaffUser[] = [
+export const seedUsers: StaffUser[] = [
   { directoryId: "ldap-1001", name: "Marcela Ibáñez", email: "marcela.ibanez@mitrol.net", status: "activo", groupIds: ["grp-admin"], extraPermissions: [], scope: "all", lastSync: SYNC },
   { directoryId: "ldap-1002", name: "Federico Castaño", email: "federico.castano@mitrol.net", status: "activo", groupIds: ["grp-soporte"], extraPermissions: [], scope: "all", lastSync: SYNC },
   { directoryId: "ldap-1003", name: "Lucía Benítez", email: "lucia.benitez@mitrol.net", status: "activo", groupIds: ["grp-soporte-tel"], extraPermissions: [], scope: ["region-ar"], lastSync: SYNC },
@@ -216,10 +214,6 @@ export const directoryUsers: StaffUser[] = [
   { directoryId: "ldap-1011", name: "Rocío Ferreyra", email: "rocio.ferreyra@mitrol.net", status: "deshabilitado-baja", groupIds: ["grp-soporte"], extraPermissions: [], scope: "all", lastSync: "30/10/2026 06:00" },
   { directoryId: "ldap-1012", name: "Matías Villalba", email: "matias.villalba@mitrol.net", status: "deshabilitado-baja", groupIds: ["grp-ventas"], extraPermissions: [], scope: "all", lastSync: "27/10/2026 06:00" },
 ];
-
-export function getStaffUser(directoryId: string): StaffUser | undefined {
-  return directoryUsers.find((u) => u.directoryId === directoryId);
-}
 
 // --- permisos efectivos --------------------------------------------------
 export type EffectivePermissions = {
@@ -235,12 +229,13 @@ export type EffectivePermissions = {
  * REAL: `zeus-api` calcula lo mismo y es la única fuente de autorización.
  */
 export function effectivePermissions(
+  groups: PermissionGroup[],
   groupIds: string[],
   extras: string[],
   scope: ClusterScope,
 ): EffectivePermissions {
   const fromGroups = new Set(
-    groupIds.flatMap((id) => getGroup(id)?.permissions ?? []),
+    groupIds.flatMap((id) => groups.find((g) => g.id === id)?.permissions ?? []),
   );
   const all = withImpliedRead([...fromGroups, ...extras]);
   const groupsFull = withImpliedRead(fromGroups);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -10,18 +10,20 @@ import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScopeBadge } from "@/components/admin/staff/scope-badge";
-import { directoryUsers, permissionGroups, type PermissionGroup } from "@/lib/mock-staff";
+import { type PermissionGroup } from "@/lib/mock-staff";
+import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Grupos de permisos del staff: lista, alta, edición y baja.
 //
-// MOCK: la baja solo saca la fila del estado local.
-// REAL: DELETE /staff-groups/{id} en `zeus-api`; 403 sin `zeus.staff.write`.
-// Borrar un grupo se lo quita a las personas que lo tenían.
+// MOCK: lee el store en memoria (lib/staff-store.ts); borrar un grupo lo saca
+// de la lista y se lo quita a las personas que lo tenían (pide confirmación).
+// REAL: GET /staff-groups y DELETE /staff-groups/{id} en `zeus-api`; 403 sin
+// `zeus.staff.write`. La API se encarga de quitarle el grupo a cada persona.
 export default function GruposPermisosPage() {
   const t = useT();
   const router = useRouter();
-  const [groups, setGroups] = useState<PermissionGroup[]>(permissionGroups);
+  const { groups, users } = useStaffStore();
 
   const columns = useMemo<MRT_ColumnDef<PermissionGroup>[]>(
     () => [
@@ -42,7 +44,7 @@ export default function GruposPermisosPage() {
       {
         id: "personas",
         header: t("staff.grupos.col.usuarios"),
-        accessorFn: (g) => directoryUsers.filter((u) => u.groupIds.includes(g.id)).length,
+        accessorFn: (g) => users.filter((u) => u.groupIds.includes(g.id)).length,
       },
       {
         id: "alcance",
@@ -51,7 +53,7 @@ export default function GruposPermisosPage() {
         Cell: ({ row }) => <ScopeBadge scope={row.original.defaultScope} />,
       },
     ],
-    [t],
+    [t, users],
   );
 
   return (
@@ -59,7 +61,6 @@ export default function GruposPermisosPage() {
       <PageHeader
         title={t("staff.grupos.titulo")}
         description={t("staff.grupos.descripcion")}
-        backHref="/admin/staff"
         actions={
           <Button asChild data-testid="grupo-nuevo">
             <Link href="/admin/staff/grupos/nuevo">
@@ -88,8 +89,7 @@ export default function GruposPermisosPage() {
                   confirmDescription: t("staff.grupos.eliminarDescripcion", {
                     nombre: row.original.name,
                   }),
-                  onSelect: () =>
-                    setGroups((prev) => prev.filter((g) => g.id !== row.original.id)),
+                  onSelect: () => staffActions.deleteGroup(row.original.id),
                 },
               ]}
             />

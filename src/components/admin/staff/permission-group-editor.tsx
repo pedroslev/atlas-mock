@@ -19,13 +19,16 @@ import {
 } from "@/components/ui/dialog";
 import { PermissionMatrix } from "@/components/admin/staff/permission-matrix";
 import { ScopePicker } from "@/components/admin/staff/scope-picker";
-import { getGroup, withImpliedRead, type ClusterScope } from "@/lib/mock-staff";
+import { withImpliedRead, type ClusterScope } from "@/lib/mock-staff";
+import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Alta/edición de un grupo de permisos: nombre, descripción, matriz de
 // permisos por área y alcance por defecto.
 //
-// MOCK: no persiste; al guardar muestra la confirmación.
+// MOCK: crea/actualiza el grupo en el store en memoria (lib/staff-store.ts); el
+// grupo queda disponible al instante en la lista, en el alta de personas y en
+// los permisos efectivos, y se pierde al recargar la página.
 // REAL (`zeus-api`): POST /staff-groups y PUT /staff-groups/{id} con
 // { name, description, permissions, defaultScope }. Errores: 409 si el nombre
 // ya existe, 422 `unknown_permission` / `unknown_cluster`, 403 sin
@@ -33,7 +36,8 @@ import { useT } from "@/lib/i18n";
 export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const t = useT();
   const router = useRouter();
-  const group = groupId ? getGroup(groupId) : undefined;
+  const { groups } = useStaffStore();
+  const group = groupId ? groups.find((g) => g.id === groupId) : undefined;
 
   const [name, setName] = useState(group?.name ?? "");
   const [description, setDescription] = useState(group?.description ?? "");
@@ -41,7 +45,25 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const [scope, setScope] = useState<ClusterScope>(group?.defaultScope ?? "all");
   const [done, setDone] = useState(false);
 
+  // Guarda el grupo en el store (alta o edición) y abre la confirmación.
+  function guardar() {
+    const data = { name: name.trim(), description, permissions, defaultScope: scope };
+    if (group) staffActions.updateGroup(group.id, data);
+    else staffActions.createGroup(data);
+    setDone(true);
+  }
+
   const canSave = name.trim().length > 0 && permissions.length > 0;
+
+  // Un grupo creado en la sesión no existe tras recargar la página.
+  if (groupId && !group && !done) {
+    return (
+      <PageHeader
+        title={t("staff.grupos.noEncontrado")}
+        backHref="/admin/staff/grupos"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -93,7 +115,7 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
         <Button variant="outline" asChild>
           <Link href="/admin/staff/grupos">{t("staff.form.cancelar")}</Link>
         </Button>
-        <Button data-testid="grupo-guardar" disabled={!canSave} onClick={() => setDone(true)}>
+        <Button data-testid="grupo-guardar" disabled={!canSave} onClick={guardar}>
           {t(group ? "staff.grupos.form.guardar" : "staff.grupos.form.crear")}
         </Button>
       </div>

@@ -11,7 +11,11 @@ export const staff: NamespaceDict = {
     "descripcion":
       "Personas del directorio de Mitrol. Habilitá a quienes necesiten usar Zeus y asignales permisos.",
     "habilitarPersona": "Habilitar persona",
-    "gruposBoton": "Grupos de permisos",
+    "tabs.usuarios": "Usuarios",
+    "tabs.grupos": "Grupos de permisos",
+    "form.crearGrupo": "Crear grupo nuevo",
+    "form.sinGrupos": "Todavía no hay grupos. Creá uno para poder asignarlo.",
+    "grupos.noEncontrado": "El grupo ya no existe.",
 
     "col.nombre": "Nombre",
     "col.mail": "Mail",

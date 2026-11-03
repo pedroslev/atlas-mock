@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-table";
@@ -19,19 +19,19 @@ import {
 import { ScopeBadge } from "@/components/admin/staff/scope-badge";
 import { EffectivePermissionsSummary } from "@/components/admin/staff/effective-permissions";
 import {
-  directoryUsers,
   effectivePermissions,
-  getGroup,
-  permissionGroups,
   staffStatusBadge,
   type StaffUser,
 } from "@/lib/mock-staff";
+import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Usuarios del staff de Mitrol: personas traídas del directorio y su estado en
 // Zeus. Filtros por estado y por grupo, búsqueda por nombre/mail (global).
 //
-// MOCK: los datos son fijos; "Deshabilitar" cambia el estado en memoria.
+// MOCK: personas y grupos salen del store en memoria (lib/staff-store.ts), así
+// que lo que se hace en Grupos y en el editor se ve acá al instante;
+// "Deshabilitar" cambia el estado en memoria.
 // REAL (`zeus-api`): GET /staff-users devuelve las personas activas del
 // directorio LDAP de Mitrol (sincronización en solo lectura) con su estado en
 // Zeus. Si alguien deja de estar activo en el directorio, la próxima
@@ -41,11 +41,13 @@ import { useT } from "@/lib/i18n";
 export default function StaffPage() {
   const t = useT();
   const router = useRouter();
-  const [users, setUsers] = useState<StaffUser[]>(directoryUsers);
+  const { users, groups } = useStaffStore();
   const [efectivosDe, setEfectivosDe] = useState<StaffUser | null>(null);
 
   const columns = useMemo<MRT_ColumnDef<StaffUser>[]>(
-    () => [
+    () => {
+      const groupName = (id: string) => groups.find((g) => g.id === id)?.name;
+      return [
       {
         accessorKey: "name",
         header: t("staff.col.nombre"),
@@ -75,9 +77,9 @@ export default function StaffPage() {
       {
         id: "grupos",
         header: t("staff.col.grupos"),
-        accessorFn: (u) => u.groupIds.map((id) => getGroup(id)?.name).join(", "),
+        accessorFn: (u) => u.groupIds.map(groupName).join(", "),
         filterVariant: "select",
-        filterSelectOptions: permissionGroups.map((g) => g.name),
+        filterSelectOptions: groups.map((g) => g.name),
         // Un usuario puede tener varios grupos: el filtro busca dentro del texto.
         filterFn: "includesString",
         Cell: ({ row }) =>
@@ -87,7 +89,7 @@ export default function StaffPage() {
             <div className="flex flex-wrap gap-1">
               {row.original.groupIds.map((id) => (
                 <Badge key={id} variant="secondary">
-                  {getGroup(id)?.name}
+                  {groupName(id)}
                 </Badge>
               ))}
             </div>
@@ -113,15 +115,14 @@ export default function StaffPage() {
           <span className="tabular-nums text-muted-foreground">{cell.getValue<string>()}</span>
         ),
       },
-    ],
-    [t],
+    ];
+    },
+    [t, groups],
   );
 
   // Pasa a una persona a "Deshabilitado" (decisión manual de un admin).
   function deshabilitar(directoryId: string) {
-    setUsers((prev) =>
-      prev.map((u) => (u.directoryId === directoryId ? { ...u, status: "deshabilitado" } : u)),
-    );
+    staffActions.updateUser(directoryId, { status: "deshabilitado" });
   }
 
   return (
@@ -130,20 +131,12 @@ export default function StaffPage() {
         title={t("staff.titulo")}
         description={t("staff.descripcion")}
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild data-testid="staff-grupos">
-              <Link href="/admin/staff/grupos">
-                <Users />
-                {t("staff.gruposBoton")}
-              </Link>
-            </Button>
-            <Button asChild data-testid="staff-habilitar-persona">
-              <Link href="/admin/staff/habilitar">
-                <Plus />
-                {t("staff.habilitarPersona")}
-              </Link>
-            </Button>
-          </div>
+          <Button asChild data-testid="staff-habilitar-persona">
+            <Link href="/admin/staff/habilitar">
+              <Plus />
+              {t("staff.habilitarPersona")}
+            </Link>
+          </Button>
         }
       />
 
@@ -203,6 +196,7 @@ export default function StaffPage() {
           {efectivosDe && (
             <EffectivePermissionsSummary
               effective={effectivePermissions(
+                groups,
                 efectivosDe.groupIds,
                 efectivosDe.extraPermissions,
                 efectivosDe.scope,

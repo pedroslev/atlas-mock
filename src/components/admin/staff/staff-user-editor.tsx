@@ -27,20 +27,18 @@ import {
 import { PermissionMatrix } from "@/components/admin/staff/permission-matrix";
 import { ScopePicker } from "@/components/admin/staff/scope-picker";
 import { EffectivePermissionsSummary } from "@/components/admin/staff/effective-permissions";
-import {
-  directoryUsers,
-  effectivePermissions,
-  getGroup,
-  permissionGroups,
-  type ClusterScope,
-} from "@/lib/mock-staff";
+import { effectivePermissions, type ClusterScope } from "@/lib/mock-staff";
+import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Habilitar (sin `directoryId`) o editar (con `directoryId`) a una persona del
 // staff. La persona SIEMPRE se elige de la lista del directorio; el mail se
 // muestra de solo lectura.
 //
-// MOCK: no persiste; al confirmar muestra el aviso de mail enviado.
+// MOCK: lee personas y grupos del store en memoria (lib/staff-store.ts), así
+// que los grupos que se definen en "Grupos de permisos" aparecen acá al
+// instante. Al confirmar guarda en ese store (la persona pasa a Invitada) y
+// muestra el aviso de mail enviado; se pierde al recargar la página.
 // REAL (`zeus-api`):
 //  - La lista sale de la sincronización en solo lectura con el LDAP de Mitrol.
 //    La clave del usuario es el identificador inmutable del directorio, no el
@@ -58,18 +56,33 @@ export function StaffUserEditor({ directoryId }: { directoryId?: string }) {
   const router = useRouter();
   const editing = directoryId !== undefined;
   // Para habilitar solo se ofrecen personas aún no habilitadas.
-  const candidates = directoryUsers.filter((u) => u.status === "no-habilitado");
+  const { users, groups } = useStaffStore();
+  const getGroup = (id: string) => groups.find((g) => g.id === id);
+  const candidates = users.filter((u) => u.status === "no-habilitado");
   const [selectedId, setSelectedId] = useState<string | undefined>(directoryId);
-  const person = directoryUsers.find((u) => u.directoryId === selectedId);
+  const person = users.find((u) => u.directoryId === selectedId);
 
   const [groupIds, setGroupIds] = useState<string[]>(person?.groupIds ?? []);
   const [extras, setExtras] = useState<string[]>(person?.extraPermissions ?? []);
   const [scope, setScope] = useState<ClusterScope>(person?.scope ?? "all");
   const [done, setDone] = useState(false);
 
+  // Guarda en el store: al habilitar la persona pasa a Invitada (mail de alta
+  // enviado); al editar conserva su estado.
+  function confirmar() {
+    if (!person) return;
+    staffActions.updateUser(person.directoryId, {
+      groupIds,
+      extraPermissions: extras,
+      scope,
+      ...(editing ? {} : { status: "invitado" as const }),
+    });
+    setDone(true);
+  }
+
   // Permisos que ya dan los grupos elegidos: se muestran bloqueados en extras.
   const fromGroups = groupIds.flatMap((id) => getGroup(id)?.permissions ?? []);
-  const effective = effectivePermissions(groupIds, extras, scope);
+  const effective = effectivePermissions(groups, groupIds, extras, scope);
   const canSubmit = person !== undefined && groupIds.length > 0;
 
   // Alternar un grupo; al sumar el primero, el alcance arranca en el del grupo.
@@ -134,7 +147,10 @@ export function StaffUserEditor({ directoryId }: { directoryId?: string }) {
           <p className="text-sm text-muted-foreground">{t("staff.form.gruposAyuda")}</p>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {permissionGroups.map((g) => (
+          {groups.length === 0 && (
+            <p className="text-sm text-muted-foreground">{t("staff.form.sinGrupos")}</p>
+          )}
+          {groups.map((g) => (
             <div key={g.id} className="flex items-start gap-2">
               <Checkbox
                 id={`staff-grupo-${g.id}`}
@@ -148,6 +164,9 @@ export function StaffUserEditor({ directoryId }: { directoryId?: string }) {
               </Label>
             </div>
           ))}
+          <Button variant="link" asChild className="w-fit px-0" data-testid="staff-crear-grupo">
+            <Link href="/admin/staff/grupos/nuevo">{t("staff.form.crearGrupo")}</Link>
+          </Button>
         </CardContent>
       </Card>
 
@@ -190,7 +209,7 @@ export function StaffUserEditor({ directoryId }: { directoryId?: string }) {
         <Button variant="outline" asChild>
           <Link href="/admin/staff">{t("staff.form.cancelar")}</Link>
         </Button>
-        <Button data-testid="staff-confirmar" disabled={!canSubmit} onClick={() => setDone(true)}>
+        <Button data-testid="staff-confirmar" disabled={!canSubmit} onClick={confirmar}>
           {t(editing ? "staff.form.guardar" : "staff.form.habilitar")}
         </Button>
       </div>
