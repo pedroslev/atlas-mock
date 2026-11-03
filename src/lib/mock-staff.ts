@@ -17,7 +17,7 @@ import type { BadgeVariant } from "@/components/admin/badge-variant";
 export type PermissionArea = {
   /** Clave i18n del área (ver dict/staff.ts). */
   areaKey: string;
-  /** Si el alcance por cluster acota los permisos de esta área. */
+  /** Si el alcance por región acota los permisos de esta área. */
   scoped: boolean;
   permissions: { key: string; labelKey: string }[];
 };
@@ -98,9 +98,9 @@ export function withImpliedRead(keys: Iterable<string>): Set<string> {
   return result;
 }
 
-// --- alcance por cluster -------------------------------------------------
-// "all" = todos los clusters; si no, ids de `regions` (mock-admin).
-export type ClusterScope = "all" | string[];
+// --- alcance por región -------------------------------------------------
+// "all" = todas las regiones; si no, ids de `regions` (mock-admin).
+export type RegionScope = "all" | string[];
 
 // --- grupos de permisos --------------------------------------------------
 // Son la SEMILLA del store en memoria (lib/staff-store.ts): ahí se crean,
@@ -110,8 +110,8 @@ export type PermissionGroup = {
   name: string;
   description: string;
   permissions: string[];
-  /** Alcance por cluster del grupo: lo heredan todas sus personas. */
-  defaultScope: ClusterScope;
+  /** Alcance por región del grupo: lo heredan todas sus personas. */
+  defaultScope: RegionScope;
 };
 
 const readKeys = allPermissionKeys.filter((k) => k.endsWith(".read"));
@@ -214,12 +214,12 @@ export const seedUsers: StaffUser[] = [
 // --- permisos efectivos --------------------------------------------------
 export type EffectivePermissions = {
   permissions: string[];
-  scope: ClusterScope;
+  scope: RegionScope;
 };
 
 /**
  * Permisos efectivos de una persona = exactamente los de su grupo (con "editar
- * incluye ver"); el alcance por cluster es el del grupo. Sin grupo no hay nada.
+ * incluye ver"); el alcance por región es el del grupo. Sin grupo no hay nada.
  * REAL: `zeus-api` calcula lo mismo y es la única fuente de autorización.
  */
 export function effectivePermissions(

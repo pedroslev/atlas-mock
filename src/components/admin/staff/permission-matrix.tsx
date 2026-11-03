@@ -56,7 +56,7 @@ export function PermissionMatrix({
             </span>
             {area.scoped && (
               <Badge variant="outline" className="w-fit">
-                {t("staff.area.acotadaPorCluster")}
+                {t("staff.area.acotadaPorRegion")}
               </Badge>
             )}
           </div>

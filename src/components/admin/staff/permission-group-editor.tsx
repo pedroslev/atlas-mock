@@ -12,12 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PermissionMatrix } from "@/components/admin/staff/permission-matrix";
 import { ScopePicker } from "@/components/admin/staff/scope-picker";
-import { staffStatusBadge, withImpliedRead, type ClusterScope } from "@/lib/mock-staff";
+import { staffStatusBadge, withImpliedRead, type RegionScope } from "@/lib/mock-staff";
 import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Detalle de un grupo de permisos (alta y edición), misma estructura que
-// /clasificaciones/[id]: datos y alcance por cluster a la izquierda; a la
+// /clasificaciones/[id]: datos y alcance por región a la izquierda; a la
 // derecha la matriz de permisos y las personas del grupo (solo lectura).
 // Cancelar/Confirmar en el encabezado.
 //
@@ -25,11 +25,11 @@ import { useT } from "@/lib/i18n";
 // (lib/staff-store.ts), con lo que el grupo se ve al instante en la lista y en
 // el selector de grupo de la persona. Se pierde al recargar la página.
 // REAL (`zeus-api`): POST /staff-groups y PUT /staff-groups/{id} con
-// { name, description, permissions, scope }. El alcance por cluster vive solo
+// { name, description, permissions, scope }. El alcance por región vive solo
 // en el grupo y lo heredan todas sus personas; los permisos efectivos de una
 // persona son exactamente los de su grupo. La membresía no se edita acá: se
 // asigna desde la persona (PUT /staff-users/{directoryId} { groupId }).
-// Errores: 409 nombre repetido, 422 `unknown_permission` / `unknown_cluster`,
+// Errores: 409 nombre repetido, 422 `unknown_permission` / `unknown_region`,
 // 403 sin `zeus.staff.write`.
 export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const t = useT();
@@ -40,7 +40,7 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const [name, setName] = useState(group?.name ?? "");
   const [description, setDescription] = useState(group?.description ?? "");
   const [permissions, setPermissions] = useState<string[]>(group?.permissions ?? []);
-  const [scope, setScope] = useState<ClusterScope>(group?.defaultScope ?? "all");
+  const [scope, setScope] = useState<RegionScope>(group?.defaultScope ?? "all");
   // Un grupo creado en la sesión no existe tras recargar la página.
   if (groupId && !group) {
     return <PageHeader title={t("staff.grupos.noEncontrado")} backHref="/admin/staff" />;

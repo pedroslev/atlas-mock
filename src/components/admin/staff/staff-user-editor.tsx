@@ -35,7 +35,7 @@ import { useT } from "@/lib/i18n";
 // Detalle de una persona del staff (habilitar o editar), misma estructura que
 // /clasificaciones/[id]: datos a la izquierda; a la derecha el grupo de
 // permisos (selección única, obligatorio) y el resumen de solo lectura de lo
-// que da ese grupo (permisos y alcance por cluster).
+// que da ese grupo (permisos y alcance por región).
 //
 // MOCK: edita un borrador local; "Confirmar" lo guarda en el store en memoria
 // (lib/staff-store.ts) y, al habilitar, la persona pasa a Invitada y se muestra
@@ -51,7 +51,7 @@ import { useT } from "@/lib/i18n";
 //    fijar la contraseña. El mail debe terminar en @mitrol.net. Cambiar el
 //    grupo = PUT /staff-users/{directoryId} { groupId }.
 //  - Una persona tiene UN solo grupo y no hay permisos individuales: sus
-//    permisos efectivos y su alcance por cluster son los del grupo.
+//    permisos efectivos y su alcance por región son los del grupo.
 //  - Errores: 404 `directory_user_not_found`, 409 `already_enabled`, 422
 //    `group_required` (falta el grupo) / `unknown_group`, 403 sin
 //    `zeus.staff.write`.

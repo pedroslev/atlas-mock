@@ -9,7 +9,7 @@ import {
 import { useT } from "@/lib/i18n";
 
 // Resumen de solo lectura de lo que da un grupo de permisos: permisos por área
-// y alcance por cluster. Se usa en el detalle de la persona (en vivo) y en el
+// y alcance por región. Se usa en el detalle de la persona (en vivo) y en el
 // diálogo del listado.
 //
 // REAL: los permisos efectivos de una persona son exactamente los de su grupo

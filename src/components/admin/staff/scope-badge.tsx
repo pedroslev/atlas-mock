@@ -1,11 +1,11 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { ClusterScope } from "@/lib/mock-staff";
+import type { RegionScope } from "@/lib/mock-staff";
 import { useT } from "@/lib/i18n";
 
-// Rótulo del alcance: "Todos los clusters" o "N clusters".
-export function ScopeBadge({ scope }: { scope: ClusterScope }) {
+// Rótulo del alcance: "Todas las regiones" o "N regiones".
+export function ScopeBadge({ scope }: { scope: RegionScope }) {
   const t = useT();
   if (scope === "all") return <Badge variant="outline">{t("staff.alcance.todos")}</Badge>;
   return (
