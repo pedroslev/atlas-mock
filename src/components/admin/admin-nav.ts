@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Building2, Globe, Receipt, PhoneCall } from "lucide-react";
+import { Building2, Globe, Receipt, PhoneCall, ShieldCheck } from "lucide-react";
 
 export type AdminNavItem = {
   href: string;
@@ -16,4 +16,5 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin/regiones", labelKey: "admin.nav.regiones", icon: Globe },
   { href: "/admin/telefonia", labelKey: "admin.nav.telefonia", icon: PhoneCall },
   { href: "/admin/facturacion", labelKey: "admin.nav.facturacion", icon: Receipt },
+  { href: "/admin/staff", labelKey: "staff.nav", icon: ShieldCheck },
 ];
