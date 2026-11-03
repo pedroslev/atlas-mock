@@ -177,7 +177,7 @@ export function ContactosExcluidos({
           <span
             hidden
             data-valor-vigilado={JSON.stringify(
-              [...contactos].sort((a, b) => a.id.localeCompare(b.id))
+              contactos.map((c) => `${c.contacto}|${c.tipo}`).sort()
             )}
           />
           <div className="relative">
