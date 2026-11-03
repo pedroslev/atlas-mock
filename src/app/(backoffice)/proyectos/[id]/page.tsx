@@ -77,7 +77,7 @@ export default async function EditarProyectoPage({
               <T k="proyectos.acciones.crearFeriados" />
             </Link>
           </Button>
-          <Button atajo="agregar" variant="outline" size="sm" asChild>
+          <Button atajo="terceraAlta" variant="outline" size="sm" asChild>
             <Link href="/clasificaciones">
               <Plus />
               <T k="proyectos.acciones.crearClasificaciones" />

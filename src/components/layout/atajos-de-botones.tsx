@@ -61,9 +61,22 @@ function capaActiva(): ParentNode | null {
   const desplegables = document.querySelectorAll<HTMLElement>('[role="menu"], [role="listbox"]');
   if (Array.from(desplegables).some(visible)) return null;
   const capas = document.querySelectorAll(
-    '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+    '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-capa-atajos]',
   );
   return capas.length > 0 ? capas[capas.length - 1] : document;
+}
+
+function escPropio() {
+  const zonas = document.querySelectorAll<HTMLElement>("[data-esc-propio]");
+  return Array.from(zonas).some(visible);
+}
+
+// Los menús desplegables abren con pointerdown y no con clic.
+function activar(boton: HTMLElement) {
+  if (boton.getAttribute("aria-haspopup") === "menu") {
+    boton.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+  }
+  boton.click();
 }
 
 // Qué botón responde. Si se repite en la pantalla, el más cercano al foco; si
@@ -74,7 +87,14 @@ function resolver(nombre: NombreAtajo, capa: ParentNode, activo: Element | null)
   ).filter(visible);
 
   const deFila = candidatos.filter((b) => b.hasAttribute("data-atajo-fila"));
-  const enFoco = activo && deFila.find((b) => filaDe(b)?.contains(activo));
+  // Una fila puede estar dentro de otra (una opción dentro de un nodo del
+  // flujo): responde la más interna.
+  let enFoco: HTMLElement | null = null;
+  for (const b of deFila) {
+    const fila = filaDe(b);
+    if (!activo || !fila?.contains(activo)) continue;
+    if (!enFoco || filaDe(enFoco)?.contains(fila)) enFoco = b;
+  }
   if (enFoco) return enFoco;
 
   const resto = candidatos.filter((b) => !b.hasAttribute("data-atajo-fila"));
@@ -104,8 +124,9 @@ export function AtajosDeBotones({ children }: { children: ReactNode }) {
       for (const [nombre, atajo] of Object.entries(ATAJOS) as [NombreAtajo, DefinicionAtajo][]) {
         if (!coincide(e, atajo)) continue;
         if (atajo.soloEnCampo ? !enCampo : enCampo && !atajo.enCampo) continue;
-        // Esc en un modal lo resuelve el propio modal.
-        if (nombre === "cancelar" && capa !== document) continue;
+        // Esc en un modal lo resuelve el propio modal, y en el editor de flujo,
+        // el flujo: cancela lo que se está haciendo, no sale de la pantalla.
+        if (nombre === "cancelar" && (capa !== document || escPropio())) continue;
 
         const boton = resolver(nombre, capa, activo);
         if (!boton) continue;
@@ -113,7 +134,7 @@ export function AtajosDeBotones({ children }: { children: ReactNode }) {
         // Antes que los atajos del navegador y del resto de la app (Cmd+B del
         // menú lateral, Cmd+K del buscador) cuando el botón es el que responde.
         e.stopImmediatePropagation();
-        if (habilitado(boton)) boton.click();
+        if (habilitado(boton)) activar(boton);
         return;
       }
     }

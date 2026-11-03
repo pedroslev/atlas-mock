@@ -66,7 +66,7 @@ export default function CampaniasPage() {
               <FolderKanban className="size-4 text-secondary" />
               {nombre}
               {proyecto && (
-                <ActionTooltip label={t("campanias.editarProyecto")}>
+                <ActionTooltip label={t("campanias.editarProyecto")} atajo="ver" fila>
                   <Link
                     href={`/proyectos/${proyecto.id}`}
                     aria-label={t("campanias.editarProyectoAria", { nombre })}

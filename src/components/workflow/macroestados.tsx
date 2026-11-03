@@ -381,7 +381,7 @@ function SubirArchivo({
         }}
       />
       {nombre && (
-        <span className="flex items-center gap-1.5 text-sm">
+        <span data-fila className="flex items-center gap-1.5 text-sm">
           {esImagen && url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="" className="size-8 shrink-0 rounded object-cover" />
@@ -447,7 +447,7 @@ function OpcionesEditor({
   return (
     <div className="flex flex-col gap-1.5" data-testid={`play-${nodoId}-${clave}`}>
       {opciones.map((o, i) => (
-        <div key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
+        <div data-fila key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
           <div className="flex items-center gap-1">
             <span
               className="w-8 shrink-0 text-center text-xs font-medium tabular-nums text-muted-foreground"
@@ -735,7 +735,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                 tarjetas: (data.tarjetas ?? []).map((x, j) => (j === i ? { ...x, ...parche } : x)),
               });
             return (
-              <div key={i} className="flex flex-col gap-1.5 rounded-md border p-2">
+              <div data-fila key={i} className="flex flex-col gap-1.5 rounded-md border p-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
                     {t("cuentas.flujo.play.tarjeta")} {i + 1}
@@ -1250,7 +1250,7 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
 
       <span className="text-xs font-medium">{t("cuentas.flujo.case.opciones")}</span>
       {opciones.map((o, i) => (
-        <div key={o.id} className="flex items-center gap-1.5">
+        <div data-fila key={o.id} className="flex items-center gap-1.5">
           <Input
             aria-label={`${t("cuentas.flujo.case.opcion")} ${i + 1}`}
             className="h-7"
@@ -1415,7 +1415,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
 
       <span className="text-xs font-medium">{t("cuentas.flujo.http.encabezados")}</span>
       {encabezados.map((h) => (
-        <div key={h.id} className="flex items-center gap-1.5">
+        <div data-fila key={h.id} className="flex items-center gap-1.5">
           <Input
             aria-label={t("cuentas.flujo.http.encabezadoNombre")}
             className="h-7 font-mono text-xs"
@@ -1540,7 +1540,7 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
       }
     >
       {asignaciones.map((a, i) => (
-        <div key={a.id} className="flex flex-col gap-1 rounded-lg border border-border p-2">
+        <div data-fila key={a.id} className="flex flex-col gap-1 rounded-lg border border-border p-2">
           <div className="flex items-center gap-1.5">
             <Input
               aria-label={`${t("cuentas.flujo.calcular.variable")} ${i + 1}`}

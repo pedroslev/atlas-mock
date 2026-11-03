@@ -3,8 +3,8 @@ import { etiquetaAtender, etiquetaRechazar } from "@/lib/pad-mock/use-atajos-ent
 // Lista común de atajos de los botones de Olimpo: mismas combinaciones que
 // Hermes para confirmar y descartar, y Ctrl/Cmd+Alt+letra para el resto (la
 // familia que Hermes usa para no chocar con el navegador). Quedan afuera a
-// propósito las letras que Chrome o macOS ya usan con Cmd+Alt: B, C, D, F, H,
-// I, J, M, P, U y W.
+// propósito las letras que Chrome o macOS ya usan con Cmd+Alt (B, C, D, F, H, I,
+// J, M, U y W) y los signos que cambian de lugar según el teclado.
 // Una misma combinación puede repetirse en pantallas distintas si nunca conviven
 // (Cmd+Alt+S descarga errores en el importador y abre filtros en un listado).
 // - `enCampo`: funciona con el foco en un campo de texto.
@@ -69,8 +69,8 @@ export const ATAJOS = {
   enlace: formato("K"),
   // Botones únicos
   acciones: { ...letra("."), code: "Period" },
-  acercar: { ...letra("="), code: "Equal" },
-  alejar: { ...letra("-"), code: "Minus" },
+  acercar: letra("G"),
+  alejar: letra("S"),
   aplicaciones: letra("O"),
   archivo: letra("R"),
   centrar: letra("0"),
@@ -88,11 +88,13 @@ export const ATAJOS = {
   importar: letra("K"),
   limpiar: letra("Z"),
   ordenar: letra("7"),
+  paleta: letra("N"),
   pantallaCompleta: letra("X"),
   probar: letra("T"),
   tema: letra("3"),
   tildar: letra("8"),
-  tour: { ...letra("/"), code: "Slash" },
+  terceraAlta: letra("E"),
+  tour: letra("P"),
   variable: letra("V"),
   ver: letra("9"),
   vistaEscritorio: letra("1"),

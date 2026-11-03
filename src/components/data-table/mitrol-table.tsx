@@ -211,8 +211,8 @@ export function MitrolTable<T extends MRT_RowData>({
         )}
       </>
     ),
-    muiExpandButtonProps: conAtajo("contraerNodo", localizacion.expand ?? "", true),
-    muiExpandAllButtonProps: conAtajo("contraer", localizacion.expandAll ?? ""),
+    muiExpandButtonProps: conAtajo("contraerNodo", `${localizacion.expand} / ${localizacion.collapse}`, true),
+    muiExpandAllButtonProps: conAtajo("contraer", `${localizacion.expandAll} / ${localizacion.collapseAll}`),
     localization: MRT_LOCALIZATION[locale],
     enableDensityToggle: false,
     enableFullScreenToggle: false,

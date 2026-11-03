@@ -869,6 +869,8 @@ export function WorkflowEditor({
 
   return (
     <div
+      data-esc-propio
+      {...(fullscreen ? { "data-capa-atajos": "" } : {})}
       className={cn(
         "flex flex-col",
         fullscreen && "fixed inset-0 z-50 bg-background p-4",
@@ -991,7 +993,7 @@ export function WorkflowEditor({
                   <span className="text-xs font-medium text-muted-foreground">
                     {t("cuentas.flujo.macroestados")}
                   </span>
-                  <ActionTooltip label={t("cuentas.flujo.paleta.ocultar")} atajo="agregar">
+                  <ActionTooltip label={t("cuentas.flujo.paleta.ocultar")} atajo="paleta">
                     <Button
                       type="button"
                       variant="ghost"
@@ -1024,7 +1026,7 @@ export function WorkflowEditor({
                 })}
               </div>
             ) : (
-              <ActionTooltip label={t("cuentas.flujo.paleta.mostrar")} atajo="agregar">
+              <ActionTooltip label={t("cuentas.flujo.paleta.mostrar")} atajo="paleta">
                 <Button
                   type="button"
                   variant="outline"
