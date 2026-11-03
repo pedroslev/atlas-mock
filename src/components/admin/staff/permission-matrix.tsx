@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { permissionCatalog } from "@/lib/mock-staff";
 import { useT } from "@/lib/i18n";
 
-// Matriz de permisos agrupada por área, con una casilla por permiso. La usan el
-// editor de grupos y el de usuarios (permisos extra).
+// Matriz de permisos agrupada por área, con una casilla por permiso. La usa el
+// editor de grupos: los permisos solo se asignan a grupos, nunca a una persona.
 //
 // MOCK: las reglas "editar incluye ver" se aplican acá, en el cliente.
 // REAL: `zeus-api` valida el catálogo: un permiso desconocido responde 422
