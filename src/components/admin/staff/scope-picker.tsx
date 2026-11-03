@@ -35,7 +35,7 @@ export function ScopePicker({
           onCheckedChange={(c) => onChange(c ? "all" : [regions[0].id])}
         />
         <Label htmlFor={`${testIdPrefix}-todos`}>
-          {t("staff.form.todosClusters")}
+          {t("staff.alcance.todos")}
         </Label>
       </div>
       {!todos && (
