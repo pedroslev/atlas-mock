@@ -10,7 +10,8 @@ import { useT } from "@/lib/i18n";
 // Selector de alcance por región: "Todas las regiones" o una lista de
 // regiones (reusa el selector de regiones de Telefonía).
 //
-// REAL: `zeus-api` rechaza con 422 (`unknown_region`) una región que no
+// REAL: "Todas las regiones" se guarda como `region_scope` NULL (incluye las regiones
+// que se den de alta después); una lista se guarda como ids de `regions`. `zeus-api` rechaza con 422 (`unknown_region`) una región que no
 // exista en `regions`; el alcance solo acota Clientes, Telefonía y Facturación.
 export function ScopePicker({
   value,

@@ -99,7 +99,10 @@ export function withImpliedRead(keys: Iterable<string>): Set<string> {
 }
 
 // --- alcance por región -------------------------------------------------
-// "all" = todas las regiones; si no, ids de `regions` (mock-admin).
+// MOCK: "all" = todas las regiones; si no, ids de `regions` (mock-admin).
+// REAL: en `zeus-api` el alcance es `permission_groups.region_scope`: NULL = todas
+// las regiones, incluidas las que se den de alta después; con valor, la lista de
+// `regions.id` (una región nueva no entra sola en una lista).
 export type RegionScope = "all" | string[];
 
 // --- grupos de permisos --------------------------------------------------
