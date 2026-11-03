@@ -278,7 +278,11 @@ function Detalle({ clave }: { clave: ClaveApi }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.acciones.cancelar")}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => revocar(clave.id)}>
+            <AlertDialogAction
+              data-guarda-cambios
+              variant="destructive"
+              onClick={() => revocar(clave.id)}
+            >
               {t("clavesApi.revocar")}
             </AlertDialogAction>
           </AlertDialogFooter>

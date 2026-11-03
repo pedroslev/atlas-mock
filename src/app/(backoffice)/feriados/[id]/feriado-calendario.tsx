@@ -139,7 +139,9 @@ export function FeriadoCalendario({
   return (
     <>
     {/* El año elegido es solo una vista: lo que cuenta son las fechas marcadas. */}
-    <span hidden data-valor-vigilado={JSON.stringify(holidays)} />
+    <span hidden data-valor-vigilado={JSON.stringify(
+        [...holidays].sort((a, b) => a.date.localeCompare(b.date))
+      )} />
     <div data-no-vigilar className="grid gap-6 xl:grid-cols-[1fr_320px]">
       <Card className="min-w-0">
         <CardHeader>

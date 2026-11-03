@@ -173,6 +173,13 @@ export function ContactosExcluidos({
         </p>
       ) : (
         <>
+          {/* El buscador solo filtra la vista: lo que cuenta es la lista. */}
+          <span
+            hidden
+            data-valor-vigilado={JSON.stringify(
+              [...contactos].sort((a, b) => a.id.localeCompare(b.id))
+            )}
+          />
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -184,6 +191,7 @@ export function ContactosExcluidos({
               aria-label={t("listas.contactos.buscarAria")}
             />
           </div>
+          <div data-no-vigilar className="contents">
           {contactosFiltrados.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("listas.contactos.sinCoincidencias", { q: busqueda.trim() })}
@@ -231,6 +239,7 @@ export function ContactosExcluidos({
               </Table>
             </div>
           )}
+          </div>
         </>
       )}
     </div>

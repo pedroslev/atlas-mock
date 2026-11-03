@@ -35,6 +35,10 @@ import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 // común ni guardan de verdad.
 // REAL: "hay cambios" sale de comparar el formulario con lo último guardado, y
 // guardar bien lo actualiza. Los textos, botones, atajos y salidas son estos.
+//
+// MOCK: la flecha "atrás" se frena con una entrada extra en el historial que se
+// suma al primer toque, así que salir por un link la deja ahí.
+// REAL: frenar la navegación sin dejar entradas extra ni salir de Atlas.
 
 // Pantallas que editan algo y guardan con un botón. Los listados no entran:
 // solo tienen sus modales, y esos usan DialogConAviso.
@@ -67,6 +71,8 @@ function fotoDeCampos(raiz: Element): string {
 }
 
 function pantallaAnterior(pathname: string) {
+  // /plantillas/catalogo y /plantillas/grupos no son pantallas.
+  if (pathname.startsWith("/plantillas/")) return "/plantillas";
   return pathname.split("/").slice(0, -1).join("/") || "/";
 }
 
@@ -204,6 +210,11 @@ export function AvisoCambiosProvider({ children }: { children: React.ReactNode }
       if (!hayCambios()) return;
       e.preventDefault();
       e.stopPropagation();
+      // Si el link está en un menú (Mi perfil, Cerrar sesión, selector de
+      // aplicación), lo cierra para que no quede abierto detrás del aviso.
+      if (link.closest('[role="menu"],[data-slot="popover-content"]')) {
+        link.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      }
       setSalida({ tipo: "ruta", href: url.pathname + url.search + url.hash });
     };
 
