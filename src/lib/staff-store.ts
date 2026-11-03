@@ -19,9 +19,14 @@ import {
 // /staff-users); la UI las pide a la API y no guarda estado propio. Borrar un
 // grupo con personas asignadas se lo quita a cada una (lo hace la API).
 
-type StaffState = { groups: PermissionGroup[]; users: StaffUser[] };
+export type StaffTab = "personas" | "grupos";
+type StaffState = {
+  groups: PermissionGroup[];
+  users: StaffUser[];
+  tab: StaffTab;
+};
 
-let state: StaffState = { groups: seedGroups, users: seedUsers };
+let state: StaffState = { groups: seedGroups, users: seedUsers, tab: "personas" };
 const listeners = new Set<() => void>();
 
 // Reemplaza el estado (siempre un objeto nuevo) y avisa a los suscriptores.
@@ -36,21 +41,36 @@ function subscribe(listener: () => void) {
 }
 
 export const staffActions = {
-  /** Crea un grupo nuevo y devuelve su id. */
-  createGroup(data: Omit<PermissionGroup, "id">): string {
-    const id = `grp-${Date.now().toString(36)}`;
-    setState({ ...state, groups: [...state.groups, { ...data, id }] });
-    return id;
-  },
-  updateGroup(id: string, data: Omit<PermissionGroup, "id">) {
+  /**
+   * Crea (sin `id`) o actualiza un grupo y deja como miembros exactamente a
+   * `memberIds`: se lo suma a quienes faltan y se lo quita a quienes sobran.
+   * Devuelve el id del grupo.
+   */
+  saveGroup(
+    id: string | undefined,
+    data: Omit<PermissionGroup, "id">,
+    memberIds: string[],
+  ): string {
+    const groupId = id ?? `grp-${Date.now().toString(36)}`;
+    const group = { ...data, id: groupId };
     setState({
       ...state,
-      groups: state.groups.map((g) => (g.id === id ? { ...data, id } : g)),
+      groups: id
+        ? state.groups.map((g) => (g.id === id ? group : g))
+        : [...state.groups, group],
+      users: state.users.map((u) => {
+        const sin = u.groupIds.filter((g) => g !== groupId);
+        return memberIds.includes(u.directoryId)
+          ? { ...u, groupIds: [...sin, groupId] }
+          : { ...u, groupIds: sin };
+      }),
     });
+    return groupId;
   },
   /** Borra el grupo y se lo quita a las personas que lo tenían. */
   deleteGroup(id: string) {
     setState({
+      ...state,
       groups: state.groups.filter((g) => g.id !== id),
       users: state.users.map((u) => ({
         ...u,
@@ -66,6 +86,10 @@ export const staffActions = {
         u.directoryId === directoryId ? { ...u, ...changes } : u,
       ),
     });
+  },
+  /** Recuerda la pestaña activa para volver a ella desde un detalle. */
+  setTab(tab: StaffTab) {
+    setState({ ...state, tab });
   },
 };
 

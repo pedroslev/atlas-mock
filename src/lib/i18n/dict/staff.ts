@@ -11,8 +11,8 @@ export const staff: NamespaceDict = {
     "descripcion":
       "Personas del directorio de Mitrol. Habilitá a quienes necesiten usar Zeus y asignales permisos.",
     "habilitarPersona": "Habilitar persona",
-    "tabs.usuarios": "Usuarios",
-    "tabs.grupos": "Grupos de permisos",
+    "tab.personas": "Personas",
+    "tab.grupos": "Grupos de permisos",
     "form.crearGrupo": "Crear grupo nuevo",
     "form.sinGrupos": "Todavía no hay grupos. Creá uno para poder asignarlo.",
     "grupos.noEncontrado": "El grupo ya no existe.",
@@ -36,7 +36,6 @@ export const staff: NamespaceDict = {
     "sinGrupos": "—",
 
     "accion.habilitar": "Habilitar",
-    "accion.editar": "Editar permisos",
     "accion.efectivos": "Ver permisos efectivos",
     "accion.deshabilitar": "Deshabilitar",
     "accion.deshabilitarDescripcion":
@@ -45,7 +44,6 @@ export const staff: NamespaceDict = {
     "habilitar.titulo": "Habilitar persona",
     "habilitar.descripcion":
       "Elegí a la persona del directorio de Mitrol y asignale permisos. Le llegará un mail para fijar su contraseña.",
-    "editar.titulo": "Permisos de {nombre}",
     "editar.descripcion":
       "Cambiá los grupos, los permisos individuales o el alcance por cluster.",
     "form.persona": "Persona del directorio",
@@ -64,15 +62,17 @@ export const staff: NamespaceDict = {
       "Limita los permisos de Clientes, Telefonía y Facturación a los clusters elegidos.",
     "form.todosClusters": "Todos los clusters",
     "form.clustersPlaceholder": "Elegir clusters",
-    "form.guardar": "Guardar cambios",
-    "form.habilitar": "Habilitar y enviar mail",
-    "form.cancelar": "Cancelar",
+    "persona.datos": "Datos de la persona",
+    "form.sinCandidatas": "No hay personas del directorio para habilitar.",
+    "form.gruposVacio": "Todavía no tiene grupos de permisos.",
+    "miembros.agregar": "Agregar",
+    "miembros.buscar": "Buscar...",
+    "miembros.quitar": "Quitar",
+    "miembros.quitarAria": "Quitar a {nombre}",
 
     "enviado.titulo": "Mail de alta enviado",
     "enviado.descripcion":
       "Le enviamos un mail a {mail} para que fije su contraseña. Hasta entonces figura como Invitada.",
-    "guardado.titulo": "Cambios guardados",
-    "guardado.descripcion": "Los permisos de {nombre} quedaron actualizados.",
     "enviado.volver": "Volver al listado",
 
     "efectivos.titulo": "Permisos efectivos",
@@ -80,7 +80,6 @@ export const staff: NamespaceDict = {
     "efectivos.sinPermisos": "Todavía no tiene permisos.",
     "efectivos.extra": "extra",
     "efectivos.alcance": "Alcance",
-    "efectivos.dialogoTitulo": "Permisos efectivos de {nombre}",
 
     "area.clientes": "Clientes",
     "area.telefonia": "Telefonía",
@@ -96,9 +95,9 @@ export const staff: NamespaceDict = {
     "perm.deshabilitar": "Dar de baja",
     "perm.ejecutar": "Impersonar",
 
-    "grupos.titulo": "Grupos de permisos",
-    "grupos.descripcion": "Conjuntos de permisos que se asignan al staff.",
     "grupos.nuevo": "Nuevo grupo",
+    "accion.editar": "Editar",
+    "efectivos.dialogoTitulo": "Permisos efectivos de {nombre}",
     "grupos.col.nombre": "Grupo",
     "grupos.col.descripcion": "Descripción",
     "grupos.col.permisos": "Permisos",
@@ -107,18 +106,14 @@ export const staff: NamespaceDict = {
     "grupos.eliminarDescripcion":
       "Se eliminará el grupo “{nombre}”. Las personas que lo tengan lo pierden.",
     "grupos.nuevoTitulo": "Nuevo grupo de permisos",
-    "grupos.nuevoDescripcion": "Definí qué puede hacer quien tenga este grupo.",
-    "grupos.editarTitulo": "Editar grupo {nombre}",
+    "grupos.subtitulo": "Qué puede hacer quien tenga este grupo y a quién se lo asignaste.",
+    "grupos.personas.titulo": "Personas del grupo",
+    "grupos.personas.descripcion": "Solo personas ya habilitadas. Quitar a alguien no lo borra ni lo deshabilita.",
+    "grupos.personas.sinDisponibles": "No hay más personas habilitadas.",
+    "grupos.personas.vacio": "Este grupo todavía no tiene personas.",
     "grupos.form.datos": "Datos del grupo",
-    "grupos.form.nombre": "Nombre",
-    "grupos.form.descripcion": "Descripción",
     "grupos.form.permisos": "Permisos",
     "grupos.form.alcance": "Alcance por defecto",
-    "grupos.form.crear": "Crear grupo",
-    "grupos.form.guardar": "Guardar grupo",
-    "grupos.form.guardadoTitulo": "Grupo guardado",
-    "grupos.form.guardadoDescripcion": "El grupo “{nombre}” quedó guardado.",
-    "grupos.form.volver": "Volver a los grupos",
   },
   en: {},
   pt: {},

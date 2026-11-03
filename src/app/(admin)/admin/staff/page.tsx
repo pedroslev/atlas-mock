@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -21,37 +21,49 @@ import { EffectivePermissionsSummary } from "@/components/admin/staff/effective-
 import {
   effectivePermissions,
   staffStatusBadge,
+  type PermissionGroup,
   type StaffUser,
 } from "@/lib/mock-staff";
-import { staffActions, useStaffStore } from "@/lib/staff-store";
+import { staffActions, useStaffStore, type StaffTab } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
-// Usuarios del staff de Mitrol: personas traídas del directorio y su estado en
-// Zeus. Filtros por estado y por grupo, búsqueda por nombre/mail (global).
+// Control de acceso del staff de Mitrol a Zeus, en una sola pantalla con dos
+// pestañas (mismo patrón que /clasificaciones): "Personas" (traídas del
+// directorio, con su estado en Zeus) y "Grupos de permisos". El alta/edición de
+// cada una es una pantalla de detalle (/admin/staff/[id], /admin/staff/grupos/[id]).
 //
 // MOCK: personas y grupos salen del store en memoria (lib/staff-store.ts), así
-// que lo que se hace en Grupos y en el editor se ve acá al instante;
-// "Deshabilitar" cambia el estado en memoria.
+// que lo que se hace en los detalles se ve acá al instante; "Deshabilitar" y
+// borrar un grupo cambian ese store (borrar un grupo se lo quita a las
+// personas). Se pierde al recargar la página.
 // REAL (`zeus-api`): GET /staff-users devuelve las personas activas del
 // directorio LDAP de Mitrol (sincronización en solo lectura) con su estado en
-// Zeus. Si alguien deja de estar activo en el directorio, la próxima
-// sincronización lo pasa a "Deshabilitado por baja en el directorio". Deshabilitar
-// = POST /staff-users/{directoryId}/disable (403 sin `zeus.staff.write`; 404 si
-// no existe). Ver también `zeus.staff.read` para listar.
+// Zeus; si alguien deja de estar activo en el directorio, la próxima
+// sincronización lo pasa a "Deshabilitado por baja en el directorio".
+// Deshabilitar = POST /staff-users/{directoryId}/disable. GET /staff-groups y
+// DELETE /staff-groups/{id} para los grupos (la API le quita el grupo a cada
+// persona). Listar requiere `zeus.staff.read`; modificar `zeus.staff.write`
+// (403 si falta); 404 si la persona o el grupo no existen.
 export default function StaffPage() {
   const t = useT();
-  const router = useRouter();
-  const { users, groups } = useStaffStore();
+  const { users, groups, tab } = useStaffStore();
   const [efectivosDe, setEfectivosDe] = useState<StaffUser | null>(null);
 
-  const columns = useMemo<MRT_ColumnDef<StaffUser>[]>(
-    () => {
-      const groupName = (id: string) => groups.find((g) => g.id === id)?.name;
-      return [
+  const columnasPersonas = useMemo<MRT_ColumnDef<StaffUser>[]>(() => {
+    const groupName = (id: string) => groups.find((g) => g.id === id)?.name;
+    return [
       {
         accessorKey: "name",
         header: t("staff.col.nombre"),
-        Cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+        Cell: ({ row }) => (
+          <Link
+            href={`/admin/staff/${row.original.directoryId}`}
+            data-testid={`staff-persona-${row.original.directoryId}`}
+            className="font-medium hover:underline"
+          >
+            {row.original.name}
+          </Link>
+        ),
       },
       {
         accessorKey: "email",
@@ -116,74 +128,164 @@ export default function StaffPage() {
         ),
       },
     ];
-    },
-    [t, groups],
-  );
+  }, [t, groups]);
 
-  // Pasa a una persona a "Deshabilitado" (decisión manual de un admin).
-  function deshabilitar(directoryId: string) {
-    staffActions.updateUser(directoryId, { status: "deshabilitado" });
-  }
+  const columnasGrupos = useMemo<MRT_ColumnDef<PermissionGroup>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: t("staff.grupos.col.nombre"),
+        Cell: ({ row }) => (
+          <Link
+            href={`/admin/staff/grupos/${row.original.id}`}
+            data-testid={`grupo-${row.original.id}`}
+            className="font-medium hover:underline"
+          >
+            {row.original.name}
+          </Link>
+        ),
+      },
+      {
+        accessorKey: "description",
+        header: t("staff.grupos.col.descripcion"),
+        Cell: ({ cell }) => (
+          <span className="text-muted-foreground">{cell.getValue<string>()}</span>
+        ),
+      },
+      {
+        id: "permisos",
+        header: t("staff.grupos.col.permisos"),
+        accessorFn: (g) => g.permissions.length,
+      },
+      {
+        id: "personas",
+        header: t("staff.grupos.col.usuarios"),
+        accessorFn: (g) => users.filter((u) => u.groupIds.includes(g.id)).length,
+      },
+      {
+        id: "alcance",
+        header: t("staff.grupos.col.alcance"),
+        enableColumnFilter: false,
+        accessorFn: (g) => (g.defaultScope === "all" ? 0 : g.defaultScope.length),
+        Cell: ({ row }) => <ScopeBadge scope={row.original.defaultScope} />,
+      },
+    ],
+    [t, users],
+  );
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t("staff.titulo")}
-        description={t("staff.descripcion")}
-        actions={
-          <Button asChild data-testid="staff-habilitar-persona">
-            <Link href="/admin/staff/habilitar">
-              <Plus />
-              {t("staff.habilitarPersona")}
-            </Link>
-          </Button>
-        }
-      />
+      <PageHeader title={t("staff.titulo")} description={t("staff.descripcion")} />
 
-      <MitrolTable
-        columns={columns}
-        data={users}
-        options={{
-          enableRowActions: true,
-          muiTableBodyRowProps: ({ row }) => ({
-            "data-testid": `staff-fila-${row.original.directoryId}`,
-            onClick: () => router.push(`/admin/staff/${row.original.directoryId}`),
-            sx: { cursor: "pointer" },
-          }),
-          renderRowActions: ({ row }) => {
-            const u = row.original;
-            const habilitable = u.status === "no-habilitado" || u.status === "deshabilitado";
-            const deshabilitable = u.status === "invitado" || u.status === "activo";
-            return (
-              <RowActions
-                actions={[
-                  // Quien fue dado de baja en el directorio no se puede volver a
-                  // habilitar desde Zeus: solo vuelve si el directorio lo reactiva.
-                  ...(habilitable
-                    ? [{ label: t("staff.accion.habilitar"), href: `/admin/staff/${u.directoryId}` }]
-                    : []),
-                  ...(u.status !== "no-habilitado"
-                    ? [{ label: t("staff.accion.efectivos"), onSelect: () => setEfectivosDe(u) }]
-                    : []),
-                  ...(deshabilitable
-                    ? [
-                        {
-                          label: t("staff.accion.deshabilitar"),
-                          destructive: true,
-                          separatorBefore: true,
-                          confirmDescription: t("staff.accion.deshabilitarDescripcion", {
-                            nombre: u.name,
-                          }),
-                          onSelect: () => deshabilitar(u.directoryId),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-            );
-          },
-        }}
-      />
+      {/* Una sola tabla por vez; la acción de alta de cada pestaña queda a la
+          derecha de la lista de tabs, como en /clasificaciones. */}
+      <Tabs
+        value={tab}
+        onValueChange={(v) => staffActions.setTab(v as StaffTab)}
+        className="gap-4"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="personas" data-testid="staff-tab-personas">
+              {t("staff.tab.personas")}
+            </TabsTrigger>
+            <TabsTrigger value="grupos" data-testid="staff-tab-grupos">
+              {t("staff.tab.grupos")}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="personas" className="contents">
+            <Button asChild data-testid="staff-habilitar-persona">
+              <Link href="/admin/staff/habilitar">
+                <Plus />
+                {t("staff.habilitarPersona")}
+              </Link>
+            </Button>
+          </TabsContent>
+          <TabsContent value="grupos" className="contents">
+            <Button asChild data-testid="grupo-nuevo">
+              <Link href="/admin/staff/grupos/nuevo">
+                <Plus />
+                {t("staff.grupos.nuevo")}
+              </Link>
+            </Button>
+          </TabsContent>
+        </div>
+
+        <TabsContent value="personas">
+          <MitrolTable
+            columns={columnasPersonas}
+            data={users}
+            options={{
+              enableRowActions: true,
+              renderRowActions: ({ row }) => {
+                const u = row.original;
+                const habilitable = u.status === "no-habilitado" || u.status === "deshabilitado";
+                const deshabilitable = u.status === "invitado" || u.status === "activo";
+                return (
+                  <RowActions
+                    actions={[
+                      // Quien fue dado de baja en el directorio no se puede volver
+                      // a habilitar desde Zeus: solo vuelve si el directorio lo reactiva.
+                      ...(habilitable
+                        ? [{ label: t("staff.accion.habilitar"), href: `/admin/staff/${u.directoryId}` }]
+                        : []),
+                      ...(u.status === "invitado" || u.status === "activo"
+                        ? [{ label: t("staff.accion.editar"), href: `/admin/staff/${u.directoryId}` }]
+                        : []),
+                      ...(u.status !== "no-habilitado"
+                        ? [{ label: t("staff.accion.efectivos"), onSelect: () => setEfectivosDe(u) }]
+                        : []),
+                      ...(deshabilitable
+                        ? [
+                            {
+                              label: t("staff.accion.deshabilitar"),
+                              destructive: true,
+                              separatorBefore: true,
+                              confirmDescription: t("staff.accion.deshabilitarDescripcion", {
+                                nombre: u.name,
+                              }),
+                              onSelect: () =>
+                                staffActions.updateUser(u.directoryId, { status: "deshabilitado" }),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                );
+              },
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="grupos">
+          <MitrolTable
+            columns={columnasGrupos}
+            data={groups}
+            options={{
+              enableRowActions: true,
+              renderRowActions: ({ row }) => (
+                <RowActions
+                  actions={[
+                    {
+                      label: t("common.acciones.editar"),
+                      href: `/admin/staff/grupos/${row.original.id}`,
+                    },
+                    {
+                      label: t("common.acciones.eliminar"),
+                      destructive: true,
+                      separatorBefore: true,
+                      confirmDescription: t("staff.grupos.eliminarDescripcion", {
+                        nombre: row.original.name,
+                      }),
+                      onSelect: () => staffActions.deleteGroup(row.original.id),
+                    },
+                  ]}
+                />
+              ),
+            }}
+          />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={efectivosDe !== null} onOpenChange={(open) => !open && setEfectivosDe(null)}>
         <DialogContent data-testid="staff-efectivos-dialogo" className="sm:max-w-2xl">
