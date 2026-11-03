@@ -105,7 +105,9 @@ export function CampaniaEditor({
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="general" className="grid gap-6 lg:grid-cols-2">
+      {/* forceMount: el nombre conserva lo escrito y sigue bloqueando Confirmar
+          aunque se pase a otra solapa. */}
+      <TabsContent value="general" forceMount className="grid gap-6 lg:grid-cols-2 data-[state=inactive]:hidden">
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader>

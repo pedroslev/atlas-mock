@@ -60,7 +60,9 @@ export function GrupoDetalleTabs({
         )}
       </TabsList>
 
-      <TabsContent value="general" className="flex flex-col gap-6">
+      {/* forceMount: el nombre conserva lo escrito y sigue bloqueando Confirmar
+          aunque se pase a otra solapa. */}
+      <TabsContent value="general" forceMount className="flex flex-col gap-6 data-[state=inactive]:hidden">
         <Card>
           <CardHeader>
             <CardTitle>

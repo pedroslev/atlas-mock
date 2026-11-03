@@ -38,7 +38,9 @@ export default function NuevaCampaniaPage({
   const t = useT();
   const { duplicar } = use(searchParams);
   const original = duplicar ? getCampania(duplicar) : undefined;
-  const nombreProyecto = original && getProyecto(original.proyectoId)?.nombre;
+  const [proyectoId, setProyectoId] = useState(original?.proyectoId);
+  // El alta común no nombra al proyecto; al duplicar, los textos de herencia siguen al elegido.
+  const proyecto = original && proyectoId ? getProyecto(proyectoId) : undefined;
   return (
     <CamposUnicos>
     <div className="flex flex-col gap-6">
@@ -81,7 +83,7 @@ export default function NuevaCampaniaPage({
                   {t("campanias.proyecto")}{" "}
                   <span className="text-destructive">*</span>
                 </Label>
-                <CampoProyecto defaultValue={original?.proyectoId} />
+                <CampoProyecto value={proyectoId} onChange={setProyectoId} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="descripcion">
@@ -128,7 +130,7 @@ export default function NuevaCampaniaPage({
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <CampaniaHerencia
-              nombreProyecto={nombreProyecto}
+              nombreProyecto={proyecto?.nombre}
               initialGrupoClasificacionId={original?.grupoClasificacionId}
               initialGrupoBookmarksId={original?.grupoBookmarksId}
               initialGrupoPlantillasId={original?.grupoPlantillasId}
@@ -140,8 +142,8 @@ export default function NuevaCampaniaPage({
             <div className="flex flex-col gap-1.5">
               <h3 className="text-sm font-medium">{t("campanias.horarios")}</h3>
               <CampaniaHorarios
-                nombreProyecto={nombreProyecto}
-                projectHours={original && getProyecto(original.proyectoId)?.businessHours}
+                nombreProyecto={proyecto?.nombre}
+                projectHours={proyecto?.businessHours}
                 initialValue={original?.businessHours}
               />
             </div>
@@ -153,16 +155,21 @@ export default function NuevaCampaniaPage({
   );
 }
 
-function CampoProyecto({ defaultValue }: { defaultValue?: string }) {
+function CampoProyecto({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange: (value: string | undefined) => void;
+}) {
   const t = useT();
-  const [proyectoId, setProyectoId] = useState(defaultValue);
-  useBloqueo("proyecto", !proyectoId);
+  useBloqueo("proyecto", !value);
   return (
     <EntityCombobox
       id="proyecto"
       items={proyectos}
-      value={proyectoId ?? ""}
-      onChange={setProyectoId}
+      value={value ?? ""}
+      onChange={onChange}
       placeholder={t("campanias.proyectoPlaceholder")}
       searchPlaceholder={t("campanias.proyectoBuscar")}
       emptyLabel={t("campanias.proyectoVacio")}

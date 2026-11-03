@@ -15,6 +15,7 @@ import { agentes, getGruposDeUsuario, gruposTrabajo } from "@/lib/mock-data";
 // salvo el email, que es único en toda la instalación y se carga nuevo.
 // MOCK: las campañas y los permisos y estados propios no se ven acá y Crear no persiste.
 // REAL: el alta recibe el usuario de origen y copia también campañas, permisos y estados.
+// La copia nace habilitada, como cualquier alta, aunque el original esté deshabilitado.
 export default function NuevoAgentePage({
   searchParams,
 }: {

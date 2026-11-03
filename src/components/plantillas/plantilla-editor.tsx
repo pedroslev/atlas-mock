@@ -235,18 +235,18 @@ export function PlantillaEditor({
   const nombresExcedidos = excedidos.map((l) => t(`plantillas.canal.${l.canal}`)).join(", ");
 
   // Guardar queda bloqueado por canales excedidos o por errores del HTML/CSS.
-  const razonBloqueo =
-    excedidos.length > 0
-      ? t("plantillas.bloqueo.limites", { canales: nombresExcedidos })
-      : errores > 0
-        ? t("plantillas.bloqueo.errores", { n: errores })
-        : null;
   const nombreRepetido = seRepite(
     nombre,
     plantillas.filter((p) => p.id !== initial?.id).map((p) => p.nombre)
   );
-  const puedeConfirmar =
-    nombre.trim() !== "" && !nombreRepetido && canales.length > 0 && razonBloqueo === null;
+  const razonBloqueo = nombreRepetido
+    ? t("common.repetido.nombre")
+    : excedidos.length > 0
+      ? t("plantillas.bloqueo.limites", { canales: nombresExcedidos })
+      : errores > 0
+        ? t("plantillas.bloqueo.errores", { n: errores })
+        : null;
+  const puedeConfirmar = nombre.trim() !== "" && canales.length > 0 && razonBloqueo === null;
 
   /** Texto de la insignia de un canal (ej. "WhatsApp 1.020 / 4.096"). */
   function textoLimite(canal: CanalPlantilla, c: ConteoCanal) {
