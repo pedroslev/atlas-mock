@@ -3,7 +3,8 @@
 // MOCK: todo vive en memoria; el directorio, los grupos y los estados son
 // ficticios y no persisten (PRODUCT.md).
 // REAL: la lista de personas la sirve `zeus-api`, que sincroniza en SOLO
-// LECTURA con el directorio LDAP de Mitrol. Zeus no escribe nunca en el
+// LECTURA con el directorio LDAP de Mitrol y trae únicamente a las personas
+// ACTIVAS del directorio en cada sincronización. Zeus no escribe nunca en el
 // directorio: solo decide a quién autoriza y con qué permisos. La clave de cada
 // persona es el identificador inmutable del directorio (`directoryId`), no el
 // mail (el mail puede cambiar).
@@ -171,15 +172,13 @@ export type StaffStatus =
   | "no-habilitado"
   | "invitado"
   | "activo"
-  | "deshabilitado"
-  | "deshabilitado-baja";
+  | "deshabilitado";
 
 export const staffStatusBadge: Record<StaffStatus, BadgeVariant> = {
   "no-habilitado": "neutral",
   invitado: "info",
   activo: "success",
   deshabilitado: "neutral",
-  "deshabilitado-baja": "warning",
 };
 
 export type StaffUser = {
@@ -211,8 +210,8 @@ export const seedUsers: StaffUser[] = [
   { directoryId: "ldap-1008", name: "Julián Arriaga", email: "julian.arriaga@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
   { directoryId: "ldap-1009", name: "Paula Sandoval", email: "paula.sandoval@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
   { directoryId: "ldap-1010", name: "Nicolás Quiroga", email: "nicolas.quiroga@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1011", name: "Rocío Ferreyra", email: "rocio.ferreyra@mitrol.net", status: "deshabilitado-baja", groupIds: ["grp-soporte"], extraPermissions: [], scope: "all", lastSync: "30/10/2026 06:00" },
-  { directoryId: "ldap-1012", name: "Matías Villalba", email: "matias.villalba@mitrol.net", status: "deshabilitado-baja", groupIds: ["grp-ventas"], extraPermissions: [], scope: "all", lastSync: "27/10/2026 06:00" },
+  { directoryId: "ldap-1011", name: "Rocío Ferreyra", email: "rocio.ferreyra@mitrol.net", status: "activo", groupIds: ["grp-soporte"], extraPermissions: [], scope: ["region-mx"], lastSync: SYNC },
+  { directoryId: "ldap-1012", name: "Matías Villalba", email: "matias.villalba@mitrol.net", status: "deshabilitado", groupIds: ["grp-ventas"], extraPermissions: [], scope: "all", lastSync: SYNC },
 ];
 
 // --- permisos efectivos --------------------------------------------------

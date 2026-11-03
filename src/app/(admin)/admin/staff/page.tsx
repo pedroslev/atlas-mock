@@ -36,10 +36,10 @@ import { useT } from "@/lib/i18n";
 // que lo que se hace en los detalles se ve acá al instante; "Deshabilitar" y
 // borrar un grupo cambian ese store (borrar un grupo se lo quita a las
 // personas). Se pierde al recargar la página.
-// REAL (`zeus-api`): GET /staff-users devuelve las personas activas del
-// directorio LDAP de Mitrol (sincronización en solo lectura) con su estado en
-// Zeus; si alguien deja de estar activo en el directorio, la próxima
-// sincronización lo pasa a "Deshabilitado por baja en el directorio".
+// REAL (`zeus-api`): GET /staff-users devuelve solo las personas ACTIVAS del
+// directorio LDAP de Mitrol en cada sincronización (solo lectura), con su
+// estado en Zeus. Quien deja de estar activo en el directorio desaparece de la
+// lista: el job de sincronización revoca su acceso en el realm `mitrol`.
 // Deshabilitar = POST /staff-users/{directoryId}/disable. GET /staff-groups y
 // DELETE /staff-groups/{id} para los grupos (la API le quita el grupo a cada
 // persona). Listar requiere `zeus.staff.read`; modificar `zeus.staff.write`
@@ -224,8 +224,6 @@ export default function StaffPage() {
                 return (
                   <RowActions
                     actions={[
-                      // Quien fue dado de baja en el directorio no se puede volver
-                      // a habilitar desde Zeus: solo vuelve si el directorio lo reactiva.
                       ...(habilitable
                         ? [{ label: t("staff.accion.habilitar"), href: `/admin/staff/${u.directoryId}` }]
                         : []),

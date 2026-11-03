@@ -51,7 +51,7 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   }
 
   const toOption = (u: (typeof users)[number]) => ({ id: u.directoryId, name: u.name, detail: u.email });
-  // Solo personas ya habilitadas (no las no habilitadas ni las dadas de baja).
+  // Solo personas ya habilitadas (no las no habilitadas ni las deshabilitadas).
   const habilitadas = users.filter((u) => u.status === "invitado" || u.status === "activo");
   const canSave = name.trim().length > 0 && permissions.length > 0;
 

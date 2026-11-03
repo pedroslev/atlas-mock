@@ -28,7 +28,6 @@ export const staff: NamespaceDict = {
     "estado.invitado": "Invitado",
     "estado.activo": "Activo",
     "estado.deshabilitado": "Deshabilitado",
-    "estado.deshabilitado-baja": "Deshabilitado por baja en el directorio",
 
     "alcance.todos": "Todos los clusters",
     "alcance.n": "{n} clusters",
