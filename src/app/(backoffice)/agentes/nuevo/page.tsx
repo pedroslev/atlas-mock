@@ -20,10 +20,10 @@ export default function NuevoAgentePage() {
         backHref="/agentes"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/agentes">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/agentes">{t("usuarios.crear")}</Link>
             </Button>
           </>

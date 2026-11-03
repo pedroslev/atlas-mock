@@ -44,7 +44,7 @@ export default function EtiquetasPage() {
         title={t("clientes.et.titulo")}
         backHref="/clientes"
         actions={
-          <Button onClick={() => setEditando("nueva")}>
+          <Button atajo="nuevo" onClick={() => setEditando("nueva")}>
             <Plus />
             {t("clientes.et.nueva")}
           </Button>

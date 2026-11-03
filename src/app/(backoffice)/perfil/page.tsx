@@ -60,7 +60,7 @@ export default function PerfilPage() {
       <PageHeader
         title={t("common.header.miPerfil")}
         description={t("perfil.descripcion")}
-        actions={<Button>{t("perfil.guardarCambios")}</Button>}
+        actions={<Button atajo="confirmar">{t("perfil.guardarCambios")}</Button>}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

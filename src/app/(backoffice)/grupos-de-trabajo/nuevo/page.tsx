@@ -26,12 +26,12 @@ export default function NuevoGrupoTrabajoPage() {
         backHref="/grupos-de-trabajo"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/grupos-de-trabajo">
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/grupos-de-trabajo">{t("grupos.crear")}</Link>
             </Button>
           </>

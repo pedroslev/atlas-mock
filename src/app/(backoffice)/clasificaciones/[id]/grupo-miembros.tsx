@@ -77,7 +77,7 @@ export function GrupoMiembros({ initialIds }: { initialIds: string[] }) {
             {t(`clasificaciones.tipo.${tipoClave(c.tipo)}`)}
           </Badge>
         </span>
-        <ActionTooltip label={t("clasificaciones.miembros.quitar")}>
+        <ActionTooltip label={t("clasificaciones.miembros.quitar")} atajo="eliminar" fila>
           <button
             type="button"
             aria-label={t("clasificaciones.miembros.quitarAria", {
@@ -105,7 +105,7 @@ export function GrupoMiembros({ initialIds }: { initialIds: string[] }) {
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline">
+            <Button atajo="agregar" variant="outline">
               <Plus />
               {t("clasificaciones.miembros.agregar")}
             </Button>

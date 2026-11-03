@@ -96,7 +96,7 @@ export function ContactosExcluidos({
         </span>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button atajo="agregar" variant="outline" size="sm">
               <Plus />
               {t("listas.contactos.agregar")}
             </Button>
@@ -143,10 +143,10 @@ export function ContactosExcluidos({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button atajo="cancelar" variant="outline" onClick={() => setDialogOpen(false)}>
                 {t("common.acciones.cancelar")}
               </Button>
-              <Button onClick={agregarContacto} disabled={!contacto.trim()}>
+              <Button atajo="confirmar" onClick={agregarContacto} disabled={!contacto.trim()}>
                 {t("common.acciones.agregar")}
               </Button>
             </DialogFooter>
@@ -195,7 +195,7 @@ export function ContactosExcluidos({
                         <Badge variant="outline">{tipoLabel(c.tipo)}</Badge>
                       </TableCell>
                       <TableCell>
-                        <ActionTooltip label={t("listas.contactos.quitar")}>
+                        <ActionTooltip label={t("listas.contactos.quitar")} atajo="eliminar" fila>
                           <button
                             type="button"
                             aria-label={t("listas.contactos.quitarAria", {

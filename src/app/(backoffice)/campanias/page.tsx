@@ -131,13 +131,13 @@ export default function CampaniasPage() {
           description={t("campanias.descripcion")}
           actions={
             <>
-              <Button variant="outline" asChild>
+              <Button atajo="nuevoSecundario" variant="outline" asChild>
                 <Link href="/proyectos/nuevo">
                   <Plus />
                   {t("campanias.nuevoProyecto")}
                 </Link>
               </Button>
-              <Button asChild data-tour="campanias-nueva">
+              <Button atajo="nuevo" asChild data-tour="campanias-nueva">
                 <Link href="/campanias/nueva">
                   <Plus />
                   {t("campanias.nuevaCampania")}

@@ -24,12 +24,12 @@ export default function NuevaListaExclusionPage() {
         backHref="/listas-de-exclusion"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/listas-de-exclusion">
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/listas-de-exclusion">{t("listas.nueva.crear")}</Link>
             </Button>
           </>

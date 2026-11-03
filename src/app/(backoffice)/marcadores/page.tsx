@@ -164,13 +164,13 @@ export default function MarcadoresPage() {
             <TabsTrigger value="pool">{t("marcas.tabs.catalogo")}</TabsTrigger>
           </TabsList>
           <TabsContent value="grupos" className="contents">
-            <Button onClick={abrirNuevoGrupo}>
+            <Button atajo="nuevoSecundario" onClick={abrirNuevoGrupo}>
               <Plus />
               {t("marcas.nuevoGrupo")}
             </Button>
           </TabsContent>
           <TabsContent value="pool" className="contents">
-            <Button
+            <Button atajo="nuevo"
               variant="outline"
               onClick={() => {
                 setEditing(null);
@@ -270,10 +270,10 @@ export default function MarcadoresPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGrupoDialogOpen(false)}>
+            <Button atajo="cancelar" variant="outline" onClick={() => setGrupoDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
+            <Button atajo="confirmar" onClick={crearGrupo} disabled={!grupoNombre.trim()}>
               {t("marcas.crearGrupo")}
             </Button>
           </DialogFooter>

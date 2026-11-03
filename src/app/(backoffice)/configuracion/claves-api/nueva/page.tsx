@@ -107,7 +107,7 @@ export default function NuevaClaveApiPage() {
           title={t("clavesApi.creada.titulo")}
           description={t("clavesApi.creada.descripcion")}
           actions={
-            <Button asChild data-testid="clave-api-listo">
+            <Button atajo="confirmar" asChild data-testid="clave-api-listo">
               <Link href="/configuracion/claves-api">{t("clavesApi.creada.listo")}</Link>
             </Button>
           }
@@ -161,10 +161,10 @@ export default function NuevaClaveApiPage() {
         backHref="/configuracion/claves-api"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/configuracion/claves-api">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button
+            <Button atajo="confirmar"
               onClick={crear}
               disabled={!valido}
               data-testid="confirmar-crear-clave-api"

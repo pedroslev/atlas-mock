@@ -42,12 +42,12 @@ export default async function EditarListaExclusionPage({
         backHref="/listas-de-exclusion"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/listas-de-exclusion">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <Button atajo="confirmar">
               <T k="common.acciones.confirmar" />
             </Button>
           </>

@@ -39,7 +39,7 @@ export function AgenteEliminar({
             : t("usuarios.eliminar.tooltip")
         }
       >
-        <Button
+        <Button atajo="eliminar"
           variant="destructive"
           disabled={habilitado}
           onClick={() => setOpen(true)}

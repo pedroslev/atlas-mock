@@ -2,6 +2,8 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { EtiquetaAtajo } from "@/components/layout/atajos-de-botones"
+import type { NombreAtajo } from "@/lib/atajos"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -46,21 +48,52 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  atajo,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    /** Atajo que dispara el botón y se muestra en él. Los botones chicos o solo de ícono lo muestran en su tooltip: ver ActionTooltip. */
+    atajo?: NombreAtajo
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const etiqueta = atajo ? (
+    <EtiquetaAtajo
+      atajo={atajo}
+      className={
+        variant === "default"
+          ? "bg-primary-foreground/15 text-primary-foreground"
+          : variant === "destructive"
+            ? "bg-destructive/10 text-destructive"
+            : undefined
+      }
+    />
+  ) : null
+  // Con asChild, la etiqueta va adentro del único hijo (el Link).
+  const hijo =
+    asChild && etiqueta && React.isValidElement<{ children?: React.ReactNode }>(children)
+      ? React.cloneElement(children, undefined, children.props.children, etiqueta)
+      : asChild
+        ? children
+        : (
+            <>
+              {children}
+              {etiqueta}
+            </>
+          )
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      data-atajo={atajo}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {hijo}
+    </Comp>
   )
 }
 

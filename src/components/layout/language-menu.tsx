@@ -21,7 +21,7 @@ export function LanguageMenu() {
 
   return (
     <DropdownMenu>
-      <ActionTooltip label={t("common.header.idioma")}>
+      <ActionTooltip label={t("common.header.idioma")} atajo="idioma">
         <DropdownMenuTrigger asChild>
           <button
             type="button"

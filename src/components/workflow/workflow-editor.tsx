@@ -379,7 +379,7 @@ function ConexionQuitable({
           )}
           style={{ transform: `translate(-50%, -50%) translate(${quitarX}px, ${quitarY}px)` }}
         >
-          <ActionTooltip label={t("cuentas.flujo.quitarConexion")}>
+          <ActionTooltip label={t("cuentas.flujo.quitarConexion")} atajo="eliminar" fila>
             <button
               type="button"
               aria-label={t("cuentas.flujo.quitarConexion")}
@@ -400,7 +400,7 @@ function ConexionQuitable({
             )}
             style={{ transform: `translate(0%, -50%) translate(${etiquetaX}px, ${etiquetaY}px)` }}
           >
-            <ActionTooltip label={t("cuentas.flujo.irAlNodo")}>
+            <ActionTooltip label={t("cuentas.flujo.irAlNodo")} atajo="ver" fila>
               <button
                 type="button"
                 aria-label={`${t("cuentas.flujo.irAlNodo")}: ${nombreDestino}`}
@@ -934,7 +934,7 @@ export function WorkflowEditor({
               confunden con los nodos que se agregan desde la paleta. Cada uno
               dice qué hace al pasar el mouse. */}
           <Controls showInteractive={false} showZoom={false} showFitView={false}>
-            <ActionTooltip label={t("cuentas.flujo.acercar")} side="right">
+            <ActionTooltip label={t("cuentas.flujo.acercar")} side="right" atajo="acercar">
               <ControlButton
                 onClick={() => flowRef.current?.zoomIn()}
                 aria-label={t("cuentas.flujo.acercar")}
@@ -943,7 +943,7 @@ export function WorkflowEditor({
                 <Plus />
               </ControlButton>
             </ActionTooltip>
-            <ActionTooltip label={t("cuentas.flujo.alejar")} side="right">
+            <ActionTooltip label={t("cuentas.flujo.alejar")} side="right" atajo="alejar">
               <ControlButton
                 onClick={() => flowRef.current?.zoomOut()}
                 aria-label={t("cuentas.flujo.alejar")}
@@ -952,7 +952,7 @@ export function WorkflowEditor({
                 <Minus />
               </ControlButton>
             </ActionTooltip>
-            <ActionTooltip label={t("cuentas.flujo.centrar")} side="right">
+            <ActionTooltip label={t("cuentas.flujo.centrar")} side="right" atajo="centrar">
               <ControlButton
                 onClick={() => flowRef.current?.fitView({ ...ENCUADRE, duration: 300 })}
                 aria-label={t("cuentas.flujo.centrar")}
@@ -961,7 +961,7 @@ export function WorkflowEditor({
                 <Scan />
               </ControlButton>
             </ActionTooltip>
-            <ActionTooltip label={t(todosContraidos ? "cuentas.flujo.expandirTodo" : "cuentas.flujo.contraerTodo")} side="right">
+            <ActionTooltip label={t(todosContraidos ? "cuentas.flujo.expandirTodo" : "cuentas.flujo.contraerTodo")} side="right" atajo="contraer">
               <ControlButton
                 onClick={toggleContraerTodo}
                 aria-label={t(todosContraidos ? "cuentas.flujo.expandirTodo" : "cuentas.flujo.contraerTodo")}
@@ -970,7 +970,7 @@ export function WorkflowEditor({
                 {todosContraidos ? <ChevronsUpDown /> : <ChevronsDownUp />}
               </ControlButton>
             </ActionTooltip>
-            <ActionTooltip label={t("cuentas.flujo.ordenarAyuda")} side="right">
+            <ActionTooltip label={t("cuentas.flujo.ordenarAyuda")} side="right" atajo="ordenar">
               <ControlButton
                 onClick={ordenarNodos}
                 aria-label={t("cuentas.flujo.ordenarAyuda")}
@@ -991,7 +991,7 @@ export function WorkflowEditor({
                   <span className="text-xs font-medium text-muted-foreground">
                     {t("cuentas.flujo.macroestados")}
                   </span>
-                  <ActionTooltip label={t("cuentas.flujo.paleta.ocultar")}>
+                  <ActionTooltip label={t("cuentas.flujo.paleta.ocultar")} atajo="agregar">
                     <Button
                       type="button"
                       variant="ghost"
@@ -1024,7 +1024,7 @@ export function WorkflowEditor({
                 })}
               </div>
             ) : (
-              <ActionTooltip label={t("cuentas.flujo.paleta.mostrar")}>
+              <ActionTooltip label={t("cuentas.flujo.paleta.mostrar")} atajo="agregar">
                 <Button
                   type="button"
                   variant="outline"
@@ -1050,6 +1050,11 @@ export function WorkflowEditor({
               )}
               shortcut={fullscreen ? ["Esc"] : undefined}
             >
+              <ActionTooltip label={t(
+                  fullscreen
+                    ? "cuentas.flujo.salirPantallaCompleta"
+                    : "cuentas.flujo.pantallaCompleta"
+                )} atajo="pantallaCompleta">
               <Button
                 type="button"
                 variant="outline"
@@ -1064,6 +1069,7 @@ export function WorkflowEditor({
               >
                 {fullscreen ? <Minimize2 /> : <Maximize2 />}
               </Button>
+              </ActionTooltip>
             </ActionTooltip>
           </Panel>
         </ReactFlow>

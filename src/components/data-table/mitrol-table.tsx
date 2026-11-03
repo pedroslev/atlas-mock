@@ -3,6 +3,8 @@
 import { useMemo, useSyncExternalStore } from "react";
 import {
   MaterialReactTable,
+  MRT_ShowHideColumnsButton,
+  MRT_ToggleFiltersButton,
   useMaterialReactTable,
   type MRT_ColumnDef,
   type MRT_RowData,
@@ -13,6 +15,9 @@ import { MRT_Localization_EN } from "material-react-table/locales/en";
 import { MRT_Localization_PT_BR } from "material-react-table/locales/pt-BR";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { useLocale, useT, type Locale } from "@/lib/i18n";
+import { ATAJOS, type NombreAtajo } from "@/lib/atajos";
+import { useIsMac } from "@/lib/pad-mock/use-is-mac";
+import { useAtajosActivos } from "@/components/layout/atajos-de-botones";
 
 // Tabla estándar del backoffice: material-react-table (feedback de producto
 // 2026-07-16 — filtros por columna, búsqueda global y paginación superiores a
@@ -173,9 +178,41 @@ export function MitrolTable<T extends MRT_RowData>({
     ...restOptions
   } = options ?? {};
 
+  // Los botones de la propia tabla no pasan por Button ni ActionTooltip: el
+  // atajo se declara acá y se muestra en el tooltip de cada uno.
+  const isMac = useIsMac();
+  const atajosActivos = useAtajosActivos();
+  const conAtajo = (atajo: NombreAtajo, nombre: string, fila = false) =>
+    atajosActivos
+      ? {
+          "data-atajo": atajo,
+          ...(fila ? { "data-atajo-fila": "" } : {}),
+          title: `${nombre} (${ATAJOS[atajo].etiqueta(isMac)})`,
+        }
+      : {};
+  const localizacion = MRT_LOCALIZATION[locale];
+
   const table = useMaterialReactTable<T>({
     columns,
     data,
+    renderToolbarInternalActions: ({ table }) => (
+      <>
+        {table.options.enableColumnFilters !== false && table.options.enableFilters !== false && (
+          <MRT_ToggleFiltersButton
+            table={table}
+            {...conAtajo("filtros", localizacion.showHideFilters ?? "")}
+          />
+        )}
+        {table.options.enableHiding !== false && (
+          <MRT_ShowHideColumnsButton
+            table={table}
+            {...conAtajo("columnas", localizacion.showHideColumns ?? "")}
+          />
+        )}
+      </>
+    ),
+    muiExpandButtonProps: conAtajo("contraerNodo", localizacion.expand ?? "", true),
+    muiExpandAllButtonProps: conAtajo("contraer", localizacion.expandAll ?? ""),
     localization: MRT_LOCALIZATION[locale],
     enableDensityToggle: false,
     enableFullScreenToggle: false,

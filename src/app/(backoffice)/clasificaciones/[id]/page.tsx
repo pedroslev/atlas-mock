@@ -30,12 +30,12 @@ export default async function GrupoClasificacionPage({
         backHref="/clasificaciones"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/clasificaciones">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/clasificaciones">
                 <T k="common.acciones.confirmar" />
               </Link>

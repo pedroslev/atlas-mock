@@ -156,7 +156,7 @@ export function ProbarConsultaHttp({
 
   return (
     <>
-      <ActionTooltip label={t("cuentas.flujo.probar")}>
+      <ActionTooltip label={t("cuentas.flujo.probar")} atajo="probar">
         <button
           type="button"
           aria-label={t("cuentas.flujo.probar")}
@@ -186,6 +186,7 @@ export function ProbarConsultaHttp({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">{t("cuentas.flujo.probar.variables")}</h3>
                 {variables.length > 0 && (
+                  <ActionTooltip label={t("cuentas.flujo.probar.limpiar")} atajo="limpiar">
                   <Button
                     type="button"
                     variant="ghost"
@@ -195,6 +196,7 @@ export function ProbarConsultaHttp({
                   >
                     {t("cuentas.flujo.probar.limpiar")}
                   </Button>
+                  </ActionTooltip>
                 )}
               </div>
               {variables.length === 0 ? (
@@ -241,6 +243,7 @@ export function ProbarConsultaHttp({
             <section className="flex flex-col gap-2" data-testid="workflow-http-resuelta">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">{t("cuentas.flujo.probar.resuelta")}</h3>
+                <ActionTooltip label={t("cuentas.flujo.probar.curl")} atajo="copiar">
                 <Button
                   type="button"
                   variant="outline"
@@ -257,6 +260,7 @@ export function ProbarConsultaHttp({
                   {curlCopiado ? <Check /> : <Copy />}
                   {curlCopiado ? t("cuentas.flujo.probar.copiado") : t("cuentas.flujo.probar.curl")}
                 </Button>
+                </ActionTooltip>
               </div>
               <pre className="max-h-48 overflow-auto rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap break-all">
                 {`${resuelta.metodo} ${resuelta.url}`}
@@ -274,7 +278,7 @@ export function ProbarConsultaHttp({
             {/* Enviar consulta ------------------------------------------------ */}
             <section className="flex flex-col gap-2">
               <p className="text-xs text-muted-foreground">{t("cuentas.flujo.probar.aviso")}</p>
-              <Button
+              <Button atajo="confirmar"
                 type="button"
                 disabled={bloqueada || enviando}
                 onClick={pedirEnvio}

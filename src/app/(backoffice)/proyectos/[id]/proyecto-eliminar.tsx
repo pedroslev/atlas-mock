@@ -70,7 +70,7 @@ export function ProyectoEliminar({
               : t("proyectos.eliminar.tooltip")
           }
         >
-          <Button
+          <Button atajo="eliminar"
             variant="destructive"
             disabled={bloqueado}
             onClick={() => setOpen(true)}

@@ -89,7 +89,7 @@ export default function FeriadosPage() {
         title={t("feriados.titulo")}
         description={t("feriados.descripcion")}
         actions={
-          <Button asChild>
+          <Button atajo="nuevo" asChild>
             <Link href="/feriados/nuevo">
               <Plus />
               {t("feriados.nuevoGrupo")}

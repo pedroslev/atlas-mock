@@ -207,14 +207,14 @@ function Detalle({ clave }: { clave: ClaveApi }) {
               <>
                 <DominiosPermitidos dominios={dominios} onChange={setDominios} />
                 <div className="flex justify-end gap-2">
-                  <Button
+                  <Button atajo="cancelar"
                     variant="outline"
                     disabled={!cambiaron}
                     onClick={() => setDominios(clave.dominiosPermitidos)}
                   >
                     {t("common.acciones.cancelar")}
                   </Button>
-                  <Button
+                  <Button atajo="confirmar"
                     disabled={!cambiaron}
                     onClick={() => actualizarDominios(clave.id, dominios)}
                     data-testid="guardar-dominios"
@@ -254,7 +254,7 @@ function Detalle({ clave }: { clave: ClaveApi }) {
               <CardDescription>{t("clavesApi.detalle.revocarDescripcion")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
+              <Button atajo="eliminar"
                 variant="destructive"
                 onClick={() => setConfirmando(true)}
                 data-testid="revocar-clave-api"

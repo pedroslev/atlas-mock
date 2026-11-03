@@ -117,7 +117,7 @@ export function CampaniaHerencia({
               searchPlaceholder={t("campanias.buscarGrupoClasificaciones")}
               emptyLabel={t("campanias.vacioGrupoClasificaciones")}
             />
-            <ActionTooltip label={t("campanias.verClasificaciones")}>
+            <ActionTooltip label={t("campanias.verClasificaciones")} atajo="ver" fila>
               <Button
                 type="button"
                 variant="outline"
@@ -143,7 +143,7 @@ export function CampaniaHerencia({
               searchPlaceholder={t("campanias.buscarGrupoMarcas")}
               emptyLabel={t("campanias.vacioGrupoMarcas")}
             />
-            <ActionTooltip label={t("campanias.verMarcas")}>
+            <ActionTooltip label={t("campanias.verMarcas")} atajo="ver" fila>
               <Button
                 type="button"
                 variant="outline"
@@ -169,7 +169,7 @@ export function CampaniaHerencia({
               searchPlaceholder={t("plantillas.campania.buscarGrupo")}
               emptyLabel={t("plantillas.campania.vacioGrupo")}
             />
-            <ActionTooltip label={t("plantillas.campania.ver")}>
+            <ActionTooltip label={t("plantillas.campania.ver")} atajo="ver" fila>
               <Button
                 type="button"
                 variant="outline"
@@ -239,7 +239,7 @@ export function CampaniaHerencia({
               searchPlaceholder={t("campanias.buscarFeriados")}
               emptyLabel={t("campanias.vacioFeriados")}
             />
-            <ActionTooltip label={t("campanias.verFeriados")}>
+            <ActionTooltip label={t("campanias.verFeriados")} atajo="ver" fila>
               <Button
                 type="button"
                 variant="outline"
@@ -267,7 +267,7 @@ export function CampaniaHerencia({
               searchPlaceholder={t("campanias.buscarListaExclusion")}
               emptyLabel={t("campanias.vacioListaExclusion")}
             />
-            <ActionTooltip label={t("campanias.verContactos")}>
+            <ActionTooltip label={t("campanias.verContactos")} atajo="ver" fila>
               <Button
                 type="button"
                 variant="outline"

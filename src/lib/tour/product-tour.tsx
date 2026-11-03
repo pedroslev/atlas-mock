@@ -47,7 +47,7 @@ export function ProductTour() {
   }, [t]);
 
   return (
-    <ActionTooltip label={t("tour.orientacion.boton.tooltip")}>
+    <ActionTooltip label={t("tour.orientacion.boton.tooltip")} atajo="tour">
       <button
         type="button"
         onClick={start}

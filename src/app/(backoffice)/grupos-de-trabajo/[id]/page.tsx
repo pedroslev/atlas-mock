@@ -26,12 +26,12 @@ export default async function EditarGrupoTrabajoPage({
         backHref="/grupos-de-trabajo"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/grupos-de-trabajo">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <Button atajo="confirmar">
               <T k="common.acciones.confirmar" />
             </Button>
           </>

@@ -254,7 +254,7 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline">
+            <Button atajo="agregar" variant="outline">
               <UserPlus />
               {t("campanias.asignarUsuario")}
             </Button>

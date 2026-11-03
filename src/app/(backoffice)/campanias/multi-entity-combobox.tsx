@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Check, ChevronsUpDown, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -126,6 +127,7 @@ export function MultiEntityCombobox({
             <Badge key={item.id} variant="outline" className="gap-1 pr-1">
               {item.icon && <item.icon className="size-3 text-secondary" />}
               {item.nombre}
+              <ActionTooltip label={t("campanias.comboQuitar", { nombre: item.nombre })} atajo="eliminar" fila>
               <button
                 type="button"
                 aria-label={t("campanias.comboQuitar", { nombre: item.nombre })}
@@ -134,6 +136,7 @@ export function MultiEntityCombobox({
               >
                 <X className="size-3" />
               </button>
+              </ActionTooltip>
             </Badge>
           ))}
         </div>

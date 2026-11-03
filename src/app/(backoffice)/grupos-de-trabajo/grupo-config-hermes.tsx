@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -231,6 +232,7 @@ export function GrupoConfigHermesTab({
                     placeholder={t("grupos.shortcuts.nombrePlaceholder")}
                   />
                 </div>
+                <ActionTooltip label={t("grupos.shortcuts.eliminar")} atajo="eliminar" fila>
                 <Button
                   type="button"
                   variant="ghost"
@@ -241,6 +243,7 @@ export function GrupoConfigHermesTab({
                 >
                   <Trash2 />
                 </Button>
+                </ActionTooltip>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -274,7 +277,7 @@ export function GrupoConfigHermesTab({
             </div>
           ))}
 
-          <Button
+          <Button atajo="agregar"
             type="button"
             variant="outline"
             className="w-fit gap-1.5"

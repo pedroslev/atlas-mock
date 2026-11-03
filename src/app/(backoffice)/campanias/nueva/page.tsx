@@ -35,10 +35,10 @@ export default function NuevaCampaniaPage() {
         backHref="/campanias"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/campanias">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/campanias">{t("campanias.crearCampania")}</Link>
             </Button>
           </>
