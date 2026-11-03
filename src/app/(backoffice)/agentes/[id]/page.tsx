@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +72,7 @@ export default async function EditarAgentePage({
   ]);
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={agente.nombre}
@@ -84,9 +85,9 @@ export default async function EditarAgentePage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <BotonConfirmar>
               <T k="common.acciones.guardar" />
-            </Button>
+            </BotonConfirmar>
           </>
         }
       />
@@ -103,13 +104,24 @@ export default async function EditarAgentePage({
               <Label htmlFor="nombre">
                 <T k="common.comunes.nombre" />
               </Label>
-              <Input id="nombre" defaultValue={agente.nombre} />
+              <CampoUnico
+                id="nombre"
+                existentes={agentes.filter((a) => a.id !== id).map((a) => a.nombre)}
+                defaultValue={agente.nombre}
+                obligatorio
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">
                 <T k="usuarios.email" />
               </Label>
-              <Input id="email" defaultValue={agente.email} />
+              <CampoUnico
+                id="email"
+                campo="email"
+                existentes={agentes.filter((a) => a.id !== id).map((a) => a.email)}
+                defaultValue={agente.email}
+                obligatorio
+              />
             </div>
             <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
               <div className="flex items-center justify-between">
@@ -215,5 +227,6 @@ export default async function EditarAgentePage({
         </CardContent>
       </Card>
     </div>
+    </CamposUnicos>
   );
 }

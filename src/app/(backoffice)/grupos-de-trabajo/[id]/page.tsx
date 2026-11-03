@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
@@ -20,6 +21,7 @@ export default async function EditarGrupoTrabajoPage({
   if (!grupo) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={grupo.nombre}
@@ -31,9 +33,9 @@ export default async function EditarGrupoTrabajoPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <BotonConfirmar>
               <T k="common.acciones.confirmar" />
-            </Button>
+            </BotonConfirmar>
           </>
         }
       />
@@ -42,7 +44,12 @@ export default async function EditarGrupoTrabajoPage({
           que van juntas acá — la info general de un grupo es liviana
           (nombre y descripción nomás, a diferencia de Campañas) así que no
           justifica solapa propia; queda al lado de sus usuarios. */}
-      <GrupoDetalleTabs grupo={grupo} agentes={agentes} />
+      <GrupoDetalleTabs
+        grupo={grupo}
+        agentes={agentes}
+        nombresExistentes={gruposTrabajo.filter((g) => g.id !== id).map((g) => g.nombre)}
+      />
     </div>
+    </CamposUnicos>
   );
 }

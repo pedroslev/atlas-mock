@@ -1,9 +1,10 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,10 +15,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useT } from "@/lib/i18n";
+import { listasExclusion } from "@/lib/mock-data";
 
-export default function NuevaListaExclusionPage() {
+// Duplicar (ATLAS-1291) abre esta misma alta con los datos de la lista original.
+// MOCK: la descripción y los contactos no se ven acá y Crear no persiste.
+// REAL: el alta recibe la lista de origen y copia también descripción y contactos.
+export default function NuevaListaExclusionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ duplicar?: string }>;
+}) {
   const t = useT();
+  const { duplicar } = use(searchParams);
+  const original = duplicar ? listasExclusion.find((l) => l.id === duplicar) : undefined;
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t("listas.nueva.titulo")}
@@ -29,9 +41,7 @@ export default function NuevaListaExclusionPage() {
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/listas-de-exclusion">{t("listas.nueva.crear")}</Link>
-            </Button>
+            <BotonConfirmar href="/listas-de-exclusion">{t("listas.nueva.crear")}</BotonConfirmar>
           </>
         }
       />
@@ -43,13 +53,19 @@ export default function NuevaListaExclusionPage() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-            <Input id="nombre" placeholder={t("listas.placeholderNombre")} />
+            <CampoUnico
+              id="nombre"
+              existentes={listasExclusion.map((l) => l.nombre)}
+              defaultValue={original?.nombre}
+              obligatorio
+              placeholder={t("listas.placeholderNombre")}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="tipo">{t("listas.col.tipo")}</Label>
             {/* `value` es el valor de dominio (ListaExclusion["tipo"]), en
                 español y sin traducir; lo que se traduce es la etiqueta. */}
-            <Select defaultValue="Exclusión de tareas">
+            <Select defaultValue={original?.tipo ?? "Exclusión de tareas"}>
               <SelectTrigger id="tipo" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -66,5 +82,6 @@ export default function NuevaListaExclusionPage() {
         </CardContent>
       </Card>
     </div>
+    </CamposUnicos>
   );
 }

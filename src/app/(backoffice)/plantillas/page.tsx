@@ -39,6 +39,8 @@ import {
   type PlantillaGrupo,
 } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
+import { MensajeRepetido } from "@/components/layout/campos-unicos";
+import { seRepite } from "@/lib/campos-unicos";
 import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
 
 function nombreSugerido(base: string, existentes: string[]) {
@@ -59,6 +61,9 @@ export default function PlantillasPage() {
   const [grupos, setGrupos] = useState<PlantillaGrupo[]>(plantillaGrupos);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
   const [grupoNombre, setGrupoNombre] = useState("");
+  // Grupo de origen al duplicar: la copia apunta a las mismas plantillas del catálogo.
+  const [grupoOrigen, setGrupoOrigen] = useState<PlantillaGrupo | null>(null);
+  const grupoRepetido = seRepite(grupoNombre, grupos.map((g) => g.nombre));
 
   const columnasGrupos = useMemo<MRT_ColumnDef<PlantillaGrupo>[]>(
     () => [
@@ -157,7 +162,14 @@ export default function PlantillasPage() {
     );
   }
 
+  function abrirDuplicarGrupo(grupo: PlantillaGrupo) {
+    setGrupoOrigen(grupo);
+    setGrupoNombre(grupo.nombre);
+    setGrupoDialogOpen(true);
+  }
+
   function abrirNuevoGrupo() {
+    setGrupoOrigen(null);
     setGrupoNombre(
       nombreSugerido(
         t("plantillas.nuevoGrupo"),
@@ -168,13 +180,14 @@ export default function PlantillasPage() {
   }
 
   function crearGrupo() {
-    if (!grupoNombre.trim()) return;
+    if (!grupoNombre.trim() || grupoRepetido) return;
     setGrupos((prev) => [
       ...prev,
       {
         id: `pg-${prev.length + 1}-${grupoNombre.trim().toLowerCase().replace(/\s+/g, "-")}`,
         nombre: grupoNombre.trim(),
-        plantillaIds: [],
+        descripcion: grupoOrigen?.descripcion,
+        plantillaIds: grupoOrigen?.plantillaIds ?? [],
       },
     ]);
     setGrupoDialogOpen(false);
@@ -223,6 +236,10 @@ export default function PlantillasPage() {
                       href: `/plantillas/grupos/${row.original.id}`,
                     },
                     {
+                      label: t("common.acciones.duplicar"),
+                      onSelect: () => abrirDuplicarGrupo(row.original),
+                    },
+                    {
                       label: t("common.acciones.eliminar"),
                       destructive: true,
                       separatorBefore: true,
@@ -251,6 +268,10 @@ export default function PlantillasPage() {
                     {
                       label: t("common.acciones.editar"),
                       href: `/plantillas/catalogo/${row.original.id}`,
+                    },
+                    {
+                      label: t("common.acciones.duplicar"),
+                      href: `/plantillas/catalogo/nueva?duplicar=${row.original.id}`,
                     },
                     {
                       label: t("common.acciones.eliminar"),
@@ -282,13 +303,15 @@ export default function PlantillasPage() {
               value={grupoNombre}
               onChange={(e) => setGrupoNombre(e.target.value)}
               autoFocus
+              aria-invalid={grupoRepetido}
             />
+            {grupoRepetido && <MensajeRepetido />}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGrupoDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
+            <Button onClick={crearGrupo} disabled={!grupoNombre.trim() || grupoRepetido}>
               {t("plantillas.crearGrupo")}
             </Button>
           </DialogFooter>

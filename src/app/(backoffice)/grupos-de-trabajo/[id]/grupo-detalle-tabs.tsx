@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -26,9 +26,11 @@ import { GrupoFichaClienteTab } from "../grupo-ficha-cliente";
 export function GrupoDetalleTabs({
   grupo,
   agentes,
+  nombresExistentes,
 }: {
   grupo: GrupoTrabajo;
   agentes: Agente[];
+  nombresExistentes: string[];
 }) {
   const [accesoHermes, setAccesoHermes] = useState(grupo.accesoHermes);
   const [tab, setTab] = useState("general");
@@ -70,7 +72,12 @@ export function GrupoDetalleTabs({
               <Label htmlFor="nombre">
                 <T k="common.comunes.nombre" />
               </Label>
-              <Input id="nombre" defaultValue={grupo.nombre} />
+              <CampoUnico
+                id="nombre"
+                existentes={nombresExistentes}
+                defaultValue={grupo.nombre}
+                obligatorio
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="descripcion">

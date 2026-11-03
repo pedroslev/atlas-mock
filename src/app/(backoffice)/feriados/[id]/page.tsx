@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { T } from "@/lib/i18n";
 import { feriados } from "@/lib/mock-data";
@@ -22,6 +22,7 @@ export default async function EditarFeriadoPage({
   if (!grupo) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={grupo.nombre}
@@ -33,11 +34,9 @@ export default async function EditarFeriadoPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/feriados">
-                <T k="common.acciones.confirmar" />
-              </Link>
-            </Button>
+            <BotonConfirmar href="/feriados">
+              <T k="common.acciones.confirmar" />
+            </BotonConfirmar>
           </>
         }
       />
@@ -46,10 +45,16 @@ export default async function EditarFeriadoPage({
         <Label htmlFor="nombre">
           <T k="feriados.nombreGrupo" />
         </Label>
-        <Input id="nombre" defaultValue={grupo.nombre} />
+        <CampoUnico
+          id="nombre"
+          existentes={feriados.filter((f) => f.id !== id).map((f) => f.nombre)}
+          defaultValue={grupo.nombre}
+          obligatorio
+        />
       </div>
 
       <FeriadoCalendario initialHolidays={grupo.holidays} />
     </div>
+    </CamposUnicos>
   );
 }

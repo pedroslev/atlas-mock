@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
@@ -23,6 +24,7 @@ export default async function GrupoClasificacionPage({
   if (!grupo) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={grupo.nombre}
@@ -35,20 +37,23 @@ export default async function GrupoClasificacionPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/clasificaciones">
-                <T k="common.acciones.confirmar" />
-              </Link>
-            </Button>
+            <BotonConfirmar href="/clasificaciones">
+              <T k="common.acciones.confirmar" />
+            </BotonConfirmar>
           </>
         }
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(280px,380px)_1fr]">
-        <DatosGrupo nombre={grupo.nombre} descripcion={grupo.descripcion} />
+        <DatosGrupo
+          nombre={grupo.nombre}
+          descripcion={grupo.descripcion}
+          existentes={clasificacionGrupos.filter((g) => g.id !== id).map((g) => g.nombre)}
+        />
 
         <GrupoMiembros initialIds={grupo.clasificacionIds} />
       </div>
     </div>
+    </CamposUnicos>
   );
 }

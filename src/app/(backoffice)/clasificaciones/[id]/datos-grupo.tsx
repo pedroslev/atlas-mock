@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +12,11 @@ import { useT } from "@/lib/i18n";
 export function DatosGrupo({
   nombre,
   descripcion,
+  existentes,
 }: {
   nombre: string;
   descripcion?: string;
+  existentes: string[];
 }) {
   const t = useT();
 
@@ -26,7 +28,7 @@ export function DatosGrupo({
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-          <Input id="nombre" defaultValue={nombre} />
+          <CampoUnico id="nombre" existentes={existentes} defaultValue={nombre} obligatorio />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="descripcion">{t("common.comunes.descripcion")}</Label>

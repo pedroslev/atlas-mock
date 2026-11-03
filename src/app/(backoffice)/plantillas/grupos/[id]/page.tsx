@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { plantillaGrupos, getPlantillaGrupo } from "@/lib/mock-data";
@@ -26,6 +27,7 @@ export default async function GrupoPlantillasPage({
   if (!grupo) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={grupo.nombre}
@@ -38,19 +40,22 @@ export default async function GrupoPlantillasPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/plantillas">
-                <T k="common.acciones.confirmar" />
-              </Link>
-            </Button>
+            <BotonConfirmar href="/plantillas">
+              <T k="common.acciones.confirmar" />
+            </BotonConfirmar>
           </>
         }
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(280px,380px)_1fr]">
-        <DatosGrupoPlantillas nombre={grupo.nombre} descripcion={grupo.descripcion} />
+        <DatosGrupoPlantillas
+          nombre={grupo.nombre}
+          descripcion={grupo.descripcion}
+          existentes={plantillaGrupos.filter((g) => g.id !== id).map((g) => g.nombre)}
+        />
         <GrupoPlantillas initialIds={grupo.plantillaIds} />
       </div>
     </div>
+    </CamposUnicos>
   );
 }

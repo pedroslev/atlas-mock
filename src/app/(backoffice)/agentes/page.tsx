@@ -136,6 +136,10 @@ export default function AgentesPage() {
                   href: `/agentes/${row.original.id}`,
                 },
                 {
+                  label: t("common.acciones.duplicar"),
+                  href: `/agentes/nuevo?duplicar=${row.original.id}`,
+                },
+                {
                   label: row.original.habilitado
                     ? t("usuarios.acciones.deshabilitar")
                     : t("usuarios.acciones.habilitar"),

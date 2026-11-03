@@ -89,7 +89,10 @@ export default function GruposDeTrabajoPage() {
                   label: t("common.acciones.editar"),
                   href: `/grupos-de-trabajo/${row.original.id}`,
                 },
-                { label: t("grupos.acciones.duplicar") },
+                {
+                  label: t("grupos.acciones.duplicar"),
+                  href: `/grupos-de-trabajo/nuevo?duplicar=${row.original.id}`,
+                },
                 {
                   label: t("common.acciones.eliminar"),
                   destructive: true,

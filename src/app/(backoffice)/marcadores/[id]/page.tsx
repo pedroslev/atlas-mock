@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { marcadorGrupos, getMarcadorGrupo } from "@/lib/mock-data";
@@ -25,6 +25,7 @@ export default async function GrupoMarcadorPage({
   if (!grupo) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={grupo.nombre}
@@ -37,11 +38,9 @@ export default async function GrupoMarcadorPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/marcadores">
-                <T k="common.acciones.confirmar" />
-              </Link>
-            </Button>
+            <BotonConfirmar href="/marcadores">
+              <T k="common.acciones.confirmar" />
+            </BotonConfirmar>
           </>
         }
       />
@@ -58,7 +57,12 @@ export default async function GrupoMarcadorPage({
               <Label htmlFor="nombre">
                 <T k="common.comunes.nombre" />
               </Label>
-              <Input id="nombre" defaultValue={grupo.nombre} />
+              <CampoUnico
+                id="nombre"
+                existentes={marcadorGrupos.filter((g) => g.id !== id).map((g) => g.nombre)}
+                defaultValue={grupo.nombre}
+                obligatorio
+              />
             </div>
           </CardContent>
         </Card>
@@ -66,5 +70,6 @@ export default async function GrupoMarcadorPage({
         <GrupoMarcadores initialIds={grupo.marcadorIds} />
       </div>
     </div>
+    </CamposUnicos>
   );
 }

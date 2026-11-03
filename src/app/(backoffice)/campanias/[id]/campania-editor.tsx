@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -75,9 +75,11 @@ function iniciales(nombre: string) {
 export function CampaniaEditor({
   campania,
   nombreProyecto,
+  nombresExistentes,
 }: {
   campania: Campania;
   nombreProyecto?: string;
+  nombresExistentes: string[];
 }) {
   const t = useT();
   // campaigns.parameters, levantado acá (no en cada solapa) porque
@@ -112,7 +114,12 @@ export function CampaniaEditor({
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-                <Input id="nombre" defaultValue={campania.nombre} />
+                <CampoUnico
+                  id="nombre"
+                  existentes={nombresExistentes}
+                  defaultValue={campania.nombre}
+                  obligatorio
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="descripcion">

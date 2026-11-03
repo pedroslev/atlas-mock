@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { EntityCombobox } from "../campanias/entity-combobox";
 import { useT } from "@/lib/i18n";
+import { MensajeRepetido } from "@/components/layout/campos-unicos";
+import { seRepite } from "@/lib/campos-unicos";
 import type { Clasificacion, Efecto } from "@/lib/mock-data";
 
 const SIN_PADRE = "__sin_padre__";
@@ -80,11 +82,13 @@ export const efectoVariant: Record<
 // Alta/edición de una clasificación como modal (feedback 2026-07-16: formularios
 // chicos no justifican una pantalla entera). La clasificación es una entidad
 // del pool del tenant, reutilizable en varios grupos — acá NO se decide a qué
-// grupo pertenece; eso se asigna desde cada grupo.
+// grupo pertenece; eso se asigna desde cada grupo. Duplicar (ATLAS-1291) abre el
+// alta con los datos de `duplicarDe`; la copia no lleva hijas ni entra en ningún grupo.
 export function ClasificacionDialog({
   open,
   onOpenChange,
   initial,
+  duplicarDe,
   pool,
   onSave,
 }: {
@@ -92,6 +96,7 @@ export function ClasificacionDialog({
   onOpenChange: (open: boolean) => void;
   /** null = crear nueva */
   initial: Clasificacion | null;
+  duplicarDe?: Clasificacion | null;
   /** Pool completo, para elegir padre (raíces, excluyéndose a sí misma). */
   pool: Clasificacion[];
   onSave: (clasificacion: Clasificacion) => void;
@@ -107,16 +112,17 @@ export function ClasificacionDialog({
   // Reset del form al abrir (patrón "adjust state during render" de React,
   // en vez de un setState dentro de un efecto).
   const [lastResetKey, setLastResetKey] = useState<string | null>(null);
-  const resetKey = open ? (initial?.id ?? "__nueva__") : null;
+  const base = initial ?? duplicarDe;
+  const resetKey = open ? (initial?.id ?? (duplicarDe ? `__duplicar-${duplicarDe.id}__` : "__nueva__")) : null;
   if (resetKey !== lastResetKey) {
     setLastResetKey(resetKey);
     if (resetKey !== null) {
-      setNombre(initial?.nombre ?? "");
-      setIdExt(initial?.idExt ?? "");
-      setTipo(initial?.tipo ?? "Neutro");
-      setParentId(initial?.parentId);
-      setEfecto(initial?.efecto ?? "Sin efecto");
-      setDescripcion(initial?.descripcion ?? "");
+      setNombre(base?.nombre ?? "");
+      setIdExt(base?.idExt ?? "");
+      setTipo(base?.tipo ?? "Neutro");
+      setParentId(base?.parentId);
+      setEfecto(base?.efecto ?? "Sin efecto");
+      setDescripcion(base?.descripcion ?? "");
     }
   }
 
@@ -124,8 +130,18 @@ export function ClasificacionDialog({
     (c) => !c.parentId && c.id !== initial?.id
   );
 
+  // El nombre se repite solo entre las que tienen el mismo padre ("Otros" puede
+  // estar bajo "Venta" y bajo "Reclamo"); el ID externo, en todo el catálogo.
+  const otras = pool.filter((c) => c.id !== initial?.id);
+  const nombreRepetido = seRepite(
+    nombre,
+    otras.filter((c) => c.parentId === parentId).map((c) => c.nombre)
+  );
+  const idExtRepetido = seRepite(idExt, otras.map((c) => c.idExt));
+  const bloqueado = !nombre.trim() || nombreRepetido || idExtRepetido;
+
   function guardar() {
-    if (!nombre.trim()) return;
+    if (bloqueado) return;
     onSave({
       id: initial?.id ?? `clas-${nombre.trim().toLowerCase().replace(/\s+/g, "-")}-${pool.length}`,
       nombre: nombre.trim(),
@@ -161,7 +177,9 @@ export function ClasificacionDialog({
               onChange={(e) => setNombre(e.target.value)}
               placeholder={t("clasificaciones.campo.nombrePlaceholder")}
               autoFocus
+              aria-invalid={nombreRepetido}
             />
+            {nombreRepetido && <MensajeRepetido campo="nombrePadre" />}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="clas-idext">
@@ -172,7 +190,9 @@ export function ClasificacionDialog({
               value={idExt}
               onChange={(e) => setIdExt(e.target.value)}
               placeholder={t("clasificaciones.campo.idExtPlaceholder")}
+              aria-invalid={idExtRepetido}
             />
+            {idExtRepetido && <MensajeRepetido campo="idExterno" />}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="clas-tipo">{t("clasificaciones.col.tipo")}</Label>
@@ -252,7 +272,7 @@ export function ClasificacionDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.acciones.cancelar")}
           </Button>
-          <Button onClick={guardar} disabled={!nombre.trim()}>
+          <Button onClick={guardar} disabled={bloqueado}>
             {initial
               ? t("common.acciones.guardar")
               : t("clasificaciones.dialog.crear")}

@@ -5,6 +5,11 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // va en el diccionario de SU área, no acá.
 export const common: NamespaceDict = {
   es: {
+    "acciones.duplicar": "Duplicar",
+    "repetido.nombre": "Ya existe con este nombre. Cambialo para poder continuar.",
+    "repetido.nombrePadre": "Ya existe con este nombre bajo la misma clasificación padre. Cambialo para poder continuar.",
+    "repetido.email": "Ya existe un usuario con este email. Cambialo para poder continuar.",
+    "repetido.idExterno": "Ya existe una clasificación con este ID externo. Cambialo para poder continuar.",
     "nav.campanias": "Campañas",
     "nav.proyectos": "Proyectos",
     "nav.cuentas": "Cuentas",
@@ -76,6 +81,11 @@ export const common: NamespaceDict = {
     "404.volver": "Volver al inicio",
   },
   en: {
+    "acciones.duplicar": "Duplicate",
+    "repetido.nombre": "This name already exists. Change it to continue.",
+    "repetido.nombrePadre": "This name already exists under the same parent classification. Change it to continue.",
+    "repetido.email": "A user with this email already exists. Change it to continue.",
+    "repetido.idExterno": "A classification with this external ID already exists. Change it to continue.",
     "nav.campanias": "Campaigns",
     "nav.proyectos": "Projects",
     "nav.cuentas": "Accounts",
@@ -146,6 +156,11 @@ export const common: NamespaceDict = {
     "404.volver": "Back to home",
   },
   pt: {
+    "acciones.duplicar": "Duplicar",
+    "repetido.nombre": "Já existe com este nome. Altere-o para continuar.",
+    "repetido.nombrePadre": "Já existe com este nome na mesma classificação pai. Altere-o para continuar.",
+    "repetido.email": "Já existe um usuário com este e-mail. Altere-o para continuar.",
+    "repetido.idExterno": "Já existe uma classificação com este ID externo. Altere-o para continuar.",
     "nav.campanias": "Campanhas",
     "nav.proyectos": "Projetos",
     "nav.cuentas": "Contas",
@@ -217,6 +232,11 @@ export const common: NamespaceDict = {
     "404.volver": "Voltar ao início",
   },
   ca: {
+    "acciones.duplicar": "Duplica",
+    "repetido.nombre": "Ja existeix amb aquest nom. Canvia'l per poder continuar.",
+    "repetido.nombrePadre": "Ja existeix amb aquest nom a la mateixa classificació pare. Canvia'l per poder continuar.",
+    "repetido.email": "Ja existeix un usuari amb aquest correu. Canvia'l per poder continuar.",
+    "repetido.idExterno": "Ja existeix una classificació amb aquest ID extern. Canvia'l per poder continuar.",
     "nav.campanias": "Campanyes",
     "nav.proyectos": "Projectes",
     "nav.cuentas": "Comptes",

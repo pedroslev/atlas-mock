@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { T } from "@/lib/i18n";
@@ -22,6 +23,7 @@ export default async function EditarCampaniaPage({
   const proyecto = getProyecto(campania.proyectoId);
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={campania.nombre}
@@ -39,14 +41,19 @@ export default async function EditarCampaniaPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <BotonConfirmar>
               <T k="common.acciones.confirmar" />
-            </Button>
+            </BotonConfirmar>
           </>
         }
       />
 
-      <CampaniaEditor campania={campania} nombreProyecto={proyecto?.nombre} />
+      <CampaniaEditor
+        campania={campania}
+        nombreProyecto={proyecto?.nombre}
+        nombresExistentes={campanias.filter((c) => c.id !== id).map((c) => c.nombre)}
+      />
     </div>
+    </CamposUnicos>
   );
 }
