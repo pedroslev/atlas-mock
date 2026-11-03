@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -33,21 +34,25 @@ import { useT } from "@/lib/i18n";
 // cada una es una pantalla de detalle (/admin/staff/[id], /admin/staff/grupos/[id]).
 //
 // MOCK: personas y grupos salen del store en memoria (lib/staff-store.ts), así
-// que lo que se hace en los detalles se ve acá al instante; "Deshabilitar" y
-// borrar un grupo cambian ese store (borrar un grupo se lo quita a las
-// personas). Se pierde al recargar la página.
+// que lo que se hace en los detalles se ve acá al instante. Una persona tiene
+// UN solo grupo. "Deshabilitar" cambia el estado; borrar un grupo solo se
+// permite sin personas asignadas (si no, se avisa que hay que reasignarlas).
+// Se pierde al recargar la página.
 // REAL (`zeus-api`): GET /staff-users devuelve solo las personas ACTIVAS del
 // directorio LDAP de Mitrol en cada sincronización (solo lectura), con su
 // estado en Zeus. Quien deja de estar activo en el directorio desaparece de la
 // lista: el job de sincronización revoca su acceso en el realm `mitrol`.
-// Deshabilitar = POST /staff-users/{directoryId}/disable. GET /staff-groups y
-// DELETE /staff-groups/{id} para los grupos (la API le quita el grupo a cada
-// persona). Listar requiere `zeus.staff.read`; modificar `zeus.staff.write`
+// La sincronización corre una vez por noche. Deshabilitar =
+// POST /staff-users/{directoryId}/disable. GET /staff-groups y
+// DELETE /staff-groups/{id} para los grupos: 409 `group_has_members` si el
+// grupo tiene personas asignadas (hay que reasignarlas primero). Listar requiere `zeus.staff.read`; modificar `zeus.staff.write`
 // (403 si falta); 404 si la persona o el grupo no existen.
 export default function StaffPage() {
   const t = useT();
   const { users, groups, tab } = useStaffStore();
   const [efectivosDe, setEfectivosDe] = useState<StaffUser | null>(null);
+  // Grupo que no se pudo borrar por tener personas asignadas.
+  const [bloqueado, setBloqueado] = useState<PermissionGroup | null>(null);
 
   const columnasPersonas = useMemo<MRT_ColumnDef<StaffUser>[]>(() => {
     const groupName = (id: string) => groups.find((g) => g.id === id)?.name;
@@ -88,35 +93,15 @@ export default function StaffPage() {
       },
       {
         id: "grupos",
-        header: t("staff.col.grupos"),
-        accessorFn: (u) => u.groupIds.map(groupName).join(", "),
+        header: t("staff.col.grupo"),
+        accessorFn: (u) => (u.groupId ? groupName(u.groupId) : "") ?? "",
         filterVariant: "select",
         filterSelectOptions: groups.map((g) => g.name),
-        // Un usuario puede tener varios grupos: el filtro busca dentro del texto.
-        filterFn: "includesString",
         Cell: ({ row }) =>
-          row.original.groupIds.length === 0 ? (
-            <span className="text-muted-foreground">{t("staff.sinGrupos")}</span>
+          row.original.groupId ? (
+            <Badge variant="secondary">{groupName(row.original.groupId)}</Badge>
           ) : (
-            <div className="flex flex-wrap gap-1">
-              {row.original.groupIds.map((id) => (
-                <Badge key={id} variant="secondary">
-                  {groupName(id)}
-                </Badge>
-              ))}
-            </div>
-          ),
-      },
-      {
-        id: "alcance",
-        header: t("staff.col.alcance"),
-        enableColumnFilter: false,
-        accessorFn: (u) => (u.scope === "all" ? 0 : u.scope.length),
-        Cell: ({ row }) =>
-          row.original.groupIds.length === 0 ? (
             <span className="text-muted-foreground">{t("staff.sinGrupos")}</span>
-          ) : (
-            <ScopeBadge scope={row.original.scope} />
           ),
       },
       {
@@ -160,7 +145,7 @@ export default function StaffPage() {
       {
         id: "personas",
         header: t("staff.grupos.col.usuarios"),
-        accessorFn: (g) => users.filter((u) => u.groupIds.includes(g.id)).length,
+        accessorFn: (g) => users.filter((u) => u.groupId === g.id).length,
       },
       {
         id: "alcance",
@@ -268,15 +253,23 @@ export default function StaffPage() {
                       label: t("common.acciones.editar"),
                       href: `/admin/staff/grupos/${row.original.id}`,
                     },
-                    {
-                      label: t("common.acciones.eliminar"),
-                      destructive: true,
-                      separatorBefore: true,
-                      confirmDescription: t("staff.grupos.eliminarDescripcion", {
-                        nombre: row.original.name,
-                      }),
-                      onSelect: () => staffActions.deleteGroup(row.original.id),
-                    },
+                    // Con personas asignadas no se puede borrar: se avisa que hay
+                    // que reasignarlas primero. Sin personas, borra con confirmación.
+                    users.some((u) => u.groupId === row.original.id)
+                      ? {
+                          label: t("common.acciones.eliminar"),
+                          separatorBefore: true,
+                          onSelect: () => setBloqueado(row.original),
+                        }
+                      : {
+                          label: t("common.acciones.eliminar"),
+                          destructive: true,
+                          separatorBefore: true,
+                          confirmDescription: t("staff.grupos.eliminarDescripcion", {
+                            nombre: row.original.name,
+                          }),
+                          onSelect: () => staffActions.deleteGroup(row.original.id),
+                        },
                   ]}
                 />
               ),
@@ -284,6 +277,23 @@ export default function StaffPage() {
           />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={bloqueado !== null} onOpenChange={(open) => !open && setBloqueado(null)}>
+        <DialogContent data-testid="grupo-no-eliminable">
+          <DialogHeader>
+            <DialogTitle>{t("staff.grupos.noEliminableTitulo")}</DialogTitle>
+            <DialogDescription>
+              {t("staff.grupos.noEliminable", {
+                nombre: bloqueado?.name ?? "",
+                n: users.filter((u) => u.groupId === bloqueado?.id).length,
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setBloqueado(null)}>{t("common.acciones.cerrar")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={efectivosDe !== null} onOpenChange={(open) => !open && setEfectivosDe(null)}>
         <DialogContent data-testid="staff-efectivos-dialogo" className="sm:max-w-2xl">
@@ -296,10 +306,7 @@ export default function StaffPage() {
           {efectivosDe && (
             <EffectivePermissionsSummary
               effective={effectivePermissions(
-                groups,
-                efectivosDe.groupIds,
-                efectivosDe.extraPermissions,
-                efectivosDe.scope,
+                groups.find((g) => g.id === efectivosDe.groupId),
               )}
             />
           )}

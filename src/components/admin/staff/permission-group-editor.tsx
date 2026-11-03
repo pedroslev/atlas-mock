@@ -8,29 +8,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MembersCard } from "@/components/admin/staff/members-card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PermissionMatrix } from "@/components/admin/staff/permission-matrix";
 import { ScopePicker } from "@/components/admin/staff/scope-picker";
-import { withImpliedRead, type ClusterScope } from "@/lib/mock-staff";
+import { staffStatusBadge, withImpliedRead, type ClusterScope } from "@/lib/mock-staff";
 import { staffActions, useStaffStore } from "@/lib/staff-store";
 import { useT } from "@/lib/i18n";
 
 // Detalle de un grupo de permisos (alta y edición), misma estructura que
-// /clasificaciones/[id]: datos a la izquierda; a la derecha los permisos y las
-// personas del grupo (agregar con búsqueda, quitar con X sin borrar a la
-// persona). Cancelar/Confirmar en el encabezado.
+// /clasificaciones/[id]: datos y alcance por cluster a la izquierda; a la
+// derecha la matriz de permisos y las personas del grupo (solo lectura).
+// Cancelar/Confirmar en el encabezado.
 //
 // MOCK: edita un borrador local; "Confirmar" lo guarda en el store en memoria
-// (lib/staff-store.ts), con lo que el grupo y sus personas se ven al instante
-// en la lista, en el alta de personas y en los permisos efectivos. Se pierde al
-// recargar la página.
+// (lib/staff-store.ts), con lo que el grupo se ve al instante en la lista y en
+// el selector de grupo de la persona. Se pierde al recargar la página.
 // REAL (`zeus-api`): POST /staff-groups y PUT /staff-groups/{id} con
-// { name, description, permissions, defaultScope } y la membresía (personas
-// del grupo). Los permisos efectivos de cada persona son grupos ∪ extras.
+// { name, description, permissions, scope }. El alcance por cluster vive solo
+// en el grupo y lo heredan todas sus personas; los permisos efectivos de una
+// persona son exactamente los de su grupo. La membresía no se edita acá: se
+// asigna desde la persona (PUT /staff-users/{directoryId} { groupId }).
 // Errores: 409 nombre repetido, 422 `unknown_permission` / `unknown_cluster`,
-// 404 persona no habilitada, 403 sin `zeus.staff.write`. Quitar a una persona
-// del grupo no la borra ni la deshabilita.
+// 403 sin `zeus.staff.write`.
 export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const t = useT();
   const router = useRouter();
@@ -41,27 +41,23 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
   const [description, setDescription] = useState(group?.description ?? "");
   const [permissions, setPermissions] = useState<string[]>(group?.permissions ?? []);
   const [scope, setScope] = useState<ClusterScope>(group?.defaultScope ?? "all");
-  const [memberIds, setMemberIds] = useState<string[]>(
-    groupId ? users.filter((u) => u.groupIds.includes(groupId)).map((u) => u.directoryId) : [],
-  );
-
   // Un grupo creado en la sesión no existe tras recargar la página.
   if (groupId && !group) {
     return <PageHeader title={t("staff.grupos.noEncontrado")} backHref="/admin/staff" />;
   }
 
-  const toOption = (u: (typeof users)[number]) => ({ id: u.directoryId, name: u.name, detail: u.email });
-  // Solo personas ya habilitadas (no las no habilitadas ni las deshabilitadas).
-  const habilitadas = users.filter((u) => u.status === "invitado" || u.status === "activo");
+  // Personas que tienen este grupo (solo lectura).
+  const miembros = groupId ? users.filter((u) => u.groupId === groupId) : [];
   const canSave = name.trim().length > 0 && permissions.length > 0;
 
-  // Guarda el grupo y su membresía en el store y vuelve a la pestaña Grupos.
+  // Guarda el grupo en el store y vuelve a la pestaña Grupos.
   function confirmar() {
-    staffActions.saveGroup(
-      groupId,
-      { name: name.trim(), description, permissions, defaultScope: scope },
-      memberIds,
-    );
+    staffActions.saveGroup(groupId, {
+      name: name.trim(),
+      description,
+      permissions,
+      defaultScope: scope,
+    });
     router.push("/admin/staff");
   }
 
@@ -125,23 +121,36 @@ export function PermissionGroupEditor({ groupId }: { groupId?: string }) {
             </CardContent>
           </Card>
 
-          <MembersCard
-            title={t("staff.grupos.personas.titulo")}
-            description={t("staff.grupos.personas.descripcion")}
-            members={users.filter((u) => memberIds.includes(u.directoryId)).map(toOption)}
-            available={habilitadas.filter((u) => !memberIds.includes(u.directoryId)).map(toOption)}
-            onAdd={(id) => setMemberIds((prev) => [...prev, id])}
-            onRemove={(id) => setMemberIds((prev) => prev.filter((m) => m !== id))}
-            testIdPrefix="grupo-persona"
-            texts={{
-              agregar: t("staff.miembros.agregar"),
-              buscar: t("staff.miembros.buscar"),
-              sinDisponibles: t("staff.grupos.personas.sinDisponibles"),
-              vacio: t("staff.grupos.personas.vacio"),
-              quitar: t("staff.miembros.quitar"),
-              quitarAria: (nombre) => t("staff.miembros.quitarAria", { nombre }),
-            }}
-          />
+          {/* Solo lectura: asignar o cambiar el grupo se hace desde la persona. */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("staff.grupos.personas.titulo")}</CardTitle>
+              <CardDescription>{t("staff.grupos.personas.descripcion")}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1.5">
+              {miembros.length === 0 && (
+                <p className="text-sm text-muted-foreground">{t("staff.grupos.personas.vacio")}</p>
+              )}
+              {miembros.map((u) => (
+                <div
+                  key={u.directoryId}
+                  data-testid={`grupo-persona-fila-${u.directoryId}`}
+                  className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-foreground/10"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Link
+                      href={`/admin/staff/${u.directoryId}`}
+                      className="truncate font-medium hover:underline"
+                    >
+                      {u.name}
+                    </Link>
+                    <span className="truncate text-muted-foreground">{u.email}</span>
+                  </span>
+                  <Badge variant={staffStatusBadge[u.status]}>{t(`staff.estado.${u.status}`)}</Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

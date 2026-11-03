@@ -8,12 +8,13 @@ import {
 } from "@/lib/mock-staff";
 import { useT } from "@/lib/i18n";
 
-// Resumen de solo lectura de los permisos efectivos de una persona: grupos ∪
-// extras, más el alcance por cluster. Se usa en el editor (en vivo) y en el
+// Resumen de solo lectura de lo que da un grupo de permisos: permisos por área
+// y alcance por cluster. Se usa en el detalle de la persona (en vivo) y en el
 // diálogo del listado.
 //
-// REAL: los permisos efectivos los calcula `zeus-api` (unión de los permisos de
-// los grupos y los extras); la UI nunca los decide.
+// REAL: los permisos efectivos de una persona son exactamente los de su grupo
+// (una persona = un grupo, sin permisos individuales) y los calcula
+// `zeus-api`; la UI nunca los decide.
 export function EffectivePermissionsSummary({
   effective,
 }: {
@@ -57,13 +58,8 @@ export function EffectivePermissionsSummary({
                 {area.permissions
                   .filter((p) => granted.has(p.key))
                   .map((p) => (
-                    <Badge
-                      key={p.key}
-                      variant={effective.extraOnly.includes(p.key) ? "info" : "secondary"}
-                    >
+                    <Badge key={p.key} variant="secondary">
                       {t(`staff.perm.${p.labelKey}`)}
-                      {effective.extraOnly.includes(p.key) &&
-                        ` · ${t("staff.efectivos.extra")}`}
                     </Badge>
                   ))}
               </li>

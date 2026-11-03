@@ -110,7 +110,7 @@ export type PermissionGroup = {
   name: string;
   description: string;
   permissions: string[];
-  /** Alcance por defecto: lo hereda el usuario salvo que se lo pise. */
+  /** Alcance por cluster del grupo: lo heredan todas sus personas. */
   defaultScope: ClusterScope;
 };
 
@@ -140,9 +140,9 @@ export const seedGroups: PermissionGroup[] = [
   {
     id: "grp-soporte-tel",
     name: "Soporte de telefonía",
-    description: "Lo de Soporte y además edita telefonía.",
+    description: "Lo de Soporte y además edita telefonía, solo en Argentina.",
     permissions: [...soporte, "zeus.telephony.write"],
-    defaultScope: "all",
+    defaultScope: ["region-ar"],
   },
   {
     id: "grp-ventas",
@@ -188,11 +188,8 @@ export type StaffUser = {
   /** Siempre @mitrol.net; solo lectura en la UI. */
   email: string;
   status: StaffStatus;
-  groupIds: string[];
-  /** Permisos individuales extra, aditivos sobre los del grupo. */
-  extraPermissions: string[];
-  /** Alcance propio; "all" o clusters. */
-  scope: ClusterScope;
+  /** Grupo de permisos único (N personas : 1 grupo); undefined = sin grupo. */
+  groupId?: string;
   /** Última sincronización con el directorio (texto ya formateado). */
   lastSync: string;
 };
@@ -200,47 +197,37 @@ export type StaffUser = {
 const SYNC = "03/11/2026 06:00";
 
 export const seedUsers: StaffUser[] = [
-  { directoryId: "ldap-1001", name: "Marcela Ibáñez", email: "marcela.ibanez@mitrol.net", status: "activo", groupIds: ["grp-admin"], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1002", name: "Federico Castaño", email: "federico.castano@mitrol.net", status: "activo", groupIds: ["grp-soporte"], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1003", name: "Lucía Benítez", email: "lucia.benitez@mitrol.net", status: "activo", groupIds: ["grp-soporte-tel"], extraPermissions: [], scope: ["region-ar"], lastSync: SYNC },
-  { directoryId: "ldap-1004", name: "Gonzalo Paredes", email: "gonzalo.paredes@mitrol.net", status: "activo", groupIds: ["grp-ventas"], extraPermissions: ["zeus.regions.read"], scope: ["region-col", "region-mx"], lastSync: SYNC },
-  { directoryId: "ldap-1005", name: "Valeria Domínguez", email: "valeria.dominguez@mitrol.net", status: "activo", groupIds: ["grp-facturacion"], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1006", name: "Tomás Echeverría", email: "tomas.echeverria@mitrol.net", status: "invitado", groupIds: ["grp-soporte"], extraPermissions: [], scope: ["region-cl"], lastSync: SYNC },
-  { directoryId: "ldap-1007", name: "Camila Rossi", email: "camila.rossi@mitrol.net", status: "invitado", groupIds: ["grp-ventas"], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1008", name: "Julián Arriaga", email: "julian.arriaga@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1009", name: "Paula Sandoval", email: "paula.sandoval@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1010", name: "Nicolás Quiroga", email: "nicolas.quiroga@mitrol.net", status: "no-habilitado", groupIds: [], extraPermissions: [], scope: "all", lastSync: SYNC },
-  { directoryId: "ldap-1011", name: "Rocío Ferreyra", email: "rocio.ferreyra@mitrol.net", status: "activo", groupIds: ["grp-soporte"], extraPermissions: [], scope: ["region-mx"], lastSync: SYNC },
-  { directoryId: "ldap-1012", name: "Matías Villalba", email: "matias.villalba@mitrol.net", status: "deshabilitado", groupIds: ["grp-ventas"], extraPermissions: [], scope: "all", lastSync: SYNC },
+  { directoryId: "ldap-1001", name: "Marcela Ibáñez", email: "marcela.ibanez@mitrol.net", status: "activo", groupId: "grp-admin", lastSync: SYNC },
+  { directoryId: "ldap-1002", name: "Federico Castaño", email: "federico.castano@mitrol.net", status: "activo", groupId: "grp-soporte", lastSync: SYNC },
+  { directoryId: "ldap-1003", name: "Lucía Benítez", email: "lucia.benitez@mitrol.net", status: "activo", groupId: "grp-soporte-tel", lastSync: SYNC },
+  { directoryId: "ldap-1004", name: "Gonzalo Paredes", email: "gonzalo.paredes@mitrol.net", status: "activo", groupId: "grp-ventas", lastSync: SYNC },
+  { directoryId: "ldap-1005", name: "Valeria Domínguez", email: "valeria.dominguez@mitrol.net", status: "activo", groupId: "grp-facturacion", lastSync: SYNC },
+  { directoryId: "ldap-1006", name: "Tomás Echeverría", email: "tomas.echeverria@mitrol.net", status: "invitado", groupId: "grp-soporte", lastSync: SYNC },
+  { directoryId: "ldap-1007", name: "Camila Rossi", email: "camila.rossi@mitrol.net", status: "invitado", groupId: "grp-ventas", lastSync: SYNC },
+  { directoryId: "ldap-1008", name: "Julián Arriaga", email: "julian.arriaga@mitrol.net", status: "no-habilitado", lastSync: SYNC },
+  { directoryId: "ldap-1009", name: "Paula Sandoval", email: "paula.sandoval@mitrol.net", status: "no-habilitado", lastSync: SYNC },
+  { directoryId: "ldap-1010", name: "Nicolás Quiroga", email: "nicolas.quiroga@mitrol.net", status: "no-habilitado", lastSync: SYNC },
+  { directoryId: "ldap-1011", name: "Rocío Ferreyra", email: "rocio.ferreyra@mitrol.net", status: "activo", groupId: "grp-soporte", lastSync: SYNC },
+  { directoryId: "ldap-1012", name: "Matías Villalba", email: "matias.villalba@mitrol.net", status: "deshabilitado", groupId: "grp-ventas", lastSync: SYNC },
 ];
 
 // --- permisos efectivos --------------------------------------------------
 export type EffectivePermissions = {
   permissions: string[];
-  /** Permisos que vienen solo de los extras (para marcarlos en el resumen). */
-  extraOnly: string[];
   scope: ClusterScope;
 };
 
 /**
- * Permisos efectivos = unión de los permisos de todos los grupos ∪ extras.
- * El alcance es el propio del usuario (por defecto el del grupo).
+ * Permisos efectivos de una persona = exactamente los de su grupo (con "editar
+ * incluye ver"); el alcance por cluster es el del grupo. Sin grupo no hay nada.
  * REAL: `zeus-api` calcula lo mismo y es la única fuente de autorización.
  */
 export function effectivePermissions(
-  groups: PermissionGroup[],
-  groupIds: string[],
-  extras: string[],
-  scope: ClusterScope,
+  group: PermissionGroup | undefined,
 ): EffectivePermissions {
-  const fromGroups = new Set(
-    groupIds.flatMap((id) => groups.find((g) => g.id === id)?.permissions ?? []),
-  );
-  const all = withImpliedRead([...fromGroups, ...extras]);
-  const groupsFull = withImpliedRead(fromGroups);
+  const granted = withImpliedRead(group?.permissions ?? []);
   return {
-    permissions: allPermissionKeys.filter((k) => all.has(k)),
-    extraOnly: allPermissionKeys.filter((k) => all.has(k) && !groupsFull.has(k)),
-    scope,
+    permissions: allPermissionKeys.filter((k) => granted.has(k)),
+    scope: group?.defaultScope ?? "all",
   };
 }

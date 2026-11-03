@@ -13,15 +13,18 @@ export const staff: NamespaceDict = {
     "habilitarPersona": "Habilitar persona",
     "tab.personas": "Personas",
     "tab.grupos": "Grupos de permisos",
-    "form.crearGrupo": "Crear grupo nuevo",
-    "form.sinGrupos": "Todavía no hay grupos. Creá uno para poder asignarlo.",
+    "form.grupo": "Grupo de permisos",
+    "form.grupoAyuda": "Obligatorio. La persona tiene exactamente los permisos y el alcance del grupo.",
+    "form.grupoPlaceholder": "Elegir un grupo",
+    "form.sinGrupos": "No hay grupos de permisos.",
+    "grupos.noEliminable": "No se puede eliminar “{nombre}”: tiene {n} persona(s) asignada(s). Reasignalas a otro grupo desde cada persona y volvé a intentar.",
+    "grupos.noEliminableTitulo": "El grupo tiene personas",
     "grupos.noEncontrado": "El grupo ya no existe.",
 
     "col.nombre": "Nombre",
     "col.mail": "Mail",
     "col.estado": "Estado en Zeus",
-    "col.grupos": "Grupos",
-    "col.alcance": "Alcance",
+    "col.grupo": "Grupo",
     "col.sync": "Última sincronización",
 
     "estado.no-habilitado": "No habilitado",
@@ -29,10 +32,10 @@ export const staff: NamespaceDict = {
     "estado.activo": "Activo",
     "estado.deshabilitado": "Deshabilitado",
 
+    "sinGrupos": "—",
     "alcance.todos": "Todos los clusters",
     "alcance.n": "{n} clusters",
     "alcance.uno": "1 cluster",
-    "sinGrupos": "—",
 
     "accion.habilitar": "Habilitar",
     "accion.efectivos": "Ver permisos efectivos",
@@ -42,32 +45,18 @@ export const staff: NamespaceDict = {
 
     "habilitar.titulo": "Habilitar persona",
     "habilitar.descripcion":
-      "Elegí a la persona del directorio de Mitrol y asignale permisos. Le llegará un mail para fijar su contraseña.",
+      "Elegí a la persona del directorio de Mitrol y asignale un grupo de permisos. Le llegará un mail para fijar su contraseña.",
     "editar.descripcion":
-      "Cambiá los grupos, los permisos individuales o el alcance por cluster.",
+      "Cambiale el grupo de permisos.",
     "form.persona": "Persona del directorio",
     "form.personaPlaceholder": "Elegir una persona",
     "form.personaAyuda":
       "Solo aparecen personas activas en el directorio que todavía no están habilitadas.",
     "form.mail": "Mail",
     "form.mailAyuda": "Viene del directorio y no se puede cambiar. Debe terminar en @mitrol.net.",
-    "form.grupos": "Grupos de permisos",
-    "form.gruposAyuda": "Los permisos de todos los grupos elegidos se suman.",
-    "form.extras": "Permisos individuales extra",
-    "form.extrasAyuda":
-      "Se suman a los del grupo. Los que ya da un grupo aparecen marcados y bloqueados.",
-    "form.alcance": "Alcance por cluster",
-    "form.alcanceAyuda":
-      "Limita los permisos de Clientes, Telefonía y Facturación a los clusters elegidos.",
-    "form.todosClusters": "Todos los clusters",
-    "form.clustersPlaceholder": "Elegir clusters",
     "persona.datos": "Datos de la persona",
     "form.sinCandidatas": "No hay personas del directorio para habilitar.",
-    "form.gruposVacio": "Todavía no tiene grupos de permisos.",
-    "miembros.agregar": "Agregar",
     "miembros.buscar": "Buscar...",
-    "miembros.quitar": "Quitar",
-    "miembros.quitarAria": "Quitar a {nombre}",
 
     "enviado.titulo": "Mail de alta enviado",
     "enviado.descripcion":
@@ -75,9 +64,8 @@ export const staff: NamespaceDict = {
     "enviado.volver": "Volver al listado",
 
     "efectivos.titulo": "Permisos efectivos",
-    "efectivos.descripcion": "Suma de los grupos y los permisos extra, con el alcance por cluster.",
+    "efectivos.descripcion": "Lo que da el grupo: permisos y alcance por cluster.",
     "efectivos.sinPermisos": "Todavía no tiene permisos.",
-    "efectivos.extra": "extra",
     "efectivos.alcance": "Alcance",
 
     "area.clientes": "Clientes",
@@ -101,18 +89,16 @@ export const staff: NamespaceDict = {
     "grupos.col.descripcion": "Descripción",
     "grupos.col.permisos": "Permisos",
     "grupos.col.usuarios": "Personas",
-    "grupos.col.alcance": "Alcance por defecto",
-    "grupos.eliminarDescripcion":
-      "Se eliminará el grupo “{nombre}”. Las personas que lo tengan lo pierden.",
+    "grupos.col.alcance": "Alcance por cluster",
+    "grupos.eliminarDescripcion": "Se eliminará el grupo “{nombre}”.",
     "grupos.nuevoTitulo": "Nuevo grupo de permisos",
     "grupos.subtitulo": "Qué puede hacer quien tenga este grupo y a quién se lo asignaste.",
     "grupos.personas.titulo": "Personas del grupo",
-    "grupos.personas.descripcion": "Solo personas ya habilitadas. Quitar a alguien no lo borra ni lo deshabilita.",
-    "grupos.personas.sinDisponibles": "No hay más personas habilitadas.",
+    "grupos.personas.descripcion": "Para asignar o cambiar el grupo de alguien, entrá a la persona.",
     "grupos.personas.vacio": "Este grupo todavía no tiene personas.",
     "grupos.form.datos": "Datos del grupo",
     "grupos.form.permisos": "Permisos",
-    "grupos.form.alcance": "Alcance por defecto",
+    "grupos.form.alcance": "Alcance por cluster",
   },
   en: {},
   pt: {},

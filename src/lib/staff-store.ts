@@ -16,8 +16,9 @@ import {
 // ejemplo. Crear/editar/borrar un grupo y habilitar/deshabilitar personas se
 // reflejan al instante en listas, selectores, filtros y permisos efectivos.
 // REAL: la fuente es `zeus-api` (grupos en /staff-groups, personas en
-// /staff-users); la UI las pide a la API y no guarda estado propio. Borrar un
-// grupo con personas asignadas se lo quita a cada una (lo hace la API).
+// /staff-users); la UI las pide a la API y no guarda estado propio. Una persona
+// tiene un solo grupo; borrar un grupo con personas responde 409
+// `group_has_members` (la API lo valida, no la UI).
 
 export type StaffTab = "personas" | "grupos";
 type StaffState = {
@@ -41,16 +42,8 @@ function subscribe(listener: () => void) {
 }
 
 export const staffActions = {
-  /**
-   * Crea (sin `id`) o actualiza un grupo y deja como miembros exactamente a
-   * `memberIds`: se lo suma a quienes faltan y se lo quita a quienes sobran.
-   * Devuelve el id del grupo.
-   */
-  saveGroup(
-    id: string | undefined,
-    data: Omit<PermissionGroup, "id">,
-    memberIds: string[],
-  ): string {
+  /** Crea (sin `id`) o actualiza un grupo. Devuelve el id del grupo. */
+  saveGroup(id: string | undefined, data: Omit<PermissionGroup, "id">): string {
     const groupId = id ?? `grp-${Date.now().toString(36)}`;
     const group = { ...data, id: groupId };
     setState({
@@ -58,25 +51,17 @@ export const staffActions = {
       groups: id
         ? state.groups.map((g) => (g.id === id ? group : g))
         : [...state.groups, group],
-      users: state.users.map((u) => {
-        const sin = u.groupIds.filter((g) => g !== groupId);
-        return memberIds.includes(u.directoryId)
-          ? { ...u, groupIds: [...sin, groupId] }
-          : { ...u, groupIds: sin };
-      }),
     });
     return groupId;
   },
-  /** Borra el grupo y se lo quita a las personas que lo tenían. */
-  deleteGroup(id: string) {
-    setState({
-      ...state,
-      groups: state.groups.filter((g) => g.id !== id),
-      users: state.users.map((u) => ({
-        ...u,
-        groupIds: u.groupIds.filter((g) => g !== id),
-      })),
-    });
+  /**
+   * Borra el grupo solo si no tiene personas asignadas. Devuelve false (y no
+   * borra nada) si las tiene: primero hay que reasignarlas.
+   */
+  deleteGroup(id: string): boolean {
+    if (state.users.some((u) => u.groupId === id)) return false;
+    setState({ ...state, groups: state.groups.filter((g) => g.id !== id) });
+    return true;
   },
   /** Reemplaza los datos de una persona (habilitar, editar, deshabilitar). */
   updateUser(directoryId: string, changes: Partial<StaffUser>) {
