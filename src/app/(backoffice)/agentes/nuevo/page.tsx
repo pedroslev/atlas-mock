@@ -23,7 +23,7 @@ export default function NuevoAgentePage() {
             <Button variant="outline" asChild>
               <Link href="/agentes">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/agentes">{t("usuarios.crear")}</Link>
             </Button>
           </>

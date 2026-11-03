@@ -33,7 +33,7 @@ export default async function EditarFeriadoPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/feriados">
                 <T k="common.acciones.confirmar" />
               </Link>

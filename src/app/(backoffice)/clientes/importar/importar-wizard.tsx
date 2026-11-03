@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Check,
@@ -25,17 +24,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -65,6 +53,7 @@ import {
   type Etiqueta,
   type TipoCampo,
 } from "@/lib/mock-clientes";
+import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 
 // Importación de clientes en pantalla propia (propuesta 2026-10-09, ajustes
@@ -562,6 +551,21 @@ export function ImportarClientes() {
   const primeroIncompleto = PASOS.findIndex((p) => p !== "revision" && !pasoOk(p));
   const maxAlcanzable = primeroIncompleto === -1 ? PASOS.length - 1 : primeroIncompleto;
 
+  // El catálogo de etiquetas queda afuera: crear una no se deshace al reiniciar.
+  useCambiosDeValor("importador", {
+    cargado,
+    config,
+    basicos,
+    tipoDocFijo,
+    contactos: contactos.map((contacto) => ({ ...contacto, id: "" })),
+    adicionales,
+    vacios,
+    clave,
+    etiquetas,
+    reglas,
+    politicas,
+  });
+
   const reset = () => {
     setPaso("archivo");
     setCargado(false);
@@ -583,13 +587,19 @@ export function ImportarClientes() {
     <ArchivoCtx.Provider value={archivo}>
       {/* En pantallas anchas la página no scrollea: ocupa el alto disponible
           y cada panel (wizard y tabla de campos) tiene su propio scroll. */}
-      <div className="flex flex-col gap-4 xl:min-h-0 xl:flex-1">
+      <div data-no-vigilar data-sin-aviso={importado || undefined} className="flex flex-col gap-4 xl:min-h-0 xl:flex-1">
         {/* Encabezado + pasos fijos arriba (siempre visibles). */}
         <div className="sticky top-0 z-20 -mx-4 bg-background px-4 sm:-mx-6 sm:px-6">
           <PageHeader
             title={t("clientes.imp.titulo")}
             description={t("clientes.imp.descripcion")}
-            actions={!importado && <CancelarImportacion hayCambios={cargado} />}
+            actions={
+              !importado && (
+                <Button variant="outline" asChild>
+                  <Link href="/clientes">{t("clientes.imp.cancelar")}</Link>
+                </Button>
+              )
+            }
           />
           <div className="border-b py-3">
             <Stepper
@@ -734,40 +744,6 @@ export function ImportarClientes() {
   );
 }
 
-// "Cancelar" con confirmación (pedido de producto 2026-10-14): si ya hay un
-// archivo cargado, avisa que se pierde lo configurado antes de salir. Sin
-// archivo, sale directo. (El "Volver" del encabezado se quitó para que no haya
-// una salida sin confirmación.)
-function CancelarImportacion({ hayCambios }: { hayCambios: boolean }) {
-  const t = useT();
-  const router = useRouter();
-  if (!hayCambios) {
-    return (
-      <Button variant="outline" asChild>
-        <Link href="/clientes">{t("clientes.imp.cancelar")}</Link>
-      </Button>
-    );
-  }
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline">{t("clientes.imp.cancelar")}</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("clientes.imp.cancelarTitulo")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("clientes.imp.cancelarDesc")}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("clientes.imp.seguirImportando")}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={() => router.push("/clientes")}>
-            {t("clientes.imp.descartarSalir")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
 
 // Indicador de pasos clickeable: se puede ir a cualquier paso hasta el
 // primero que todavía no está completo.

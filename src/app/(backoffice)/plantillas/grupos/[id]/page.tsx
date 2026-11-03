@@ -38,7 +38,7 @@ export default async function GrupoPlantillasPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/plantillas">
                 <T k="common.acciones.confirmar" />
               </Link>

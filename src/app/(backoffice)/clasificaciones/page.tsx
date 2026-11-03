@@ -20,8 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -43,13 +44,6 @@ import {
   efectoVariant,
   tipoClave,
 } from "./clasificacion-dialog";
-
-function nombreSugerido(base: string, existentes: string[]) {
-  if (!existentes.includes(base)) return base;
-  let i = 2;
-  while (existentes.includes(`${base} (${i})`)) i++;
-  return `${base} (${i})`;
-}
 
 // Cada tipo de clasificación se pinta con un tono distinto (feedback
 // 2026-07-16: "distintos colores si son diferentes") — así se leen de un
@@ -211,12 +205,7 @@ export default function ClasificacionesPage() {
   }
 
   function abrirNuevoGrupo() {
-    setGrupoNombre(
-      nombreSugerido(
-        t("clasificaciones.nuevoGrupo"),
-        grupos.map((g) => g.nombre)
-      )
-    );
+    setGrupoNombre("");
     setGrupoDescripcion("");
     setGrupoDialogOpen(true);
   }
@@ -359,7 +348,7 @@ export default function ClasificacionesPage() {
         onSave={guardarClasificacion}
       />
 
-      <Dialog open={grupoDialogOpen} onOpenChange={setGrupoDialogOpen}>
+      <DialogConAviso open={grupoDialogOpen} onOpenChange={setGrupoDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("clasificaciones.nuevoGrupo.titulo")}</DialogTitle>
@@ -374,6 +363,7 @@ export default function ClasificacionesPage() {
                 id="grupo-nombre"
                 value={grupoNombre}
                 onChange={(e) => setGrupoNombre(e.target.value)}
+                placeholder={t("clasificaciones.nuevoGrupo.placeholder")}
                 autoFocus
               />
             </div>
@@ -391,15 +381,17 @@ export default function ClasificacionesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGrupoDialogOpen(false)}>
+            <DialogClose asChild>
+              <Button variant="outline">
               {t("common.acciones.cancelar")}
             </Button>
+            </DialogClose>
             <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
               {t("clasificaciones.nuevoGrupo.crear")}
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </DialogConAviso>
     </div>
   );
 }

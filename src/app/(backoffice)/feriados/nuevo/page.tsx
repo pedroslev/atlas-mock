@@ -21,7 +21,7 @@ export default function NuevoFeriadoPage() {
             <Button variant="outline" asChild>
               <Link href="/feriados">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/feriados">{t("feriados.crearGrupo")}</Link>
             </Button>
           </>

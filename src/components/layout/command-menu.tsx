@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useNavegarConAviso } from "@/components/layout/aviso-cambios";
 import {
   Command,
   CommandDialog,
@@ -29,7 +29,7 @@ export function CommandMenu({
   children?: (open: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
-  const router = useRouter();
+  const navegar = useNavegarConAviso();
   const t = useT();
 
   React.useEffect(() => {
@@ -45,7 +45,7 @@ export function CommandMenu({
 
   const go = (href: string) => {
     setOpen(false);
-    router.push(href);
+    navegar(href);
   };
 
   return (

@@ -216,6 +216,7 @@ function Detalle({ clave }: { clave: ClaveApi }) {
                   </Button>
                   <Button
                     disabled={!cambiaron}
+                    data-guarda-cambios
                     onClick={() => actualizarDominios(clave.id, dominios)}
                     data-testid="guardar-dominios"
                   >

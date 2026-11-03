@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -94,7 +95,17 @@ export function ContactosExcluidos({
             { n: contactos.length.toLocaleString("es-AR") }
           )}
         </span>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogConAviso
+          open={dialogOpen}
+          onOpenChange={(abierto) => {
+            setDialogOpen(abierto);
+            // Descartar limpia lo escrito: al volver a abrir arranca vacío.
+            if (!abierto) {
+              setContacto("");
+              setTipo("calline");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               <Plus />
@@ -143,15 +154,17 @@ export function ContactosExcluidos({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <DialogClose asChild>
+                <Button variant="outline">
                 {t("common.acciones.cancelar")}
               </Button>
+              </DialogClose>
               <Button onClick={agregarContacto} disabled={!contacto.trim()}>
                 {t("common.acciones.agregar")}
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </DialogConAviso>
       </div>
 
       {contactos.length === 0 ? (

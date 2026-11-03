@@ -29,7 +29,7 @@ export default function NuevaListaExclusionPage() {
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/listas-de-exclusion">{t("listas.nueva.crear")}</Link>
             </Button>
           </>

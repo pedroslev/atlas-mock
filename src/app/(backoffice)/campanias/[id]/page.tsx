@@ -39,7 +39,7 @@ export default async function EditarCampaniaPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <Button data-guarda-cambios>
               <T k="common.acciones.confirmar" />
             </Button>
           </>

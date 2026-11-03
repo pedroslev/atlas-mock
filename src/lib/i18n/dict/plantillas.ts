@@ -9,6 +9,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // selector de plantillas en Hermes.
 export const plantillas: NamespaceDict = {
   es: {
+    "dialogoGrupo.placeholder": "Ej: Cobranzas",
     descripcion:
       "Dejá precargados los mensajes que tus asesores usan todo el tiempo en chat, email y SMS, y agrupalos para asignarlos a tus campañas. Una plantilla puede estar en varios grupos.",
 
@@ -230,6 +231,7 @@ export const plantillas: NamespaceDict = {
     "selector.adjuntoAgregado": "Archivos de la plantilla: en chat van como mensaje aparte, donde está el 📎 en el texto.",
   },
   en: {
+    "dialogoGrupo.placeholder": "E.g.: Collections",
     descripcion:
       "Preload the messages your agents use all the time on chat, email and SMS, and group them to assign them to your campaigns. A template can belong to several groups.",
 
@@ -447,6 +449,7 @@ export const plantillas: NamespaceDict = {
     "selector.adjuntoAgregado": "Template files: in chat they go as a separate message, where the 📎 is in the text.",
   },
   pt: {
+    "dialogoGrupo.placeholder": "Ex.: Cobranças",
     descripcion:
       "Deixe pré-carregadas as mensagens que seus atendentes usam o tempo todo em chat, e-mail e SMS, e agrupe-as para atribuí-las às suas campanhas. Um modelo pode estar em vários grupos.",
 
@@ -664,6 +667,7 @@ export const plantillas: NamespaceDict = {
     "selector.adjuntoAgregado": "Arquivos do modelo: no chat vão como mensagem separada, onde está o 📎 no texto.",
   },
   ca: {
+    "dialogoGrupo.placeholder": "Ex.: Cobraments",
     descripcion:
       "Deixa precarregats els missatges que els teus agents fan servir tot el temps al xat, al correu i als SMS, i agrupa'ls per assignar-los a les teves campanyes. Una plantilla pot ser a diversos grups.",
 

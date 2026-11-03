@@ -137,7 +137,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "«Cancelar» (arriba a la derecha) sale de la importación. Si ya cargaste un archivo, pregunta «¿Cancelar la importación?» porque se pierde todo lo configurado; podés elegir «Seguir importando» o «Descartar y salir».",
+              "«Cancelar» (arriba a la derecha) sale de la importación. Si ya hiciste cambios, por cualquier salida aparece «¿Salir sin guardar?»: «Seguir editando» te deja donde estabas y «Descartar y salir» pierde lo configurado; no se importa ningún cliente. Sin cambios, sale directo.",
           },
           {
             tipo: "nota",
@@ -532,7 +532,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "«Cancelar» (top right) leaves the import. If you already loaded a file, it asks «¿Cancelar la importación?» because everything configured is lost; you can choose «Seguir importando» or «Descartar y salir».",
+              "«Cancelar» (top right) leaves the import. If you made changes, any way out shows «Leave without saving?»: «Keep editing» keeps you where you were and «Discard and leave» loses what you configured; no customer is imported. With no changes, it leaves right away.",
           },
           {
             tipo: "nota",

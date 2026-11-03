@@ -35,13 +35,6 @@ import {
 import { useT } from "@/lib/i18n";
 import { MarcadorDialog } from "./marcador-dialog";
 
-function nombreSugerido(base: string, existentes: string[]) {
-  if (!existentes.includes(base)) return base;
-  let i = 2;
-  while (existentes.includes(`${base} (${i})`)) i++;
-  return `${base} (${i})`;
-}
-
 // Pantalla partida en dos, igual que Clasificaciones (feedback 2026-07-16):
 // arriba los GRUPOS de bookmarks, abajo el POOL de marcas del tenant —
 // una misma marca puede usarse en varios grupos (DER: bookmark_groups
@@ -125,12 +118,7 @@ export default function MarcadoresPage() {
   }
 
   function abrirNuevoGrupo() {
-    setGrupoNombre(
-      nombreSugerido(
-        t("marcas.nuevoGrupo"),
-        grupos.map((g) => g.nombre)
-      )
-    );
+    setGrupoNombre("");
     setGrupoDialogOpen(true);
   }
 
@@ -266,6 +254,7 @@ export default function MarcadoresPage() {
               id="grupo-nombre"
               value={grupoNombre}
               onChange={(e) => setGrupoNombre(e.target.value)}
+              placeholder={t("marcas.dialogoGrupo.placeholder")}
               autoFocus
             />
           </div>
