@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import type { NombreAtajo } from "@/lib/atajos";
 import { useT } from "@/lib/i18n";
 import { ProbarConsultaHttp } from "@/components/workflow/probar-consulta-http";
 
@@ -105,8 +106,8 @@ function NodoMacroestado({
   const [editando, setEditando] = useState(false);
   const titulo = data.titulo?.trim() || tituloPorDefecto;
 
-  const accion = (label: string, onClick: () => void, contenido: ReactNode, destructiva = false) => (
-    <ActionTooltip label={label}>
+  const accion = (label: string, onClick: () => void, contenido: ReactNode, destructiva = false, atajo?: NombreAtajo) => (
+    <ActionTooltip label={label} atajo={atajo} fila={!!atajo}>
       <button
         type="button"
         aria-label={label}
@@ -123,7 +124,7 @@ function NodoMacroestado({
   );
 
   return (
-    <div className="flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10">
+    <div data-fila className="flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10">
       <Handle type="target" position={Position.Top} className="!bg-secondary" />
       <div className="flex items-center justify-between gap-1">
         <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium">
@@ -144,7 +145,11 @@ function NodoMacroestado({
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
-                if (e.key === "Escape") setEditando(false);
+                if (e.key === "Escape") {
+                  // El flujo en pantalla completa no debe salir con este Esc.
+                  e.preventDefault();
+                  setEditando(false);
+                }
               }}
             />
           ) : (
@@ -175,13 +180,15 @@ function NodoMacroestado({
               <Info className="size-3.5" />
             </a>
           </ActionTooltip>
-          {accion(t("cuentas.flujo.duplicar"), data.onDuplicate, <Copy className="size-3.5" />)}
+          {accion(t("cuentas.flujo.duplicar"), data.onDuplicate, <Copy className="size-3.5" />, false, "copiar")}
           {accion(
             t(data.colapsado ? "cuentas.flujo.mostrarOpciones" : "cuentas.flujo.ocultarOpciones"),
             () => data.onChange({ colapsado: !data.colapsado }),
             data.colapsado ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />,
+            false,
+            "contraerNodo",
           )}
-          {accion(t("cuentas.flujo.quitarNodo"), data.onDelete, <Trash2 className="size-3.5" />, true)}
+          {accion(t("cuentas.flujo.quitarNodo"), data.onDelete, <Trash2 className="size-3.5" />, true, "eliminar")}
         </span>
       </div>
       {data.colapsado ? (
@@ -378,7 +385,7 @@ function SubirArchivo({
         }}
       />
       {nombre && (
-        <span className="flex items-center gap-1.5 text-sm">
+        <span data-fila className="flex items-center gap-1.5 text-sm">
           {esImagen && url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="" className="size-8 shrink-0 rounded object-cover" />
@@ -388,6 +395,7 @@ function SubirArchivo({
           <span className="min-w-0 flex-1 truncate" data-testid={`${testid}-nombre`}>
             {nombre}
           </span>
+          <ActionTooltip label={t("cuentas.flujo.play.archivo.quitar")} atajo="eliminar" fila>
           <Button
             type="button"
             variant="ghost"
@@ -398,9 +406,10 @@ function SubirArchivo({
           >
             <X />
           </Button>
+          </ActionTooltip>
         </span>
       )}
-      <Button
+      <Button atajo="archivo"
         type="button"
         variant="outline"
         size="sm"
@@ -442,7 +451,7 @@ function OpcionesEditor({
   return (
     <div className="flex flex-col gap-1.5" data-testid={`play-${nodoId}-${clave}`}>
       {opciones.map((o, i) => (
-        <div key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
+        <div data-fila key={i} className="flex flex-col gap-1 rounded-md border p-1.5">
           <div className="flex items-center gap-1">
             <span
               className="w-8 shrink-0 text-center text-xs font-medium tabular-nums text-muted-foreground"
@@ -459,6 +468,7 @@ function OpcionesEditor({
               data-testid={`play-${nodoId}-${clave}-${i}-titulo`}
               onChange={(e) => cambiar(i, { titulo: e.target.value })}
             />
+            <ActionTooltip label={t("cuentas.flujo.play.opcion.quitar")} atajo="eliminar" fila>
             <Button
               type="button"
               variant="ghost"
@@ -472,6 +482,7 @@ function OpcionesEditor({
             >
               <X />
             </Button>
+            </ActionTooltip>
           </div>
           {conDescripcion && (
             <Input
@@ -485,7 +496,7 @@ function OpcionesEditor({
           )}
         </div>
       ))}
-      <Button
+      <Button atajo="agregar"
         type="button"
         variant="outline"
         size="sm"
@@ -534,7 +545,7 @@ function BotonEscuchar({ id, url }: { id: string; url: string }) {
 
   const label = t(sonando ? "cuentas.flujo.play.pausar" : "cuentas.flujo.play.escuchar");
   return (
-    <ActionTooltip label={label}>
+    <ActionTooltip label={label} atajo="escuchar" fila>
       <Button
         type="button"
         variant="outline"
@@ -728,11 +739,12 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                 tarjetas: (data.tarjetas ?? []).map((x, j) => (j === i ? { ...x, ...parche } : x)),
               });
             return (
-              <div key={i} className="flex flex-col gap-1.5 rounded-md border p-2">
+              <div data-fila key={i} className="flex flex-col gap-1.5 rounded-md border p-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">
                     {t("cuentas.flujo.play.tarjeta")} {i + 1}
                   </span>
+                  <ActionTooltip label={t("cuentas.flujo.play.tarjeta.quitar")} atajo="eliminar" fila>
                   <Button
                     type="button"
                     variant="ghost"
@@ -746,6 +758,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                   >
                     <X />
                   </Button>
+                  </ActionTooltip>
                 </div>
                 <Textarea
                   rows={2}
@@ -775,7 +788,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               </div>
             );
           })}
-          <Button
+          <Button atajo="agregar"
             type="button"
             variant="outline"
             size="sm"
@@ -893,7 +906,7 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
               {data.audioUrl && <BotonEscuchar id={id} url={data.audioUrl} />}
             </span>
           )}
-          <Button
+          <Button atajo="archivo"
             type="button"
             variant="outline"
             size="sm"
@@ -1241,7 +1254,7 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
 
       <span className="text-xs font-medium">{t("cuentas.flujo.case.opciones")}</span>
       {opciones.map((o, i) => (
-        <div key={o.id} className="flex items-center gap-1.5">
+        <div data-fila key={o.id} className="flex items-center gap-1.5">
           <Input
             aria-label={`${t("cuentas.flujo.case.opcion")} ${i + 1}`}
             className="h-7"
@@ -1251,7 +1264,7 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
               setOpciones(opciones.map((x) => (x.id === o.id ? { ...x, valor: e.target.value } : x)))
             }
           />
-          <ActionTooltip label={t("cuentas.flujo.case.quitarOpcion")}>
+          <ActionTooltip label={t("cuentas.flujo.case.quitarOpcion")} atajo="eliminar" fila>
             <button
               type="button"
               aria-label={t("cuentas.flujo.case.quitarOpcion")}
@@ -1266,7 +1279,7 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
           </ActionTooltip>
         </div>
       ))}
-      <Button
+      <Button atajo="agregar"
         type="button"
         variant="ghost"
         size="sm"
@@ -1406,7 +1419,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
 
       <span className="text-xs font-medium">{t("cuentas.flujo.http.encabezados")}</span>
       {encabezados.map((h) => (
-        <div key={h.id} className="flex items-center gap-1.5">
+        <div data-fila key={h.id} className="flex items-center gap-1.5">
           <Input
             aria-label={t("cuentas.flujo.http.encabezadoNombre")}
             className="h-7 font-mono text-xs"
@@ -1423,7 +1436,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
             data-testid={`http-${id}-encabezado-${h.id}-valor`}
             onChange={(e) => editar(h.id, { valor: e.target.value })}
           />
-          <ActionTooltip label={t("cuentas.flujo.http.quitarEncabezado")}>
+          <ActionTooltip label={t("cuentas.flujo.http.quitarEncabezado")} atajo="eliminar" fila>
             <button
               type="button"
               aria-label={t("cuentas.flujo.http.quitarEncabezado")}
@@ -1435,7 +1448,7 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
           </ActionTooltip>
         </div>
       ))}
-      <Button
+      <Button atajo="agregar"
         type="button"
         variant="ghost"
         size="sm"
@@ -1531,7 +1544,7 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
       }
     >
       {asignaciones.map((a, i) => (
-        <div key={a.id} className="flex flex-col gap-1 rounded-lg border border-border p-2">
+        <div data-fila key={a.id} className="flex flex-col gap-1 rounded-lg border border-border p-2">
           <div className="flex items-center gap-1.5">
             <Input
               aria-label={`${t("cuentas.flujo.calcular.variable")} ${i + 1}`}
@@ -1541,7 +1554,7 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
               data-testid={`calcular-${id}-${a.id}-variable`}
               onChange={(e) => editar(a.id, { variable: e.target.value })}
             />
-            <ActionTooltip label={t("cuentas.flujo.calcular.quitar")}>
+            <ActionTooltip label={t("cuentas.flujo.calcular.quitar")} atajo="eliminar" fila>
               <button
                 type="button"
                 aria-label={t("cuentas.flujo.calcular.quitar")}
@@ -1562,7 +1575,7 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
           />
         </div>
       ))}
-      <Button
+      <Button atajo="agregar"
         type="button"
         variant="ghost"
         size="sm"

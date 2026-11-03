@@ -4,6 +4,7 @@
 // HTML crudo de un mensaje.
 
 import { Paperclip } from "lucide-react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Badge } from "@/components/ui/badge";
 import {
   CANALES_MENSAJERIA,
@@ -109,6 +110,7 @@ export function AdjuntosChips({
           <span className="font-medium">{a.nombre}</span>
           <span className="text-muted-foreground">{a.tamano}</span>
           {onQuitar && (
+            <ActionTooltip label={t("plantillas.editor.quitarArchivo", { nombre: a.nombre })} atajo="eliminar" fila>
             <button
               type="button"
               aria-label={t("plantillas.editor.quitarArchivo", { nombre: a.nombre })}
@@ -117,6 +119,7 @@ export function AdjuntosChips({
             >
               ×
             </button>
+            </ActionTooltip>
           )}
         </span>
       ))}

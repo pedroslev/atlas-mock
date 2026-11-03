@@ -126,7 +126,7 @@ export default function EstadosAuxiliaresPage() {
         title={t("common.nav.estadosAuxiliares")}
         description={t("estados.descripcion")}
         actions={
-          <Button onClick={() => abrir(null)}>
+          <Button atajo="nuevo" onClick={() => abrir(null)}>
             <Plus />
             {t("estados.crear")}
           </Button>
@@ -231,10 +231,10 @@ export default function EstadosAuxiliaresPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button atajo="cancelar" variant="outline" onClick={() => setDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={guardar} disabled={!nombre.trim()}>
+            <Button atajo="confirmar" onClick={guardar} disabled={!nombre.trim()}>
               {editing ? t("common.acciones.guardar") : t("estados.crearEstado")}
             </Button>
           </DialogFooter>

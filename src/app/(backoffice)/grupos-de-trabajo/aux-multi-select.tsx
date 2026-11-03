@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,9 @@ export function AuxMultiSelect({ initialIds }: { initialIds: string[] }) {
                 aria-hidden
               />
               {estado.nombre}
+              <ActionTooltip label={t("grupos.aux.deshabilitarAria", {
+                  nombre: estado.nombre,
+                })} atajo="eliminar" fila>
               <button
                 type="button"
                 aria-label={t("grupos.aux.deshabilitarAria", {
@@ -115,6 +119,7 @@ export function AuxMultiSelect({ initialIds }: { initialIds: string[] }) {
               >
                 <X className="size-3" />
               </button>
+              </ActionTooltip>
             </Badge>
           ))}
         </div>

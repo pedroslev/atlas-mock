@@ -144,10 +144,10 @@ export function EtiquetaDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button atajo="cancelar" variant="outline" onClick={onClose}>
             {t("common.acciones.cancelar")}
           </Button>
-          <Button
+          <Button atajo="confirmar"
             disabled={!nombreFinal || !!duplicada}
             onClick={() =>
               onSave({

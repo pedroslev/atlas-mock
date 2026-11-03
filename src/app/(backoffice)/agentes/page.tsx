@@ -114,7 +114,7 @@ export default function AgentesPage() {
         title={t("common.nav.usuarios")}
         description={t("usuarios.descripcion")}
         actions={
-          <Button asChild>
+          <Button atajo="nuevo" asChild>
             <Link href="/agentes/nuevo">
               <Plus />
               {t("usuarios.nuevo")}

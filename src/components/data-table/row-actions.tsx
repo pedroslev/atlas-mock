@@ -48,7 +48,7 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
   return (
     <>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <ActionTooltip label={t("inicio.tabla.masAcciones")}>
+        <ActionTooltip label={t("inicio.tabla.masAcciones")} atajo="acciones" fila>
           <DropdownMenuTrigger asChild>
             <button
               type="button"

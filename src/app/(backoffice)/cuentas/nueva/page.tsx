@@ -16,12 +16,12 @@ export default function NuevaCuentaPage() {
         backHref="/cuentas"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/cuentas">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/cuentas">
                 <T k="cuentas.nueva.crear" />
               </Link>

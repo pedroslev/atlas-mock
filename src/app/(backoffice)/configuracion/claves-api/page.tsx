@@ -220,7 +220,7 @@ export default function ClavesApiPage() {
         description={t("clavesApi.descripcion")}
         actions={
           puedeClaves("crear") && (
-            <Button asChild data-testid="crear-clave-api">
+            <Button atajo="nuevo" asChild data-testid="crear-clave-api">
               <Link href="/configuracion/claves-api/nueva">
                 <Plus />
                 {t("clavesApi.crear")}

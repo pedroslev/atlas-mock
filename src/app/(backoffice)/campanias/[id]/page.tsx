@@ -34,12 +34,12 @@ export default async function EditarCampaniaPage({
         backHref="/campanias"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/campanias">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <Button atajo="confirmar">
               <T k="common.acciones.confirmar" />
             </Button>
           </>

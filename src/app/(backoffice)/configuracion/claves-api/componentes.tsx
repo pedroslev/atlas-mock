@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Check, Copy, KeyRound, ShieldAlert, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,8 +58,9 @@ export function BotonCopiar({
     setTimeout(() => setCopiada(false), 1500);
   }
 
-  return (
+  const boton = (
     <Button
+      atajo={soloIcono ? undefined : "copiar"}
       variant={soloIcono ? "ghost" : "outline"}
       size={soloIcono ? "icon-sm" : "sm"}
       onClick={copiar}
@@ -69,6 +71,13 @@ export function BotonCopiar({
       {!soloIcono &&
         (copiada ? t("clavesApi.creada.copiada") : t("clavesApi.creada.copiar"))}
     </Button>
+  );
+  return soloIcono ? (
+    <ActionTooltip label={etiqueta} atajo="copiar" fila>
+      {boton}
+    </ActionTooltip>
+  ) : (
+    boton
   );
 }
 
@@ -161,7 +170,7 @@ export function DominiosPermitidos({
           aria-invalid={error || undefined}
           data-testid="clave-api-dominio"
         />
-        <Button
+        <Button atajo="agregar"
           type="button"
           variant="outline"
           onClick={agregar}
@@ -180,6 +189,7 @@ export function DominiosPermitidos({
             <li key={d}>
               <Badge variant="outline" className="h-6 gap-1 pr-1 font-mono">
                 {d}
+                <ActionTooltip label={t("clavesApi.dominios.quitar", { dominio: d })} atajo="eliminar" fila>
                 <button
                   type="button"
                   onClick={() => onChange(dominios.filter((x) => x !== d))}
@@ -188,6 +198,7 @@ export function DominiosPermitidos({
                 >
                   <X className="size-3" />
                 </button>
+                </ActionTooltip>
               </Badge>
             </li>
           ))}

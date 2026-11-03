@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -280,6 +281,7 @@ export function UrlsExternasTab({
                   placeholder={t("campanias.parametros.urlNombrePlaceholder")}
                 />
               </div>
+              <ActionTooltip label={t("campanias.parametros.eliminarUrl")} atajo="eliminar" fila>
               <Button
                 type="button"
                 variant="ghost"
@@ -290,6 +292,7 @@ export function UrlsExternasTab({
               >
                 <Trash2 />
               </Button>
+              </ActionTooltip>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -342,7 +345,7 @@ export function UrlsExternasTab({
           </div>
         ))}
 
-        <Button
+        <Button atajo="agregar"
           type="button"
           variant="outline"
           className="w-fit gap-1.5"

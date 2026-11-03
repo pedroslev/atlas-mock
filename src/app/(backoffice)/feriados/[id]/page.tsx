@@ -28,12 +28,12 @@ export default async function EditarFeriadoPage({
         backHref="/feriados"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/feriados">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/feriados">
                 <T k="common.acciones.confirmar" />
               </Link>

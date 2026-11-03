@@ -112,10 +112,10 @@ export function MarcadorDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button atajo="cancelar" variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.acciones.cancelar")}
           </Button>
-          <Button onClick={guardar} disabled={!nombre.trim()}>
+          <Button atajo="confirmar" onClick={guardar} disabled={!nombre.trim()}>
             {initial ? t("common.acciones.guardar") : t("marcas.crearMarca")}
           </Button>
         </DialogFooter>

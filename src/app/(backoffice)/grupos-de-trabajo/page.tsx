@@ -68,7 +68,7 @@ export default function GruposDeTrabajoPage() {
         title={t("common.nav.gruposRoles")}
         description={t("grupos.descripcion")}
         actions={
-          <Button asChild>
+          <Button atajo="nuevo" asChild>
             <Link href="/grupos-de-trabajo/nuevo">
               <Plus />
               {t("grupos.nuevo")}

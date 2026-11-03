@@ -18,10 +18,10 @@ export default function NuevoFeriadoPage() {
         backHref="/feriados"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/feriados">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/feriados">{t("feriados.crearGrupo")}</Link>
             </Button>
           </>

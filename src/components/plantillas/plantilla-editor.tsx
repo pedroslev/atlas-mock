@@ -451,10 +451,10 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
         backHref="/plantillas"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/plantillas">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild disabled={!puedeConfirmar} className={cn(!puedeConfirmar && "cursor-not-allowed opacity-50")}>
+            <Button atajo="confirmar" asChild disabled={!puedeConfirmar} className={cn(!puedeConfirmar && "cursor-not-allowed opacity-50")}>
               <Link
                 href="/plantillas"
                 aria-disabled={!puedeConfirmar}
@@ -542,6 +542,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     <span className="text-xs font-medium text-muted-foreground">
                       {t("plantillas.editor.grupoMensajeria")}
                     </span>
+                    <ActionTooltip label={todaMensajeria ? t("plantillas.editor.destildarTodos") : t("plantillas.editor.tildarTodos")} atajo="tildar">
                     <Button
                       type="button"
                       variant="outline"
@@ -551,6 +552,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     >
                       {todaMensajeria ? t("plantillas.editor.destildarTodos") : t("plantillas.editor.tildarTodos")}
                     </Button>
+                    </ActionTooltip>
                   </div>
                   <div className="flex flex-wrap items-center gap-4" data-testid="plantilla-canales-mensajeria">
                     {CANALES_MENSAJERIA.map(checkboxCanal)}
@@ -563,7 +565,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                 </span>
               </div>
               <div className="flex justify-end">
-                <Button type="button" variant="secondary" onClick={() => setPaso("mensaje")}>
+                <Button atajo="siguiente" type="button" variant="secondary" onClick={() => setPaso("mensaje")}>
                   {t("plantillas.editor.continuar")}
                   <ArrowRight />
                 </Button>
@@ -656,33 +658,34 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     {/* Barra de formato: solo en mensajería (SMS y email no la tienen). */}
                     {esMensajeria && (
                       <>
-                    <ActionTooltip label={t("plantillas.editor.negrita")}>
+                    <ActionTooltip label={t("plantillas.editor.negrita")} atajo="negrita">
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("**")}>
                         <Bold className="size-4" />
                       </Button>
                     </ActionTooltip>
-                    <ActionTooltip label={t("plantillas.editor.cursiva")}>
+                    <ActionTooltip label={t("plantillas.editor.cursiva")} atajo="cursiva">
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("_")}>
                         <Italic className="size-4" />
                       </Button>
                     </ActionTooltip>
-                    <ActionTooltip label={t("plantillas.editor.tachado")}>
+                    <ActionTooltip label={t("plantillas.editor.tachado")} atajo="tachado">
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => envolver("~~")}>
                         <Strikethrough className="size-4" />
                       </Button>
                     </ActionTooltip>
-                    <ActionTooltip label={t("plantillas.editor.lista")}>
+                    <ActionTooltip label={t("plantillas.editor.lista")} atajo="lista">
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => listar("vineta")}>
                         <List className="size-4" />
                       </Button>
                     </ActionTooltip>
-                    <ActionTooltip label={t("plantillas.editor.listaNumerada")}>
+                    <ActionTooltip label={t("plantillas.editor.listaNumerada")} atajo="listaNumerada">
                       <Button type="button" variant="outline" size="icon-sm" onClick={() => listar("numero")}>
                         <ListOrdered className="size-4" />
                       </Button>
                     </ActionTooltip>
                     <Popover open={enlaceOpen} onOpenChange={setEnlaceOpen}>
-                      <PopoverTrigger asChild>
+                      <ActionTooltip label={t("plantillas.editor.enlace")} atajo="enlace">
+                        <PopoverTrigger asChild>
                         <Button
                           type="button"
                           variant="outline"
@@ -693,7 +696,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         >
                           <Link2 className="size-4" />
                         </Button>
-                      </PopoverTrigger>
+                        </PopoverTrigger>
+                      </ActionTooltip>
                       <PopoverContent className="flex w-80 flex-col gap-3" align="start">
                         <div className="flex flex-col gap-1.5">
                           <Label htmlFor="pl-enlace-texto">{t("plantillas.editor.enlaceTexto")}</Label>
@@ -721,7 +725,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">{t("plantillas.editor.enlaceAyuda")}</p>
-                        <Button type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim() || enlaceInvalido}>
+                        <Button atajo="confirmar" type="button" size="sm" onClick={insertarEnlace} disabled={!enlaceUrl.trim() || enlaceInvalido}>
                           {t("plantillas.editor.insertarEnlace")}
                         </Button>
                       </PopoverContent>
@@ -729,7 +733,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                       </>
                     )}
                     <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-                      <PopoverTrigger asChild>
+                      <ActionTooltip label={t("plantillas.editor.emoji")} atajo="emoji">
+                        <PopoverTrigger asChild>
                         <Button
                           type="button"
                           variant="outline"
@@ -739,7 +744,8 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                         >
                           <SmilePlus className="size-4" />
                         </Button>
-                      </PopoverTrigger>
+                        </PopoverTrigger>
+                      </ActionTooltip>
                       <PopoverContent className="w-auto p-0" align="start">
                         {/* Todos los emojis, con buscador y categorías. Mock con
                             emoji-picker-react; la librería definitiva y el idioma
@@ -773,7 +779,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     </Popover>
                     <Popover open={variablesOpen} onOpenChange={setVariablesOpen}>
                       <PopoverTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className="ml-1">
+                        <Button atajo="variable" type="button" variant="outline" size="sm" className="ml-1">
                           <Braces className="size-4" />
                           {t("plantillas.editor.insertarVariable")}
                         </Button>
@@ -806,7 +812,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                       </PopoverContent>
                     </Popover>
                     {!esSms && (
-                      <Button
+                      <Button atajo="archivo"
                         type="button"
                         variant="outline"
                         size="sm"
@@ -1086,6 +1092,7 @@ function VistaPrevia({
                 // del cuadro nunca se ejecuta en esta página.
                 <>
                   <div className="flex items-center gap-1">
+                    <ActionTooltip label={t("plantillas.editor.anchoEscritorio")} atajo="vistaEscritorio">
                     <Button
                       type="button"
                       size="xs"
@@ -1095,6 +1102,8 @@ function VistaPrevia({
                     >
                       {t("plantillas.editor.anchoEscritorio")}
                     </Button>
+                    </ActionTooltip>
+                    <ActionTooltip label={t("plantillas.editor.anchoMovil")} atajo="vistaMovil">
                     <Button
                       type="button"
                       size="xs"
@@ -1104,6 +1113,7 @@ function VistaPrevia({
                     >
                       {t("plantillas.editor.anchoMovil")}
                     </Button>
+                    </ActionTooltip>
                   </div>
                   {/* Fondo gris de "escritorio"; el iframe toma el ancho real, así
                       las @media del correo responden al alternador. */}

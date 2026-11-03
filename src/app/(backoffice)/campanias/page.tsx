@@ -66,7 +66,7 @@ export default function CampaniasPage() {
               <FolderKanban className="size-4 text-secondary" />
               {nombre}
               {proyecto && (
-                <ActionTooltip label={t("campanias.editarProyecto")}>
+                <ActionTooltip label={t("campanias.editarProyecto")} atajo="ver" fila>
                   <Link
                     href={`/proyectos/${proyecto.id}`}
                     aria-label={t("campanias.editarProyectoAria", { nombre })}
@@ -131,13 +131,13 @@ export default function CampaniasPage() {
           description={t("campanias.descripcion")}
           actions={
             <>
-              <Button variant="outline" asChild>
+              <Button atajo="nuevoSecundario" variant="outline" asChild>
                 <Link href="/proyectos/nuevo">
                   <Plus />
                   {t("campanias.nuevoProyecto")}
                 </Link>
               </Button>
-              <Button asChild data-tour="campanias-nueva">
+              <Button atajo="nuevo" asChild data-tour="campanias-nueva">
                 <Link href="/campanias/nueva">
                   <Plus />
                   {t("campanias.nuevaCampania")}

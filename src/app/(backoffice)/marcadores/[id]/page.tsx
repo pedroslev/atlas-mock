@@ -32,12 +32,12 @@ export default async function GrupoMarcadorPage({
         backHref="/marcadores"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/marcadores">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/marcadores">
                 <T k="common.acciones.confirmar" />
               </Link>

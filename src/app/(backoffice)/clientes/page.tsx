@@ -83,13 +83,13 @@ export default function ClientesPage() {
         description={t("clientes.descripcion")}
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="etiquetas" variant="outline" asChild>
               <Link href="/clientes/etiquetas">
                 <Tags />
                 {t("clientes.administrarEtiquetas")}
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="importar" asChild>
               <Link href="/clientes/importar">
                 <Upload />
                 {t("clientes.importar")}

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { ActionTooltip } from "@/components/layout/action-tooltip";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -699,7 +700,7 @@ export function ImportarClientes() {
           <div className="sticky -bottom-4 z-20 -mx-4 -mb-4 flex items-center justify-between gap-3 border-t bg-background px-4 py-3 sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:px-6">
             <div>
               {idx > 0 && (
-                <Button variant="outline" onClick={() => setPaso(PASOS[idx - 1])}>
+                <Button atajo="anterior" variant="outline" onClick={() => setPaso(PASOS[idx - 1])}>
                   {t("clientes.imp.anterior")}
                 </Button>
               )}
@@ -715,13 +716,13 @@ export function ImportarClientes() {
                       errores: n(TOTALES.errores),
                     })}
                   </span>
-                  <Button onClick={() => setImportado(true)}>
+                  <Button atajo="confirmar" onClick={() => setImportado(true)}>
                     <Upload />
                     {t("clientes.imp.importarValidos")}
                   </Button>
                 </>
               ) : (
-                <Button disabled={!puedeAvanzar} onClick={() => setPaso(PASOS[idx + 1])}>
+                <Button atajo="confirmar" disabled={!puedeAvanzar} onClick={() => setPaso(PASOS[idx + 1])}>
                   {t("clientes.imp.siguiente")}
                   <ArrowRight />
                 </Button>
@@ -743,7 +744,7 @@ function CancelarImportacion({ hayCambios }: { hayCambios: boolean }) {
   const router = useRouter();
   if (!hayCambios) {
     return (
-      <Button variant="outline" asChild>
+      <Button atajo="cancelar" variant="outline" asChild>
         <Link href="/clientes">{t("clientes.imp.cancelar")}</Link>
       </Button>
     );
@@ -751,7 +752,7 @@ function CancelarImportacion({ hayCambios }: { hayCambios: boolean }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline">{t("clientes.imp.cancelar")}</Button>
+        <Button atajo="cancelar" variant="outline">{t("clientes.imp.cancelar")}</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -904,6 +905,7 @@ function PasoArchivo({
   if (!cargado) {
     return (
       <div className="flex flex-col gap-3">
+        <ActionTooltip label={t("clientes.imp.soltar")} atajo="archivo">
         <button
           type="button"
           onClick={() => onCargar(simular)}
@@ -913,6 +915,7 @@ function PasoArchivo({
           <span className="font-medium text-foreground">{t("clientes.imp.soltar")}</span>
           <span className="text-xs">{t("clientes.imp.formatos")}</span>
         </button>
+        </ActionTooltip>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>{t("clientes.imp.simular")}</span>
           {FORMATOS_PRUEBA.map((f) => (
@@ -960,7 +963,7 @@ function PasoArchivo({
             {t("clientes.imp.archivoValido")}
           </Badge>
         )}
-        <Button variant="outline" size="sm" onClick={onCambiar}>
+        <Button atajo="archivo" variant="outline" size="sm" onClick={onCambiar}>
           <RefreshCw />
           {t("clientes.imp.cambiarArchivo")}
         </Button>
@@ -1280,6 +1283,7 @@ function PasoContacto({
               />
               {t("clientes.ficha.principal")}
             </label>
+            <ActionTooltip label={t("common.acciones.eliminar")} atajo="eliminar" fila>
             <Button
               variant="ghost"
               size="icon"
@@ -1289,10 +1293,11 @@ function PasoContacto({
             >
               <Trash2 />
             </Button>
+            </ActionTooltip>
           </div>
         ))}
       </div>
-      <Button
+      <Button atajo="agregar"
         variant="outline"
         size="sm"
         className="self-start"
@@ -1405,6 +1410,7 @@ function PasoAdicionales({
                   <Label>{t("clientes.imp.tipo")}</Label>
                   <TipoSelect value={v.tipo} disabled={!!existente} onChange={(tipo) => updVacio(v.id, { tipo })} />
                 </div>
+                <ActionTooltip label={t("common.acciones.eliminar")} atajo="eliminar" fila>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1414,6 +1420,7 @@ function PasoAdicionales({
                 >
                   <Trash2 />
                 </Button>
+                </ActionTooltip>
               </div>
               {repetidos.has(v.id) && <span className="text-xs text-destructive">{t("clientes.imp.nombreRepetido")}</span>}
               {existente ? (
@@ -1425,7 +1432,7 @@ function PasoAdicionales({
           );
         })}
         <div className="flex flex-wrap items-center gap-3">
-          <Button
+          <Button atajo="agregar"
             variant="outline"
             size="sm"
             onClick={() =>
@@ -1518,6 +1525,7 @@ function OpcionesPermitidas({ opciones, onChange }: { opciones: string[]; onChan
         {opciones.map((o) => (
           <Badge key={o} variant="outline" className="gap-1 pr-1">
             {o}
+            <ActionTooltip label={t("clientes.imp.quitarOpcion", { opcion: o })} atajo="eliminar" fila>
             <button
               type="button"
               aria-label={t("clientes.imp.quitarOpcion", { opcion: o })}
@@ -1526,6 +1534,7 @@ function OpcionesPermitidas({ opciones, onChange }: { opciones: string[]; onChan
             >
               ×
             </button>
+            </ActionTooltip>
           </Badge>
         ))}
       </div>
@@ -1544,7 +1553,7 @@ function OpcionesPermitidas({ opciones, onChange }: { opciones: string[]; onChan
             }
           }}
         />
-        <Button variant="outline" size="sm" disabled={!nueva.trim() || repetida} onClick={agregar}>
+        <Button atajo="agregar" variant="outline" size="sm" disabled={!nueva.trim() || repetida} onClick={agregar}>
           <Plus />
           {t("clientes.imp.agregarOpcion")}
         </Button>
@@ -1851,7 +1860,7 @@ function PasoEtiquetas({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium">{t("clientes.imp.etiquetas")}</span>
-          <Button variant="ghost" size="sm" onClick={() => setNuevaEtiqueta(true)}>
+          <Button atajo="nuevo" variant="ghost" size="sm" onClick={() => setNuevaEtiqueta(true)}>
             <Plus />
             {t("clientes.et.nueva")}
           </Button>
@@ -2007,6 +2016,7 @@ function EtiquetasPicker({
     <div className="flex flex-wrap items-center gap-2">
       {elegidas.map((e) => (
         <EtiquetaBadge key={e.id} etiqueta={e}>
+          <ActionTooltip label={t("clientes.ficha.quitarEtiqueta", { nombre: e.nombre })} atajo="eliminar" fila>
           <button
             type="button"
             aria-label={t("clientes.ficha.quitarEtiqueta", { nombre: e.nombre })}
@@ -2015,6 +2025,7 @@ function EtiquetasPicker({
           >
             ×
           </button>
+          </ActionTooltip>
         </EtiquetaBadge>
       ))}
       <Popover open={open} onOpenChange={setOpen}>
@@ -2166,6 +2177,7 @@ function ReglasEtiquetas({
                   />
                 </>
               )}
+              <ActionTooltip label={t("clientes.imp.auto.eliminar")} atajo="eliminar" fila>
               <Button
                 variant="ghost"
                 size="icon"
@@ -2175,6 +2187,7 @@ function ReglasEtiquetas({
               >
                 <Trash2 />
               </Button>
+              </ActionTooltip>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium">{t("clientes.imp.auto.entonces")}</span>
@@ -2195,7 +2208,7 @@ function ReglasEtiquetas({
       })}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button
+        <Button atajo="agregar"
           variant="outline"
           size="sm"
           onClick={() =>
@@ -2422,7 +2435,7 @@ function PasoRevision({
             </TableBody>
           </Table>
         </div>
-        <Button variant="link" size="sm" className="self-start px-0">
+        <Button atajo="descargar" variant="link" size="sm" className="self-start px-0">
           {t("clientes.imp.descargarErrores")}
         </Button>
       </div>
@@ -2442,10 +2455,10 @@ function Resultado({ onOtra }: { onOtra: () => void }) {
       <span className="text-lg font-semibold">{t("clientes.imp.listo")}</span>
       <p className="max-w-md text-sm text-muted-foreground">{t("clientes.imp.listoDesc")}</p>
       <div className="mt-2 flex flex-wrap justify-center gap-2">
-        <Button variant="outline" onClick={onOtra}>
+        <Button atajo="nuevo" variant="outline" onClick={onOtra}>
           {t("clientes.imp.otraImportacion")}
         </Button>
-        <Button asChild>
+        <Button atajo="cancelar" asChild>
           <Link href="/clientes">{t("clientes.imp.volverClientes")}</Link>
         </Button>
       </div>

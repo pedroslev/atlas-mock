@@ -79,12 +79,12 @@ export default async function EditarAgentePage({
         backHref="/agentes"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/agentes">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button>
+            <Button atajo="confirmar">
               <T k="common.acciones.guardar" />
             </Button>
           </>

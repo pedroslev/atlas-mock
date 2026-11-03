@@ -194,13 +194,13 @@ export default function PlantillasPage() {
             <TabsTrigger value="catalogo">{t("plantillas.tabs.catalogo")}</TabsTrigger>
           </TabsList>
           <TabsContent value="grupos" className="contents">
-            <Button onClick={abrirNuevoGrupo}>
+            <Button atajo="nuevoSecundario" onClick={abrirNuevoGrupo}>
               <Plus />
               {t("plantillas.nuevoGrupo")}
             </Button>
           </TabsContent>
           <TabsContent value="catalogo" className="contents">
-            <Button variant="outline" asChild>
+            <Button atajo="nuevo" variant="outline" asChild>
               <Link href="/plantillas/catalogo/nueva">
                 <Plus />
                 {t("plantillas.nuevaPlantilla")}
@@ -285,10 +285,10 @@ export default function PlantillasPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGrupoDialogOpen(false)}>
+            <Button atajo="cancelar" variant="outline" onClick={() => setGrupoDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
+            <Button atajo="confirmar" onClick={crearGrupo} disabled={!grupoNombre.trim()}>
               {t("plantillas.crearGrupo")}
             </Button>
           </DialogFooter>

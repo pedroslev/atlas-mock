@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { AtajosDeBotones } from "@/components/layout/atajos-de-botones";
 import { CampaniasProvider } from "@/lib/campanias-store";
 
 // SidebarProvider ahora envuelve todo (header incluido) para que AppHeader
@@ -14,19 +15,21 @@ export default function BackofficeLayout({
 }) {
   return (
     <CampaniasProvider>
-      <SidebarProvider className="h-screen w-full flex-col">
-        <AppHeader />
-        <div className="flex min-h-0 flex-1">
-          <AppSidebar />
-          {/* min-w-0: sin esto una tabla ancha (ej. Objetivos de contacto)
-              agranda el inset más allá de la pantalla en vez de scrollear. */}
-          <SidebarInset className="min-w-0">
-            <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
-              {children}
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <AtajosDeBotones>
+        <SidebarProvider className="h-screen w-full flex-col">
+          <AppHeader />
+          <div className="flex min-h-0 flex-1">
+            <AppSidebar />
+            {/* min-w-0: sin esto una tabla ancha (ej. Objetivos de contacto)
+                agranda el inset más allá de la pantalla en vez de scrollear. */}
+            <SidebarInset className="min-w-0">
+              <main className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-none px-4 pb-4 sm:gap-6 sm:px-6 sm:pb-6">
+                {children}
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </AtajosDeBotones>
     </CampaniasProvider>
   );
 }

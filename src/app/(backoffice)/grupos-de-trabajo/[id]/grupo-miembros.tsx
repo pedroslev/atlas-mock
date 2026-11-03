@@ -50,7 +50,7 @@ function AgregarUsuario({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button atajo="agregar" variant="outline" size="sm">
           <UserPlus />
           {t("grupos.miembros.agregar")}
         </Button>
@@ -151,7 +151,7 @@ export function GrupoMiembros({
                 <span className="hidden text-muted-foreground sm:inline">
                   {m.email}
                 </span>
-                <ActionTooltip label={t("grupos.miembros.quitar")}>
+                <ActionTooltip label={t("grupos.miembros.quitar")} atajo="eliminar" fila>
                   <button
                     type="button"
                     aria-label={t("grupos.miembros.quitarAria", {

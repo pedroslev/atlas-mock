@@ -109,7 +109,7 @@ export function AppHeader() {
         <LanguageMenu />
 
         <Popover>
-          <ActionTooltip label="Atlas">
+          <ActionTooltip label="Atlas" atajo="aplicaciones">
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -173,7 +173,7 @@ export function AppHeader() {
         </Popover>
 
         <DropdownMenu>
-          <ActionTooltip label="Marina Acosta">
+          <ActionTooltip label="Marina Acosta" atajo="cuenta">
             <DropdownMenuTrigger asChild>
               <button
                 type="button"

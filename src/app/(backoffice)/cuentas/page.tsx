@@ -80,7 +80,7 @@ export default function CuentasPage() {
         title={t("cuentas.titulo")}
         description={t("cuentas.descripcion")}
         actions={
-          <Button asChild>
+          <Button atajo="nuevo" asChild>
             <Link href="/cuentas/nueva">
               <Plus />
               {t("cuentas.nueva")}

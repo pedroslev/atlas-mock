@@ -31,7 +31,7 @@ export function ThemeToggle() {
     : t("common.header.temaOscuro");
 
   return (
-    <ActionTooltip label={label}>
+    <ActionTooltip label={label} atajo="tema">
       <button
         type="button"
         onClick={toggle}

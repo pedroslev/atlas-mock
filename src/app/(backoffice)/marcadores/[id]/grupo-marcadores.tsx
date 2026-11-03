@@ -46,7 +46,7 @@ export function GrupoMarcadores({ initialIds }: { initialIds: string[] }) {
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline">
+            <Button atajo="agregar" variant="outline">
               <Plus />
               {t("marcas.miembros.agregar")}
             </Button>
@@ -97,7 +97,7 @@ export function GrupoMarcadores({ initialIds }: { initialIds: string[] }) {
                 </span>
               )}
             </span>
-            <ActionTooltip label={t("marcas.miembros.quitar")}>
+            <ActionTooltip label={t("marcas.miembros.quitar")} atajo="eliminar" fila>
               <button
                 type="button"
                 aria-label={t("marcas.miembros.quitarAria", {

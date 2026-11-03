@@ -54,7 +54,7 @@ export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline">
+            <Button atajo="agregar" variant="outline">
               <Plus />
               {t("plantillas.miembros.agregar")}
             </Button>
@@ -114,7 +114,7 @@ export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
               )}
               <CanalBadges canales={p.canales} />
             </span>
-            <ActionTooltip label={t("plantillas.miembros.quitar")}>
+            <ActionTooltip label={t("plantillas.miembros.quitar")} atajo="eliminar" fila>
               <button
                 type="button"
                 aria-label={t("plantillas.miembros.quitarAria", { nombre: p.nombre })}

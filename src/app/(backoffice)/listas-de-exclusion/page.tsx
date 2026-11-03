@@ -56,7 +56,7 @@ export default function ListasDeExclusionPage() {
         title={t("common.nav.listasExclusion")}
         description={t("listas.descripcion")}
         actions={
-          <Button asChild>
+          <Button atajo="nuevo" asChild>
             <Link href="/listas-de-exclusion/nueva">
               <Plus />
               {t("listas.nuevaLista")}

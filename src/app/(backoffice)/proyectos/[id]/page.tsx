@@ -45,12 +45,12 @@ export default async function EditarProyectoPage({
         backHref="/campanias"
         actions={
           <>
-            <Button variant="outline" asChild>
+            <Button atajo="cancelar" variant="outline" asChild>
               <Link href="/campanias">
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button atajo="confirmar" asChild>
               <Link href="/campanias">
                 <T k="common.acciones.confirmar" />
               </Link>
@@ -71,19 +71,19 @@ export default async function EditarProyectoPage({
           </div>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" asChild>
+          <Button atajo="nuevoSecundario" variant="outline" size="sm" asChild>
             <Link href="/feriados/nuevo">
               <Plus />
               <T k="proyectos.acciones.crearFeriados" />
             </Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button atajo="terceraAlta" variant="outline" size="sm" asChild>
             <Link href="/clasificaciones">
               <Plus />
               <T k="proyectos.acciones.crearClasificaciones" />
             </Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button atajo="nuevo" variant="outline" size="sm" asChild>
             <Link href="/campanias/nueva">
               <Plus />
               <T k="proyectos.acciones.nuevaCampania" />

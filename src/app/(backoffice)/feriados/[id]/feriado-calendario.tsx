@@ -220,7 +220,7 @@ export function FeriadoCalendario({
                       {h.description}
                     </span>
                   </div>
-                  <ActionTooltip label={t("feriados.calendario.quitarFecha")}>
+                  <ActionTooltip label={t("feriados.calendario.quitarFecha")} atajo="eliminar" fila>
                     <button
                       type="button"
                       aria-label={t("feriados.calendario.quitarFechaAria", {
@@ -275,7 +275,7 @@ export function FeriadoCalendario({
           </div>
           <DialogFooter>
             {editing?.existing && (
-              <Button
+              <Button atajo="eliminar"
                 variant="destructive"
                 onClick={() => editing && quitar(editing.iso)}
               >
@@ -283,10 +283,10 @@ export function FeriadoCalendario({
                 {t("feriados.calendario.quitarFecha")}
               </Button>
             )}
-            <Button variant="outline" onClick={() => setEditing(null)}>
+            <Button atajo="cancelar" variant="outline" onClick={() => setEditing(null)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={guardar} disabled={!editing?.description.trim()}>
+            <Button atajo="confirmar" onClick={guardar} disabled={!editing?.description.trim()}>
               {editing?.existing
                 ? t("common.acciones.guardar")
                 : t("feriados.dialogo.marcarFeriado")}
