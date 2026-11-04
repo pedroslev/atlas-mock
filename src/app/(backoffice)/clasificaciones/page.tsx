@@ -30,6 +30,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
+import { MensajeRepetido } from "@/components/layout/campos-unicos";
+import { seRepite } from "@/lib/campos-unicos";
 import {
   clasificaciones as clasificacionesIniciales,
   clasificacionGrupos,
@@ -44,6 +46,13 @@ import {
   efectoVariant,
   tipoClave,
 } from "./clasificacion-dialog";
+
+function nombreSugerido(base: string, existentes: string[]) {
+  if (!existentes.includes(base)) return base;
+  let i = 2;
+  while (existentes.includes(`${base} (${i})`)) i++;
+  return `${base} (${i})`;
+}
 
 // Cada tipo de clasificación se pinta con un tono distinto (feedback
 // 2026-07-16: "distintos colores si son diferentes") — así se leen de un
@@ -73,9 +82,13 @@ export default function ClasificacionesPage() {
   const [grupos, setGrupos] = useState<ClasificacionGrupo[]>(clasificacionGrupos);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Clasificacion | null>(null);
+  const [duplicando, setDuplicando] = useState<Clasificacion | null>(null);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
   const [grupoNombre, setGrupoNombre] = useState("");
   const [grupoDescripcion, setGrupoDescripcion] = useState("");
+  // Grupo de origen al duplicar: la copia apunta a las mismas clasificaciones del pool.
+  const [grupoOrigen, setGrupoOrigen] = useState<ClasificacionGrupo | null>(null);
+  const grupoRepetido = seRepite(grupoNombre, grupos.map((g) => g.nombre));
 
   const columnasGrupos = useMemo<MRT_ColumnDef<ClasificacionGrupo>[]>(
     () => [
@@ -204,21 +217,34 @@ export default function ClasificacionesPage() {
     );
   }
 
+  function abrirDuplicarGrupo(grupo: ClasificacionGrupo) {
+    setGrupoOrigen(grupo);
+    setGrupoNombre(grupo.nombre);
+    setGrupoDescripcion(grupo.descripcion ?? "");
+    setGrupoDialogOpen(true);
+  }
+
   function abrirNuevoGrupo() {
-    setGrupoNombre("");
+    setGrupoOrigen(null);
+    setGrupoNombre(
+      nombreSugerido(
+        t("clasificaciones.nuevoGrupo"),
+        grupos.map((g) => g.nombre)
+      )
+    );
     setGrupoDescripcion("");
     setGrupoDialogOpen(true);
   }
 
   function crearGrupo() {
-    if (!grupoNombre.trim()) return;
+    if (!grupoNombre.trim() || grupoRepetido) return;
     setGrupos((prev) => [
       ...prev,
       {
         id: `cg-${prev.length + 1}-${grupoNombre.trim().toLowerCase().replace(/\s+/g, "-")}`,
         nombre: grupoNombre.trim(),
         descripcion: grupoDescripcion.trim() || undefined,
-        clasificacionIds: [],
+        clasificacionIds: grupoOrigen?.clasificacionIds ?? [],
       },
     ]);
     setGrupoDialogOpen(false);
@@ -258,6 +284,7 @@ export default function ClasificacionesPage() {
               variant="outline"
               onClick={() => {
                 setEditing(null);
+                setDuplicando(null);
                 setDialogOpen(true);
               }}
             >
@@ -279,6 +306,10 @@ export default function ClasificacionesPage() {
                     {
                       label: t("common.acciones.editar"),
                       href: `/clasificaciones/${row.original.id}`,
+                    },
+                    {
+                      label: t("common.acciones.duplicar"),
+                      onSelect: () => abrirDuplicarGrupo(row.original),
                     },
                     {
                       label: t("common.acciones.eliminar"),
@@ -312,6 +343,15 @@ export default function ClasificacionesPage() {
                       label: t("common.acciones.editar"),
                       onSelect: () => {
                         setEditing(row.original);
+                        setDuplicando(null);
+                        setDialogOpen(true);
+                      },
+                    },
+                    {
+                      label: t("common.acciones.duplicar"),
+                      onSelect: () => {
+                        setEditing(null);
+                        setDuplicando(row.original);
                         setDialogOpen(true);
                       },
                     },
@@ -344,6 +384,7 @@ export default function ClasificacionesPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initial={editing}
+        duplicarDe={duplicando}
         pool={pool}
         onSave={guardarClasificacion}
       />
@@ -365,7 +406,9 @@ export default function ClasificacionesPage() {
                 onChange={(e) => setGrupoNombre(e.target.value)}
                 placeholder={t("clasificaciones.nuevoGrupo.placeholder")}
                 autoFocus
+                aria-invalid={grupoRepetido}
               />
+              {grupoRepetido && <MensajeRepetido />}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="grupo-descripcion">
@@ -386,7 +429,7 @@ export default function ClasificacionesPage() {
               {t("common.acciones.cancelar")}
             </Button>
             </DialogClose>
-            <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
+            <Button onClick={crearGrupo} disabled={!grupoNombre.trim() || grupoRepetido}>
               {t("clasificaciones.nuevoGrupo.crear")}
             </Button>
           </DialogFooter>

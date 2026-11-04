@@ -1,9 +1,10 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -15,11 +16,22 @@ import {
 } from "@/components/ui/card";
 import { AuxMultiSelect } from "../aux-multi-select";
 import { useT } from "@/lib/i18n";
+import { getGrupoTrabajo, gruposTrabajo } from "@/lib/mock-data";
 
-export default function NuevoGrupoTrabajoPage() {
+// Duplicar (ATLAS-1291) abre esta misma alta con los datos del grupo original.
+// MOCK: los usuarios, los permisos y el resto de la configuración no se ven acá y Crear no persiste.
+// REAL: el alta recibe el grupo de origen y lo copia tal cual, con sus mismos usuarios.
+export default function NuevoGrupoTrabajoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ duplicar?: string }>;
+}) {
   const t = useT();
+  const { duplicar } = use(searchParams);
+  const original = duplicar ? getGrupoTrabajo(duplicar) : undefined;
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t("grupos.nuevo")}
@@ -31,9 +43,7 @@ export default function NuevoGrupoTrabajoPage() {
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild data-guarda-cambios>
-              <Link href="/grupos-de-trabajo">{t("grupos.crear")}</Link>
-            </Button>
+            <BotonConfirmar href="/grupos-de-trabajo">{t("grupos.crear")}</BotonConfirmar>
           </>
         }
       />
@@ -46,8 +56,11 @@ export default function NuevoGrupoTrabajoPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-              <Input
+              <CampoUnico
                 id="nombre"
+                existentes={gruposTrabajo.map((g) => g.nombre)}
+                defaultValue={original?.nombre}
+                obligatorio
                 placeholder={t("grupos.form.nombrePlaceholder")}
               />
             </div>
@@ -57,6 +70,7 @@ export default function NuevoGrupoTrabajoPage() {
               </Label>
               <Textarea
                 id="descripcion"
+                defaultValue={original?.descripcion}
                 rows={3}
                 placeholder={t("common.comunes.opcional")}
               />
@@ -70,10 +84,11 @@ export default function NuevoGrupoTrabajoPage() {
             <CardDescription>{t("grupos.aux.descNuevo")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <AuxMultiSelect initialIds={[]} />
+            <AuxMultiSelect initialIds={original?.estadosAuxiliares ?? []} />
           </CardContent>
         </Card>
       </div>
     </div>
+    </CamposUnicos>
   );
 }

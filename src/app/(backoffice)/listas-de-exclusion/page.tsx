@@ -77,6 +77,10 @@ export default function ListasDeExclusionPage() {
                   label: t("common.acciones.editar"),
                   href: `/listas-de-exclusion/${row.original.id}`,
                 },
+                {
+                  label: t("common.acciones.duplicar"),
+                  href: `/listas-de-exclusion/nueva?duplicar=${row.original.id}`,
+                },
                 { label: t("listas.descargar") },
                 {
                   label: t("common.acciones.eliminar"),

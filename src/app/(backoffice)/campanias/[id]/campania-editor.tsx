@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -75,9 +75,11 @@ function iniciales(nombre: string) {
 export function CampaniaEditor({
   campania,
   nombreProyecto,
+  nombresExistentes,
 }: {
   campania: Campania;
   nombreProyecto?: string;
+  nombresExistentes: string[];
 }) {
   const t = useT();
   // campaigns.parameters, levantado acá (no en cada solapa) porque
@@ -103,7 +105,9 @@ export function CampaniaEditor({
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
       </TabsList>
 
-      <TabsContent forceMount value="general" className="grid gap-6 lg:grid-cols-2 data-[state=inactive]:hidden">
+      {/* forceMount: el nombre conserva lo escrito y sigue bloqueando Confirmar
+          aunque se pase a otra solapa. */}
+      <TabsContent value="general" forceMount className="grid gap-6 lg:grid-cols-2 data-[state=inactive]:hidden">
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader>
@@ -112,7 +116,12 @@ export function CampaniaEditor({
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-                <Input id="nombre" defaultValue={campania.nombre} />
+                <CampoUnico
+                  id="nombre"
+                  existentes={nombresExistentes}
+                  defaultValue={campania.nombre}
+                  obligatorio
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="descripcion">

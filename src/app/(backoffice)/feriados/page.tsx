@@ -111,6 +111,10 @@ export default function FeriadosPage() {
                   href: `/feriados/${row.original.id}`,
                 },
                 {
+                  label: t("common.acciones.duplicar"),
+                  href: `/feriados/nuevo?duplicar=${row.original.id}`,
+                },
+                {
                   label: t("common.acciones.eliminar"),
                   destructive: true,
                   separatorBefore: true,

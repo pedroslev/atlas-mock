@@ -34,6 +34,15 @@ import {
 } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 import { MarcadorDialog } from "./marcador-dialog";
+import { MensajeRepetido } from "@/components/layout/campos-unicos";
+import { seRepite } from "@/lib/campos-unicos";
+
+function nombreSugerido(base: string, existentes: string[]) {
+  if (!existentes.includes(base)) return base;
+  let i = 2;
+  while (existentes.includes(`${base} (${i})`)) i++;
+  return `${base} (${i})`;
+}
 
 // Pantalla partida en dos, igual que Clasificaciones (feedback 2026-07-16):
 // arriba los GRUPOS de bookmarks, abajo el POOL de marcas del tenant —
@@ -45,8 +54,12 @@ export default function MarcadoresPage() {
   const [grupos, setGrupos] = useState<MarcadorGrupo[]>(marcadorGrupos);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Marcador | null>(null);
+  const [duplicando, setDuplicando] = useState<Marcador | null>(null);
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
   const [grupoNombre, setGrupoNombre] = useState("");
+  // Grupo de origen al duplicar: la copia apunta a las mismas marcas del pool.
+  const [grupoOrigen, setGrupoOrigen] = useState<MarcadorGrupo | null>(null);
+  const grupoRepetido = seRepite(grupoNombre, grupos.map((g) => g.nombre));
 
   const columnasGrupos = useMemo<MRT_ColumnDef<MarcadorGrupo>[]>(
     () => [
@@ -117,19 +130,31 @@ export default function MarcadoresPage() {
     );
   }
 
+  function abrirDuplicarGrupo(grupo: MarcadorGrupo) {
+    setGrupoOrigen(grupo);
+    setGrupoNombre(grupo.nombre);
+    setGrupoDialogOpen(true);
+  }
+
   function abrirNuevoGrupo() {
-    setGrupoNombre("");
+    setGrupoOrigen(null);
+    setGrupoNombre(
+      nombreSugerido(
+        t("marcas.nuevoGrupo"),
+        grupos.map((g) => g.nombre)
+      )
+    );
     setGrupoDialogOpen(true);
   }
 
   function crearGrupo() {
-    if (!grupoNombre.trim()) return;
+    if (!grupoNombre.trim() || grupoRepetido) return;
     setGrupos((prev) => [
       ...prev,
       {
         id: `bg-${prev.length + 1}-${grupoNombre.trim().toLowerCase().replace(/\s+/g, "-")}`,
         nombre: grupoNombre.trim(),
-        marcadorIds: [],
+        marcadorIds: grupoOrigen?.marcadorIds ?? [],
       },
     ]);
     setGrupoDialogOpen(false);
@@ -162,6 +187,7 @@ export default function MarcadoresPage() {
               variant="outline"
               onClick={() => {
                 setEditing(null);
+                setDuplicando(null);
                 setDialogOpen(true);
               }}
             >
@@ -183,6 +209,10 @@ export default function MarcadoresPage() {
                     {
                       label: t("common.acciones.editar"),
                       href: `/marcadores/${row.original.id}`,
+                    },
+                    {
+                      label: t("common.acciones.duplicar"),
+                      onSelect: () => abrirDuplicarGrupo(row.original),
                     },
                     {
                       label: t("common.acciones.eliminar"),
@@ -214,6 +244,15 @@ export default function MarcadoresPage() {
                       label: t("common.acciones.editar"),
                       onSelect: () => {
                         setEditing(row.original);
+                        setDuplicando(null);
+                        setDialogOpen(true);
+                      },
+                    },
+                    {
+                      label: t("common.acciones.duplicar"),
+                      onSelect: () => {
+                        setEditing(null);
+                        setDuplicando(row.original);
                         setDialogOpen(true);
                       },
                     },
@@ -236,7 +275,8 @@ export default function MarcadoresPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initial={editing}
-        poolSize={items.length}
+        duplicarDe={duplicando}
+        pool={items}
         onSave={guardarMarcador}
       />
 
@@ -256,13 +296,15 @@ export default function MarcadoresPage() {
               onChange={(e) => setGrupoNombre(e.target.value)}
               placeholder={t("marcas.dialogoGrupo.placeholder")}
               autoFocus
+              aria-invalid={grupoRepetido}
             />
+            {grupoRepetido && <MensajeRepetido />}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGrupoDialogOpen(false)}>
               {t("common.acciones.cancelar")}
             </Button>
-            <Button onClick={crearGrupo} disabled={!grupoNombre.trim()}>
+            <Button onClick={crearGrupo} disabled={!grupoNombre.trim() || grupoRepetido}>
               {t("marcas.crearGrupo")}
             </Button>
           </DialogFooter>

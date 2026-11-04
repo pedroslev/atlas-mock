@@ -176,7 +176,10 @@ export default function CampaniasPage() {
                       label: t("campanias.accion.asignarUsuarios"),
                       href: `/campanias/${row.original.id}?tab=usuarios`,
                     },
-                    { label: t("campanias.accion.duplicar") },
+                    {
+                      label: t("campanias.accion.duplicar"),
+                      href: `/campanias/nueva?duplicar=${row.original.id}`,
+                    },
                     {
                       label: t("common.acciones.eliminar"),
                       destructive: true,

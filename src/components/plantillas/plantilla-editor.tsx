@@ -75,7 +75,10 @@ import {
   type FormatoCuerpo,
   type Plantilla,
   type TipoRender,
+  plantillas,
 } from "@/lib/mock-data";
+import { seRepite } from "@/lib/campos-unicos";
+import { MensajeRepetido } from "@/components/layout/campos-unicos";
 import {
   datosEjemplo,
   marcaArchivo,
@@ -136,23 +139,31 @@ function formatoTamano(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
+export function PlantillaEditor({
+  initial,
+  duplicarDe,
+}: {
+  initial: Plantilla | null;
+  /** Abre el alta con los datos de esta plantilla (ATLAS-1291). */
+  duplicarDe?: Plantilla;
+}) {
   const t = useT();
-  const [nombre, setNombre] = useState(initial?.nombre ?? "");
-  const [descripcion, setDescripcion] = useState(initial?.descripcion ?? "");
-  const [activa, setActiva] = useState(initial?.activa ?? true);
+  const base = initial ?? duplicarDe;
+  const [nombre, setNombre] = useState(base?.nombre ?? "");
+  const [descripcion, setDescripcion] = useState(base?.descripcion ?? "");
+  const [activa, setActiva] = useState(base?.activa ?? true);
   const [canales, setCanales] = useState<CanalPlantilla[]>(
-    initial?.canales ?? [...CANALES_MENSAJERIA]
+    base?.canales ?? [...CANALES_MENSAJERIA]
   );
   // Solo email: el cuerpo es texto plano (por defecto) o código HTML.
-  const [bodyFormat, setBodyFormat] = useState<FormatoCuerpo>(initial?.bodyFormat ?? "texto");
+  const [bodyFormat, setBodyFormat] = useState<FormatoCuerpo>(base?.bodyFormat ?? "texto");
   // Solo email con cuerpo HTML: el CSS se carga aparte, en su propia pestaña.
-  const [cuerpoCss, setCuerpoCss] = useState(initial?.cuerpoCss ?? "");
+  const [cuerpoCss, setCuerpoCss] = useState(base?.cuerpoCss ?? "");
   const [cuerpoTab, setCuerpoTab] = useState<"html" | "css">("html");
-  const [asunto, setAsunto] = useState(initial?.asunto ?? "");
-  const [contenido, setContenido] = useState(initial?.contenido ?? "");
+  const [asunto, setAsunto] = useState(base?.asunto ?? "");
+  const [contenido, setContenido] = useState(base?.contenido ?? "");
   const [adjuntos, setAdjuntos] = useState<AdjuntoPlantilla[]>(
-    initial?.adjuntos ?? []
+    base?.adjuntos ?? []
   );
   const [variablesOpen, setVariablesOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -225,8 +236,13 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
   const nombresExcedidos = excedidos.map((l) => t(`plantillas.canal.${l.canal}`)).join(", ");
 
   // Guardar queda bloqueado por canales excedidos o por errores del HTML/CSS.
-  const razonBloqueo =
-    excedidos.length > 0
+  const nombreRepetido = seRepite(
+    nombre,
+    plantillas.filter((p) => p.id !== initial?.id).map((p) => p.nombre)
+  );
+  const razonBloqueo = nombreRepetido
+    ? t("common.repetido.nombre")
+    : excedidos.length > 0
       ? t("plantillas.bloqueo.limites", { canales: nombresExcedidos })
       : errores > 0
         ? t("plantillas.bloqueo.errores", { n: errores })
@@ -519,7 +535,9 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
                     onChange={(e) => setNombre(e.target.value)}
                     placeholder={t("plantillas.editor.placeholderNombre")}
                     autoFocus={!initial}
+                    aria-invalid={nombreRepetido}
                   />
+                  {nombreRepetido && <MensajeRepetido />}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="pl-activa">{t("plantillas.editor.activa")}</Label>

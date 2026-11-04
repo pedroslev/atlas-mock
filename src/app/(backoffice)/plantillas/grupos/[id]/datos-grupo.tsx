@@ -3,7 +3,7 @@
 // MOCK: el nombre y la descripción del grupo se editan en memoria.
 // REAL: PATCH del grupo en message_template_groups (olimpo-api).
 
-import { Input } from "@/components/ui/input";
+import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +13,11 @@ import { useT } from "@/lib/i18n";
 export function DatosGrupoPlantillas({
   nombre,
   descripcion,
+  existentes,
 }: {
   nombre: string;
   descripcion?: string;
+  existentes: string[];
 }) {
   const t = useT();
 
@@ -27,7 +29,7 @@ export function DatosGrupoPlantillas({
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-          <Input id="nombre" defaultValue={nombre} />
+          <CampoUnico id="nombre" existentes={existentes} defaultValue={nombre} obligatorio />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="descripcion">{t("common.comunes.descripcion")}</Label>

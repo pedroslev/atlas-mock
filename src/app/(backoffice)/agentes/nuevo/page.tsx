@@ -1,19 +1,37 @@
 "use client";
 
+import { use, useState } from "react";
 import Link from "next/link";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EntityCombobox } from "../../campanias/entity-combobox";
+import { MultiEntityCombobox } from "../../campanias/multi-entity-combobox";
 import { useT } from "@/lib/i18n";
-import { gruposTrabajo } from "@/lib/mock-data";
+import { agentes, getGruposDeUsuario, gruposTrabajo } from "@/lib/mock-data";
 
-export default function NuevoAgentePage() {
+// Duplicar (ATLAS-1291) abre esta misma alta con los datos del usuario original,
+// salvo el email, que es único en toda la instalación y se carga nuevo.
+// MOCK: las campañas del original no se ven acá y Crear no persiste.
+// REAL: la copia es un alta normal del usuario (nombre y email) y el front, en pasos
+// aparte, lo agrega a los mismos grupos y campañas del original; si un paso falla, avisa
+// qué quedó hecho y permite reintentar. Los permisos y estados vienen de los grupos.
+// La copia nace habilitada, como cualquier alta, aunque el original esté deshabilitado.
+export default function NuevoAgentePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ duplicar?: string }>;
+}) {
   const t = useT();
+  const { duplicar } = use(searchParams);
+  const original = duplicar ? agentes.find((a) => a.id === duplicar) : undefined;
+  const [grupoIds, setGrupoIds] = useState<string[]>(
+    original ? getGruposDeUsuario(original.id).map((g) => g.id) : []
+  );
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={t("usuarios.nuevo")}
@@ -23,9 +41,7 @@ export default function NuevoAgentePage() {
             <Button variant="outline" asChild>
               <Link href="/agentes">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild data-guarda-cambios>
-              <Link href="/agentes">{t("usuarios.crear")}</Link>
-            </Button>
+            <BotonConfirmar href="/agentes">{t("usuarios.crear")}</BotonConfirmar>
           </>
         }
       />
@@ -37,21 +53,32 @@ export default function NuevoAgentePage() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-            <Input id="nombre" placeholder={t("usuarios.form.nombrePlaceholder")} />
+            <CampoUnico
+              id="nombre"
+              existentes={agentes.map((a) => a.nombre)}
+              defaultValue={original?.nombre}
+              obligatorio
+              placeholder={t("usuarios.form.nombrePlaceholder")}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">{t("usuarios.email")}</Label>
-            <Input
+            <CampoUnico
               id="email"
+              campo="email"
               type="email"
+              existentes={agentes.map((a) => a.email)}
+              obligatorio
               placeholder={t("usuarios.form.emailPlaceholder")}
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="grupo">{t("usuarios.form.grupo")}</Label>
-            <EntityCombobox
+            <MultiEntityCombobox
               id="grupo"
               items={gruposTrabajo}
+              value={grupoIds}
+              onChange={setGrupoIds}
               placeholder={t("usuarios.form.grupoPlaceholder")}
               searchPlaceholder={t("usuarios.form.grupoBuscar")}
               emptyLabel={t("usuarios.form.grupoVacio")}
@@ -63,5 +90,6 @@ export default function NuevoAgentePage() {
         </CardContent>
       </Card>
     </div>
+    </CamposUnicos>
   );
 }

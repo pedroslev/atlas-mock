@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,6 +30,7 @@ export default async function EditarListaExclusionPage({
   if (!lista) notFound();
 
   return (
+    <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={lista.nombre}
@@ -47,9 +48,9 @@ export default async function EditarListaExclusionPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button data-guarda-cambios>
+            <BotonConfirmar>
               <T k="common.acciones.confirmar" />
-            </Button>
+            </BotonConfirmar>
           </>
         }
       />
@@ -67,7 +68,12 @@ export default async function EditarListaExclusionPage({
               <Label htmlFor="nombre">
                 <T k="common.comunes.nombre" />
               </Label>
-              <Input id="nombre" defaultValue={lista.nombre} />
+              <CampoUnico
+                id="nombre"
+                existentes={listasExclusion.filter((l) => l.id !== id).map((l) => l.nombre)}
+                defaultValue={lista.nombre}
+                obligatorio
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="tipo">
@@ -104,5 +110,6 @@ export default async function EditarListaExclusionPage({
         </Card>
       </div>
     </div>
+    </CamposUnicos>
   );
 }
