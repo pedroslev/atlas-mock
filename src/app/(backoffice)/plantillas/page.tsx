@@ -302,6 +302,7 @@ export default function PlantillasPage() {
               id="grupo-nombre"
               value={grupoNombre}
               onChange={(e) => setGrupoNombre(e.target.value)}
+              placeholder={t("plantillas.dialogoGrupo.placeholder")}
               autoFocus
               aria-invalid={grupoRepetido}
             />

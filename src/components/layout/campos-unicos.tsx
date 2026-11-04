@@ -95,9 +95,10 @@ export function CampoUnico({
 // las altas del mock); deshabilitado no navega, igual que en el editor de plantillas.
 export function BotonConfirmar({ href, children }: { href?: string; children: ReactNode }) {
   const bloqueado = (useContext(BloqueosContext)?.bloqueados.size ?? 0) > 0;
-  if (!href) return <Button disabled={bloqueado}>{children}</Button>;
+  // data-guarda-cambios (ATLAS-1288): confirmar deja la pantalla como guardada, salvo que esté bloqueado.
+  if (!href) return <Button disabled={bloqueado} data-guarda-cambios>{children}</Button>;
   return (
-    <Button asChild className={cn(bloqueado && "cursor-not-allowed opacity-50")}>
+    <Button asChild data-guarda-cambios className={cn(bloqueado && "cursor-not-allowed opacity-50")}>
       <Link
         href={href}
         aria-disabled={bloqueado}

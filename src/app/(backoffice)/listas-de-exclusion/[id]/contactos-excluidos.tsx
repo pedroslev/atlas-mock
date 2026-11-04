@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -94,7 +95,17 @@ export function ContactosExcluidos({
             { n: contactos.length.toLocaleString("es-AR") }
           )}
         </span>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogConAviso
+          open={dialogOpen}
+          onOpenChange={(abierto) => {
+            setDialogOpen(abierto);
+            // Descartar limpia lo escrito: al volver a abrir arranca vacío.
+            if (!abierto) {
+              setContacto("");
+              setTipo("calline");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               <Plus />
@@ -143,15 +154,17 @@ export function ContactosExcluidos({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <DialogClose asChild>
+                <Button variant="outline">
                 {t("common.acciones.cancelar")}
               </Button>
+              </DialogClose>
               <Button onClick={agregarContacto} disabled={!contacto.trim()}>
                 {t("common.acciones.agregar")}
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </DialogConAviso>
       </div>
 
       {contactos.length === 0 ? (
@@ -160,6 +173,13 @@ export function ContactosExcluidos({
         </p>
       ) : (
         <>
+          {/* El buscador solo filtra la vista: lo que cuenta es la lista. */}
+          <span
+            hidden
+            data-valor-vigilado={JSON.stringify(
+              contactos.map((c) => `${c.contacto}|${c.tipo}`).sort()
+            )}
+          />
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -171,6 +191,7 @@ export function ContactosExcluidos({
               aria-label={t("listas.contactos.buscarAria")}
             />
           </div>
+          <div data-no-vigilar className="contents">
           {contactosFiltrados.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("listas.contactos.sinCoincidencias", { q: busqueda.trim() })}
@@ -218,6 +239,7 @@ export function ContactosExcluidos({
               </Table>
             </div>
           )}
+          </div>
         </>
       )}
     </div>

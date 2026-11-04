@@ -21,7 +21,7 @@ export default function NuevaCuentaPage() {
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/cuentas">
                 <T k="cuentas.nueva.crear" />
               </Link>

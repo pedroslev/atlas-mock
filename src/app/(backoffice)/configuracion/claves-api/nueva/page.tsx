@@ -102,7 +102,7 @@ export default function NuevaClaveApiPage() {
 
   if (creada) {
     return (
-      <div className="flex flex-col gap-6">
+      <div data-sin-aviso className="flex flex-col gap-6">
         <PageHeader
           title={t("clavesApi.creada.titulo")}
           description={t("clavesApi.creada.descripcion")}

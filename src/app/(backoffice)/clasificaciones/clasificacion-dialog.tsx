@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -155,7 +156,7 @@ export function ClasificacionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogConAviso open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -269,9 +270,11 @@ export function ClasificacionDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogClose asChild>
+            <Button variant="outline">
             {t("common.acciones.cancelar")}
           </Button>
+          </DialogClose>
           <Button onClick={guardar} disabled={bloqueado}>
             {initial
               ? t("common.acciones.guardar")
@@ -279,6 +282,6 @@ export function ClasificacionDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </DialogConAviso>
   );
 }

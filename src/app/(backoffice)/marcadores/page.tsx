@@ -294,6 +294,7 @@ export default function MarcadoresPage() {
               id="grupo-nombre"
               value={grupoNombre}
               onChange={(e) => setGrupoNombre(e.target.value)}
+              placeholder={t("marcas.dialogoGrupo.placeholder")}
               autoFocus
               aria-invalid={grupoRepetido}
             />

@@ -201,21 +201,21 @@ export function CampaniaEditor({
         </div>
       </TabsContent>
 
-      <TabsContent value="controles-agente">
+      <TabsContent forceMount value="controles-agente" className="data-[state=inactive]:hidden">
         <ControlesAgenteTab
           value={parametros.agentControls}
           onChange={(v) => setParametros((p) => ({ ...p, agentControls: v }))}
         />
       </TabsContent>
 
-      <TabsContent value="visualizacion">
+      <TabsContent forceMount value="visualizacion" className="data-[state=inactive]:hidden">
         <VisualizacionTab
           value={parametros.displaySettings}
           onChange={(v) => setParametros((p) => ({ ...p, displaySettings: v }))}
         />
       </TabsContent>
 
-      <TabsContent value="grabacion">
+      <TabsContent forceMount value="grabacion" className="data-[state=inactive]:hidden">
         <GrabacionTab
           value={parametros.recordingSettings}
           holdHabilitado={parametros.agentControls.allowHold}
@@ -223,21 +223,21 @@ export function CampaniaEditor({
         />
       </TabsContent>
 
-      <TabsContent value="config-operativa">
+      <TabsContent forceMount value="config-operativa" className="data-[state=inactive]:hidden">
         <ConfigOperativaTab
           value={parametros.agentOperationSettings}
           onChange={(v) => setParametros((p) => ({ ...p, agentOperationSettings: v }))}
         />
       </TabsContent>
 
-      <TabsContent value="url-interaccion">
+      <TabsContent forceMount value="url-interaccion" className="data-[state=inactive]:hidden">
         <UrlsExternasTab
           value={parametros.interactionUrlSettings}
           onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
         />
       </TabsContent>
 
-      <TabsContent value="usuarios">
+      <TabsContent forceMount value="usuarios" className="data-[state=inactive]:hidden">
         <UsuariosTab initialUsuarioIds={campania.usuariosAsignados} />
       </TabsContent>
     </Tabs>

@@ -31,7 +31,7 @@ export default function NuevoProyectoPage() {
             <Button variant="outline" asChild>
               <Link href="/campanias">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/campanias">{t("proyectos.nuevo.crear")}</Link>
             </Button>
           </>
