@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -160,8 +161,9 @@ export default function EstadosAuxiliaresPage() {
         }}
       />
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogConAviso open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
+          <span hidden data-valor-vigilado={color} />
           <DialogHeader>
             <DialogTitle>
               {editing
@@ -231,15 +233,17 @@ export default function EstadosAuxiliaresPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <DialogClose asChild>
+              <Button variant="outline">
               {t("common.acciones.cancelar")}
             </Button>
+            </DialogClose>
             <Button onClick={guardar} disabled={!nombre.trim()}>
               {editing ? t("common.acciones.guardar") : t("estados.crearEstado")}
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </DialogConAviso>
     </div>
   );
 }

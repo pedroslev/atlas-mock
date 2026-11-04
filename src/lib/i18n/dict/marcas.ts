@@ -5,6 +5,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // `common.nav.marcas`; acá va solo lo propio de estas pantallas.
 export const marcas: NamespaceDict = {
   es: {
+    "dialogoGrupo.placeholder": "Ej: Clientes prioritarios",
     descripcion:
       "Definí las marcas que los asesores pueden dejar sobre una gestión y agrupalas para asignarlas a tus campañas. Una marca puede reutilizarse en varios grupos.",
 
@@ -49,6 +50,7 @@ export const marcas: NamespaceDict = {
     "miembros.quitarAria": "Quitar {nombre} del grupo",
   },
   en: {
+    "dialogoGrupo.placeholder": "E.g.: Priority customers",
     descripcion:
       "Define the marks that agents can leave on an interaction and group them to assign them to your campaigns. A mark can be reused in several groups.",
 
@@ -93,6 +95,7 @@ export const marcas: NamespaceDict = {
     "miembros.quitarAria": "Remove {nombre} from the group",
   },
   pt: {
+    "dialogoGrupo.placeholder": "Ex.: Clientes prioritários",
     descripcion:
       "Defina as marcas que os atendentes podem deixar em um atendimento e agrupe-as para atribuí-las às suas campanhas. Uma marca pode ser reutilizada em vários grupos.",
 
@@ -137,6 +140,7 @@ export const marcas: NamespaceDict = {
     "miembros.quitarAria": "Remover {nombre} do grupo",
   },
   ca: {
+    "dialogoGrupo.placeholder": "Ex.: Clients prioritaris",
     descripcion:
       "Defineix les marques que els agents poden deixar sobre una gestió i agrupa-les per assignar-les a les teves campanyes. Una marca es pot reutilitzar en diversos grups.",
 

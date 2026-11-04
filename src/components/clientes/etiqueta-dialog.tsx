@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -47,7 +48,7 @@ export function EtiquetaDialog({
   const enPaleta = PALETA_ETIQUETAS.some((p) => p.hex.toLowerCase() === color.toLowerCase());
 
   return (
-    <Dialog open={etiqueta !== null} onOpenChange={(o) => !o && onClose()}>
+    <DialogConAviso open={etiqueta !== null} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{etiqueta === "nueva" ? t("clientes.et.nueva") : t("common.acciones.editar")}</DialogTitle>
@@ -144,9 +145,11 @@ export function EtiquetaDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <DialogClose asChild>
+            <Button variant="outline">
             {t("common.acciones.cancelar")}
           </Button>
+          </DialogClose>
           <Button
             disabled={!nombreFinal || !!duplicada}
             onClick={() =>
@@ -164,6 +167,6 @@ export function EtiquetaDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </DialogConAviso>
   );
 }

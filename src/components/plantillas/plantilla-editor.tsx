@@ -89,6 +89,7 @@ import {
   type OrigenVariable,
   type VariablePlantilla,
 } from "@/lib/plantillas";
+import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useLocale, useT } from "@/lib/i18n";
 import { contarParaCanal, type ConteoCanal, MAX_SEGMENTOS_SMS } from "@/lib/limites-canal";
 import { validarEmail, resumirHallazgos, type Hallazgo } from "@/lib/validar-email";
@@ -441,10 +442,22 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
     variables: variablesCliente,
   });
 
+  useCambiosDeValor("plantilla", {
+    nombre,
+    descripcion,
+    activa,
+    canales,
+    bodyFormat,
+    cuerpoCss,
+    asunto,
+    contenido,
+    adjuntos,
+  });
+
   return (
     // min-h-0 + flex-1: el editor ocupa el alto del <main> y nunca lo desborda;
     // lo que no entra se desplaza dentro de cada recuadro.
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div data-no-vigilar className="flex min-h-0 flex-1 flex-col gap-4">
       <PageHeader
         title={initial ? initial.nombre : t("plantillas.editor.nueva")}
         description={t("plantillas.editor.subtitulo")}
@@ -457,6 +470,7 @@ export function PlantillaEditor({ initial }: { initial: Plantilla | null }) {
             <Button asChild disabled={!puedeConfirmar} className={cn(!puedeConfirmar && "cursor-not-allowed opacity-50")}>
               <Link
                 href="/plantillas"
+                data-guarda-cambios
                 aria-disabled={!puedeConfirmar}
                 data-testid="plantilla-guardar"
                 title={razonBloqueo ?? undefined}

@@ -5,6 +5,10 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // va en el diccionario de SU área, no acá.
 export const common: NamespaceDict = {
   es: {
+    "avisoCambios.titulo": "¿Salir sin guardar?",
+    "avisoCambios.descripcion": "Hiciste cambios en esta pantalla. Si salís ahora, se van a perder.",
+    "avisoCambios.seguir": "Seguir editando",
+    "avisoCambios.descartar": "Descartar y salir",
     "nav.campanias": "Campañas",
     "nav.proyectos": "Proyectos",
     "nav.cuentas": "Cuentas",
@@ -76,6 +80,10 @@ export const common: NamespaceDict = {
     "404.volver": "Volver al inicio",
   },
   en: {
+    "avisoCambios.titulo": "Leave without saving?",
+    "avisoCambios.descripcion": "You made changes on this screen. If you leave now, they will be lost.",
+    "avisoCambios.seguir": "Keep editing",
+    "avisoCambios.descartar": "Discard and leave",
     "nav.campanias": "Campaigns",
     "nav.proyectos": "Projects",
     "nav.cuentas": "Accounts",
@@ -146,6 +154,10 @@ export const common: NamespaceDict = {
     "404.volver": "Back to home",
   },
   pt: {
+    "avisoCambios.titulo": "Sair sem salvar?",
+    "avisoCambios.descripcion": "Você fez alterações nesta tela. Se sair agora, elas serão perdidas.",
+    "avisoCambios.seguir": "Continuar editando",
+    "avisoCambios.descartar": "Descartar e sair",
     "nav.campanias": "Campanhas",
     "nav.proyectos": "Projetos",
     "nav.cuentas": "Contas",
@@ -217,6 +229,10 @@ export const common: NamespaceDict = {
     "404.volver": "Voltar ao início",
   },
   ca: {
+    "avisoCambios.titulo": "Vols sortir sense desar?",
+    "avisoCambios.descripcion": "Has fet canvis en aquesta pantalla. Si surts ara, es perdran.",
+    "avisoCambios.seguir": "Continua editant",
+    "avisoCambios.descartar": "Descarta i surt",
     "nav.campanias": "Campanyes",
     "nav.proyectos": "Projectes",
     "nav.cuentas": "Comptes",

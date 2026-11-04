@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -777,12 +778,24 @@ export function WorkflowEditor({
 
   // Al abrir, acomoda el flujo una vez que todos los nodos están medidos.
   const ordenadoInicial = useRef(false);
+  const [flujoOrdenado, setFlujoOrdenado] = useState(false);
   useEffect(() => {
     if (ordenadoInicial.current || !nodes.every((n) => n.measured?.width)) return;
     ordenadoInicial.current = true;
+    setFlujoOrdenado(true);
     setNodes((nds) => ordenar(nds, edges));
     setTimeout(() => flowRef.current?.fitView(ENCUADRE), 0);
   }, [nodes, edges, setNodes]);
+
+  // El orden automático al abrir no cuenta como cambio; mover un nodo, sí.
+  useCambiosDeValor(
+    "flujo",
+    {
+      nodos: nodes.map((n) => ({ id: n.id, posicion: n.position, datos: n.data })),
+      conexiones: edges.map((e) => [e.source, e.sourceHandle, e.target, e.targetHandle]),
+    },
+    flujoOrdenado,
+  );
 
   const ordenarNodos = useCallback(() => {
     setNodes((nds) => ordenar(nds, edges));

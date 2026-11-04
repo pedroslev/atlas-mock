@@ -19,8 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
-  Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -136,7 +137,12 @@ export function FeriadoCalendario({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+    <>
+    {/* El año elegido es solo una vista: lo que cuenta son las fechas marcadas. */}
+    <span hidden data-valor-vigilado={JSON.stringify(
+        [...holidays].sort((a, b) => a.date.localeCompare(b.date))
+      )} />
+    <div data-no-vigilar className="grid gap-6 xl:grid-cols-[1fr_320px]">
       <Card className="min-w-0">
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
@@ -239,7 +245,7 @@ export function FeriadoCalendario({
         </CardContent>
       </Card>
 
-      <Dialog
+      <DialogConAviso
         open={editing !== null}
         onOpenChange={(open) => !open && setEditing(null)}
       >
@@ -283,9 +289,11 @@ export function FeriadoCalendario({
                 {t("feriados.calendario.quitarFecha")}
               </Button>
             )}
-            <Button variant="outline" onClick={() => setEditing(null)}>
+            <DialogClose asChild>
+              <Button variant="outline">
               {t("common.acciones.cancelar")}
             </Button>
+            </DialogClose>
             <Button onClick={guardar} disabled={!editing?.description.trim()}>
               {editing?.existing
                 ? t("common.acciones.guardar")
@@ -293,7 +301,8 @@ export function FeriadoCalendario({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </DialogConAviso>
     </div>
+    </>
   );
 }

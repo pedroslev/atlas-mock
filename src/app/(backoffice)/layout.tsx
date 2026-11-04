@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { AvisoCambiosProvider } from "@/components/layout/aviso-cambios";
 import { CampaniasProvider } from "@/lib/campanias-store";
 
 // SidebarProvider ahora envuelve todo (header incluido) para que AppHeader
@@ -14,6 +15,7 @@ export default function BackofficeLayout({
 }) {
   return (
     <CampaniasProvider>
+      <AvisoCambiosProvider>
       <SidebarProvider className="h-screen w-full flex-col">
         <AppHeader />
         <div className="flex min-h-0 flex-1">
@@ -27,6 +29,7 @@ export default function BackofficeLayout({
           </SidebarInset>
         </div>
       </SidebarProvider>
+      </AvisoCambiosProvider>
     </CampaniasProvider>
   );
 }

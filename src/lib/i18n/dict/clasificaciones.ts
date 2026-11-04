@@ -5,6 +5,7 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // de mock-data (el dato queda en castellano; se mapea en el punto de render).
 export const clasificaciones: NamespaceDict = {
   es: {
+    "nuevoGrupo.placeholder": "Ej: Ventas",
     "titulo": "Clasificaciones",
     "descripcion":
       "Definí con qué resultados se cierra cada gestión y agrupalos para asignarlos a tus campañas. Una clasificación puede reutilizarse en varios grupos.",
@@ -77,6 +78,7 @@ export const clasificaciones: NamespaceDict = {
     "miembros.sistemaNota": "Las clasificaciones de sistema no se agregan a grupos: aplican solas en todas las campañas.",
   },
   en: {
+    "nuevoGrupo.placeholder": "E.g.: Sales",
     "titulo": "Classifications",
     "descripcion":
       "Define the outcomes each interaction is closed with and group them to assign them to your campaigns. A classification can be reused in several groups.",
@@ -149,6 +151,7 @@ export const clasificaciones: NamespaceDict = {
     "miembros.sistemaNota": "System classifications aren't added to groups: they apply automatically in every campaign.",
   },
   pt: {
+    "nuevoGrupo.placeholder": "Ex.: Vendas",
     "titulo": "Classificações",
     "descripcion":
       "Defina com quais resultados cada atendimento é encerrado e agrupe-os para atribuí-los às suas campanhas. Uma classificação pode ser reutilizada em vários grupos.",
@@ -221,6 +224,7 @@ export const clasificaciones: NamespaceDict = {
     "miembros.sistemaNota": "As classificações de sistema não são adicionadas a grupos: aplicam-se sozinhas em todas as campanhas.",
   },
   ca: {
+    "nuevoGrupo.placeholder": "Ex.: Vendes",
     "titulo": "Classificacions",
     "descripcion":
       "Defineix amb quins resultats es tanca cada gestió i agrupa'ls per assignar-los a les teves campanyes. Una classificació es pot reutilitzar en diversos grups.",

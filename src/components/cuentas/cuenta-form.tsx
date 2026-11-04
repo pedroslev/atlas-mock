@@ -48,6 +48,8 @@ export function CuentaForm({
     simultaneas: cuenta?.provisioning || 3,
   });
 
+  const [flujoAbierto, setFlujoAbierto] = useState(false);
+
   const telefonia = esTelefonia(tipo);
   const tKeyTipo = TIPOS_CUENTA.find((x) => x.value === tipo)?.tKey;
 
@@ -57,7 +59,12 @@ export function CuentaForm({
   const tieneDerivacion = !telefonia || uso === "entrante" || uso === "ambas";
 
   return (
-    <Tabs defaultValue="general">
+    <Tabs
+      defaultValue="general"
+      onValueChange={(pestania) => {
+        if (pestania === "workflow") setFlujoAbierto(true);
+      }}
+    >
       <TabsList>
         <TabsTrigger value="general">{t("cuentas.tab.general")}</TabsTrigger>
         {tieneDerivacion && (
@@ -67,7 +74,7 @@ export function CuentaForm({
         )}
       </TabsList>
 
-      <TabsContent value="general">
+      <TabsContent forceMount value="general" className="data-[state=inactive]:hidden">
         <Card>
           <CardHeader>
             <CardTitle>{t("cuentas.datos.titulo")}</CardTitle>
@@ -165,7 +172,14 @@ export function CuentaForm({
         )}
       </TabsContent>
 
-      <TabsContent value="workflow">
+      {/* El flujo se monta la primera vez que se abre: el lienzo necesita estar
+          visible para medirse. De ahí en más se conserva. */}
+      <TabsContent
+        data-no-vigilar
+        forceMount={flujoAbierto ? true : undefined}
+        value="workflow"
+        className="data-[state=inactive]:hidden"
+      >
         <Card>
           <CardHeader>
             <CardTitle>{t("cuentas.derivacion.titulo")}</CardTitle>

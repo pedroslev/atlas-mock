@@ -41,13 +41,6 @@ import {
 import { useT } from "@/lib/i18n";
 import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
 
-function nombreSugerido(base: string, existentes: string[]) {
-  if (!existentes.includes(base)) return base;
-  let i = 2;
-  while (existentes.includes(`${base} (${i})`)) i++;
-  return `${base} (${i})`;
-}
-
 // Plantillas de mensajes (ATLAS-1191): mismo modelo que Clasificaciones y
 // Marcas — solapa GRUPOS (lo que se asigna a una campaña) y solapa CATÁLOGO
 // (el maestro de plantillas del tenant). Una plantilla puede estar en varios
@@ -158,12 +151,7 @@ export default function PlantillasPage() {
   }
 
   function abrirNuevoGrupo() {
-    setGrupoNombre(
-      nombreSugerido(
-        t("plantillas.nuevoGrupo"),
-        grupos.map((g) => g.nombre)
-      )
-    );
+    setGrupoNombre("");
     setGrupoDialogOpen(true);
   }
 
@@ -281,6 +269,7 @@ export default function PlantillasPage() {
               id="grupo-nombre"
               value={grupoNombre}
               onChange={(e) => setGrupoNombre(e.target.value)}
+              placeholder={t("plantillas.dialogoGrupo.placeholder")}
               autoFocus
             />
           </div>

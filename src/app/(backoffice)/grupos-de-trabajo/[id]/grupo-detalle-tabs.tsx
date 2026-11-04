@@ -58,7 +58,7 @@ export function GrupoDetalleTabs({
         )}
       </TabsList>
 
-      <TabsContent value="general" className="flex flex-col gap-6">
+      <TabsContent forceMount value="general" className="flex flex-col gap-6 data-[state=inactive]:hidden">
         <Card>
           <CardHeader>
             <CardTitle>
@@ -84,7 +84,7 @@ export function GrupoDetalleTabs({
         <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
       </TabsContent>
 
-      <TabsContent value="permisos">
+      <TabsContent forceMount value="permisos" className="data-[state=inactive]:hidden">
         <GrupoPermisos
           initialPermisos={grupo.permisos}
           accesoHermes={accesoHermes}
@@ -94,7 +94,7 @@ export function GrupoDetalleTabs({
       </TabsContent>
 
       {accesoHermes && (
-        <TabsContent value="config-hermes">
+        <TabsContent forceMount value="config-hermes" className="data-[state=inactive]:hidden">
           <GrupoConfigHermesTab
             initialEstadosAuxiliares={grupo.estadosAuxiliares}
             initialHistoryLookbackDays={grupo.historyLookbackDays}
@@ -106,7 +106,7 @@ export function GrupoDetalleTabs({
 
       {/* Qué ve y modifica el grupo en la ficha del cliente (2026-10-15). */}
       {accesoHermes && (
-        <TabsContent value="ficha-cliente">
+        <TabsContent forceMount value="ficha-cliente" className="data-[state=inactive]:hidden">
           <GrupoFichaClienteTab grupoId={grupo.id} />
         </TabsContent>
       )}

@@ -31,7 +31,7 @@ export default function NuevoGrupoTrabajoPage() {
                 {t("common.acciones.cancelar")}
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/grupos-de-trabajo">{t("grupos.crear")}</Link>
             </Button>
           </>

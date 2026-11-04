@@ -50,7 +50,7 @@ export default async function EditarProyectoPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/campanias">
                 <T k="common.acciones.confirmar" />
               </Link>

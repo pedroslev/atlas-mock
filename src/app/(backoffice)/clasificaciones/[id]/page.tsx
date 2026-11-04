@@ -35,7 +35,7 @@ export default async function GrupoClasificacionPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/clasificaciones">
                 <T k="common.acciones.confirmar" />
               </Link>

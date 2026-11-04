@@ -38,7 +38,7 @@ export default function NuevaCampaniaPage() {
             <Button variant="outline" asChild>
               <Link href="/campanias">{t("common.acciones.cancelar")}</Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-guarda-cambios>
               <Link href="/campanias">{t("campanias.crearCampania")}</Link>
             </Button>
           </>
