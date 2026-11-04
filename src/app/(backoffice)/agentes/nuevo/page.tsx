@@ -13,8 +13,10 @@ import { agentes, getGruposDeUsuario, gruposTrabajo } from "@/lib/mock-data";
 
 // Duplicar (ATLAS-1291) abre esta misma alta con los datos del usuario original,
 // salvo el email, que es único en toda la instalación y se carga nuevo.
-// MOCK: las campañas y los permisos y estados propios no se ven acá y Crear no persiste.
-// REAL: el alta recibe el usuario de origen y copia también campañas, permisos y estados.
+// MOCK: las campañas del original no se ven acá y Crear no persiste.
+// REAL: la copia es un alta normal del usuario (nombre y email) y el front, en pasos
+// aparte, lo agrega a los mismos grupos y campañas del original; si un paso falla, avisa
+// qué quedó hecho y permite reintentar. Los permisos y estados vienen de los grupos.
 // La copia nace habilitada, como cualquier alta, aunque el original esté deshabilitado.
 export default function NuevoAgentePage({
   searchParams,
