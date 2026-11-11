@@ -5,16 +5,21 @@ import Link from "next/link";
 import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MultiEntityCombobox } from "../../campanias/multi-entity-combobox";
 import { useT } from "@/lib/i18n";
-import { agentes, getGruposDeUsuario, gruposTrabajo } from "@/lib/mock-data";
+import { agentes, getGruposDeUsuario, gruposTrabajo, partirNombre } from "@/lib/mock-data";
 
 // Duplicar (ATLAS-1291) abre esta misma alta con los datos del usuario original,
 // salvo el email, que es único en toda la instalación y se carga nuevo.
+// Nombre/s y Apellido/s van separados y el alta es por invitación al email
+// (REAL: identity-api crea el usuario con first_name/last_name y le manda el
+// mail para fijar la contraseña; el administrador no define contraseña). El
+// único campo que no se repite es el email.
 // MOCK: las campañas del original no se ven acá y Crear no persiste.
-// REAL: la copia es un alta normal del usuario (nombre y email) y el front, en pasos
+// REAL: la copia es un alta normal del usuario (nombre, apellido y email) y el front, en pasos
 // aparte, lo agrega a los mismos grupos y campañas del original; si un paso falla, avisa
 // qué quedó hecho y permite reintentar. Los permisos y estados vienen de los grupos.
 // La copia nace habilitada, como cualquier alta, aunque el original esté deshabilitado.
@@ -29,6 +34,9 @@ export default function NuevoAgentePage({
   const [grupoIds, setGrupoIds] = useState<string[]>(
     original ? getGruposDeUsuario(original.id).map((g) => g.id) : []
   );
+  // El mock guarda el nombre completo en un solo campo: se parte en la última
+  // palabra para precargar Nombre/s y Apellido/s al duplicar.
+  const [nombresOriginal, apellidosOriginal] = partirNombre(original?.nombre);
 
   return (
     <CamposUnicos>
@@ -52,16 +60,6 @@ export default function NuevoAgentePage({
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="nombre">{t("common.comunes.nombre")}</Label>
-            <CampoUnico
-              id="nombre"
-              existentes={agentes.map((a) => a.nombre)}
-              defaultValue={original?.nombre}
-              obligatorio
-              placeholder={t("usuarios.form.nombrePlaceholder")}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">{t("usuarios.email")}</Label>
             <CampoUnico
               id="email"
@@ -70,6 +68,27 @@ export default function NuevoAgentePage({
               existentes={agentes.map((a) => a.email)}
               obligatorio
               placeholder={t("usuarios.form.emailPlaceholder")}
+            />
+            <p className="text-xs text-muted-foreground">{t("usuarios.form.emailAyuda")}</p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="nombres">{t("usuarios.form.nombres")}</Label>
+            <Input
+              id="nombres"
+              required
+              autoComplete="given-name"
+              defaultValue={nombresOriginal}
+              placeholder={t("usuarios.form.nombresPlaceholder")}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="apellidos">{t("usuarios.form.apellidos")}</Label>
+            <Input
+              id="apellidos"
+              required
+              autoComplete="family-name"
+              defaultValue={apellidosOriginal}
+              placeholder={t("usuarios.form.apellidosPlaceholder")}
             />
           </div>
           <div className="flex flex-col gap-1.5">

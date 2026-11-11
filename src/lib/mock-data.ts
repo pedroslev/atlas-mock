@@ -410,10 +410,20 @@ export type ListaExclusion = {
 // tenant (ver ADR-BD-003). "habilitado" = users.enabled.
 export type Agente = {
   id: string;
+  /** Nombre completo; las pantallas lo parten en Nombre/s y Apellido/s (partirNombre). */
   nombre: string;
   email: string;
   habilitado: boolean;
 };
+
+// "Marina Acosta" → ["Marina", "Acosta"]; sin espacio, todo va a Nombre/s.
+// identity-api guarda first_name y last_name por separado; el mock conserva
+// el nombre completo en un solo campo para no tocar los listados.
+export function partirNombre(completo?: string): [string, string] {
+  if (!completo) return ["", ""];
+  const i = completo.lastIndexOf(" ");
+  return i === -1 ? [completo, ""] : [completo.slice(0, i), completo.slice(i + 1)];
+}
 
 // working_groups.permissions (JSONB): claves {modulo}.{accion}. Simplificado
 // acá a lectura/escritura/eliminación por sección del backoffice (el árbol

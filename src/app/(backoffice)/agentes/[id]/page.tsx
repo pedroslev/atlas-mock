@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
   getGruposDeUsuario,
   getOverrideDeUsuario,
   getEstadoAuxiliar,
+  partirNombre,
 } from "@/lib/mock-data";
 import { AgenteEliminar } from "./agente-eliminar";
 
@@ -53,6 +55,8 @@ export default async function EditarAgentePage({
 
   const grupos = getGruposDeUsuario(agente.id);
   const override = getOverrideDeUsuario(agente.id);
+  // Nombre/s y Apellido/s separados, como los guarda identity-api.
+  const [nombres, apellidos] = partirNombre(agente.nombre);
 
   // Efectivo = unión de lo que dan los grupos + overrides propios del
   // usuario (aditivo, nunca reemplazo — ver ADR-FUNDAMENTOS-007).
@@ -101,15 +105,16 @@ export default async function EditarAgentePage({
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nombre">
-                <T k="common.comunes.nombre" />
+              <Label htmlFor="nombres">
+                <T k="usuarios.form.nombres" />
               </Label>
-              <CampoUnico
-                id="nombre"
-                existentes={agentes.filter((a) => a.id !== id).map((a) => a.nombre)}
-                defaultValue={agente.nombre}
-                obligatorio
-              />
+              <Input id="nombres" defaultValue={nombres} required autoComplete="given-name" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="apellidos">
+                <T k="usuarios.form.apellidos" />
+              </Label>
+              <Input id="apellidos" defaultValue={apellidos} required autoComplete="family-name" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">

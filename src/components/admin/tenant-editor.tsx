@@ -16,13 +16,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -32,7 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { EntityCombobox } from "@/app/(backoffice)/campanias/entity-combobox";
 import {
-  regions,
   regionLabel,
   type Organization,
   type Region,
@@ -57,8 +49,9 @@ export function TenantEditor({
   initialContacts: TenantContact[];
 }) {
   const t = useT();
-  const [name, setName] = useState(organization.name);
-  const [regionId, setRegionId] = useState(organization.regionId);
+  // Nombre y región NO se editan después del alta (ADR-BD-001 §tenant_contacts:
+  // el tenant queda en la celda donde se aprovisionó y su nombre no cambia).
+  // Solo país y activo tienen estado local.
   const [countryId, setCountryId] = useState(organization.countryId);
   const [active, setActive] = useState(organization.active);
 
@@ -76,10 +69,8 @@ export function TenantEditor({
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <GeneralSection
-          name={name}
-          setName={setName}
-          regionId={regionId}
-          setRegionId={setRegionId}
+          name={organization.name}
+          region={region}
           countryId={countryId}
           setCountryId={setCountryId}
           active={active}
@@ -98,18 +89,14 @@ export function TenantEditor({
 
 function GeneralSection({
   name,
-  setName,
-  regionId,
-  setRegionId,
+  region,
   countryId,
   setCountryId,
   active,
   setActive,
 }: {
   name: string;
-  setName: (v: string) => void;
-  regionId: string;
-  setRegionId: (v: string) => void;
+  region: Region | undefined;
   countryId: string;
   setCountryId: (v: string) => void;
   active: boolean;
@@ -123,29 +110,23 @@ function GeneralSection({
         <CardTitle>{t("admin.form.datosCliente")}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        {/* Solo lectura: el nombre no se cambia después del alta. */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="edit-name">{t("common.comunes.nombre")}</Label>
-          <Input
-            id="edit-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <Input id="edit-name" value={name} disabled readOnly />
+          <p className="text-xs text-muted-foreground">{t("admin.detalle.nombreAyuda")}</p>
         </div>
 
+        {/* Solo lectura: el tenant queda en la celda donde se aprovisionó. */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="edit-region">{t("admin.campos.region")}</Label>
-          <Select value={regionId} onValueChange={setRegionId}>
-            <SelectTrigger id="edit-region" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {regions.map((region) => (
-                <SelectItem key={region.id} value={region.id}>
-                  {region.code} · {regionLabel(region, t)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="edit-region"
+            value={region ? `${region.code} · ${regionLabel(region, t)}` : t("admin.detalle.sinRegion")}
+            disabled
+            readOnly
+          />
+          <p className="text-xs text-muted-foreground">{t("admin.detalle.regionAyuda")}</p>
         </div>
 
         <div className="flex flex-col gap-1.5">

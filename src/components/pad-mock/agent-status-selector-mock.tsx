@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Lock } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { estadosAgenteDisponibles } from "@/lib/pad-mock/data";
+import { estadosAgenteDisponibles, type EstadoForzado } from "@/lib/pad-mock/data";
+import { useNow, formatDuration } from "@/lib/pad-mock/use-now";
 
 // Selector de estado del agente — a pedido, tiene que dejar elegir entre
 // Principales (Disponible/No disponible/Ausente) y Auxiliares (Almuerzo,
@@ -37,26 +38,42 @@ export function AgentStatusSelectorMock({
   estadoId: string;
   onEstadoIdChange: (id: string) => void;
   cronometro: string;
-  /** Estado que pone el sistema (p. ej. "En llamada interna"): se muestra en
-   *  lugar del elegido y no se puede cambiar a mano mientras dura. */
-  estadoSistema?: { nombre: string; dotClass: string };
+  /** Estado forzado por la interacción (ADR-BD-004: Conectando, En llamada,
+   *  Trabajo pos-llamada, En llamada interna): se muestra en lugar del elegido,
+   *  bloqueado con candado, y el cronómetro cuenta desde `desde`. */
+  estadoSistema?: EstadoForzado & { desde?: number };
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const now = useNow(!!estadoSistema);
   const estado = estadosAgenteDisponibles.find((e) => e.id === estadoId) ?? estadosAgenteDisponibles[0];
   const Icon = estado.icon;
   const principales = estadosAgenteDisponibles.filter((e) => e.grupo === "principal");
   const auxiliares = estadosAgenteDisponibles.filter((e) => e.grupo === "auxiliar");
 
   if (estadoSistema) {
+    const IconForzado = estadoSistema.icon;
+    const cronometroForzado =
+      estadoSistema.desde !== undefined
+        ? formatDuration(Math.max(0, Math.floor((now - estadoSistema.desde) / 1000)))
+        : null;
     return colapsado ? (
       <span title={estadoSistema.nombre} className="mx-auto flex size-8 items-center justify-center">
         <span className={cn("size-2.5 rounded-full", estadoSistema.dotClass)} />
       </span>
     ) : (
-      <div className="flex w-full items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar px-2 py-1.5">
-        <span className={cn("size-2.5 shrink-0 rounded-full", estadoSistema.dotClass)} aria-hidden />
+      // Variante bloqueada: el estado lo impone la interacción, no se abre el
+      // Popover. Candado al final, mismo patrón que hermes-front.
+      <div
+        className="flex w-full items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar-accent/50 px-2 py-1.5"
+        aria-label={t("padMock.agentStatus.forzadoAria", { estado: estadoSistema.nombre })}
+      >
+        <IconForzado className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">{estadoSistema.nombre}</span>
+        {cronometroForzado && (
+          <span className="shrink-0 font-mono text-[0.65rem] text-muted-foreground tabular-nums">{cronometroForzado}</span>
+        )}
+        <Lock className="size-3 shrink-0 text-muted-foreground" />
       </div>
     );
   }

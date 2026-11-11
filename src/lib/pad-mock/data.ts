@@ -19,6 +19,9 @@ import {
   Utensils,
   GraduationCap,
   Coffee,
+  Loader,
+  PhoneCall,
+  ClipboardCheck,
 } from "lucide-react";
 
 // whatsapp/mail/sms todavía no tienen pantalla de interacción activa:
@@ -188,6 +191,8 @@ export type InteraccionEntrante = {
   atencionForzada: boolean;
   /** Webcall o videollamada: la cuenta suma chat durante la llamada. */
   chatEnLlamada?: boolean;
+  /** La campaña no exige tipificar para cerrar (badge "Opcional" en la barra). */
+  tipificacionOpcional?: boolean;
   /** Clave en historialPorCliente. */
   claveHistorial: string;
   // MOCK: los datos del cliente están escritos en cada entrante de ejemplo.
@@ -282,6 +287,8 @@ export const entrantesMock: InteraccionEntrante[] = [
   },
   {
     id: "wc-2",
+    // Ejemplo de campaña que no exige tipificar: la barra muestra "Opcional".
+    tipificacionOpcional: true,
     canal: "webcall",
     nombre: "Martín Sosa",
     campania: "Soporte técnico Nivel 1",
@@ -586,6 +593,8 @@ export type HistorialAgenteEntrada = {
   nombreCliente?: string;
   duracion: string;
   tipificacion: string;
+  /** Campaña por la que entró o salió la interacción; vacía en las internas. */
+  campania?: string;
   /** Llamada interna: numeroCliente lleva el nombre del otro agente y no hay
    *  tipificación. */
   interno?: boolean;
@@ -595,9 +604,10 @@ export type HistorialAgenteEntrada = {
 
 export const historialAgenteMock: HistorialAgenteEntrada[] = [
   { id: "ha-0", fecha: "18/08/2026", hora: "14:05", canal: "llamada", numeroCliente: "Lucas Ferreyra", duracion: "1:12", tipificacion: "—", interno: true },
-  { id: "ha-1", fecha: "18/08/2026", hora: "13:52", canal: "llamada", numeroCliente: "4498812", nombreCliente: "Elena Rivas", duracion: "3:34", tipificacion: "Reclamo resuelto" },
+  { id: "ha-1", fecha: "18/08/2026", hora: "13:52", canal: "llamada", numeroCliente: "4498812", nombreCliente: "Elena Rivas", campania: "Reclamos facturación", duracion: "3:34", tipificacion: "Reclamo resuelto" },
   {
     id: "ha-chat-1",
+    campania: "Atención web",
     fecha: "18/08/2026",
     hora: "13:44",
     canal: "chat",
@@ -613,11 +623,11 @@ export const historialAgenteMock: HistorialAgenteEntrada[] = [
       { autor: "cliente", texto: "Genial, muchas gracias.", hora: "13:46:02" },
     ],
   },
-  { id: "ha-2", fecha: "18/08/2026", hora: "13:35", canal: "whatsapp", numeroCliente: "8871023", nombreCliente: "Nicolás Aguirre", duracion: "6:12", tipificacion: "Consulta resuelta" },
-  { id: "ha-3", fecha: "18/08/2026", hora: "13:18", canal: "whatsapp", numeroCliente: "5512980", duracion: "4:02", tipificacion: "Deriva a Logística" },
-  { id: "ha-4", fecha: "18/08/2026", hora: "12:59", canal: "mail", numeroCliente: "6603317", nombreCliente: "Diego Peralta", duracion: "—", tipificacion: "Sin resolución" },
-  { id: "ha-5", fecha: "18/08/2026", hora: "12:41", canal: "llamada", numeroCliente: "3345789", nombreCliente: "Valentina Ibarra", duracion: "5:56", tipificacion: "Cargo a revisar por Facturación" },
-  { id: "ha-6", fecha: "18/08/2026", hora: "12:20", canal: "llamada", numeroCliente: "7729015", duracion: "1:01", tipificacion: "Cliente solicita rellamado" },
+  { id: "ha-2", fecha: "18/08/2026", hora: "13:35", canal: "whatsapp", numeroCliente: "8871023", nombreCliente: "Nicolás Aguirre", campania: "Soporte WhatsApp", duracion: "6:12", tipificacion: "Consulta resuelta" },
+  { id: "ha-3", fecha: "18/08/2026", hora: "13:18", canal: "whatsapp", numeroCliente: "5512980", campania: "Soporte WhatsApp", duracion: "4:02", tipificacion: "Deriva a Logística" },
+  { id: "ha-4", fecha: "18/08/2026", hora: "12:59", canal: "mail", numeroCliente: "6603317", nombreCliente: "Diego Peralta", campania: "Consultas por mail", duracion: "—", tipificacion: "Sin resolución" },
+  { id: "ha-5", fecha: "18/08/2026", hora: "12:41", canal: "llamada", numeroCliente: "3345789", nombreCliente: "Valentina Ibarra", campania: "Reclamos facturación", duracion: "5:56", tipificacion: "Cargo a revisar por Facturación" },
+  { id: "ha-6", fecha: "18/08/2026", hora: "12:20", canal: "llamada", numeroCliente: "7729015", campania: "Cobranzas tempranas", duracion: "1:01", tipificacion: "Cliente solicita rellamado" },
 ];
 
 // --- Estado del agente (selector del menú izquierdo) ------------------------
@@ -637,6 +647,21 @@ export const estadosAgenteDisponibles: EstadoAgenteMock[] = [
   { id: "capacitacion", nombre: "Capacitación", grupo: "auxiliar", icon: GraduationCap, dotClass: "bg-info" },
   { id: "descanso", nombre: "Descanso", grupo: "auxiliar", icon: Coffee, dotClass: "bg-secondary" },
 ];
+
+// Estados forzados por la interacción (ADR-BD-004 §call_status): los impone el
+// sistema según lo que la interacción está haciendo y el agente no puede salir
+// de ellos por elección. El selector los muestra bloqueados, con candado y
+// cronómetro, igual que hermes-front (agent-status-selector.tsx). Los nombres
+// y colores son los mismos que el front (pad.estado.*).
+export type EstadoForzado = { nombre: string; dotClass: string; icon: LucideIcon };
+export const estadosForzados = {
+  /** Interacción sonando o marcando (Ringing/Dialing): transición, LOCKED. */
+  conectando: { nombre: "Conectando", dotClass: "bg-info", icon: Loader } satisfies EstadoForzado,
+  /** Interacción en curso (Connected). */
+  enLlamada: { nombre: "En llamada", dotClass: "bg-primary", icon: PhoneCall } satisfies EstadoForzado,
+  /** After-call work: la interacción terminó y falta tipificar y cerrar. */
+  acw: { nombre: "Trabajo pos-llamada", dotClass: "bg-secondary", icon: ClipboardCheck } satisfies EstadoForzado,
+} as const;
 
 export const estadoAgenteMock = {
   nombre: "Marina Acosta",
@@ -687,7 +712,7 @@ export const agentesDirectorioMock: AgenteDirectorio[] = [
 // Estado que muestra el propio agente mientras está en una llamada interna.
 // No se elige a mano (no está en estadosAgenteDisponibles): lo pone el
 // sistema mientras dura la llamada.
-export const estadoLlamadaInterna = { nombre: "En llamada interna", dotClass: "bg-primary" };
+export const estadoLlamadaInterna: EstadoForzado = { nombre: "En llamada interna", dotClass: "bg-primary", icon: PhoneCall };
 
 // Quién llama cuando se simula una llamada interna entrante.
 export const agenteLlamadaEntrante: AgenteDirectorio = agentesDirectorioMock[2];

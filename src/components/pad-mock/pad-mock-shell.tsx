@@ -18,6 +18,7 @@ import {
   entrantesMock,
   clienteMock,
   estadoLlamadaInterna,
+  estadosForzados,
   historialAgenteMock,
   historialPorCliente,
   ocupaAlAsesorEntero,
@@ -435,9 +436,20 @@ export function PadMockShell() {
   const entranteActivo = entrantesMock.find((c) => c.id === filaActiva?.entranteId);
   const filaAvisoChat = cola.find((f) => f.id === avisoChatFilaId && f.porAceptar);
   const avisoChat = entrantesMock.find((c) => c.id === filaAvisoChat?.entranteId);
-  // Mientras hay una llamada interna conectada y al frente, el agente figura
-  // "En llamada interna".
-  const enLlamadaInterna = !!filaActiva?.interno && !filaActiva.sonando;
+  // Estado forzado por la interacción activa (ADR-BD-004): el selector del
+  // menú lo muestra bloqueado en lugar del elegido. Sonando o marcando →
+  // Conectando; cortada y sin cerrar → Trabajo pos-llamada; en curso → En
+  // llamada (o "En llamada interna" si es con otro agente). El cronómetro
+  // arranca cuando arrancó la interacción (iniciadaEn); si la fila no lo
+  // tiene, el selector no muestra cronómetro.
+  const estadoForzado = (() => {
+    if (!filaActiva || filaActiva.porAceptar) return undefined;
+    const desde = filaActiva.iniciadaEn;
+    if (filaActiva.sonando) return { ...estadosForzados.conectando, desde };
+    if (finalizadas.includes(filaActiva.id)) return { ...estadosForzados.acw, desde };
+    if (filaActiva.interno) return { ...estadoLlamadaInterna, desde };
+    return { ...estadosForzados.enLlamada, desde };
+  })();
 
   return (
     // min-w-0: que el contenido (por ejemplo, el historial de Inicio) no
@@ -460,7 +472,7 @@ export function PadMockShell() {
         onEstadoAgenteChange={cambiarEstadoAgente}
         ultimaCampaniaId={ultimaCampaniaId}
         ultimaCuentaId={ultimaCuentaId}
-        estadoSistema={enLlamadaInterna ? estadoLlamadaInterna : undefined}
+        estadoSistema={estadoForzado}
       />
 
       {accesoActivo ? (
@@ -491,6 +503,7 @@ export function PadMockShell() {
             <CenterColumn
               key={`centro-${interaccionActivaId}`}
               tipificaciones={tipificaciones}
+              tipificacionObligatoria={!entranteActivo?.tipificacionOpcional}
               enEspera={enEspera}
               holdStartedAt={holdStartedAt}
               onToggleEspera={toggleEspera}

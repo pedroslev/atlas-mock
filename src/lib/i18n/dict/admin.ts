@@ -36,7 +36,7 @@ export const admin: NamespaceDict = {
     "form.nombrePlaceholder": "Ej: Banco Sur",
     "form.regionPlaceholder": "Seleccionar región",
     "form.regionAyuda":
-      "El código de región lo define desarrollo (AR, COL, MX, CL, CUSTOM).",
+      "El código lo define desarrollo al dar de alta la región.",
     "form.paisPlaceholder": "Seleccionar país",
     "form.paisBuscar": "Buscar país...",
     "form.paisVacio": "No se encontró ningún país.",
@@ -47,6 +47,8 @@ export const admin: NamespaceDict = {
 
     "detalle.sinRegion": "Sin región asignada",
     "detalle.activoAyuda": "Refleja el estado del cliente.",
+    "detalle.nombreAyuda": "No se puede cambiar después del alta.",
+    "detalle.regionAyuda": "No se puede cambiar: el cliente queda en la celda donde se aprovisionó.",
 
     "soporte.titulo": "Soporte multitenancy",
     "soporte.descripcion":
@@ -257,7 +259,7 @@ export const admin: NamespaceDict = {
     "form.nombrePlaceholder": "E.g. Banco Sur",
     "form.regionPlaceholder": "Select a region",
     "form.regionAyuda":
-      "The region code is defined by development (AR, COL, MX, CL, CUSTOM).",
+      "The code is defined by development when the region is created.",
     "form.paisPlaceholder": "Select a country",
     "form.paisBuscar": "Search country...",
     "form.paisVacio": "No country found.",
@@ -268,6 +270,8 @@ export const admin: NamespaceDict = {
 
     "detalle.sinRegion": "No region assigned",
     "detalle.activoAyuda": "Reflects the client status.",
+    "detalle.nombreAyuda": "Cannot be changed after creation.",
+    "detalle.regionAyuda": "Cannot be changed: the client stays in the cell where it was provisioned.",
 
     "soporte.titulo": "Multitenancy support",
     "soporte.descripcion":
@@ -478,7 +482,7 @@ export const admin: NamespaceDict = {
     "form.nombrePlaceholder": "Ex.: Banco Sur",
     "form.regionPlaceholder": "Selecionar região",
     "form.regionAyuda":
-      "O código de região é definido pelo desenvolvimento (AR, COL, MX, CL, CUSTOM).",
+      "O código é definido pelo desenvolvimento ao cadastrar a região.",
     "form.paisPlaceholder": "Selecionar país",
     "form.paisBuscar": "Pesquisar país...",
     "form.paisVacio": "Nenhum país encontrado.",
@@ -489,6 +493,8 @@ export const admin: NamespaceDict = {
 
     "detalle.sinRegion": "Sem região atribuída",
     "detalle.activoAyuda": "Reflete a situação do cliente.",
+    "detalle.nombreAyuda": "Não pode ser alterado após o cadastro.",
+    "detalle.regionAyuda": "Não pode ser alterado: o cliente fica na célula onde foi provisionado.",
 
     "soporte.titulo": "Suporte multitenancy",
     "soporte.descripcion":
@@ -699,7 +705,7 @@ export const admin: NamespaceDict = {
     "form.nombrePlaceholder": "Ex.: Banco Sur",
     "form.regionPlaceholder": "Selecciona una regió",
     "form.regionAyuda":
-      "El codi de regió el defineix desenvolupament (AR, COL, MX, CL, CUSTOM).",
+      "El codi el defineix desenvolupament en donar d'alta la regió.",
     "form.paisPlaceholder": "Selecciona un país",
     "form.paisBuscar": "Cerca un país...",
     "form.paisVacio": "No s'ha trobat cap país.",
@@ -710,6 +716,8 @@ export const admin: NamespaceDict = {
 
     "detalle.sinRegion": "Sense regió assignada",
     "detalle.activoAyuda": "Reflecteix l'estat del client.",
+    "detalle.nombreAyuda": "No es pot canviar després de l'alta.",
+    "detalle.regionAyuda": "No es pot canviar: el client queda a la cel·la on es va aprovisionar.",
 
     "soporte.titulo": "Suport multitenancy",
     "soporte.descripcion":

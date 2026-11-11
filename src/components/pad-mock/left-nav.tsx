@@ -19,6 +19,7 @@ import {
   type CuentaSaliente,
   type FilaCola,
   type PaginaExterna,
+  type EstadoForzado,
 } from "@/lib/pad-mock/data";
 
 // A pedido: por ahora el ícono de accesos rápidos no es configurable por
@@ -76,7 +77,7 @@ export function LeftNav({
   onEstadoAgenteChange: (id: string) => void;
   ultimaCampaniaId?: string;
   ultimaCuentaId?: string;
-  estadoSistema?: { nombre: string; dotClass: string };
+  estadoSistema?: EstadoForzado & { desde?: number };
 }) {
   const t = useT();
   const [colapsado, setColapsado] = useState(false);

@@ -59,6 +59,7 @@ const SIN_PAGINAS: PaginaExterna[] = [];
 // hay cliente sobre el que trabajar.
 export function CenterColumn({
   tipificaciones,
+  tipificacionObligatoria = true,
   enEspera,
   holdStartedAt,
   onToggleEspera,
@@ -84,6 +85,8 @@ export function CenterColumn({
   onFinalizar,
 }: {
   tipificaciones: Tipificacion[];
+  /** La campaña exige tipificar antes de cerrar (badge Obligatoria/Opcional). */
+  tipificacionObligatoria?: boolean;
   enEspera: boolean;
   holdStartedAt: number | null;
   onToggleEspera: () => void;
@@ -471,6 +474,7 @@ export function CenterColumn({
 
       <InteractionControls
         tipificaciones={tipificaciones}
+        tipificacionObligatoria={tipificacionObligatoria}
         enEspera={enEspera}
         onToggleEspera={onToggleEspera}
         onCerrarInteraccion={onCerrarInteraccion}
