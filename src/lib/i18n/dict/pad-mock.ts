@@ -241,6 +241,7 @@ export const padMock: NamespaceDict = {
     "agentStatus.principales": "Principales",
     "agentStatus.auxiliares": "Auxiliares",
     "agentStatus.forzadoAria": "Estado forzado: {estado}",
+    "agentStatus.despues": "Después: {estado}",
 
     // HistorialDetailDialog
     "historialDetalle.tipificacion": "Tipificación",

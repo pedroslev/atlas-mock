@@ -17,7 +17,6 @@ import {
   campaniasSalientesMock,
   entrantesMock,
   clienteMock,
-  estadoLlamadaInterna,
   estadosForzados,
   historialAgenteMock,
   historialPorCliente,
@@ -436,19 +435,17 @@ export function PadMockShell() {
   const entranteActivo = entrantesMock.find((c) => c.id === filaActiva?.entranteId);
   const filaAvisoChat = cola.find((f) => f.id === avisoChatFilaId && f.porAceptar);
   const avisoChat = entrantesMock.find((c) => c.id === filaAvisoChat?.entranteId);
-  // Estado forzado por la interacción activa (ADR-BD-004): el selector del
-  // menú lo muestra bloqueado en lugar del elegido. Sonando o marcando →
-  // Conectando; cortada y sin cerrar → Trabajo pos-llamada; en curso → En
-  // llamada (o "En llamada interna" si es con otro agente). El cronómetro
-  // arranca cuando arrancó la interacción (iniciadaEn); si la fila no lo
-  // tiene, el selector no muestra cronómetro.
+  // Estado forzado por la interacción activa (ADR-BD-004, ATLAS-736): sonando
+  // o marcando → Conectando (bloqueado); cortada y sin cerrar → ACW; en curso →
+  // Conectado (también la interna). En Conectado y ACW el selector elige el
+  // estado de después. Un chat no fuerza estado (ADR-IDIGITALES-007). El
+  // cronómetro arranca con la interacción (iniciadaEn); sin eso no se muestra.
   const estadoForzado = (() => {
-    if (!filaActiva || filaActiva.porAceptar) return undefined;
+    if (!filaActiva || filaActiva.porAceptar || filaActiva.canal === "chat") return undefined;
     const desde = filaActiva.iniciadaEn;
     if (filaActiva.sonando) return { ...estadosForzados.conectando, desde };
     if (finalizadas.includes(filaActiva.id)) return { ...estadosForzados.acw, desde };
-    if (filaActiva.interno) return { ...estadoLlamadaInterna, desde };
-    return { ...estadosForzados.enLlamada, desde };
+    return { ...estadosForzados.conectado, desde };
   })();
 
   return (

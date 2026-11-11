@@ -648,19 +648,27 @@ export const estadosAgenteDisponibles: EstadoAgenteMock[] = [
   { id: "descanso", nombre: "Descanso", grupo: "auxiliar", icon: Coffee, dotClass: "bg-secondary" },
 ];
 
-// Estados forzados por la interacción (ADR-BD-004 §call_status): los impone el
-// sistema según lo que la interacción está haciendo y el agente no puede salir
-// de ellos por elección. El selector los muestra bloqueados, con candado y
-// cronómetro, igual que hermes-front (agent-status-selector.tsx). Los nombres
-// y colores son los mismos que el front (pad.estado.*).
-export type EstadoForzado = { nombre: string; dotClass: string; icon: LucideIcon };
+// Estados forzados por la interacción (ADR-BD-004 §call_status, ATLAS-736):
+// los impone el sistema según lo que la interacción está haciendo. Conectando
+// está bloqueado del todo (candado). En Conectado y ACW el selector no cambia
+// el estado actual sino el de DESPUÉS de la interacción ("Después: Almuerzo"),
+// igual que hermes-front (eligeEstadoSiguiente). Los digitales (chat) no
+// fuerzan estado (ADR-IDIGITALES-007). Rótulos y colores como el front
+// (pad.estado.conectando/conectado/acw).
+export type EstadoForzado = {
+  nombre: string;
+  dotClass: string;
+  icon: LucideIcon;
+  /** true: el agente no puede elegir nada mientras dura (candado). */
+  bloqueado: boolean;
+};
 export const estadosForzados = {
   /** Interacción sonando o marcando (Ringing/Dialing): transición, LOCKED. */
-  conectando: { nombre: "Conectando", dotClass: "bg-info", icon: Loader } satisfies EstadoForzado,
-  /** Interacción en curso (Connected). */
-  enLlamada: { nombre: "En llamada", dotClass: "bg-primary", icon: PhoneCall } satisfies EstadoForzado,
+  conectando: { nombre: "Conectando", dotClass: "bg-info", icon: Loader, bloqueado: true } satisfies EstadoForzado,
+  /** Interacción de voz en curso (Connected), también la llamada interna. */
+  conectado: { nombre: "Conectado", dotClass: "bg-primary", icon: PhoneCall, bloqueado: false } satisfies EstadoForzado,
   /** After-call work: la interacción terminó y falta tipificar y cerrar. */
-  acw: { nombre: "Trabajo pos-llamada", dotClass: "bg-secondary", icon: ClipboardCheck } satisfies EstadoForzado,
+  acw: { nombre: "ACW", dotClass: "bg-secondary", icon: ClipboardCheck, bloqueado: false } satisfies EstadoForzado,
 } as const;
 
 export const estadoAgenteMock = {
@@ -708,11 +716,6 @@ export const agentesDirectorioMock: AgenteDirectorio[] = [
   { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
   { id: "ad-9", nombre: "Paula Herrera", estadoId: "en-llamada-interna" },
 ];
-
-// Estado que muestra el propio agente mientras está en una llamada interna.
-// No se elige a mano (no está en estadosAgenteDisponibles): lo pone el
-// sistema mientras dura la llamada.
-export const estadoLlamadaInterna: EstadoForzado = { nombre: "En llamada interna", dotClass: "bg-primary", icon: PhoneCall };
 
 // Quién llama cuando se simula una llamada interna entrante.
 export const agenteLlamadaEntrante: AgenteDirectorio = agentesDirectorioMock[2];

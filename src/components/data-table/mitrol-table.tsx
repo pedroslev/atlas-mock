@@ -208,15 +208,13 @@ export function MitrolTable<T extends MRT_RowData>({
     muiTableHeadCellProps: {
       sx: {
         fontWeight: 600,
-        // Sólo en dark: header con un tono más claro que el cuerpo y borde
-        // inferior visible para que se lea la estructura (light se deja como
-        // estaba, superficie blanca plana).
-        ...(dark && {
-          backgroundColor: "#273449",
-          color: "#F1F5F9",
-          borderBottom: "1px solid #334155",
-          "& .MuiTableSortLabel-icon, & svg": { color: "#CBD5E1" },
-        }),
+        // Siempre presentes (ver muiTableBodyCellProps): en dark, header con
+        // un tono más claro que el cuerpo y borde inferior; en light, sin
+        // override (superficie blanca plana).
+        backgroundColor: dark ? "#273449" : undefined,
+        color: dark ? "#F1F5F9" : undefined,
+        borderBottom: dark ? "1px solid #334155" : undefined,
+        "& .MuiTableSortLabel-icon, & svg": { color: dark ? "#CBD5E1" : undefined },
       },
     },
     // Siempre presente (nunca `...(dark && {...})`): tanstack-table mergea las

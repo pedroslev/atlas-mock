@@ -38,25 +38,26 @@ export function AgentStatusSelectorMock({
   estadoId: string;
   onEstadoIdChange: (id: string) => void;
   cronometro: string;
-  /** Estado forzado por la interacción (ADR-BD-004: Conectando, En llamada,
-   *  Trabajo pos-llamada, En llamada interna): se muestra en lugar del elegido,
-   *  bloqueado con candado, y el cronómetro cuenta desde `desde`. */
+  /** Estado forzado por la interacción (ADR-BD-004, ATLAS-736): se muestra en
+   *  lugar del elegido y el cronómetro cuenta desde `desde`. Si está
+   *  `bloqueado` (Conectando) no se puede elegir nada; si no (Conectado, ACW),
+   *  la lista elige el estado de DESPUÉS de la interacción. */
   estadoSistema?: EstadoForzado & { desde?: number };
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const now = useNow(!!estadoSistema);
   const estado = estadosAgenteDisponibles.find((e) => e.id === estadoId) ?? estadosAgenteDisponibles[0];
-  const Icon = estado.icon;
   const principales = estadosAgenteDisponibles.filter((e) => e.grupo === "principal");
   const auxiliares = estadosAgenteDisponibles.filter((e) => e.grupo === "auxiliar");
 
-  if (estadoSistema) {
+  const cronometroForzado =
+    estadoSistema?.desde !== undefined
+      ? formatDuration(Math.max(0, Math.floor((now - estadoSistema.desde) / 1000)))
+      : null;
+
+  if (estadoSistema?.bloqueado) {
     const IconForzado = estadoSistema.icon;
-    const cronometroForzado =
-      estadoSistema.desde !== undefined
-        ? formatDuration(Math.max(0, Math.floor((now - estadoSistema.desde) / 1000)))
-        : null;
     return colapsado ? (
       <span title={estadoSistema.nombre} className="mx-auto flex size-8 items-center justify-center">
         <span className={cn("size-2.5 rounded-full", estadoSistema.dotClass)} />
@@ -77,6 +78,10 @@ export function AgentStatusSelectorMock({
       </div>
     );
   }
+
+  // Qué se ve en el disparador: el estado forzado si lo hay, si no el elegido.
+  const visible = estadoSistema ?? estado;
+  const IconVisible = visible.icon;
 
   const lista = (
     <Command>
@@ -126,10 +131,10 @@ export function AgentStatusSelectorMock({
         <PopoverTrigger asChild>
           <button
             type="button"
-            title={estado.nombre}
+            title={visible.nombre}
             className="mx-auto flex size-8 items-center justify-center rounded-lg hover:bg-sidebar-accent"
           >
-            <span className={cn("size-2.5 rounded-full", estado.dotClass)} />
+            <span className={cn("size-2.5 rounded-full", visible.dotClass)} />
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" side="right" className="w-56 p-0">
@@ -145,14 +150,23 @@ export function AgentStatusSelectorMock({
         <button
           type="button"
           aria-expanded={open}
-          className="flex w-full items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar px-2 py-1.5 hover:bg-sidebar-accent"
+          className="flex w-full flex-col gap-0.5 rounded-lg border border-sidebar-border bg-sidebar px-2 py-1.5 hover:bg-sidebar-accent"
         >
-          <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">{estado.nombre}</span>
-          <span className="shrink-0 font-mono text-[0.65rem] text-muted-foreground tabular-nums">
-            {cronometro}
+          <span className="flex w-full items-center gap-1.5">
+            <IconVisible className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">{visible.nombre}</span>
+            <span className="shrink-0 font-mono text-[0.65rem] text-muted-foreground tabular-nums">
+              {estadoSistema ? cronometroForzado : cronometro}
+            </span>
+            <ChevronsUpDown className="size-3 shrink-0 text-muted-foreground" />
           </span>
-          <ChevronsUpDown className="size-3 shrink-0 text-muted-foreground" />
+          {/* ATLAS-736: en Conectado y ACW lo que se elige es el estado de
+              después de la interacción, y se muestra acá. */}
+          {estadoSistema && (
+            <span className="w-full truncate text-left text-[0.65rem] text-muted-foreground">
+              {t("padMock.agentStatus.despues", { estado: estado.nombre })}
+            </span>
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-56 p-0">

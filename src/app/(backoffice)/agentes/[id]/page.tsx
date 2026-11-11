@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
+import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ import { AgenteEliminar } from "./agente-eliminar";
 const MODULO_KEYS: Record<string, string> = {
   "Proyectos": "common.nav.proyectos",
   "Campañas": "common.nav.campanias",
+  "Clientes": "common.nav.clientes",
   "Cuentas": "common.nav.cuentas",
   "Clasificaciones": "common.nav.clasificaciones",
   "Marcas": "common.nav.marcas",
@@ -120,13 +121,11 @@ export default async function EditarAgentePage({
               <Label htmlFor="email">
                 <T k="usuarios.email" />
               </Label>
-              <CampoUnico
-                id="email"
-                campo="email"
-                existentes={agentes.filter((a) => a.id !== id).map((a) => a.email)}
-                defaultValue={agente.email}
-                obligatorio
-              />
+              {/* Solo lectura (ATLAS-192): es con lo que la persona inicia sesión. */}
+              <Input id="email" value={agente.email} readOnly disabled />
+              <p className="text-xs text-muted-foreground">
+                <T k="usuarios.detalle.emailAyuda" />
+              </p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
               <div className="flex items-center justify-between">
