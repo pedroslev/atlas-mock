@@ -107,6 +107,8 @@ export const padMock: NamespaceDict = {
     "callControls.buscarTipificacion": "Buscar tipificación…",
     "callControls.sinResultados": "Sin resultados.",
     "callControls.tipificacionPlaceholder": "Tipificación…",
+    "callControls.tipificacionObligatoria": "Obligatoria",
+    "callControls.tipificacionOpcional": "Opcional",
     "callControls.espera": "Espera",
     "callControls.retomar": "Retomar",
     "callControls.reactivar": "Reactivar",
@@ -156,6 +158,7 @@ export const padMock: NamespaceDict = {
     "inicio.colCanal": "Canal",
     "inicio.colFecha": "Fecha y hora",
     "inicio.colCliente": "Cliente",
+    "inicio.colCampania": "Campaña",
     "inicio.colDuracion": "Duración",
     "inicio.colTipificacion": "Tipificación",
 
@@ -237,6 +240,8 @@ export const padMock: NamespaceDict = {
     // AgentStatusSelectorMock
     "agentStatus.principales": "Principales",
     "agentStatus.auxiliares": "Auxiliares",
+    "agentStatus.forzadoAria": "Estado forzado: {estado}",
+    "agentStatus.despues": "Después: {estado}",
 
     // HistorialDetailDialog
     "historialDetalle.tipificacion": "Tipificación",

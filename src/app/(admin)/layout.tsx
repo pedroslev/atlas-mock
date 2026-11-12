@@ -15,7 +15,10 @@ export default function AdminLayout({
       <AdminHeader />
       <div className="flex min-h-0 flex-1">
         <AdminSidebar />
-        <SidebarInset>
+        {/* min-w-0: sin esto, una tabla ancha (p.ej. Grupos de permisos) estira
+            el contenido más allá del espacio disponible y corre el encabezado
+            y los botones hacia la derecha. Igual que el layout del backoffice. */}
+        <SidebarInset className="min-w-0">
           <main className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-none px-6 pb-6">
             {children}
           </main>

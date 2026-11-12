@@ -17,7 +17,7 @@ import {
   campaniasSalientesMock,
   entrantesMock,
   clienteMock,
-  estadoLlamadaInterna,
+  estadosForzados,
   historialAgenteMock,
   historialPorCliente,
   ocupaAlAsesorEntero,
@@ -435,9 +435,20 @@ export function PadMockShell() {
   const entranteActivo = entrantesMock.find((c) => c.id === filaActiva?.entranteId);
   const filaAvisoChat = cola.find((f) => f.id === avisoChatFilaId && f.porAceptar);
   const avisoChat = entrantesMock.find((c) => c.id === filaAvisoChat?.entranteId);
-  // Mientras hay una llamada interna conectada y al frente, el agente figura
-  // "En llamada interna".
-  const enLlamadaInterna = !!filaActiva?.interno && !filaActiva.sonando;
+  // Estado forzado por la interacción activa (ADR-BD-004, ATLAS-736): sonando
+  // o marcando → Conectando (bloqueado); cortada y sin cerrar → ACW; en curso →
+  // Conectado (también la interna y el chat). Con una llamada, el selector
+  // elige el estado de después; con solo un chat, cambia el estado actual
+  // (ADR-IDIGITALES-007). El cronómetro arranca con la interacción
+  // (iniciadaEn); sin eso no se muestra.
+  const estadoForzado = (() => {
+    if (!filaActiva || filaActiva.porAceptar) return undefined;
+    const desde = filaActiva.iniciadaEn;
+    const eligeDespues = filaActiva.canal !== "chat";
+    if (filaActiva.sonando) return { ...estadosForzados.conectando, desde, eligeDespues };
+    if (finalizadas.includes(filaActiva.id)) return { ...estadosForzados.acw, desde, eligeDespues };
+    return { ...estadosForzados.conectado, desde, eligeDespues };
+  })();
 
   return (
     // min-w-0: que el contenido (por ejemplo, el historial de Inicio) no
@@ -460,7 +471,7 @@ export function PadMockShell() {
         onEstadoAgenteChange={cambiarEstadoAgente}
         ultimaCampaniaId={ultimaCampaniaId}
         ultimaCuentaId={ultimaCuentaId}
-        estadoSistema={enLlamadaInterna ? estadoLlamadaInterna : undefined}
+        estadoSistema={estadoForzado}
       />
 
       {accesoActivo ? (
@@ -491,6 +502,7 @@ export function PadMockShell() {
             <CenterColumn
               key={`centro-${interaccionActivaId}`}
               tipificaciones={tipificaciones}
+              tipificacionObligatoria={!entranteActivo?.tipificacionOpcional}
               enEspera={enEspera}
               holdStartedAt={holdStartedAt}
               onToggleEspera={toggleEspera}

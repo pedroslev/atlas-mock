@@ -101,7 +101,8 @@ export function InicioPanel({
         id: "fecha",
         header: t("padMock.inicio.colFecha"),
         size: 150,
-        accessorFn: (h) => `${h.fecha} ${h.hora}`,
+        // Clave ordenable (aaaa-mm-dd hh:mm): la tabla arranca por la más reciente.
+        accessorFn: (h) => `${h.fecha.split("/").reverse().join("-")} ${h.hora}`,
         Cell: ({ row }) => (
           <span className="flex flex-col font-mono text-xs tabular-nums">
             <span>{row.original.fecha}</span>
@@ -129,6 +130,19 @@ export function InicioPanel({
                 {row.original.numeroCliente}
               </span>
             </div>
+          ),
+      },
+      {
+        // Tomada de hermes-front: la campaña por la que pasó la interacción.
+        id: "campania",
+        header: t("padMock.inicio.colCampania"),
+        accessorFn: (h) => h.campania ?? "",
+        filterVariant: "select",
+        Cell: ({ row }) =>
+          row.original.campania ? (
+            <span className="text-sm">{row.original.campania}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
           ),
       },
       {
@@ -338,6 +352,8 @@ export function InicioPanel({
             options={{
               enableStickyHeader: false,
               muiTableContainerProps: { sx: {} },
+              // Lo más reciente arriba (tomado de hermes-front).
+              initialState: { sorting: [{ id: "fecha", desc: true }] },
             }}
           />
           {conversacion?.conversacion && (

@@ -41,7 +41,7 @@ import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { InfoHint } from "@/components/pad-mock/info-hint";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
-import { marcasDisponibles, type Tipificacion } from "@/lib/pad-mock/data";
+import { formatEspera, marcasDisponibles, type Tipificacion } from "@/lib/pad-mock/data";
 import { useIsMac } from "@/lib/pad-mock/use-is-mac";
 
 type ActionTone = "success" | "destructive" | "neutral" | "active";
@@ -59,6 +59,7 @@ const SHORTCUTS = {
   marcar: "B",
   cerrar: "E",
   dialpad: "D",
+  // Con Shift: Ctrl+S es "Cambiar estado" en hermes-front (decisión ATLAS-1329).
   compartir: "S",
   captura: "I",
   pip: "P",
@@ -79,6 +80,7 @@ function ControlButton({
   onClick,
   pressed,
   disabled,
+  shift = false,
 }: {
   icon: LucideIcon;
   label: string;
@@ -88,15 +90,20 @@ function ControlButton({
   onClick?: () => void;
   pressed?: boolean;
   disabled?: boolean;
+  /** El atajo lleva Shift además del modificador. */
+  shift?: boolean;
 }) {
   return (
-    <ActionTooltip label={label} shortcut={[isMac ? "⌘" : "Ctrl", shortcutKey]}>
+    <ActionTooltip
+      label={label}
+      shortcut={shift ? [isMac ? "⌘" : "Ctrl", "Shift", shortcutKey] : [isMac ? "⌘" : "Ctrl", shortcutKey]}
+    >
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
         aria-label={label}
-        aria-keyshortcuts={`${isMac ? "Meta" : "Control"}+${shortcutKey}`}
+        aria-keyshortcuts={`${isMac ? "Meta" : "Control"}+${shift ? "Shift+" : ""}${shortcutKey}`}
         aria-pressed={pressed}
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40",
@@ -115,10 +122,13 @@ function TipificacionSelector({
   tipificaciones,
   value,
   onChange,
+  disabled,
 }: {
   tipificaciones: Tipificacion[];
   value: string | undefined;
   onChange: (id: string) => void;
+  /** Deshabilitado mientras la interacción sigue en curso. */
+  disabled?: boolean;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -132,6 +142,7 @@ function TipificacionSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={disabled}
           className="w-48 min-w-0 shrink-0 justify-between font-normal"
         >
           <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate">
@@ -169,7 +180,10 @@ function TipificacionSelector({
   );
 }
 
-type MarcaAgregada = { marca: string; comentario?: string };
+// `segundo`: momento de la interacción en que se puso la marca (tomado de
+// hermes-front: "si pongo un bookmark tiene que aparecer con el timestamp").
+// Después la revisa calidad sobre la grabación.
+type MarcaAgregada = { marca: string; comentario?: string; segundo: number };
 
 // Barra de controles de la interacción activa — vive en CenterColumn, FUERA
 // del Tabs, para quedar visible sin importar qué solapa esté mirando el
@@ -198,6 +212,7 @@ type MarcaAgregada = { marca: string; comentario?: string };
 // tipificación que cargar). Mientras suena (sonando), cortar la cancela.
 export function InteractionControls({
   tipificaciones,
+  tipificacionObligatoria = true,
   enEspera,
   onToggleEspera,
   onCerrarInteraccion,
@@ -212,6 +227,9 @@ export function InteractionControls({
   onCortar,
 }: {
   tipificaciones: Tipificacion[];
+  /** La campaña exige tipificar para cerrar. Si no, Cerrar interacción se
+   *  habilita sin tipificación y la barra lo muestra como "Opcional". */
+  tipificacionObligatoria?: boolean;
   enEspera: boolean;
   onToggleEspera: () => void;
   onCerrarInteraccion: () => void;
@@ -247,6 +265,8 @@ export function InteractionControls({
   const alternarSilencioLocal = useCallback(() => setSilenciadoLocal((v) => !v), []);
   const alternarSilencio = onToggleSilenciado ?? alternarSilencioLocal;
   const [marcas, setMarcas] = useState<MarcaAgregada[]>([]);
+  // Inicio de la interacción, para el segundo de cada marca (montaje ≈ inicio).
+  const [inicioMs] = useState(() => Date.now());
   const [marcarAbierto, setMarcarAbierto] = useState(false);
   const [marcaSeleccionada, setMarcaSeleccionada] = useState<string | null>(null);
   const [comentarioMarca, setComentarioMarca] = useState("");
@@ -261,7 +281,11 @@ export function InteractionControls({
     (v: boolean) => (onCortar && v ? onCortar() : setCortadaLocal(v)),
     [onCortar]
   );
-  const [tipSeleccionada, setTipSeleccionada] = useState(tipificaciones[0]?.id);
+  // Sin preselección, y recién se puede elegir con la interacción cortada
+  // (ATLAS-736: el worker toma la tipificación en ACW, no durante la llamada).
+  const [tipSeleccionada, setTipSeleccionada] = useState<string | undefined>(undefined);
+  // Con tipificación opcional se puede cerrar sin elegir ninguna.
+  const puedeCerrar = !tipificacionObligatoria || !!tipSeleccionada;
 
   function cerrarMarcar(next: boolean) {
     setMarcarAbierto(next);
@@ -276,7 +300,11 @@ export function InteractionControls({
     if (!marca) return;
     setMarcas((cur) => [
       ...cur,
-      { marca: marca.nombre, comentario: comentarioMarca.trim() || undefined },
+      {
+        marca: marca.nombre,
+        comentario: comentarioMarca.trim() || undefined,
+        segundo: Math.max(0, Math.floor((Date.now() - inicioMs) / 1000)),
+      },
     ]);
     cerrarMarcar(false);
   }
@@ -284,7 +312,7 @@ export function InteractionControls({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const mod = e.ctrlKey || e.metaKey;
-      if (!mod || e.altKey || e.shiftKey || e.repeat) return;
+      if (!mod || e.altKey || e.repeat) return;
       const el = e.target as HTMLElement | null;
       if (
         el &&
@@ -296,6 +324,15 @@ export function InteractionControls({
         return;
       }
       const key = e.key.toLowerCase();
+      // Con Shift solo existe Compartir pantalla (Ctrl+Shift+S); el resto de
+      // los atajos van sin Shift.
+      if (e.shiftKey) {
+        if (key === SHORTCUTS.compartir.toLowerCase() && !cortada && video) {
+          e.preventDefault();
+          video.onToggleCompartir();
+        }
+        return;
+      }
       if (interno) {
         if (key === SHORTCUTS.cerrar.toLowerCase()) {
           e.preventDefault();
@@ -321,12 +358,6 @@ export function InteractionControls({
           if (!cortada && !chat) {
             e.preventDefault();
             alternarSilencio();
-          }
-          break;
-        case SHORTCUTS.compartir.toLowerCase():
-          if (!cortada && video) {
-            e.preventDefault();
-            video.onToggleCompartir();
           }
           break;
         case SHORTCUTS.captura.toLowerCase():
@@ -359,7 +390,7 @@ export function InteractionControls({
           // elegida, cerrar de verdad la interacción.
           if (!cortada) {
             setCortada(true);
-          } else if (tipSeleccionada) {
+          } else if (puedeCerrar) {
             onCerrarInteraccion();
           }
           break;
@@ -367,7 +398,7 @@ export function InteractionControls({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cortada, setCortada, tipSeleccionada, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, interno, sonando, alternarSilencio]);
+  }, [cortada, setCortada, puedeCerrar, onToggleEspera, onCerrarInteraccion, chat, llamadaWeb, video, interno, sonando, alternarSilencio]);
 
   if (interno) {
     return (
@@ -418,7 +449,12 @@ export function InteractionControls({
         tipificaciones={tipificaciones}
         value={tipSeleccionada}
         onChange={setTipSeleccionada}
+        disabled={!cortada}
       />
+      {/* Si la campaña exige tipificar (tomado de hermes-front, acw-panel). */}
+      <Badge variant={tipificacionObligatoria ? "warning" : "neutral"} className="shrink-0">
+        {tipificacionObligatoria ? t("padMock.callControls.tipificacionObligatoria") : t("padMock.callControls.tipificacionOpcional")}
+      </Badge>
 
       {enEspera && (
         <Badge variant="warning" className="shrink-0 gap-1">
@@ -430,6 +466,7 @@ export function InteractionControls({
         const badge = (
           <Badge variant="neutral" className="shrink-0 gap-1">
             <Bookmark className="size-2.5" />
+            <span className="font-mono tabular-nums">{formatEspera(m.segundo)}</span>
             {m.marca}
           </Badge>
         );
@@ -518,6 +555,7 @@ export function InteractionControls({
             icon={video.compartiendo ? ScreenShareOff : ScreenShare}
             label={video.compartiendo ? t("padMock.callControls.dejarDeCompartir") : t("padMock.callControls.compartirPantalla")}
             shortcutKey={SHORTCUTS.compartir}
+            shift
             isMac={isMac}
             tone={video.compartiendo ? "active" : "neutral"}
             pressed={video.compartiendo}
@@ -624,13 +662,13 @@ export function InteractionControls({
           shortcutKey={SHORTCUTS.cerrar}
           isMac={isMac}
           tone="destructive"
-          disabled={cortada && !tipSeleccionada}
+          disabled={cortada && !puedeCerrar}
           onClick={() => {
             if (!cortada) {
               setCortada(true);
               return;
             }
-            if (tipSeleccionada) onCerrarInteraccion();
+            if (puedeCerrar) onCerrarInteraccion();
           }}
         />
       </div>
