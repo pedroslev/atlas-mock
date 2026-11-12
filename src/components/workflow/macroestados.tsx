@@ -149,13 +149,17 @@ function NodoMacroestado({
             <div
               data-testid="nodo-contraido"
               className={cn(
-                "group relative flex size-16 items-center justify-center rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 [&>span>svg]:size-7",
+                // El alto crece con la cantidad de salidas: los puntos van sobre
+                // el borde derecho, nunca por fuera del recuadro.
+                "group relative flex min-h-16 items-center rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10",
                 data.sinConectar && "ring-2 ring-destructive",
               )}
             >
               <Handle type="target" position={Position.Top} className={PUNTO_ENTRADA} />
-              <span className="shrink-0">{icono}</span>
-              <div className="absolute -right-2 top-1/2 flex -translate-y-1/2 flex-col gap-1">
+              <span className="flex size-16 shrink-0 items-center justify-center [&>svg]:size-7">
+                {icono}
+              </span>
+              <div className="-mr-2 flex flex-col gap-1 py-2">
                 {salidas}
                 {data.fueraDeHorario && <SalidaFueraDeHorario />}
               </div>
