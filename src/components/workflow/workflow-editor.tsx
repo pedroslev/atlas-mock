@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
   ControlButton,
+  MiniMap,
   Handle,
   Panel,
   Position,
@@ -19,6 +20,8 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  useStore,
+  useStoreApi,
   type Connection,
   type Edge,
   type EdgeProps,
@@ -56,6 +59,7 @@ import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { routeEdges, type Point, type Rect, type RouteRequest } from "@/lib/workflow/edge-routing";
 import {
   type Workflow,
   type WorkflowNode,
@@ -243,6 +247,56 @@ function conexionesDeRetorno(nodes: Node[], edges: Edge[]): Set<string> {
 const vaPorCarril = (origen: Node, destino: Node) =>
   destino.position.y < origen.position.y + (origen.measured?.height ?? 0);
 
+// Rutas de todas las conexiones, calculadas juntas por EdgeRouter (ver lib/workflow/edge-routing).
+// Una conexión sin ruta, o con un extremo que se está arrastrando, usa el trazado simple de abajo.
+const RutasContext = createContext<Map<string, Point[]>>(new Map());
+
+// Calcula las rutas cuando cambian los nodos o las conexiones, pero no mientras se arrastra un
+// nodo: recalcular en cada cuadro del arrastre sería caro, y al soltarlo se recalcula.
+function EdgeRouter({ onRutas }: { onRutas: (rutas: Map<string, Point[]>) => void }) {
+  const nodes = useStore((s) => s.nodes);
+  const edges = useStore((s) => s.edges);
+  const store = useStoreApi();
+  // Firma de la geometría que se ruteó por última vez: el lienzo se re-renderiza por muchas
+  // cosas (incluidas las rutas nuevas), y solo hay que rutear de nuevo si algo se movió.
+  const ultimaFirma = useRef("");
+  useEffect(() => {
+    if (nodes.some((n) => n.dragging)) return;
+    const { nodeLookup } = store.getState();
+    const rects: Rect[] = [];
+    for (const n of nodeLookup.values()) {
+      if (n.id === PUNTA_ID || !n.measured.width || !n.measured.height) continue;
+      const { x, y } = n.internals.positionAbsolute;
+      rects.push({ id: n.id, x, y, width: n.measured.width, height: n.measured.height });
+    }
+    const pedidos: RouteRequest[] = [];
+    for (const e of edges) {
+      const origen = nodeLookup.get(e.source);
+      const destino = nodeLookup.get(e.target);
+      const salidas = origen?.internals.handleBounds?.source ?? [];
+      const salida = salidas.find((h) => h.id === (e.sourceHandle ?? null)) ?? salidas[0];
+      const entrada = destino?.internals.handleBounds?.target?.[0];
+      if (!origen || !destino || !salida || !entrada || e.target === PUNTA_ID) continue;
+      const o = origen.internals.positionAbsolute;
+      const d = destino.internals.positionAbsolute;
+      const porAbajo = salida.position === Position.Bottom;
+      pedidos.push({
+        id: e.id,
+        from: porAbajo
+          ? [o.x + salida.x + salida.width / 2, o.y + salida.y + salida.height]
+          : [o.x + salida.x + salida.width, o.y + salida.y + salida.height / 2],
+        fromSide: porAbajo ? "bottom" : "right",
+        to: [d.x + entrada.x + entrada.width / 2, d.y + entrada.y],
+      });
+    }
+    const firma = JSON.stringify([rects, pedidos]);
+    if (firma === ultimaFirma.current) return;
+    ultimaFirma.current = firma;
+    onRutas(routeEdges(rects, pedidos));
+  }, [nodes, edges, store, onRutas]);
+  return null;
+}
+
 // Conexión ortogonal para un flujo que corre de arriba hacia abajo. Sale por
 // la derecha de la fila de la salida y entra por el borde superior del destino.
 // - Hacia adelante: baja por la separación al costado del nodo y corre por el
@@ -277,6 +331,7 @@ function ConexionQuitable({
   const origen = nodes.find((n) => n.id === source);
   const destino = nodes.find((n) => n.id === target);
   const internoOrigen = useInternalNode(source);
+  const rutas = useContext(RutasContext);
   if (!origen || !destino) return null;
 
   const porId = new Map(nodes.map((n) => [n.id, n]));
@@ -352,6 +407,32 @@ function ConexionQuitable({
     ];
     quitarX = (gx + targetX) / 2;
     quitarY = canal;
+  }
+
+  // Con una ruta calculada para todo el flujo (y vigente: sus extremos coinciden con la salida y
+  // la entrada de ahora), se usa esa; la cruz va en el medio del tramo más largo.
+  const ruta = rutas.get(id);
+  const vigente =
+    ruta &&
+    !origen.dragging &&
+    !destino.dragging &&
+    Math.abs(ruta[0][0] - sourceX) < 1 &&
+    Math.abs(ruta[0][1] - sourceY) < 1 &&
+    Math.abs(ruta[ruta.length - 1][0] - targetX) < 1 &&
+    Math.abs(ruta[ruta.length - 1][1] - targetY) < 1;
+  if (ruta && vigente) {
+    puntos = ruta;
+    let largo = -1;
+    for (let k = 1; k < ruta.length; k++) {
+      const l = Math.abs(ruta[k][0] - ruta[k - 1][0]) + Math.abs(ruta[k][1] - ruta[k - 1][1]);
+      if (l > largo) {
+        largo = l;
+        quitarX = (ruta[k][0] + ruta[k - 1][0]) / 2;
+        quitarY = (ruta[k][1] + ruta[k - 1][1]) / 2;
+      }
+    }
+    etiquetaX = ruta[1][0] + 10;
+    etiquetaY = ruta[1][1];
   }
 
   const hayNodoSeleccionado = nodes.some((n) => n.selected);
@@ -515,7 +596,9 @@ export function WorkflowEditor({
             id: n.id,
             type: n.type,
             position: n.position,
-            data: { campaniaId: n.campaniaId },
+            // Un flujo guardado arranca contraído (título, resumen y salidas) para que se lea
+            // entero; cada nodo se expande con su flecha o todos con «Expandir todo».
+            data: { campaniaId: n.campaniaId, colapsado: true },
           },
     [],
   );
@@ -523,6 +606,7 @@ export function WorkflowEditor({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
     (initialWorkflow?.nodes ?? [inicioNode]).map(toFlowNode),
   );
+  const [rutas, setRutas] = useState<Map<string, Point[]>>(new Map());
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
     initialWorkflow?.edges.map((e: WorkflowEdge) => ({
       id: e.id,
@@ -897,6 +981,7 @@ export function WorkflowEditor({
         )}
         style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
+        <RutasContext.Provider value={rutas}>
         <ReactFlow
           nodes={nodosEnLienzo}
           edges={conexionesEnLienzo}
@@ -943,6 +1028,17 @@ export function WorkflowEditor({
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={16} color="var(--border)" />
+          <EdgeRouter onRutas={setRutas} />
+          {/* Vista general del flujo: muestra dónde está lo que se ve y permite moverse. */}
+          <MiniMap
+            pannable
+            zoomable
+            position="bottom-right"
+            bgColor="var(--card)"
+            nodeColor="var(--muted)"
+            maskColor="color-mix(in oklab, var(--foreground) 8%, transparent)"
+            className="!rounded-lg !ring-1 !ring-foreground/10"
+          />
           {/* Zoom, centrado y acciones sobre todo el lienzo, juntos: así no se
               confunden con los nodos que se agregan desde la paleta. Cada uno
               dice qué hace al pasar el mouse. */}
@@ -1080,6 +1176,7 @@ export function WorkflowEditor({
             </ActionTooltip>
           </Panel>
         </ReactFlow>
+        </RutasContext.Provider>
       </div>
     </div>
   );
