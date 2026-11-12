@@ -86,7 +86,7 @@ const Compacto = createContext(false);
 // de agarrar) con borde del color de la tarjeta para que se despeguen de ella.
 const PUNTO_ENTRADA = "!size-4 !border-2 !border-card !bg-secondary hover:!bg-primary";
 const PUNTO_SALIDA =
-  "!static !size-4 !translate-x-0 !translate-y-0 !border-2 !border-card hover:!bg-primary";
+  "!static !size-4 !transform-none !border-2 !border-card hover:!bg-primary";
 
 // Marco común de los macroestados: entrada a la izquierda; encabezado con
 // ícono, título editable y acciones; el formulario del nodo (que se puede

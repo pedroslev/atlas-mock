@@ -190,7 +190,9 @@ export type WorkflowNodeType =
   | "if"
   | "case"
   | "http"
-  | "calcular";
+  | "calcular"
+  // Nota adhesiva: un recordatorio para quien arma el flujo, no hace nada en la interacción.
+  | "nota";
 export type WorkflowNode = {
   id: string;
   type: WorkflowNodeType;

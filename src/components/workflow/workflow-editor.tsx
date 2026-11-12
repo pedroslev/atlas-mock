@@ -51,7 +51,10 @@ import {
   Scan,
   PanelLeftClose,
   PanelLeftOpen,
+  StickyNote,
+  Trash2,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -119,6 +122,39 @@ function InicioNode({ data }: { data: { sinConectar?: boolean } }) {
   );
 }
 
+// Nota adhesiva (como en n8n): un papel amarillo con texto libre para saber en
+// qué parte del flujo se está. No tiene entradas ni salidas, no se ejecuta y va
+// detrás de los macroestados. Se agrega desde la paleta y se mueve como un nodo.
+function NotaNode({ data }: { data: { texto?: string; onChange: (p: Record<string, unknown>) => void; onDelete: () => void } }) {
+  const t = useT();
+  return (
+    <div
+      data-testid="nota"
+      className="group relative w-56 rounded-xl bg-amber-100 p-3 text-amber-950 shadow-sm ring-1 ring-amber-300 dark:bg-amber-200"
+    >
+      <Textarea
+        aria-label={t("cuentas.flujo.nota")}
+        placeholder={t("cuentas.flujo.nota.placeholder")}
+        // nodrag: escribir no arrastra la nota; se arrastra desde el borde.
+        className="nodrag min-h-20 resize-y border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
+        value={data.texto ?? ""}
+        onChange={(e) => data.onChange({ texto: e.target.value })}
+      />
+      <ActionTooltip label={t("cuentas.flujo.nota.quitar")}>
+        <button
+          type="button"
+          aria-label={t("cuentas.flujo.nota.quitar")}
+          data-testid="nota-quitar"
+          onClick={data.onDelete}
+          className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-lg text-amber-900/60 opacity-0 hover:bg-amber-200 hover:text-destructive group-hover:opacity-100"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </ActionTooltip>
+    </div>
+  );
+}
+
 // Salidas que pueden quedar sin conectar sin que falte nada
 // (propuesta-motor-workflows.md §5): el camino termina ahí.
 const SALIDAS_OPCIONALES = new Set(["error", "timeout", "other", "out_of_hours"]);
@@ -136,7 +172,7 @@ function nodosSinConectar(
   const conEntrada = new Set(edges.map((e) => e.target));
   const resultado = new Set<string>();
   for (const n of nodes) {
-    if (n.type === "punta") continue;
+    if (n.type === "punta" || n.type === "nota") continue;
     const faltaEntrada = n.type !== "inicio" && !conEntrada.has(n.id);
     const faltaSalida = salidasDe(n.id).some(
       (salida) => !SALIDAS_OPCIONALES.has(salida) && !conectadas.has(`${n.id}/${salida}`),
@@ -201,7 +237,7 @@ function nodosConFueraDeHorario(nodes: Node[], edges: Edge[]): Set<string> {
   for (const n of nodes) {
     // El inicio no ofrece "Fuera de horario". La derivación sí: su campaña es,
     // por definición, el único destino posible.
-    if (n.type === "inicio" || n.type === "punta") continue;
+    if (n.type === "inicio" || n.type === "punta" || n.type === "nota") continue;
     if (campaniasDesde(n.id).size === 1) habilitados.add(n.id);
   }
   return habilitados;
@@ -234,6 +270,8 @@ function ordenar(nodes: Node[], edges: Edge[]): Node[] {
   const ultimo = Math.max(0, ...nivel.values()) + 1;
   const capas: Node[][] = [];
   for (const n of nodes) {
+    // Las notas no son parte del recorrido: se quedan donde se las dejó.
+    if (n.type === "nota") continue;
     const c = nivel.get(n.id) ?? ultimo;
     (capas[c] ??= []).push(n);
   }
@@ -467,10 +505,11 @@ function ConexionQuitable({
     quitarX = carril;
     quitarY = (abajo + arriba) / 2;
   } else {
-    // El canal baja como mucho hasta justo arriba del destino: la línea tiene
-    // que seguir entrando por su borde superior.
+    // El tramo horizontal va a mitad de camino entre la salida y la entrada
+    // (las hermanas se reparten alrededor), y baja como mucho hasta justo
+    // arriba del destino: la línea tiene que seguir entrando por su borde superior.
     const canal = Math.min(
-      desvio.canal ?? Math.max(targetY - 16 - (rango % 5) * 7, sourceY + 8),
+      desvio.canal ?? Math.max((sourceY + targetY) / 2 + (rango % 5) * 7, sourceY + 8),
       targetY - 8,
     );
     tramos.push(
@@ -589,6 +628,7 @@ const PUNTA_ID = "__punta-conexion__";
 const nodeTypes = {
   inicio: InicioNode,
   punta: PuntaConexion,
+  nota: NotaNode,
   derivacion: DerivacionNode,
   play: PlayNode,
   collect: CollectNode,
@@ -607,6 +647,7 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
   { type: "http", icono: Globe },
   { type: "calcular", icono: Calculator },
   { type: "derivacion", icono: GitBranch },
+  { type: "nota", icono: StickyNote },
 ];
 
 // Encuadre del flujo: nunca más de 100%, así un flujo de un solo nodo no se
@@ -805,7 +846,8 @@ export function WorkflowEditor({
         while (nds.some((n) => n.position.x === position.x && n.position.y === position.y)) {
           position = { x: position.x + 30, y: position.y + 30 };
         }
-        return [...nds, { id, type, position, data: {} }];
+        // La nota va detrás de los macroestados, para escribir sobre un grupo de nodos.
+        return [...nds, { id, type, position, data: {}, ...(type === "nota" ? { zIndex: -1 } : {}) }];
       });
     },
     [setNodes],
@@ -964,7 +1006,7 @@ export function WorkflowEditor({
   // Todos los nodos (salvo "inicio", que no se contrae) están contraídos →
   // el botón pasa a "Expandir todo"; en cualquier otro caso, "Contraer todo".
   const todosContraidos = useMemo(() => {
-    const contraibles = nodes.filter((n) => n.type !== "inicio");
+    const contraibles = nodes.filter((n) => n.type !== "inicio" && n.type !== "nota");
     return contraibles.length > 0 && contraibles.every((n) => n.data.colapsado);
   }, [nodes]);
 
@@ -972,7 +1014,7 @@ export function WorkflowEditor({
   const toggleContraerTodo = useCallback(() => {
     setNodes((nds) =>
       nds.map((n) =>
-        n.type === "inicio" ? n : { ...n, data: { ...n.data, colapsado: !todosContraidos } },
+        n.type === "inicio" || n.type === "nota" ? n : { ...n, data: { ...n.data, colapsado: !todosContraidos } },
       ),
     );
   }, [todosContraidos, setNodes]);
