@@ -253,7 +253,7 @@ const RutasContext = createContext<Map<string, Point[]>>(new Map());
 
 // Calcula las rutas cuando cambian los nodos o las conexiones, pero no mientras se arrastra un
 // nodo: recalcular en cada cuadro del arrastre sería caro, y al soltarlo se recalcula.
-function EdgeRouter({ onRutas }: { onRutas: (rutas: Map<string, Point[]>) => void }) {
+function EdgeRouter({ onRutas }: { onRutas: (update: (prev: Map<string, Point[]>) => Map<string, Point[]>) => void }) {
   const nodes = useStore((s) => s.nodes);
   const edges = useStore((s) => s.edges);
   const store = useStoreApi();
@@ -261,7 +261,6 @@ function EdgeRouter({ onRutas }: { onRutas: (rutas: Map<string, Point[]>) => voi
   // cosas (incluidas las rutas nuevas), y solo hay que rutear de nuevo si algo se movió.
   const ultimaFirma = useRef("");
   useEffect(() => {
-    if (nodes.some((n) => n.dragging)) return;
     const { nodeLookup } = store.getState();
     const rects: Rect[] = [];
     for (const n of nodeLookup.values()) {
@@ -269,14 +268,18 @@ function EdgeRouter({ onRutas }: { onRutas: (rutas: Map<string, Point[]>) => voi
       const { x, y } = n.internals.positionAbsolute;
       rects.push({ id: n.id, x, y, width: n.measured.width, height: n.measured.height });
     }
+    // Mientras se arrastra, solo las conexiones de los nodos arrastrados: lo siguen en vivo.
+    const arrastrados = new Set(nodes.filter((n) => n.dragging).map((n) => n.id));
     const pedidos: RouteRequest[] = [];
     for (const e of edges) {
+      if (e.target === PUNTA_ID) continue;
+      if (arrastrados.size > 0 && !arrastrados.has(e.source) && !arrastrados.has(e.target)) continue;
       const origen = nodeLookup.get(e.source);
       const destino = nodeLookup.get(e.target);
       const salidas = origen?.internals.handleBounds?.source ?? [];
       const salida = salidas.find((h) => h.id === (e.sourceHandle ?? null)) ?? salidas[0];
       const entrada = destino?.internals.handleBounds?.target?.[0];
-      if (!origen || !destino || !salida || !entrada || e.target === PUNTA_ID) continue;
+      if (!origen || !destino || !salida || !entrada) continue;
       const o = origen.internals.positionAbsolute;
       const d = destino.internals.positionAbsolute;
       const porAbajo = salida.position === Position.Bottom;
@@ -289,10 +292,12 @@ function EdgeRouter({ onRutas }: { onRutas: (rutas: Map<string, Point[]>) => voi
         to: [d.x + entrada.x + entrada.width / 2, d.y + entrada.y],
       });
     }
+    if (pedidos.length === 0) return;
     const firma = JSON.stringify([rects, pedidos]);
     if (firma === ultimaFirma.current) return;
     ultimaFirma.current = firma;
-    onRutas(routeEdges(rects, pedidos));
+    const rutas = routeEdges(rects, pedidos);
+    onRutas((prev) => (arrastrados.size > 0 ? new Map([...prev, ...rutas]) : rutas));
   }, [nodes, edges, store, onRutas]);
   return null;
 }
@@ -414,8 +419,6 @@ function ConexionQuitable({
   const ruta = rutas.get(id);
   const vigente =
     ruta &&
-    !origen.dragging &&
-    !destino.dragging &&
     Math.abs(ruta[0][0] - sourceX) < 1 &&
     Math.abs(ruta[0][1] - sourceY) < 1 &&
     Math.abs(ruta[ruta.length - 1][0] - targetX) < 1 &&

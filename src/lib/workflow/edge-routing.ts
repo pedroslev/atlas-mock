@@ -98,14 +98,13 @@ function simplify(points: Point[]): Point[] {
 
 /** Puntos de quiebre de cada conexión, de la salida a la entrada. */
 export function routeEdges(nodes: Rect[], requests: RouteRequest[]): Map<string, Point[]> {
+  // Bordes enteros: son líneas de la grilla, y así cada nodo tapa un rango exacto de índices.
   const boxes = nodes.map((n) => ({
-    left: n.x - MARGIN,
-    right: n.x + n.width + MARGIN,
-    top: n.y - MARGIN,
-    bottom: n.y + n.height + MARGIN,
+    left: Math.round(n.x - MARGIN),
+    right: Math.round(n.x + n.width + MARGIN),
+    top: Math.round(n.y - MARGIN),
+    bottom: Math.round(n.y + n.height + MARGIN),
   }));
-  const inside = (x: number, y: number) =>
-    boxes.some((b) => x > b.left && x < b.right && y > b.top && y < b.bottom);
 
   // Puntos donde arranca y termina la búsqueda: un tramo recto afuera del margen del nodo.
   const ends = requests.map((r) => {
@@ -142,15 +141,26 @@ export function routeEdges(nodes: Rect[], requests: RouteRequest[]): Map<string,
   const xIndex = new Map(xs.map((x, i) => [x, i]));
   const yIndex = new Map(ys.map((y, i) => [y, i]));
 
-  // Qué puntos y qué tramos entre puntos vecinos quedan fuera de todo nodo.
-  const free = new Uint8Array(W * H);
-  const freeRight = new Uint8Array(W * H);
-  const freeDown = new Uint8Array(W * H);
-  for (let j = 0; j < H; j++) {
-    for (let i = 0; i < W; i++) {
-      free[j * W + i] = inside(xs[i], ys[j]) ? 0 : 1;
-      if (i + 1 < W) freeRight[j * W + i] = inside((xs[i] + xs[i + 1]) / 2, ys[j]) ? 0 : 1;
-      if (j + 1 < H) freeDown[j * W + i] = inside(xs[i], (ys[j] + ys[j + 1]) / 2) ? 0 : 1;
+  // Qué puntos y qué tramos entre puntos vecinos quedan fuera de todo nodo. Cada nodo tapa un
+  // rango de índices: se marca solo ese rango, sin recorrer la grilla entera por cada nodo
+  // (es lo que permite recalcular mientras se arrastra).
+  const free = new Uint8Array(W * H).fill(1);
+  const freeRight = new Uint8Array(W * H).fill(1);
+  const freeDown = new Uint8Array(W * H).fill(1);
+  for (const b of boxes) {
+    const iL = xIndex.get(b.left)!;
+    const iR = xIndex.get(b.right)!;
+    const jT = yIndex.get(b.top)!;
+    const jB = yIndex.get(b.bottom)!;
+    for (let j = jT; j <= jB; j++) {
+      for (let i = iL; i <= iR; i++) {
+        const p = j * W + i;
+        const rowInside = j > jT && j < jB;
+        const colInside = i > iL && i < iR;
+        if (rowInside && colInside) free[p] = 0;
+        if (rowInside && i < iR) freeRight[p] = 0;
+        if (colInside && j < jB) freeDown[p] = 0;
+      }
     }
   }
 
