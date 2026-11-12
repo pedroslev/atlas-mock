@@ -38,12 +38,19 @@ export function useAutocompletadoVariables({
   setValor,
   variables,
   alElegir,
+  formato,
 }: {
   setValor: (valor: string) => void;
   /** Variables de cliente ya filtradas por el permiso Ver del grupo de trabajo. */
   variables: VariablePlantilla[];
   /** Aviso al elegir, con la posición final del cursor (por si el padre la guarda). */
   alElegir?: (cursor: number) => void;
+  /**
+   * Cómo queda escrita la variable elegida. Por defecto, el marcador
+   * `{{cliente.<clave>}}` de las plantillas; el editor del flujo pasa
+   * `cliente.<clave>` a secas para las expresiones CEL.
+   */
+  formato?: (clave: string) => string;
 }) {
   const t = useT();
   // El prefijo depende del idioma; el canónico "cliente." vale siempre.
@@ -99,7 +106,7 @@ export function useAutocompletadoVariables({
   function elegir(v: VariablePlantilla) {
     const el = campoRef.current;
     if (!el || !disparo) return;
-    const marca = `{{${v.clave}}}`;
+    const marca = formato ? formato(v.clave) : `{{${v.clave}}}`;
     const valor = el.value.slice(0, disparo.inicio) + marca + el.value.slice(disparo.fin);
     const cursor = disparo.inicio + marca.length;
     setValor(valor);

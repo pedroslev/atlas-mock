@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   Handle,
   Position,
@@ -42,8 +42,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { ProbarConsultaHttp } from "@/components/workflow/probar-consulta-http";
+import { CampoConVariables } from "@/components/workflow/campo-con-variables";
 
 // Los macroestados del editor: la derivación a campaña, el primer set de la
 // Fase 1 — PLAY, COLLECT, IF y CASE — y las herramientas HTTP y Calcular
@@ -66,11 +69,25 @@ type Comun = {
   // en una misma derivación, así que el nodo ofrece la salida "Fuera de
   // horario" (propuesta §4.2).
   fueraDeHorario?: boolean;
+  // El editor lo marca cuando se tocó «Confirmar» y este nodo tiene una salida
+  // obligatoria sin conectar o no le llega ninguna conexión: borde rojo, sin
+  // más detalle (quien arma el flujo no conoce ids de nodos).
+  sinConectar?: boolean;
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onRemoveExit: (handleId: string) => void;
 };
+
+// Con el nodo contraído las salidas se dibujan solo como puntos, apilados a la
+// derecha del cuadrado; el nombre de cada una aparece al pasar el mouse.
+const Compacto = createContext(false);
+
+// Puntos de conexión grandes (16px, feedback 2026-11: los de 8px eran incómodos
+// de agarrar) con borde del color de la tarjeta para que se despeguen de ella.
+const PUNTO_ENTRADA = "!size-4 !border-2 !border-card !bg-secondary hover:!bg-primary";
+const PUNTO_SALIDA =
+  "!static !size-4 !transform-none !border-2 !border-card hover:!bg-primary";
 
 // Marco común de los macroestados: entrada a la izquierda; encabezado con
 // ícono, título editable y acciones; el formulario del nodo (que se puede
@@ -122,9 +139,61 @@ function NodoMacroestado({
     </ActionTooltip>
   );
 
+  // Contraído: un cuadrado con el ícono, la entrada arriba y las salidas como
+  // puntos a la derecha (feedback 2026-11, como en n8n). Lo que configura el
+  // nodo se ve al dejar el mouse encima; el botón de la esquina lo expande.
+  if (data.colapsado) {
+    return (
+      <Compacto.Provider value={true}>
+        <HoverCard openDelay={600} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <div
+              data-testid="nodo-contraido"
+              className={cn(
+                // El alto crece con la cantidad de salidas: los puntos van sobre
+                // el borde derecho, nunca por fuera del recuadro.
+                "group relative flex min-h-16 items-center rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10",
+                data.sinConectar && "ring-2 ring-destructive",
+              )}
+            >
+              <Handle type="target" position={Position.Top} className={PUNTO_ENTRADA} />
+              <span className="flex size-16 shrink-0 items-center justify-center [&>svg]:size-7">
+                {icono}
+              </span>
+              <div className="-mr-2 flex flex-col gap-1 py-2">
+                {salidas}
+                {data.fueraDeHorario && <SalidaFueraDeHorario />}
+              </div>
+              <div className="absolute -bottom-2 -left-2 rounded-full bg-card opacity-0 ring-1 ring-foreground/10 group-hover:opacity-100">
+                {accion(
+                  t("cuentas.flujo.mostrarOpciones"),
+                  () => data.onChange({ colapsado: false }),
+                  <ChevronDown className="size-3.5" />,
+                )}
+              </div>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="right" className="flex flex-col gap-1">
+            <p className="font-medium">{titulo}</p>
+            {/* Con título propio se recuerda qué macroestado es; sin él, alcanza con la descripción. */}
+            <p className="text-xs text-muted-foreground">
+              {titulo === tituloPorDefecto ? descripcion : `${tituloPorDefecto}: ${descripcion}`}
+            </p>
+            {resumen && <p className="truncate text-xs">{resumen}</p>}
+          </HoverCardContent>
+        </HoverCard>
+      </Compacto.Provider>
+    );
+  }
+
   return (
-    <div className="flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10">
-      <Handle type="target" position={Position.Top} className="!bg-secondary" />
+    <div
+      className={cn(
+        "flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10",
+        data.sinConectar && "ring-2 ring-destructive",
+      )}
+    >
+      <Handle type="target" position={Position.Top} className={PUNTO_ENTRADA} />
       <div className="flex items-center justify-between gap-1">
         <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium">
           {/* El ícono recuerda qué macroestado es aunque el título se haya cambiado. */}
@@ -177,19 +246,15 @@ function NodoMacroestado({
           </ActionTooltip>
           {accion(t("cuentas.flujo.duplicar"), data.onDuplicate, <Copy className="size-3.5" />)}
           {accion(
-            t(data.colapsado ? "cuentas.flujo.mostrarOpciones" : "cuentas.flujo.ocultarOpciones"),
-            () => data.onChange({ colapsado: !data.colapsado }),
-            data.colapsado ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />,
+            t("cuentas.flujo.ocultarOpciones"),
+            () => data.onChange({ colapsado: true }),
+            <ChevronUp className="size-3.5" />,
           )}
           {accion(t("cuentas.flujo.quitarNodo"), data.onDelete, <Trash2 className="size-3.5" />, true)}
         </span>
       </div>
-      {data.colapsado ? (
-        resumen && <p className="truncate text-xs text-muted-foreground">{resumen}</p>
-      ) : (
-        // nodrag: los controles del formulario no arrastran el nodo.
-        <div className="nodrag flex flex-col gap-2">{children}</div>
-      )}
+      {/* nodrag: los controles del formulario no arrastran el nodo. */}
+      <div className="nodrag flex flex-col gap-2">{children}</div>
       {(salidas || data.fueraDeHorario) && (
         <div className="flex flex-col gap-1 border-t border-border pt-2">
           {salidas}
@@ -203,15 +268,20 @@ function NodoMacroestado({
 // Una salida con nombre: la etiqueta a la derecha y el punto de conexión al
 // lado.
 function Salida({ id, etiqueta }: { id: string; etiqueta: string }) {
+  const compacto = useContext(Compacto);
+  if (compacto) {
+    return (
+      <ActionTooltip label={etiqueta} side="right">
+        <span className="flex">
+          <Handle type="source" id={id} position={Position.Right} className={cn(PUNTO_SALIDA, "!bg-secondary")} />
+        </span>
+      </ActionTooltip>
+    );
+  }
   return (
     <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
       <span>{etiqueta}</span>
-      <Handle
-        type="source"
-        id={id}
-        position={Position.Right}
-        className="!static !size-2 !translate-x-0 !translate-y-0 !bg-secondary"
-      />
+      <Handle type="source" id={id} position={Position.Right} className={cn(PUNTO_SALIDA, "!bg-secondary")} />
     </div>
   );
 }
@@ -222,17 +292,28 @@ function Salida({ id, etiqueta }: { id: string; etiqueta: string }) {
 // excepción, no el camino principal.
 export function SalidaFueraDeHorario() {
   const t = useT();
+  const compacto = useContext(Compacto);
+  const punto = (
+    <Handle
+      type="source"
+      id="out_of_hours"
+      position={Position.Right}
+      className={cn(PUNTO_SALIDA, "!bg-muted-foreground")}
+    />
+  );
+  if (compacto) {
+    return (
+      <ActionTooltip label={t("cuentas.flujo.outOfHours")} side="right">
+        <span className="flex">{punto}</span>
+      </ActionTooltip>
+    );
+  }
   return (
     <ActionTooltip label={t("cuentas.flujo.outOfHoursAyuda")}>
       <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
         <Moon className="size-3.5" />
         <span>{t("cuentas.flujo.outOfHours")}</span>
-        <Handle
-          type="source"
-          id="out_of_hours"
-          position={Position.Right}
-          className="!static !size-2 !translate-x-0 !translate-y-0 !bg-muted-foreground"
-        />
+        {punto}
       </div>
     </ActionTooltip>
   );
@@ -672,13 +753,14 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
           a los botones y a la lista. */}
       {fuente === "texto" && (tipoMensaje === "texto" || tipoMensaje === "botones" || tipoMensaje === "lista" || tipoMensaje === "carrusel") && (
         <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.texto")}>
-          <Textarea
+          <CampoConVariables
+            multilinea
             id={`${id}-texto`}
             rows={3}
             value={data.texto ?? ""}
             placeholder={t("cuentas.flujo.play.textoPlaceholder")}
             data-testid={`play-${id}-texto`}
-            onChange={(e) => data.onChange({ texto: e.target.value })}
+            onChange={(texto) => data.onChange({ texto })}
           />
         </Campo>
       )}
@@ -747,13 +829,14 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                     <X />
                   </Button>
                 </div>
-                <Textarea
+                <CampoConVariables
+                  multilinea
                   rows={2}
                   aria-label={t("cuentas.flujo.play.tarjeta.texto")}
                   placeholder={t("cuentas.flujo.play.tarjeta.texto")}
                   value={tarjeta.texto ?? ""}
                   data-testid={`play-${id}-tarjeta-${i}-texto`}
-                  onChange={(e) => cambiarTarjeta({ texto: e.target.value })}
+                  onChange={(texto) => cambiarTarjeta({ texto })}
                 />
                 <SubirArchivo
                   testid={`play-${id}-tarjeta-${i}-imagen`}
@@ -1074,12 +1157,14 @@ function ExpresionCel({
   const t = useT();
   return (
     <Campo id={`${id}-cel`} label={t("cuentas.flujo.condicion.expresion")}>
-      <Textarea
+      <CampoConVariables
+        multilinea
+        cel
         id={`${id}-cel`}
         className="min-h-12 font-mono text-xs"
         placeholder={placeholder}
         value={valor ?? ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
       />
     </Campo>
   );
@@ -1123,12 +1208,13 @@ export function IfNode({ id, data }: NodeProps & { data: IfData }) {
       {modo === "simple" ? (
         <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
           <Campo id={`${id}-variable`} label={t("cuentas.flujo.condicion.variable")}>
-            <Input
+            <CampoConVariables
+              cel
               id={`${id}-variable`}
               className="h-7 font-mono text-xs"
               placeholder="opcion"
               value={data.variable ?? ""}
-              onChange={(e) => data.onChange({ variable: e.target.value })}
+              onChange={(variable) => data.onChange({ variable })}
             />
           </Campo>
           <Campo id={`${id}-operador`} label={t("cuentas.flujo.condicion.operador")}>
@@ -1222,12 +1308,13 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
       <SelectorModo id={id} modo={modo} onChange={(m) => data.onChange({ modo: m })} />
       {modo === "simple" ? (
         <Campo id={`${id}-variable`} label={t("cuentas.flujo.condicion.variable")}>
-          <Input
+          <CampoConVariables
+            cel
             id={`${id}-variable`}
             className="h-7 font-mono text-xs"
             placeholder="opcion"
             value={data.variable ?? ""}
-            onChange={(e) => data.onChange({ variable: e.target.value })}
+            onChange={(variable) => data.onChange({ variable })}
           />
         </Campo>
       ) : (
@@ -1393,13 +1480,13 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
           </Select>
         </Campo>
         <Campo id={`${id}-url`} label={t("cuentas.flujo.http.url")}>
-          <Input
+          <CampoConVariables
             id={`${id}-url`}
             className="h-7 font-mono text-xs"
             placeholder="https://api.cliente.com/saldo/{{ documento }}"
             value={data.url ?? ""}
             data-testid={`http-${id}-url`}
-            onChange={(e) => data.onChange({ url: e.target.value })}
+            onChange={(url) => data.onChange({ url })}
           />
         </Campo>
       </div>
@@ -1415,13 +1502,13 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
             data-testid={`http-${id}-encabezado-${h.id}-nombre`}
             onChange={(e) => editar(h.id, { nombre: e.target.value })}
           />
-          <Input
+          <CampoConVariables
             aria-label={t("cuentas.flujo.http.encabezadoValor")}
             className="h-7 font-mono text-xs"
             placeholder="Bearer …"
             value={h.valor}
             data-testid={`http-${id}-encabezado-${h.id}-valor`}
-            onChange={(e) => editar(h.id, { valor: e.target.value })}
+            onChange={(valor) => editar(h.id, { valor })}
           />
           <ActionTooltip label={t("cuentas.flujo.http.quitarEncabezado")}>
             <button
@@ -1451,13 +1538,14 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
 
       {METODOS_CON_CUERPO.includes(metodo) && (
         <Campo id={`${id}-cuerpo`} label={t("cuentas.flujo.http.cuerpo")}>
-          <Textarea
+          <CampoConVariables
+            multilinea
             id={`${id}-cuerpo`}
             className="min-h-16 font-mono text-xs"
             placeholder='{"documento": "{{ documento }}"}'
             value={data.cuerpo ?? ""}
             data-testid={`http-${id}-cuerpo`}
-            onChange={(e) => data.onChange({ cuerpo: e.target.value })}
+            onChange={(cuerpo) => data.onChange({ cuerpo })}
           />
         </Campo>
       )}
@@ -1552,13 +1640,15 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
               </button>
             </ActionTooltip>
           </div>
-          <Textarea
+          <CampoConVariables
+            multilinea
+            cel
             aria-label={`${t("cuentas.flujo.condicion.expresion")} ${i + 1}`}
             className="min-h-10 font-mono text-xs"
             placeholder="int(saldo) - int(pago)"
             value={a.expresion}
             data-testid={`calcular-${id}-${a.id}-expresion`}
-            onChange={(e) => editar(a.id, { expresion: e.target.value })}
+            onChange={(expresion) => editar(a.id, { expresion })}
           />
         </div>
       ))}

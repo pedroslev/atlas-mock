@@ -23,6 +23,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "El botón de información de cada macroestado abre su sección de esta página."
+          },
+          {
+            "tipo": "p",
+            "texto": "El flujo se puede guardar a medio conectar. Al confirmar, si hay nodos con una salida sin conectar o a los que no llega ninguna conexión, Olimpo avisa y los marca con el borde rojo en la solapa Flujo: podés revisarlos o guardar igual y terminar después. Mientras tanto, una interacción que llegue a una salida sin conectar termina ahí."
           }
         ]
       },
@@ -45,6 +49,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "Lo que captura el cliente siempre es texto. Para comparar o calcular con números hay que convertirlo: int(opcion)."
+          },
+          {
+            "tipo": "p",
+            "texto": "Los datos del cliente que llamó o escribió están disponibles desde el inicio como variables cliente.<campo>, con los mismos campos que la ficha del cliente y que las plantillas de mensajes: cliente.nombre, cliente.numero_identificacion, cliente.deuda… Al escribir «cliente.» en un mensaje, una URL, un encabezado, un cuerpo, una expresión o el nombre de una variable se despliega la lista de campos; en los textos queda {{ cliente.nombre }} y en las expresiones cliente.nombre a secas. Si el cliente no está identificado, cada campo vale texto vacío."
           }
         ]
       },
@@ -425,6 +433,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "The information button on each macrostate opens its section on this page."
+          },
+          {
+            "tipo": "p",
+            "texto": "The workflow can be saved half-connected. When you confirm, if any node has an unconnected exit or no connection reaches it, Olimpo warns you and outlines those nodes in red in the Workflow tab: you can review them or save anyway and finish later. Meanwhile, an interaction that reaches an unconnected exit ends there."
           }
         ]
       },
@@ -447,6 +459,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "What the customer enters is always text. To compare or calculate with numbers, convert it: int(option)."
+          },
+          {
+            "tipo": "p",
+            "texto": "The data of the customer who called or wrote is available from the start as cliente.<field> variables, with the same fields as the customer record and the message templates: cliente.nombre, cliente.numero_identificacion, cliente.deuda… Typing «client.» in a message, a URL, a header, a body, an expression or a variable name opens the list of fields; in texts it is written as {{ cliente.nombre }} and in expressions as cliente.nombre. If the customer is not identified, each field is empty text."
           }
         ]
       },

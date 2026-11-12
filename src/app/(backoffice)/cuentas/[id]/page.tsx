@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { ConfirmarCuenta } from "@/components/cuentas/confirmar-cuenta";
 import { T } from "@/lib/i18n";
 import { cuentas, campanias } from "@/lib/mock-data";
 import { CuentaForm } from "@/components/cuentas/cuenta-form";
@@ -35,11 +36,7 @@ export default async function EditarCuentaPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild data-guarda-cambios>
-              <Link href="/cuentas">
-                <T k="common.acciones.confirmar" />
-              </Link>
-            </Button>
+            <ConfirmarCuenta href="/cuentas" />
           </>
         }
       />

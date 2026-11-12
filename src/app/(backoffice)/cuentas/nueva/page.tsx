@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { ConfirmarCuenta } from "@/components/cuentas/confirmar-cuenta";
 import { T } from "@/lib/i18n";
 import { campanias } from "@/lib/mock-data";
 import { CuentaForm } from "@/components/cuentas/cuenta-form";
@@ -21,11 +22,7 @@ export default function NuevaCuentaPage() {
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <Button asChild data-guarda-cambios>
-              <Link href="/cuentas">
-                <T k="cuentas.nueva.crear" />
-              </Link>
-            </Button>
+            <ConfirmarCuenta href="/cuentas" etiqueta="cuentas.nueva.crear" />
           </>
         }
       />
