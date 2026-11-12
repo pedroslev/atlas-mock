@@ -77,7 +77,7 @@ export function LeftNav({
   onEstadoAgenteChange: (id: string) => void;
   ultimaCampaniaId?: string;
   ultimaCuentaId?: string;
-  estadoSistema?: EstadoForzado & { desde?: number };
+  estadoSistema?: EstadoForzado & { desde?: number; eligeDespues?: boolean };
 }) {
   const t = useT();
   const [colapsado, setColapsado] = useState(false);

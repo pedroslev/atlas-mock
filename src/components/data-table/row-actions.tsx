@@ -60,7 +60,10 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
             </button>
           </DropdownMenuTrigger>
         </ActionTooltip>
-        <DropdownMenuContent align="end">
+        {/* stopPropagation también acá: el menú se renderiza en un Portal, pero el
+            evento sintético de React sube igual hasta el onClick de la fila
+            (verificado en el navegador: elegir una acción navegaba al detalle). */}
+        <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
           {actions.map((action) => (
             <Fragment key={action.label}>
               {action.separatorBefore && <DropdownMenuSeparator />}
@@ -93,7 +96,7 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent onClick={(event) => event.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {t("common.comunes.eliminarTitulo")}

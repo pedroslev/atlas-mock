@@ -437,15 +437,17 @@ export function PadMockShell() {
   const avisoChat = entrantesMock.find((c) => c.id === filaAvisoChat?.entranteId);
   // Estado forzado por la interacción activa (ADR-BD-004, ATLAS-736): sonando
   // o marcando → Conectando (bloqueado); cortada y sin cerrar → ACW; en curso →
-  // Conectado (también la interna). En Conectado y ACW el selector elige el
-  // estado de después. Un chat no fuerza estado (ADR-IDIGITALES-007). El
-  // cronómetro arranca con la interacción (iniciadaEn); sin eso no se muestra.
+  // Conectado (también la interna y el chat). Con una llamada, el selector
+  // elige el estado de después; con solo un chat, cambia el estado actual
+  // (ADR-IDIGITALES-007). El cronómetro arranca con la interacción
+  // (iniciadaEn); sin eso no se muestra.
   const estadoForzado = (() => {
-    if (!filaActiva || filaActiva.porAceptar || filaActiva.canal === "chat") return undefined;
+    if (!filaActiva || filaActiva.porAceptar) return undefined;
     const desde = filaActiva.iniciadaEn;
-    if (filaActiva.sonando) return { ...estadosForzados.conectando, desde };
-    if (finalizadas.includes(filaActiva.id)) return { ...estadosForzados.acw, desde };
-    return { ...estadosForzados.conectado, desde };
+    const eligeDespues = filaActiva.canal !== "chat";
+    if (filaActiva.sonando) return { ...estadosForzados.conectando, desde, eligeDespues };
+    if (finalizadas.includes(filaActiva.id)) return { ...estadosForzados.acw, desde, eligeDespues };
+    return { ...estadosForzados.conectado, desde, eligeDespues };
   })();
 
   return (

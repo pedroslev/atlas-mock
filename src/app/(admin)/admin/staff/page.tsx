@@ -117,9 +117,12 @@ export default function StaffPage() {
 
   const columnasGrupos = useMemo<MRT_ColumnDef<PermissionGroup>[]>(
     () => [
+      // Anchos fijados para que la tabla entre en el ancho del contenido sin
+      // scroll horizontal (el default de 180 px por columna la desbordaba).
       {
         accessorKey: "name",
         header: t("staff.grupos.col.nombre"),
+        size: 220,
         Cell: ({ row }) => (
           <Link
             href={`/admin/staff/grupos/${row.original.id}`}
@@ -133,6 +136,7 @@ export default function StaffPage() {
       {
         accessorKey: "description",
         header: t("staff.grupos.col.descripcion"),
+        size: 360,
         Cell: ({ cell }) => (
           <span className="text-muted-foreground">{cell.getValue<string>()}</span>
         ),
@@ -140,16 +144,19 @@ export default function StaffPage() {
       {
         id: "permisos",
         header: t("staff.grupos.col.permisos"),
+        size: 110,
         accessorFn: (g) => g.permissions.length,
       },
       {
         id: "personas",
         header: t("staff.grupos.col.usuarios"),
+        size: 110,
         accessorFn: (g) => users.filter((u) => u.groupId === g.id).length,
       },
       {
         id: "alcance",
         header: t("staff.grupos.col.alcance"),
+        size: 170,
         enableColumnFilter: false,
         accessorFn: (g) => (g.defaultScope === "all" ? 0 : g.defaultScope.length),
         Cell: ({ row }) => <ScopeBadge scope={row.original.defaultScope} />,

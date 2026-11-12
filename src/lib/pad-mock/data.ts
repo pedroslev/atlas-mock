@@ -652,8 +652,10 @@ export const estadosAgenteDisponibles: EstadoAgenteMock[] = [
 // los impone el sistema según lo que la interacción está haciendo. Conectando
 // está bloqueado del todo (candado). En Conectado y ACW el selector no cambia
 // el estado actual sino el de DESPUÉS de la interacción ("Después: Almuerzo"),
-// igual que hermes-front (eligeEstadoSiguiente). Los digitales (chat) no
-// fuerzan estado (ADR-IDIGITALES-007). Rótulos y colores como el front
+// igual que hermes-front (eligeEstadoSiguiente). Un chat atendido también
+// pone Conectado (ADR-IDIGITALES-007: el asesor deja de estar Disponible aunque
+// le quede capacidad para otro chat), pero sin llamada que cerrar el selector
+// cambia el estado actual, no el de después. Rótulos y colores como el front
 // (pad.estado.conectando/conectado/acw).
 export type EstadoForzado = {
   nombre: string;

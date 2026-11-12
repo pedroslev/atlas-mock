@@ -41,8 +41,9 @@ export function AgentStatusSelectorMock({
   /** Estado forzado por la interacción (ADR-BD-004, ATLAS-736): se muestra en
    *  lugar del elegido y el cronómetro cuenta desde `desde`. Si está
    *  `bloqueado` (Conectando) no se puede elegir nada; si no (Conectado, ACW),
-   *  la lista elige el estado de DESPUÉS de la interacción. */
-  estadoSistema?: EstadoForzado & { desde?: number };
+   *  con `eligeDespues` la lista elige el estado de DESPUÉS de la interacción
+   *  y sin él (solo chats) cambia el estado actual. */
+  estadoSistema?: EstadoForzado & { desde?: number; eligeDespues?: boolean };
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -162,7 +163,7 @@ export function AgentStatusSelectorMock({
           </span>
           {/* ATLAS-736: en Conectado y ACW lo que se elige es el estado de
               después de la interacción, y se muestra acá. */}
-          {estadoSistema && (
+          {estadoSistema?.eligeDespues && (
             <span className="w-full truncate text-left text-[0.65rem] text-muted-foreground">
               {t("padMock.agentStatus.despues", { estado: estado.nombre })}
             </span>
