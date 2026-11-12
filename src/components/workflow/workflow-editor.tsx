@@ -56,7 +56,14 @@ import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { routeEdges, type Point, type Rect, type RouteRequest } from "@/lib/workflow/edge-routing";
+import {
+  edgeGeometry,
+  edgesToReroute,
+  routeEdges,
+  type Point,
+  type Rect,
+  type RouteRequest,
+} from "@/lib/workflow/edge-routing";
 import { createRoutesStore, type RoutesStore } from "@/lib/workflow/routes-store";
 import {
   type Workflow,
@@ -268,12 +275,11 @@ function EdgeRouter() {
       const { x, y } = n.internals.positionAbsolute;
       rects.push({ id: n.id, x, y, width: n.measured.width, height: n.measured.height });
     }
-    // Mientras se arrastra, solo las conexiones de los nodos arrastrados: lo siguen en vivo.
-    const arrastrados = new Set(nodes.filter((n) => n.dragging).map((n) => n.id));
+    // Incremental, como draw.io: se rutean solo las que lo necesitan (ver edgesToReroute).
+    const arrastrando = nodes.some((n) => n.dragging);
     const pedidos: RouteRequest[] = [];
     for (const e of edges) {
       if (e.target === PUNTA_ID) continue;
-      if (arrastrados.size > 0 && !arrastrados.has(e.source) && !arrastrados.has(e.target)) continue;
       const origen = nodeLookup.get(e.source);
       const destino = nodeLookup.get(e.target);
       const salidas = origen?.internals.handleBounds?.source ?? [];
@@ -292,11 +298,18 @@ function EdgeRouter() {
         to: [d.x + entrada.x + entrada.width / 2, d.y + entrada.y],
       });
     }
-    if (pedidos.length === 0) return;
-    const firma = JSON.stringify([rects, pedidos]);
+    const firma = JSON.stringify([rects, pedidos, arrastrando]);
     if (firma === ultimaFirma.current) return;
     ultimaFirma.current = firma;
-    rutasStore.setRoutes(routeEdges(rects, pedidos), arrastrados.size > 0);
+    const actuales = rutasStore.all();
+    const rutear = edgesToReroute(actuales, pedidos, rects, !arrastrando);
+    const fijas = new Map<string, Point[]>();
+    for (const p of pedidos) {
+      const ruta = actuales.get(p.id);
+      if (ruta && !rutear.has(p.id)) fijas.set(p.id, ruta);
+    }
+    const nuevas = routeEdges(rects, pedidos.filter((p) => rutear.has(p.id)), { fixed: fijas });
+    rutasStore.setRoutes(new Map([...fijas, ...nuevas]));
   }, [nodes, edges, store, rutasStore]);
   return null;
 }
@@ -341,31 +354,14 @@ function ConexionQuitable({
   const tipoDestino = useStore((s) => s.nodeLookup.get(target)?.type);
   const soloTextoDestino = useStore((s) => s.nodeLookup.get(target)?.data.soloTexto === true);
 
-  const cerca = (p: Point, x: number, y: number) => Math.abs(p[0] - x) < 1 && Math.abs(p[1] - y) < 1;
-  const gx = sourcePosition === Position.Bottom ? sourceX : sourceX + 14;
-  const puntos: Point[] =
-    ruta && cerca(ruta[0], sourceX, sourceY) && cerca(ruta[ruta.length - 1], targetX, targetY)
-      ? ruta
-      : [
-          [sourceX, sourceY],
-          [gx, sourceY],
-          [gx, targetY - 16],
-          [targetX, targetY - 16],
-          [targetX, targetY],
-        ];
-  let quitarX = sourceX;
-  let quitarY = sourceY;
-  let largo = -1;
-  for (let k = 1; k < puntos.length; k++) {
-    const l = Math.abs(puntos[k][0] - puntos[k - 1][0]) + Math.abs(puntos[k][1] - puntos[k - 1][1]);
-    if (l > largo) {
-      largo = l;
-      quitarX = (puntos[k][0] + puntos[k - 1][0]) / 2;
-      quitarY = (puntos[k][1] + puntos[k - 1][1]) / 2;
-    }
-  }
-  const etiquetaX = puntos[1][0] + 10;
-  const etiquetaY = puntos[1][1];
+  const { points: puntos, remove, label } = edgeGeometry(
+    ruta,
+    [sourceX, sourceY],
+    [targetX, targetY],
+    sourcePosition === Position.Bottom,
+  );
+  const [quitarX, quitarY] = remove;
+  const [etiquetaX, etiquetaY] = label;
   const atenuada = hayNodoSeleccionado && !selected && !extremoSeleccionado;
   const nombreDestino = tituloDestino ?? t(claveTitulo(tipoDestino ?? "", soloTextoDestino));
 
