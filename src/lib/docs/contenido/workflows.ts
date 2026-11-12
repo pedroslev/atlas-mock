@@ -49,6 +49,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "Lo que captura el cliente siempre es texto. Para comparar o calcular con números hay que convertirlo: int(opcion)."
+          },
+          {
+            "tipo": "p",
+            "texto": "Los datos del cliente que llamó o escribió están disponibles desde el inicio como variables cliente.<campo>, con los mismos campos que la ficha del cliente y que las plantillas de mensajes: cliente.nombre, cliente.numero_identificacion, cliente.deuda… Al escribir «cliente.» en un mensaje, una URL, un encabezado, un cuerpo, una expresión o el nombre de una variable se despliega la lista de campos; en los textos queda {{ cliente.nombre }} y en las expresiones cliente.nombre a secas. Si el cliente no está identificado, cada campo vale texto vacío."
           }
         ]
       },
@@ -455,6 +459,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "What the customer enters is always text. To compare or calculate with numbers, convert it: int(option)."
+          },
+          {
+            "tipo": "p",
+            "texto": "The data of the customer who called or wrote is available from the start as cliente.<field> variables, with the same fields as the customer record and the message templates: cliente.nombre, cliente.numero_identificacion, cliente.deuda… Typing «client.» in a message, a URL, a header, a body, an expression or a variable name opens the list of fields; in texts it is written as {{ cliente.nombre }} and in expressions as cliente.nombre. If the customer is not identified, each field is empty text."
           }
         ]
       },

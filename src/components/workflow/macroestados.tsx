@@ -46,6 +46,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { ProbarConsultaHttp } from "@/components/workflow/probar-consulta-http";
+import { CampoConVariables } from "@/components/workflow/campo-con-variables";
 
 // Los macroestados del editor: la derivación a campaña, el primer set de la
 // Fase 1 — PLAY, COLLECT, IF y CASE — y las herramientas HTTP y Calcular
@@ -752,13 +753,14 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
           a los botones y a la lista. */}
       {fuente === "texto" && (tipoMensaje === "texto" || tipoMensaje === "botones" || tipoMensaje === "lista" || tipoMensaje === "carrusel") && (
         <Campo id={`${id}-texto`} label={t("cuentas.flujo.play.texto")}>
-          <Textarea
+          <CampoConVariables
+            multilinea
             id={`${id}-texto`}
             rows={3}
             value={data.texto ?? ""}
             placeholder={t("cuentas.flujo.play.textoPlaceholder")}
             data-testid={`play-${id}-texto`}
-            onChange={(e) => data.onChange({ texto: e.target.value })}
+            onChange={(texto) => data.onChange({ texto })}
           />
         </Campo>
       )}
@@ -827,13 +829,14 @@ export function PlayNode({ id, data }: NodeProps & { data: PlayData }) {
                     <X />
                   </Button>
                 </div>
-                <Textarea
+                <CampoConVariables
+                  multilinea
                   rows={2}
                   aria-label={t("cuentas.flujo.play.tarjeta.texto")}
                   placeholder={t("cuentas.flujo.play.tarjeta.texto")}
                   value={tarjeta.texto ?? ""}
                   data-testid={`play-${id}-tarjeta-${i}-texto`}
-                  onChange={(e) => cambiarTarjeta({ texto: e.target.value })}
+                  onChange={(texto) => cambiarTarjeta({ texto })}
                 />
                 <SubirArchivo
                   testid={`play-${id}-tarjeta-${i}-imagen`}
@@ -1154,12 +1157,14 @@ function ExpresionCel({
   const t = useT();
   return (
     <Campo id={`${id}-cel`} label={t("cuentas.flujo.condicion.expresion")}>
-      <Textarea
+      <CampoConVariables
+        multilinea
+        cel
         id={`${id}-cel`}
         className="min-h-12 font-mono text-xs"
         placeholder={placeholder}
         value={valor ?? ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
       />
     </Campo>
   );
@@ -1203,12 +1208,13 @@ export function IfNode({ id, data }: NodeProps & { data: IfData }) {
       {modo === "simple" ? (
         <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
           <Campo id={`${id}-variable`} label={t("cuentas.flujo.condicion.variable")}>
-            <Input
+            <CampoConVariables
+              cel
               id={`${id}-variable`}
               className="h-7 font-mono text-xs"
               placeholder="opcion"
               value={data.variable ?? ""}
-              onChange={(e) => data.onChange({ variable: e.target.value })}
+              onChange={(variable) => data.onChange({ variable })}
             />
           </Campo>
           <Campo id={`${id}-operador`} label={t("cuentas.flujo.condicion.operador")}>
@@ -1302,12 +1308,13 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
       <SelectorModo id={id} modo={modo} onChange={(m) => data.onChange({ modo: m })} />
       {modo === "simple" ? (
         <Campo id={`${id}-variable`} label={t("cuentas.flujo.condicion.variable")}>
-          <Input
+          <CampoConVariables
+            cel
             id={`${id}-variable`}
             className="h-7 font-mono text-xs"
             placeholder="opcion"
             value={data.variable ?? ""}
-            onChange={(e) => data.onChange({ variable: e.target.value })}
+            onChange={(variable) => data.onChange({ variable })}
           />
         </Campo>
       ) : (
@@ -1473,13 +1480,13 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
           </Select>
         </Campo>
         <Campo id={`${id}-url`} label={t("cuentas.flujo.http.url")}>
-          <Input
+          <CampoConVariables
             id={`${id}-url`}
             className="h-7 font-mono text-xs"
             placeholder="https://api.cliente.com/saldo/{{ documento }}"
             value={data.url ?? ""}
             data-testid={`http-${id}-url`}
-            onChange={(e) => data.onChange({ url: e.target.value })}
+            onChange={(url) => data.onChange({ url })}
           />
         </Campo>
       </div>
@@ -1495,13 +1502,13 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
             data-testid={`http-${id}-encabezado-${h.id}-nombre`}
             onChange={(e) => editar(h.id, { nombre: e.target.value })}
           />
-          <Input
+          <CampoConVariables
             aria-label={t("cuentas.flujo.http.encabezadoValor")}
             className="h-7 font-mono text-xs"
             placeholder="Bearer …"
             value={h.valor}
             data-testid={`http-${id}-encabezado-${h.id}-valor`}
-            onChange={(e) => editar(h.id, { valor: e.target.value })}
+            onChange={(valor) => editar(h.id, { valor })}
           />
           <ActionTooltip label={t("cuentas.flujo.http.quitarEncabezado")}>
             <button
@@ -1531,13 +1538,14 @@ export function HttpNode({ id, data }: NodeProps & { data: HttpData }) {
 
       {METODOS_CON_CUERPO.includes(metodo) && (
         <Campo id={`${id}-cuerpo`} label={t("cuentas.flujo.http.cuerpo")}>
-          <Textarea
+          <CampoConVariables
+            multilinea
             id={`${id}-cuerpo`}
             className="min-h-16 font-mono text-xs"
             placeholder='{"documento": "{{ documento }}"}'
             value={data.cuerpo ?? ""}
             data-testid={`http-${id}-cuerpo`}
-            onChange={(e) => data.onChange({ cuerpo: e.target.value })}
+            onChange={(cuerpo) => data.onChange({ cuerpo })}
           />
         </Campo>
       )}
@@ -1632,13 +1640,15 @@ export function CalcularNode({ id, data }: NodeProps & { data: CalcularData }) {
               </button>
             </ActionTooltip>
           </div>
-          <Textarea
+          <CampoConVariables
+            multilinea
+            cel
             aria-label={`${t("cuentas.flujo.condicion.expresion")} ${i + 1}`}
             className="min-h-10 font-mono text-xs"
             placeholder="int(saldo) - int(pago)"
             value={a.expresion}
             data-testid={`calcular-${id}-${a.id}-expresion`}
-            onChange={(e) => editar(a.id, { expresion: e.target.value })}
+            onChange={(expresion) => editar(a.id, { expresion })}
           />
         </div>
       ))}
