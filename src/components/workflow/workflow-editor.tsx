@@ -16,6 +16,7 @@ import {
   useNodes,
   useEdges,
   useInternalNode,
+  useNodesInitialized,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -53,6 +54,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  fijarSinConectar,
+  reiniciarEstadoConexiones,
+  useEstadoConexiones,
+} from "@/components/workflow/estado-conexiones";
 import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -91,15 +98,68 @@ const claveDescripcion = (type: string, soloTexto: boolean) =>
     ? `cuentas.flujo.${type}.descripcionTexto`
     : `cuentas.flujo.${type}.descripcion`;
 
-function InicioNode() {
+function InicioNode({ data }: { data: { sinConectar?: boolean } }) {
   const t = useT();
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-primary-foreground ring-1 ring-foreground/10">
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-primary-foreground ring-1 ring-foreground/10",
+        // Sin nada conectado a la salida, al confirmar queda marcado como los demás.
+        data.sinConectar && "ring-2 ring-destructive",
+      )}
+    >
       <Play className="size-4" />
       <span className="text-sm font-medium">{t("cuentas.flujo.inicio")}</span>
-      <Handle type="source" position={Position.Bottom} className="!bg-primary-foreground" />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!size-4 !border-2 !border-primary !bg-primary-foreground"
+      />
     </div>
   );
+}
+
+// Salidas que pueden quedar sin conectar sin que falte nada
+// (propuesta-motor-workflows.md §5): el camino termina ahí.
+const SALIDAS_OPCIONALES = new Set(["error", "timeout", "other", "out_of_hours"]);
+
+// Nodos con algo sin conectar: una salida obligatoria sin destino, o un nodo al
+// que no llega ninguna conexión. Las salidas se leen de los puntos realmente
+// dibujados en cada nodo (`salidasDe`), así no hay que repetir acá la lista por
+// tipo. No bloquea el guardado: se avisa al confirmar (ver ConfirmarCuenta).
+function nodosSinConectar(
+  nodes: Node[],
+  edges: Edge[],
+  salidasDe: (id: string) => string[],
+): Set<string> {
+  const conectadas = new Set(edges.map((e) => `${e.source}/${e.sourceHandle ?? ""}`));
+  const conEntrada = new Set(edges.map((e) => e.target));
+  const resultado = new Set<string>();
+  for (const n of nodes) {
+    if (n.type === "punta") continue;
+    const faltaEntrada = n.type !== "inicio" && !conEntrada.has(n.id);
+    const faltaSalida = salidasDe(n.id).some(
+      (salida) => !SALIDAS_OPCIONALES.has(salida) && !conectadas.has(`${n.id}/${salida}`),
+    );
+    if (faltaEntrada || faltaSalida) resultado.add(n.id);
+  }
+  return resultado;
+}
+
+// Vive dentro de <ReactFlow> para leer los puntos de salida medidos de cada
+// nodo; recalcula los nodos sin conectar cada vez que cambia el flujo.
+function VigilanteConexiones({ onChange }: { onChange: (ids: Set<string>) => void }) {
+  const nodes = useNodes();
+  const edges = useEdges();
+  const medidos = useNodesInitialized();
+  const { getInternalNode } = useReactFlow();
+  useEffect(() => {
+    if (!medidos) return;
+    const salidasDe = (id: string) =>
+      (getInternalNode(id)?.internals.handleBounds?.source ?? []).map((h) => h.id ?? "");
+    onChange(nodosSinConectar(nodes, edges, salidasDe));
+  }, [nodes, edges, medidos, getInternalNode, onChange]);
+  return null;
 }
 
 // Regla de "Fuera de horario": un nodo ofrece la salida cuando, siguiendo hacia
@@ -243,6 +303,54 @@ function conexionesDeRetorno(nodes: Node[], edges: Edge[]): Set<string> {
 const vaPorCarril = (origen: Node, destino: Node) =>
   destino.position.y < origen.position.y + (origen.measured?.height ?? 0);
 
+// Desvíos que el usuario le puso a una conexión arrastrando sus tramos (como en
+// draw.io): coordenadas absolutas del lienzo. `codo` es la x del tramo vertical
+// que sale del nodo, `canal` la y del tramo horizontal y `carril` la x del
+// carril lateral de un retorno. «Ordenar» los borra.
+type Desvio = { codo?: number; canal?: number; carril?: number };
+
+// Tramo de una conexión que se puede arrastrar: una franja transparente sobre
+// la línea, con el cursor de mover; al soltar, la conexión queda donde se dejó.
+function TramoArrastrable({
+  de,
+  a,
+  eje,
+  onMover,
+}: {
+  de: [number, number];
+  a: [number, number];
+  // "x": el tramo es vertical y se mueve a los costados; "y": es horizontal y se
+  // mueve arriba/abajo.
+  eje: "x" | "y";
+  onMover: (valor: number) => void;
+}) {
+  const { screenToFlowPosition } = useReactFlow();
+  return (
+    <path
+      d={`M${de[0]} ${de[1]} L${a[0]} ${a[1]}`}
+      className="nodrag nopan"
+      style={{
+        fill: "none",
+        stroke: "transparent",
+        strokeWidth: 14,
+        pointerEvents: "stroke",
+        cursor: eje === "x" ? "ew-resize" : "ns-resize",
+      }}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        const punto = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+        onMover(eje === "x" ? punto.x : punto.y);
+      }}
+      onPointerUp={(e) => e.currentTarget.releasePointerCapture(e.pointerId)}
+    />
+  );
+}
+
 // Conexión ortogonal para un flujo que corre de arriba hacia abajo. Sale por
 // la derecha de la fila de la salida y entra por el borde superior del destino.
 // - Hacia adelante: baja por la separación al costado del nodo y corre por el
@@ -256,6 +364,7 @@ const vaPorCarril = (origen: Node, destino: Node) =>
 // Con un nodo seleccionado, las conexiones que no lo tocan se atenúan.
 // El botón para quitarla va en el medio, siempre visible: sin él, la única
 // forma de borrarla era hacer click justo sobre la línea y apretar Backspace.
+// Los tramos rectos se pueden arrastrar para acomodar la línea (ver Desvio).
 function ConexionQuitable({
   id,
   source,
@@ -269,9 +378,14 @@ function ConexionQuitable({
   style,
   markerEnd,
   selected,
+  data,
 }: EdgeProps) {
   const t = useT();
-  const { deleteElements, setCenter, getZoom } = useReactFlow();
+  const { deleteElements, setCenter, getZoom, setEdges } = useReactFlow();
+  const desvio = (data ?? {}) as Desvio;
+  // Guarda un desvío de esta conexión (lo que el usuario arrastró).
+  const desviar = (patch: Desvio) =>
+    setEdges((eds) => eds.map((e) => (e.id === id ? { ...e, data: { ...e.data, ...patch } } : e)));
   const nodes = useNodes();
   const edges = useEdges();
   const origen = nodes.find((n) => n.id === source);
@@ -297,7 +411,11 @@ function ConexionQuitable({
   const salidas = internoOrigen?.internals.handleBounds?.source ?? [];
   const posSalida = Math.max(0, salidas.findIndex((h) => h.id === (sourceHandleId ?? null)));
   // El inicio sale por abajo: baja derecho, sin el codo al costado.
-  const gx = sourcePosition === Position.Bottom ? sourceX : sourceX + 14 + 9 * (Math.max(salidas.length, 1) - 1 - posSalida);
+  const gx =
+    desvio.codo ??
+    (sourcePosition === Position.Bottom
+      ? sourceX
+      : sourceX + 14 + 9 * (Math.max(salidas.length, 1) - 1 - posSalida));
 
   let puntos: [number, number][];
   // Dónde va la cruz para quitar la conexión (a mitad de tramo) y, solo en los
@@ -306,6 +424,8 @@ function ConexionQuitable({
   let quitarY: number;
   let etiquetaX = 0;
   let etiquetaY = 0;
+  // Tramos que se pueden arrastrar, con el desvío que cada uno modifica.
+  const tramos: { de: [number, number]; a: [number, number]; eje: "x" | "y"; clave: keyof Desvio }[] = [];
   if (porCarril) {
     const altoOrigen = origen.measured?.height ?? 0;
     const fondoCapa = Math.max(
@@ -318,14 +438,19 @@ function ConexionQuitable({
         .map((n) => n.position.y + (n.measured?.height ?? 0)),
     );
     const derecha = Math.max(...nodes.map((n) => n.position.x + (n.measured?.width ?? 0)));
-    const carril = derecha + 36 + rango * 18;
+    const carril = desvio.carril ?? derecha + 36 + rango * 18;
     // Los retornos de una misma capa bajan a canales separados lo suficiente
     // para que sus etiquetas, que van sobre este tramo, no se pisen.
     const rangoCapa = hermanas
       .filter((e) => Math.round((porId.get(e.source)?.position.y ?? 0) / 10) === Math.round(origen.position.y / 10))
       .findIndex((e) => e.id === id);
-    const abajo = fondoCapa + 24 + Math.max(0, rangoCapa) * 22;
+    const abajo = desvio.canal ?? fondoCapa + 24 + Math.max(0, rangoCapa) * 22;
     const arriba = targetY - 46 - rango * 9;
+    tramos.push(
+      { de: [gx, sourceY], a: [gx, abajo], eje: "x", clave: "codo" },
+      { de: [gx, abajo], a: [carril, abajo], eje: "y", clave: "canal" },
+      { de: [carril, abajo], a: [carril, arriba], eje: "x", clave: "carril" },
+    );
     puntos = [
       [sourceX, sourceY],
       [gx, sourceY],
@@ -342,7 +467,16 @@ function ConexionQuitable({
     quitarX = carril;
     quitarY = (abajo + arriba) / 2;
   } else {
-    const canal = Math.max(targetY - 16 - (rango % 5) * 7, sourceY + 8);
+    // El canal baja como mucho hasta justo arriba del destino: la línea tiene
+    // que seguir entrando por su borde superior.
+    const canal = Math.min(
+      desvio.canal ?? Math.max(targetY - 16 - (rango % 5) * 7, sourceY + 8),
+      targetY - 8,
+    );
+    tramos.push(
+      { de: [gx, sourceY], a: [gx, canal], eje: "x", clave: "codo" },
+      { de: [gx, canal], a: [targetX, canal], eje: "y", clave: "canal" },
+    );
     puntos = [
       [sourceX, sourceY],
       [gx, sourceY],
@@ -371,6 +505,15 @@ function ConexionQuitable({
         }}
         markerEnd={markerEnd}
       />
+      {tramos.map((tramo) => (
+        <TramoArrastrable
+          key={tramo.clave}
+          de={tramo.de}
+          a={tramo.a}
+          eje={tramo.eje}
+          onMover={(valor) => desviar({ [tramo.clave]: valor })}
+        />
+      ))}
       <EdgeLabelRenderer>
         {/* Cruz para quitar la conexión, a mitad de tramo. */}
         <div
@@ -766,6 +909,19 @@ export function WorkflowEditor({
 
   const conFueraDeHorario = useMemo(() => nodosConFueraDeHorario(nodes, edges), [nodes, edges]);
 
+  // Nodos con algo sin conectar (ver nodosSinConectar). El número va al botón
+  // «Confirmar» de la página; la marca roja en cada nodo recién aparece cuando
+  // se tocó «Confirmar» (`mostrar`).
+  const [sinConectar, setSinConectar] = useState<Set<string>>(new Set());
+  const actualizarSinConectar = useCallback((ids: Set<string>) => {
+    setSinConectar((previos) =>
+      previos.size === ids.size && [...ids].every((id) => previos.has(id)) ? previos : ids,
+    );
+  }, []);
+  useEffect(() => fijarSinConectar(sinConectar.size), [sinConectar]);
+  useEffect(() => reiniciarEstadoConexiones, []);
+  const { mostrar: marcarSinConectar } = useEstadoConexiones();
+
   // Si un nodo deja de cumplir la regla (se le agregó un camino a otra
   // campaña), su conexión "Fuera de horario" ya no aplica y se quita.
   useEffect(() => {
@@ -792,16 +948,18 @@ export function WorkflowEditor({
     "flujo",
     {
       nodos: nodes.map((n) => ({ id: n.id, posicion: n.position, datos: n.data })),
-      conexiones: edges.map((e) => [e.source, e.sourceHandle, e.target, e.targetHandle]),
+      conexiones: edges.map((e) => [e.source, e.sourceHandle, e.target, e.targetHandle, e.data]),
     },
     flujoOrdenado,
   );
 
   const ordenarNodos = useCallback(() => {
     setNodes((nds) => ordenar(nds, edges));
+    // Los desvíos de las conexiones eran para la disposición anterior.
+    setEdges((eds) => eds.map((e) => (e.data ? { ...e, data: undefined } : e)));
     // Después de acomodar, encuadra todo el workflow.
     setTimeout(() => flowRef.current?.fitView({ ...ENCUADRE, duration: 300 }), 0);
-  }, [edges, setNodes]);
+  }, [edges, setNodes, setEdges]);
 
   // Todos los nodos (salvo "inicio", que no se contrae) están contraídos →
   // el botón pasa a "Expandir todo"; en cualquier otro caso, "Contraer todo".
@@ -821,11 +979,12 @@ export function WorkflowEditor({
 
   const nodesWithHandlers = nodes.map((n) =>
     n.type === "inicio"
-      ? n
+      ? { ...n, data: { sinConectar: marcarSinConectar && sinConectar.has(n.id) } }
       : {
           ...n,
           data: {
             ...n.data,
+            sinConectar: marcarSinConectar && sinConectar.has(n.id),
             onChange: (patch: Record<string, unknown>) => updateData(n.id, patch),
             fueraDeHorario: conFueraDeHorario.has(n.id),
             onDelete: () => removeNode(n.id),
@@ -887,6 +1046,9 @@ export function WorkflowEditor({
         fullscreen && "fixed inset-0 z-50 bg-background p-4",
       )}
     >
+      {/* Dentro del lienzo la ayuda al pasar el mouse espera 2 s (feedback
+          2026-11: aparecer al toque sobre cada tarjeta y conexión molestaba). */}
+      <TooltipProvider delayDuration={2000}>
       <div
         ref={lienzoRef}
         className={cn(
@@ -938,11 +1100,14 @@ export function WorkflowEditor({
           // Zoom out bastante más que el default (0.5): un workflow real tiene
           // muchos nodos y hay que poder verlo entero.
           minZoom={0.1}
+          // Al arrastrar una conexión, engancha al punto de entrada desde más lejos.
+          connectionRadius={40}
           fitView
           fitViewOptions={ENCUADRE}
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={16} color="var(--border)" />
+          <VigilanteConexiones onChange={actualizarSinConectar} />
           {/* Zoom, centrado y acciones sobre todo el lienzo, juntos: así no se
               confunden con los nodos que se agregan desde la paleta. Cada uno
               dice qué hace al pasar el mouse. */}
@@ -1081,6 +1246,7 @@ export function WorkflowEditor({
           </Panel>
         </ReactFlow>
       </div>
+      </TooltipProvider>
     </div>
   );
 }

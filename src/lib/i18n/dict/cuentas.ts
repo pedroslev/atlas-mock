@@ -5,6 +5,11 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // `components/workflow/workflow-editor.tsx`.
 export const cuentas: NamespaceDict = {
   es: {
+    "flujo.sinConectar.titulo": "Hay partes del flujo sin conectar",
+    "flujo.sinConectar.descripcion":
+      "{n} nodo(s) tienen una salida sin conectar o no les llega ninguna conexión; quedaron marcados en rojo en la solapa Flujo. Podés guardar igual y terminar de conectarlos después: mientras tanto, una interacción que llegue a una salida sin conectar termina ahí.",
+    "flujo.sinConectar.revisar": "Revisar el flujo",
+    "flujo.sinConectar.guardarIgual": "Guardar igual",
     "titulo": "Cuentas",
     "descripcion":
       "Administrá las cuentas de telefonía, chat, videollamada y webcall por las que ingresan y se realizan las interacciones.",
@@ -259,6 +264,11 @@ export const cuentas: NamespaceDict = {
     "flujo.calcular.quitar": "Quitar cálculo",
   },
   en: {
+    "flujo.sinConectar.titulo": "Parts of the workflow are not connected",
+    "flujo.sinConectar.descripcion":
+      "{n} node(s) have an unconnected exit or no connection reaches them; they are outlined in red in the Workflow tab. You can save anyway and finish connecting them later: meanwhile, an interaction that reaches an unconnected exit ends there.",
+    "flujo.sinConectar.revisar": "Review the workflow",
+    "flujo.sinConectar.guardarIgual": "Save anyway",
     "titulo": "Accounts",
     "descripcion":
       "Manage the telephony, chat and video call accounts that interactions come in and go out through.",
@@ -512,6 +522,11 @@ export const cuentas: NamespaceDict = {
     "flujo.calcular.quitar": "Remove calculation",
   },
   pt: {
+    "flujo.sinConectar.titulo": "Há partes do fluxo sem conectar",
+    "flujo.sinConectar.descripcion":
+      "{n} nó(s) têm uma saída sem conectar ou nenhuma conexão chega a eles; ficaram marcados em vermelho na aba Fluxo. Você pode salvar mesmo assim e terminar de conectá-los depois: enquanto isso, uma interação que chegue a uma saída sem conectar termina ali.",
+    "flujo.sinConectar.revisar": "Revisar o fluxo",
+    "flujo.sinConectar.guardarIgual": "Salvar mesmo assim",
     "titulo": "Contas",
     "descripcion":
       "Administre as contas de telefonia, chat e videochamada pelas quais as interações entram e saem.",
@@ -731,6 +746,11 @@ export const cuentas: NamespaceDict = {
     "flujo.calcular.quitar": "Remover cálculo",
   },
   ca: {
+    "flujo.sinConectar.titulo": "Hi ha parts del flux sense connectar",
+    "flujo.sinConectar.descripcion":
+      "{n} node(s) tenen una sortida sense connectar o no els arriba cap connexió; han quedat marcats en vermell a la pestanya Flux. Pots desar igualment i acabar de connectar-los després: mentrestant, una interacció que arribi a una sortida sense connectar acaba allà.",
+    "flujo.sinConectar.revisar": "Revisar el flux",
+    "flujo.sinConectar.guardarIgual": "Desar igualment",
     "titulo": "Comptes",
     "descripcion":
       "Administra els comptes de telefonia, xat i videotrucada pels quals entren i surten les interaccions.",

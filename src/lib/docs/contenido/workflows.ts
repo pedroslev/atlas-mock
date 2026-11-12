@@ -23,6 +23,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "El botón de información de cada macroestado abre su sección de esta página."
+          },
+          {
+            "tipo": "p",
+            "texto": "El flujo se puede guardar a medio conectar. Al confirmar, si hay nodos con una salida sin conectar o a los que no llega ninguna conexión, Olimpo avisa y los marca con el borde rojo en la solapa Flujo: podés revisarlos o guardar igual y terminar después. Mientras tanto, una interacción que llegue a una salida sin conectar termina ahí."
           }
         ]
       },
@@ -425,6 +429,10 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "p",
             "texto": "The information button on each macrostate opens its section on this page."
+          },
+          {
+            "tipo": "p",
+            "texto": "The workflow can be saved half-connected. When you confirm, if any node has an unconnected exit or no connection reaches it, Olimpo warns you and outlines those nodes in red in the Workflow tab: you can review them or save anyway and finish later. Meanwhile, an interaction that reaches an unconnected exit ends there."
           }
         ]
       },

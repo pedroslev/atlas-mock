@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   Handle,
   Position,
@@ -42,6 +42,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { ProbarConsultaHttp } from "@/components/workflow/probar-consulta-http";
 
@@ -66,11 +68,25 @@ type Comun = {
   // en una misma derivación, así que el nodo ofrece la salida "Fuera de
   // horario" (propuesta §4.2).
   fueraDeHorario?: boolean;
+  // El editor lo marca cuando se tocó «Confirmar» y este nodo tiene una salida
+  // obligatoria sin conectar o no le llega ninguna conexión: borde rojo, sin
+  // más detalle (quien arma el flujo no conoce ids de nodos).
+  sinConectar?: boolean;
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onRemoveExit: (handleId: string) => void;
 };
+
+// Con el nodo contraído las salidas se dibujan solo como puntos, apilados a la
+// derecha del cuadrado; el nombre de cada una aparece al pasar el mouse.
+const Compacto = createContext(false);
+
+// Puntos de conexión grandes (16px, feedback 2026-11: los de 8px eran incómodos
+// de agarrar) con borde del color de la tarjeta para que se despeguen de ella.
+const PUNTO_ENTRADA = "!size-4 !border-2 !border-card !bg-secondary hover:!bg-primary";
+const PUNTO_SALIDA =
+  "!static !size-4 !translate-x-0 !translate-y-0 !border-2 !border-card hover:!bg-primary";
 
 // Marco común de los macroestados: entrada a la izquierda; encabezado con
 // ícono, título editable y acciones; el formulario del nodo (que se puede
@@ -122,9 +138,57 @@ function NodoMacroestado({
     </ActionTooltip>
   );
 
+  // Contraído: un cuadrado con el ícono, la entrada arriba y las salidas como
+  // puntos a la derecha (feedback 2026-11, como en n8n). Lo que configura el
+  // nodo se ve al dejar el mouse encima; el botón de la esquina lo expande.
+  if (data.colapsado) {
+    return (
+      <Compacto.Provider value={true}>
+        <HoverCard openDelay={600} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <div
+              data-testid="nodo-contraido"
+              className={cn(
+                "group relative flex size-16 items-center justify-center rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 [&>span>svg]:size-7",
+                data.sinConectar && "ring-2 ring-destructive",
+              )}
+            >
+              <Handle type="target" position={Position.Top} className={PUNTO_ENTRADA} />
+              <span className="shrink-0">{icono}</span>
+              <div className="absolute -right-2 top-1/2 flex -translate-y-1/2 flex-col gap-1">
+                {salidas}
+                {data.fueraDeHorario && <SalidaFueraDeHorario />}
+              </div>
+              <div className="absolute -bottom-2 -left-2 rounded-full bg-card opacity-0 ring-1 ring-foreground/10 group-hover:opacity-100">
+                {accion(
+                  t("cuentas.flujo.mostrarOpciones"),
+                  () => data.onChange({ colapsado: false }),
+                  <ChevronDown className="size-3.5" />,
+                )}
+              </div>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="right" className="flex flex-col gap-1">
+            <p className="font-medium">{titulo}</p>
+            {/* Con título propio se recuerda qué macroestado es; sin él, alcanza con la descripción. */}
+            <p className="text-xs text-muted-foreground">
+              {titulo === tituloPorDefecto ? descripcion : `${tituloPorDefecto}: ${descripcion}`}
+            </p>
+            {resumen && <p className="truncate text-xs">{resumen}</p>}
+          </HoverCardContent>
+        </HoverCard>
+      </Compacto.Provider>
+    );
+  }
+
   return (
-    <div className="flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10">
-      <Handle type="target" position={Position.Top} className="!bg-secondary" />
+    <div
+      className={cn(
+        "flex w-72 flex-col gap-2 rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10",
+        data.sinConectar && "ring-2 ring-destructive",
+      )}
+    >
+      <Handle type="target" position={Position.Top} className={PUNTO_ENTRADA} />
       <div className="flex items-center justify-between gap-1">
         <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium">
           {/* El ícono recuerda qué macroestado es aunque el título se haya cambiado. */}
@@ -177,19 +241,15 @@ function NodoMacroestado({
           </ActionTooltip>
           {accion(t("cuentas.flujo.duplicar"), data.onDuplicate, <Copy className="size-3.5" />)}
           {accion(
-            t(data.colapsado ? "cuentas.flujo.mostrarOpciones" : "cuentas.flujo.ocultarOpciones"),
-            () => data.onChange({ colapsado: !data.colapsado }),
-            data.colapsado ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />,
+            t("cuentas.flujo.ocultarOpciones"),
+            () => data.onChange({ colapsado: true }),
+            <ChevronUp className="size-3.5" />,
           )}
           {accion(t("cuentas.flujo.quitarNodo"), data.onDelete, <Trash2 className="size-3.5" />, true)}
         </span>
       </div>
-      {data.colapsado ? (
-        resumen && <p className="truncate text-xs text-muted-foreground">{resumen}</p>
-      ) : (
-        // nodrag: los controles del formulario no arrastran el nodo.
-        <div className="nodrag flex flex-col gap-2">{children}</div>
-      )}
+      {/* nodrag: los controles del formulario no arrastran el nodo. */}
+      <div className="nodrag flex flex-col gap-2">{children}</div>
       {(salidas || data.fueraDeHorario) && (
         <div className="flex flex-col gap-1 border-t border-border pt-2">
           {salidas}
@@ -203,15 +263,20 @@ function NodoMacroestado({
 // Una salida con nombre: la etiqueta a la derecha y el punto de conexión al
 // lado.
 function Salida({ id, etiqueta }: { id: string; etiqueta: string }) {
+  const compacto = useContext(Compacto);
+  if (compacto) {
+    return (
+      <ActionTooltip label={etiqueta} side="right">
+        <span className="flex">
+          <Handle type="source" id={id} position={Position.Right} className={cn(PUNTO_SALIDA, "!bg-secondary")} />
+        </span>
+      </ActionTooltip>
+    );
+  }
   return (
     <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
       <span>{etiqueta}</span>
-      <Handle
-        type="source"
-        id={id}
-        position={Position.Right}
-        className="!static !size-2 !translate-x-0 !translate-y-0 !bg-secondary"
-      />
+      <Handle type="source" id={id} position={Position.Right} className={cn(PUNTO_SALIDA, "!bg-secondary")} />
     </div>
   );
 }
@@ -222,17 +287,28 @@ function Salida({ id, etiqueta }: { id: string; etiqueta: string }) {
 // excepción, no el camino principal.
 export function SalidaFueraDeHorario() {
   const t = useT();
+  const compacto = useContext(Compacto);
+  const punto = (
+    <Handle
+      type="source"
+      id="out_of_hours"
+      position={Position.Right}
+      className={cn(PUNTO_SALIDA, "!bg-muted-foreground")}
+    />
+  );
+  if (compacto) {
+    return (
+      <ActionTooltip label={t("cuentas.flujo.outOfHours")} side="right">
+        <span className="flex">{punto}</span>
+      </ActionTooltip>
+    );
+  }
   return (
     <ActionTooltip label={t("cuentas.flujo.outOfHoursAyuda")}>
       <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
         <Moon className="size-3.5" />
         <span>{t("cuentas.flujo.outOfHours")}</span>
-        <Handle
-          type="source"
-          id="out_of_hours"
-          position={Position.Right}
-          className="!static !size-2 !translate-x-0 !translate-y-0 !bg-muted-foreground"
-        />
+        {punto}
       </div>
     </ActionTooltip>
   );
