@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   ReactFlow,
   Background,
@@ -14,9 +14,6 @@ import {
   addEdge,
   BaseEdge,
   EdgeLabelRenderer,
-  useNodes,
-  useEdges,
-  useInternalNode,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -60,6 +57,7 @@ import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { routeEdges, type Point, type Rect, type RouteRequest } from "@/lib/workflow/edge-routing";
+import { createRoutesStore, type RoutesStore } from "@/lib/workflow/routes-store";
 import {
   type Workflow,
   type WorkflowNode,
@@ -240,23 +238,25 @@ function conexionesDeRetorno(nodes: Node[], edges: Edge[]): Set<string> {
   return retornos;
 }
 
-// Solo para dibujar: una conexión cuyo destino quedó arriba del nodo de origen
-// (o a su altura) no puede bajar directo al borde superior sin atravesar nodos,
-// así que va por el carril lateral. Es geometría del lienzo, no tiene que ver
-// con si la conexión es de retorno.
-const vaPorCarril = (origen: Node, destino: Node) =>
-  destino.position.y < origen.position.y + (origen.measured?.height ?? 0);
-
 // Rutas de todas las conexiones, calculadas juntas por EdgeRouter (ver lib/workflow/edge-routing).
 // Una conexión sin ruta, o con un extremo que se está arrastrando, usa el trazado simple de abajo.
-const RutasContext = createContext<Map<string, Point[]>>(new Map());
+const RutasContext = createContext<RoutesStore>(createRoutesStore());
+
+// Datos armados de cada nodo del lienzo, por objeto de nodo (ver nodesWithHandlers).
+const nodosArmados = new WeakMap<Node, { clave: string; deps: unknown[]; nodo: Node }>();
 
 // Calcula las rutas cuando cambian los nodos o las conexiones, pero no mientras se arrastra un
 // nodo: recalcular en cada cuadro del arrastre sería caro, y al soltarlo se recalcula.
-function EdgeRouter({ onRutas }: { onRutas: (update: (prev: Map<string, Point[]>) => Map<string, Point[]>) => void }) {
+function EdgeRouter() {
   const nodes = useStore((s) => s.nodes);
   const edges = useStore((s) => s.edges);
   const store = useStoreApi();
+  const rutasStore = useContext(RutasContext);
+  // Qué conexiones vuelven (punteadas): depende de la estructura, no se recalcula al arrastrar.
+  const estructura = nodes.some((n) => n.dragging) ? null : edges;
+  useEffect(() => {
+    if (estructura) rutasStore.setReturns(conexionesDeRetorno(store.getState().nodes, estructura));
+  }, [estructura, store, rutasStore]);
   // Firma de la geometría que se ruteó por última vez: el lienzo se re-renderiza por muchas
   // cosas (incluidas las rutas nuevas), y solo hay que rutear de nuevo si algo se movió.
   const ultimaFirma = useRef("");
@@ -296,9 +296,8 @@ function EdgeRouter({ onRutas }: { onRutas: (update: (prev: Map<string, Point[]>
     const firma = JSON.stringify([rects, pedidos]);
     if (firma === ultimaFirma.current) return;
     ultimaFirma.current = firma;
-    const rutas = routeEdges(rects, pedidos);
-    onRutas((prev) => (arrastrados.size > 0 ? new Map([...prev, ...rutas]) : rutas));
-  }, [nodes, edges, store, onRutas]);
+    rutasStore.setRoutes(routeEdges(rects, pedidos), arrastrados.size > 0);
+  }, [nodes, edges, store, rutasStore]);
   return null;
 }
 
@@ -319,7 +318,6 @@ function ConexionQuitable({
   id,
   source,
   target,
-  sourceHandleId,
   sourceX,
   sourceY,
   sourcePosition,
@@ -330,118 +328,46 @@ function ConexionQuitable({
   selected,
 }: EdgeProps) {
   const t = useT();
-  const { deleteElements, setCenter, getZoom } = useReactFlow();
-  const nodes = useNodes();
-  const edges = useEdges();
-  const origen = nodes.find((n) => n.id === source);
-  const destino = nodes.find((n) => n.id === target);
-  const internoOrigen = useInternalNode(source);
-  const rutas = useContext(RutasContext);
-  if (!origen || !destino) return null;
+  const { deleteElements, setCenter, getZoom, getNode } = useReactFlow();
+  // Cada conexión lee solo lo suyo: no se vuelve a dibujar cuando se mueve un nodo que no la toca.
+  const rutasStore = useContext(RutasContext);
+  const ruta = useSyncExternalStore(rutasStore.subscribe, () => rutasStore.get(id), () => undefined);
+  const retorno = useSyncExternalStore(rutasStore.subscribe, () => rutasStore.isReturn(id), () => false);
+  const hayNodoSeleccionado = useStore((s) => s.nodes.some((n) => n.selected));
+  const extremoSeleccionado = useStore(
+    (s) => Boolean(s.nodeLookup.get(source)?.selected || s.nodeLookup.get(target)?.selected),
+  );
+  const tituloDestino = useStore((s) => s.nodeLookup.get(target)?.data.titulo as string | undefined);
+  const tipoDestino = useStore((s) => s.nodeLookup.get(target)?.type);
+  const soloTextoDestino = useStore((s) => s.nodeLookup.get(target)?.data.soloTexto === true);
 
-  const porId = new Map(nodes.map((n) => [n.id, n]));
-  const retorno = conexionesDeRetorno(nodes, edges).has(id);
-  const porCarril = vaPorCarril(origen, destino);
-  // Conexiones que comparten el mismo tipo de trazado: sirven para repartir
-  // carriles y canales y que no se superpongan.
-  const hermanas = edges.filter((e) => {
-    const o = porId.get(e.source);
-    const d = porId.get(e.target);
-    if (!o || !d || vaPorCarril(o, d) !== porCarril) return false;
-    return porCarril || Math.round(d.position.y / 10) === Math.round(destino.position.y / 10);
-  });
-  const rango = Math.max(0, hermanas.findIndex((e) => e.id === id));
-
-  // Separación al costado del nodo: la salida más alta es la más lejana, así
-  // las conexiones de una misma tarjeta quedan anidadas y no se cruzan.
-  const salidas = internoOrigen?.internals.handleBounds?.source ?? [];
-  const posSalida = Math.max(0, salidas.findIndex((h) => h.id === (sourceHandleId ?? null)));
-  // El inicio sale por abajo: baja derecho, sin el codo al costado.
-  const gx = sourcePosition === Position.Bottom ? sourceX : sourceX + 14 + 9 * (Math.max(salidas.length, 1) - 1 - posSalida);
-
-  let puntos: [number, number][];
-  // Dónde va la cruz para quitar la conexión (a mitad de tramo) y, solo en los
-  // retornos, la etiqueta con el destino (pegada a la salida).
-  let quitarX: number;
-  let quitarY: number;
-  let etiquetaX = 0;
-  let etiquetaY = 0;
-  if (porCarril) {
-    const altoOrigen = origen.measured?.height ?? 0;
-    const fondoCapa = Math.max(
-      ...nodes
-        .filter(
-          (n) =>
-            n.position.y < origen.position.y + altoOrigen &&
-            n.position.y + (n.measured?.height ?? 0) > origen.position.y,
-        )
-        .map((n) => n.position.y + (n.measured?.height ?? 0)),
-    );
-    const derecha = Math.max(...nodes.map((n) => n.position.x + (n.measured?.width ?? 0)));
-    const carril = derecha + 36 + rango * 18;
-    // Los retornos de una misma capa bajan a canales separados lo suficiente
-    // para que sus etiquetas, que van sobre este tramo, no se pisen.
-    const rangoCapa = hermanas
-      .filter((e) => Math.round((porId.get(e.source)?.position.y ?? 0) / 10) === Math.round(origen.position.y / 10))
-      .findIndex((e) => e.id === id);
-    const abajo = fondoCapa + 24 + Math.max(0, rangoCapa) * 22;
-    const arriba = targetY - 46 - rango * 9;
-    puntos = [
-      [sourceX, sourceY],
-      [gx, sourceY],
-      [gx, abajo],
-      [carril, abajo],
-      [carril, arriba],
-      [targetX, arriba],
-      [targetX, targetY],
-    ];
-    // La etiqueta de un retorno va pegada a donde sale la línea, no a donde
-    // llega: dice a qué nodo vuelve esta salida, leída desde la salida.
-    etiquetaX = gx + 10;
-    etiquetaY = abajo;
-    quitarX = carril;
-    quitarY = (abajo + arriba) / 2;
-  } else {
-    const canal = Math.max(targetY - 16 - (rango % 5) * 7, sourceY + 8);
-    puntos = [
-      [sourceX, sourceY],
-      [gx, sourceY],
-      [gx, canal],
-      [targetX, canal],
-      [targetX, targetY],
-    ];
-    quitarX = (gx + targetX) / 2;
-    quitarY = canal;
-  }
-
-  // Con una ruta calculada para todo el flujo (y vigente: sus extremos coinciden con la salida y
-  // la entrada de ahora), se usa esa; la cruz va en el medio del tramo más largo.
-  const ruta = rutas.get(id);
-  const vigente =
-    ruta &&
-    Math.abs(ruta[0][0] - sourceX) < 1 &&
-    Math.abs(ruta[0][1] - sourceY) < 1 &&
-    Math.abs(ruta[ruta.length - 1][0] - targetX) < 1 &&
-    Math.abs(ruta[ruta.length - 1][1] - targetY) < 1;
-  if (ruta && vigente) {
-    puntos = ruta;
-    let largo = -1;
-    for (let k = 1; k < ruta.length; k++) {
-      const l = Math.abs(ruta[k][0] - ruta[k - 1][0]) + Math.abs(ruta[k][1] - ruta[k - 1][1]);
-      if (l > largo) {
-        largo = l;
-        quitarX = (ruta[k][0] + ruta[k - 1][0]) / 2;
-        quitarY = (ruta[k][1] + ruta[k - 1][1]) / 2;
-      }
+  const cerca = (p: Point, x: number, y: number) => Math.abs(p[0] - x) < 1 && Math.abs(p[1] - y) < 1;
+  const gx = sourcePosition === Position.Bottom ? sourceX : sourceX + 14;
+  const puntos: Point[] =
+    ruta && cerca(ruta[0], sourceX, sourceY) && cerca(ruta[ruta.length - 1], targetX, targetY)
+      ? ruta
+      : [
+          [sourceX, sourceY],
+          [gx, sourceY],
+          [gx, targetY - 16],
+          [targetX, targetY - 16],
+          [targetX, targetY],
+        ];
+  let quitarX = sourceX;
+  let quitarY = sourceY;
+  let largo = -1;
+  for (let k = 1; k < puntos.length; k++) {
+    const l = Math.abs(puntos[k][0] - puntos[k - 1][0]) + Math.abs(puntos[k][1] - puntos[k - 1][1]);
+    if (l > largo) {
+      largo = l;
+      quitarX = (puntos[k][0] + puntos[k - 1][0]) / 2;
+      quitarY = (puntos[k][1] + puntos[k - 1][1]) / 2;
     }
-    etiquetaX = ruta[1][0] + 10;
-    etiquetaY = ruta[1][1];
   }
-
-  const hayNodoSeleccionado = nodes.some((n) => n.selected);
-  const atenuada = hayNodoSeleccionado && !selected && !origen.selected && !destino.selected;
-  const nombreDestino =
-    (destino.data.titulo as string | undefined) ?? t(claveTitulo(destino.type ?? "", destino.data.soloTexto === true));
+  const etiquetaX = puntos[1][0] + 10;
+  const etiquetaY = puntos[1][1];
+  const atenuada = hayNodoSeleccionado && !selected && !extremoSeleccionado;
+  const nombreDestino = tituloDestino ?? t(claveTitulo(tipoDestino ?? "", soloTextoDestino));
 
   return (
     <>
@@ -490,13 +416,15 @@ function ConexionQuitable({
                 type="button"
                 aria-label={`${t("cuentas.flujo.irAlNodo")}: ${nombreDestino}`}
                 data-testid={`retorno-${id}`}
-                onClick={() =>
+                onClick={() => {
+                  const destino = getNode(target);
+                  if (!destino) return;
                   setCenter(
                     destino.position.x + (destino.measured?.width ?? 0) / 2,
                     destino.position.y + (destino.measured?.height ?? 0) / 2,
                     { zoom: Math.max(getZoom(), 0.6), duration: 400 },
-                  )
-                }
+                  );
+                }}
                 className="flex h-5 max-w-40 items-center rounded-full bg-card px-1.5 text-xs text-muted-foreground ring-1 ring-foreground/10 hover:text-foreground"
               >
                 <span className="truncate">↩ {nombreDestino}</span>
@@ -609,7 +537,7 @@ export function WorkflowEditor({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
     (initialWorkflow?.nodes ?? [inicioNode]).map(toFlowNode),
   );
-  const [rutas, setRutas] = useState<Map<string, Point[]>>(new Map());
+  const [rutasStore] = useState(createRoutesStore);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
     initialWorkflow?.edges.map((e: WorkflowEdge) => ({
       id: e.id,
@@ -906,26 +834,36 @@ export function WorkflowEditor({
     );
   }, [todosContraidos, setNodes]);
 
-  const nodesWithHandlers = nodes.map((n) =>
-    n.type === "inicio"
-      ? n
-      : {
-          ...n,
-          data: {
-            ...n.data,
-            onChange: (patch: Record<string, unknown>) => updateData(n.id, patch),
-            fueraDeHorario: conFueraDeHorario.has(n.id),
-            onDelete: () => removeNode(n.id),
-            onDuplicate: () => duplicar(n.id),
-            onRemoveExit: (handleId: string) => removeExit(n.id, handleId),
-            // Derivación
-            campanias,
-            // PLAY
-            soloTexto,
-            onSubirAudio: subirAudio,
-          },
-        },
-  );
+  // Un nodo que no cambió reusa sus datos armados y no se vuelve a dibujar: mientras se arrastra,
+  // solo cambia el nodo arrastrado. La regla de refs lo marca porque las acciones guardadas llegan
+  // a pegar (que usa el portapapeles); solo se llaman desde eventos, no al dibujar.
+  // eslint-disable-next-line react-hooks/refs
+  const nodesWithHandlers = nodes.map((n) => {
+    if (n.type === "inicio") return n;
+    const fueraDeHorario = conFueraDeHorario.has(n.id);
+    const clave = JSON.stringify([fueraDeHorario, soloTexto]);
+    const deps = [campanias, subirAudio];
+    const previo = nodosArmados.get(n);
+    if (previo && previo.clave === clave && previo.deps.every((d, i) => d === deps[i])) return previo.nodo;
+    const nodo: Node = {
+      ...n,
+      data: {
+        ...n.data,
+        onChange: (patch: Record<string, unknown>) => updateData(n.id, patch),
+        fueraDeHorario,
+        onDelete: () => removeNode(n.id),
+        onDuplicate: () => duplicar(n.id),
+        onRemoveExit: (handleId: string) => removeExit(n.id, handleId),
+        // Derivación
+        campanias,
+        // PLAY
+        soloTexto,
+        onSubirAudio: subirAudio,
+      },
+    };
+    nodosArmados.set(n, { clave, deps, nodo });
+    return nodo;
+  });
 
   // Mientras hay una conexión pendiente, se dibuja hasta la punta que sigue al mouse.
   const nodosEnLienzo: Node[] =
@@ -984,7 +922,7 @@ export function WorkflowEditor({
         )}
         style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
-        <RutasContext.Provider value={rutas}>
+        <RutasContext.Provider value={rutasStore}>
         <ReactFlow
           nodes={nodosEnLienzo}
           edges={conexionesEnLienzo}
@@ -1031,7 +969,7 @@ export function WorkflowEditor({
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={16} color="var(--border)" />
-          <EdgeRouter onRutas={setRutas} />
+          <EdgeRouter />
           {/* Vista general del flujo: muestra dónde está lo que se ve y permite moverse. */}
           <MiniMap
             pannable
