@@ -424,7 +424,8 @@ function EdgeRouter() {
     if (firma === ultimaFirma.current) return;
     ultimaFirma.current = firma;
     const actuales = rutasStore.all();
-    const rutear = edgesToReroute(actuales, pedidos, rects, !arrastrando);
+    // Las automáticas que quedaron encima de una acomodada a mano se corren (la que se movió manda).
+    const rutear = edgesToReroute(actuales, pedidos, rects, !arrastrando, aMano);
     const fijas = new Map<string, Point[]>(aMano);
     for (const p of pedidos) {
       const ruta = actuales.get(p.id);

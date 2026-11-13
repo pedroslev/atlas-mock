@@ -249,7 +249,16 @@ export function routeEdges(
     }
   }
 
-  function search(start: Point, end: Point, startDir: Dir): Point[] | null {
+  // Entradas a las que llega más de una conexión (contando las que se conservan): ahí cada una
+  // tiene que llegar por su lado y juntarse recién en el último tramo corto, no bajar todas por la
+  // misma vertical (se verían como una sola línea).
+  const toKey = (p: Point) => `${Math.round(p[0])},${Math.round(p[1])}`;
+  const incoming = new Map<string, number>();
+  for (const p of [...requests.map((r) => r.to), ...[...(options.fixed?.values() ?? [])].map((pts) => pts[pts.length - 1])]) {
+    incoming.set(toKey(p), (incoming.get(toKey(p)) ?? 0) + 1);
+  }
+
+  function search(start: Point, end: Point, startDir: Dir, sharedEntry = false): Point[] | null {
     const si = xIndex.get(Math.round(start[0]));
     const sj = yIndex.get(Math.round(start[1]));
     const ei = xIndex.get(Math.round(end[0]));
@@ -292,6 +301,8 @@ export function routeEdges(
       for (const [q, moveDir, ok] of moves) {
         if (!ok || (free[q] === 0 && q !== goal)) continue;
         const length = Math.abs(xs[q % W] - xs[i]) + Math.abs(ys[Math.floor(q / W)] - ys[j]);
+        // Entrada compartida: por la vertical de la entrada solo se baja el último tramo corto.
+        if (sharedEntry && moveDir === 1 && i === ei && !(q === goal && length <= 2 * MARGIN)) continue;
         const segment = Math.min(p, q) * 2 + moveDir;
         let total = best[state] + length + usage[segment] * REUSE_COST;
         if (moveDir !== dir) total += BEND_COST;
@@ -343,17 +354,19 @@ export function routeEdges(
   const routes = new Map<string, Point[]>();
   for (const { r, k } of order) {
     const { start, end, preferredY } = ends[k];
+    const sharedEntry = (incoming.get(toKey(r.to)) ?? 0) > 1;
     // Hacia adelante y con el camino libre, la conexión va en Z con el tramo horizontal a mitad de
-    // camino, como en el trazado acordado del editor; si algún nodo lo tapa, la busca A*.
+    // camino, como en el trazado acordado del editor; si algún nodo lo tapa (o la entrada es
+    // compartida), la busca A*.
     const middle: Point[] | null =
-      preferredY === undefined
+      preferredY === undefined || sharedEntry
         ? null
         : [start, [start[0], preferredY], [end[0], preferredY], end];
     const middleFree =
       middle !== null &&
       middle.every((p, m) => m === 0 || !boxes.some((b) => crossesBox(middle[m - 1], p, b))) &&
       segmentsOf(middle).every((segment) => usage[segment] === 0);
-    const path = middleFree ? middle : search(start, end, r.fromSide === "bottom" ? 1 : 0);
+    const path = middleFree ? middle : search(start, end, r.fromSide === "bottom" ? 1 : 0, sharedEntry);
     if (path) markUsage(path);
     // Sin camino libre (un nodo encima de otro) o con una búsqueda que pasó el tope, se dibuja
     // directo, en ángulo recto.
@@ -369,7 +382,7 @@ export function routeEdges(
 // pegados a la salida y a la entrada.
 function nudgeOverlaps(routes: Map<string, Point[]>, fixed?: Map<string, Point[]>) {
   type Seg = { id: string; k: number; vertical: boolean; at: number; lo: number; hi: number; kept: boolean };
-  const groups = new Map<string, Seg[]>();
+  const segments: Seg[] = [];
   const all: [string, Point[], boolean][] = [
     ...[...(fixed ?? [])].map(([id, pts]) => [id, pts, true] as [string, Point[], boolean]),
     ...[...routes].map(([id, pts]) => [id, pts, false] as [string, Point[], boolean]),
@@ -380,12 +393,17 @@ function nudgeOverlaps(routes: Map<string, Point[]>, fixed?: Map<string, Point[]
       const vertical = a[0] === b[0];
       const at = vertical ? a[0] : a[1];
       const [lo, hi] = vertical ? [Math.min(a[1], b[1]), Math.max(a[1], b[1])] : [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
-      const key = `${vertical ? "v" : "h"}${at}`;
-      groups.set(key, [...(groups.get(key) ?? []), { id, k, vertical, at, lo, hi, kept }]);
+      segments.push({ id, k, vertical, at, lo, hi, kept });
     }
+  }
+  const groups = new Map<string, Seg[]>();
+  for (const g of segments) {
+    const key = `${g.vertical ? "v" : "h"}${g.at}`;
+    groups.set(key, [...(groups.get(key) ?? []), g]);
   }
   for (const segs of groups.values()) {
     if (segs.length < 2) continue;
+    const base = segs[0].at;
     // Cada tramo toma el primer carril libre entre los que se le superponen. Los de las rutas
     // que se conservan van primero y no se mueven: las nuevas se corren a su lado.
     segs.sort((a, b) => Number(b.kept) - Number(a.kept) || a.lo - b.lo);
@@ -402,12 +420,28 @@ function nudgeOverlaps(routes: Map<string, Point[]>, fixed?: Map<string, Point[]
     for (const s of segs) {
       if (s.kept) continue;
       // Con tramos que se conservan, las nuevas se corren hacia un lado; si no, se reparten
-      // alrededor de la línea.
+      // alrededor de la línea de referencia.
       const offset = (laneOf.get(s)! - (anyKept ? 0 : (lanes.length - 1) / 2)) * NUDGE;
       const pts = routes.get(s.id)!;
       const c = s.vertical ? 0 : 1;
-      pts[s.k] = c === 0 ? [s.at + offset, pts[s.k][1]] : [pts[s.k][0], s.at + offset];
-      pts[s.k + 1] = c === 0 ? [s.at + offset, pts[s.k + 1][1]] : [pts[s.k + 1][0], s.at + offset];
+      pts[s.k] = c === 0 ? [base + offset, pts[s.k][1]] : [pts[s.k][0], base + offset];
+      pts[s.k + 1] = c === 0 ? [base + offset, pts[s.k + 1][1]] : [pts[s.k + 1][0], base + offset];
+      s.at = base + offset;
+    }
+  }
+  // Tramos paralelos que se pisan sobre líneas distintas pero a menos de NUDGE (una línea de la
+  // grilla y la del medio del pasillo, a 3 px): a esa distancia se verían como una sola. Se aleja
+  // el tramo nuevo hasta NUDGE del otro, hacia el lado en que ya estaba.
+  for (const s of segments) {
+    if (s.kept) continue;
+    for (const o of segments) {
+      if (o === s || o.id === s.id || o.vertical !== s.vertical) continue;
+      const gap = s.at - o.at;
+      if (gap === 0 || Math.abs(gap) >= NUDGE || Math.min(s.hi, o.hi) - Math.max(s.lo, o.lo) <= 2) continue;
+      s.at = o.at + Math.sign(gap) * NUDGE;
+      const pts = routes.get(s.id)!;
+      pts[s.k] = s.vertical ? [s.at, pts[s.k][1]] : [pts[s.k][0], s.at];
+      pts[s.k + 1] = s.vertical ? [s.at, pts[s.k + 1][1]] : [pts[s.k + 1][0], s.at];
     }
   }
 }
@@ -428,15 +462,19 @@ function crosses(a: Point, b: Point, r: Rect): boolean {
 
 /**
  * Qué conexiones hay que volver a rutear, como en draw.io: las que no tienen ruta, las que tienen
- * la salida o la entrada en otro lugar y, si `crossing`, las que quedaron pasando por un nodo. Las
- * demás conservan su trazado: al soltar un nodo, sus conexiones quedan como venían del arrastre.
+ * la salida o la entrada en otro lugar y, si `crossing`, las que quedaron pasando por un nodo o
+ * encima de un tramo de una ruta de `avoid` (las acomodadas a mano: la que se movió queda donde se
+ * dejó y las demás se corren). Las demás conservan su trazado: al soltar un nodo, sus conexiones
+ * quedan como venían del arrastre.
  */
 export function edgesToReroute(
   routes: Map<string, Point[]>,
   requests: RouteRequest[],
   nodes: Rect[],
   crossing: boolean,
+  avoid: Map<string, Point[]> = new Map(),
 ): Set<string> {
+  const avoided = [...avoid.values()].flatMap((pts) => pts.slice(1, -2).map((p, k) => [p, pts[k + 2]] as [Point, Point]));
   // Hasta un píxel de diferencia: las rutas arrancan y terminan en píxeles enteros.
   const near = (p: Point, q: Point) => Math.abs(p[0] - q[0]) < 1 && Math.abs(p[1] - q[1]) < 1;
   const result = new Set<string>();
@@ -449,9 +487,23 @@ export function edgesToReroute(
     if (!crossing) continue;
     for (let k = 1; k < pts.length - 2 && !result.has(r.id); k++) {
       if (nodes.some((n) => crosses(pts[k], pts[k + 1], n))) result.add(r.id);
+      else if (avoided.some(([a, b]) => overlapsSegment(pts[k], pts[k + 1], a, b))) result.add(r.id);
     }
   }
   return result;
+}
+
+// Si los tramos a-b y c-d van en la misma dirección, a menos de NUDGE uno del otro (a esa
+// distancia se ven como una sola línea), y se pisan en más de un par de píxeles.
+function overlapsSegment(a: Point, b: Point, c: Point, d: Point): boolean {
+  const vertical = a[0] === b[0];
+  if (vertical !== (c[0] === d[0])) return false;
+  const [at, ct] = vertical ? [a[0], c[0]] : [a[1], c[1]];
+  if (Math.abs(at - ct) >= NUDGE) return false;
+  const axis = vertical ? 1 : 0;
+  const lo = Math.max(Math.min(a[axis], b[axis]), Math.min(c[axis], d[axis]));
+  const hi = Math.min(Math.max(a[axis], b[axis]), Math.max(c[axis], d[axis]));
+  return hi - lo > 2;
 }
 
 export type EdgeGeometry = { points: Point[]; remove: Point; label: Point };
