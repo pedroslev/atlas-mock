@@ -284,6 +284,8 @@ function AlertaRow({
   value,
   onChange,
   conSonido = true,
+  disabled,
+  disabledReason,
 }: {
   id: string;
   label: string;
@@ -293,6 +295,8 @@ function AlertaRow({
   value: { enabled: boolean; valor: number; sound?: boolean };
   onChange: (v: { enabled: boolean; valor: number; sound?: boolean }) => void;
   conSonido?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
   const t = useT();
   return (
@@ -302,10 +306,12 @@ function AlertaRow({
       label={label}
       description={description}
       alcance={alcance}
-      checked={value.enabled}
+      checked={value.enabled && !disabled}
+      disabled={disabled}
+      disabledReason={disabledReason}
       onCheckedChange={(v) => onChange({ ...value, enabled: v })}
     >
-      {value.enabled && (
+      {value.enabled && !disabled && (
         <div className="flex flex-col gap-2 border-t pt-2">
           <CampoNumero
             id={`${id}-valor`}
@@ -333,9 +339,11 @@ function AlertaRow({
 export function VisualizacionTab({
   value,
   onChange,
+  holdHabilitado,
 }: {
   value: DisplaySettingsParams;
   onChange: (v: DisplaySettingsParams) => void;
+  holdHabilitado: boolean;
 }) {
   const t = useT();
   return (
@@ -401,6 +409,8 @@ export function VisualizacionTab({
           description={t("campanias.parametros.holdAlertDesc")}
           alcance={t("campanias.parametros.alcanceConEspera")}
           unidad={t("campanias.parametros.segundos")}
+          disabled={!holdHabilitado}
+          disabledReason={t("campanias.parametros.holdAlertDependeHold")}
           value={value.holdAlert}
           onChange={(v) => onChange({ ...value, holdAlert: v as AlertaConSonido })}
         />
@@ -672,7 +682,7 @@ export function ClienteTab({
             extensiones={EXT_AUDIO}
           />
           <Badge variant="outline" className="w-fit text-[0.65rem] font-normal">
-            {t("campanias.parametros.alcanceWebcall")}
+            {t("campanias.parametros.alcanceTelefoniaWebcall")}
           </Badge>
         </div>
 

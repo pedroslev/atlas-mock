@@ -129,10 +129,11 @@ export function PlantillasDefectoTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("plantillas.campania.defaultTitulo")}</CardTitle>
+        <CardTitle>{t("campanias.plantillasDefecto.titulo")}</CardTitle>
         <CardDescription>{t("campanias.plantillasDefecto.desc")}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 lg:grid-cols-2">
+        {/* Por ahora solo chat: todavía no hay canal de mail. */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="plantilla-chat">{t("plantillas.campania.defaultChat")}</Label>
           <SelectorPlantilla id="plantilla-chat" canal="chat" value={chatId} onChange={setChatId} />

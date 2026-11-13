@@ -98,19 +98,18 @@ export function CampaniaEditor({
           {t("campanias.tab.controlesAgente")}
         </TabsTrigger>
         <TabsTrigger value="visualizacion">{t("campanias.tab.visualizacion")}</TabsTrigger>
+        {/* ATLAS-1227: solapa nueva, en violeta hasta pasarla al color final.
+            Va al lado de Visualización: esa es la vista del asesor, esta la
+            del cliente. */}
+        <TabsTrigger value="vista-cliente" className={NUEVO_TEXTO}>
+          {t("campanias.tab.vistaCliente")}
+        </TabsTrigger>
         <TabsTrigger value="grabacion">{t("campanias.tab.grabacion")}</TabsTrigger>
         <TabsTrigger value="config-operativa">
           {t("campanias.tab.configOperativa")}
         </TabsTrigger>
         <TabsTrigger value="url-interaccion">
           {t("campanias.tab.urlInteraccion")}
-        </TabsTrigger>
-        {/* ATLAS-1227: solapas nuevas, en violeta hasta pasarlas al color final. */}
-        <TabsTrigger value="plantillas" className={NUEVO_TEXTO}>
-          {t("campanias.tab.plantillas")}
-        </TabsTrigger>
-        <TabsTrigger value="cliente" className={NUEVO_TEXTO}>
-          {t("campanias.tab.cliente")}
         </TabsTrigger>
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
       </TabsList>
@@ -220,6 +219,15 @@ export function CampaniaEditor({
         <VisualizacionTab
           value={parametros.displaySettings}
           onChange={(v) => setParametros((p) => ({ ...p, displaySettings: v }))}
+          holdHabilitado={parametros.agentControls.allowHold}
+        />
+      </TabsContent>
+
+      <TabsContent forceMount value="vista-cliente" className="flex flex-col gap-6 data-[state=inactive]:hidden">
+        <PlantillasDefectoTab initialChatId={campania.plantillaDefaultChatId} />
+        <ClienteTab
+          value={parametros.clientMedia}
+          onChange={(v) => setParametros((p) => ({ ...p, clientMedia: v }))}
         />
       </TabsContent>
 
@@ -242,19 +250,6 @@ export function CampaniaEditor({
         <UrlsExternasTab
           value={parametros.interactionUrlSettings}
           onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
-        />
-      </TabsContent>
-
-      <TabsContent forceMount value="plantillas" className="data-[state=inactive]:hidden">
-        <PlantillasDefectoTab
-          initialChatId={campania.plantillaDefaultChatId}
-        />
-      </TabsContent>
-
-      <TabsContent forceMount value="cliente" className="data-[state=inactive]:hidden">
-        <ClienteTab
-          value={parametros.clientMedia}
-          onChange={(v) => setParametros((p) => ({ ...p, clientMedia: v }))}
         />
       </TabsContent>
 

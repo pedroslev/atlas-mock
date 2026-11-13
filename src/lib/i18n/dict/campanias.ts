@@ -199,9 +199,9 @@ export const campanias: NamespaceDict = {
 
     // ATLAS-1227 — propuesta de parámetros de chat, webcall y videollamada
     // (sin acordar con Pedro). Por ahora solo en español.
-    "tab.cliente": "Espera y fondo",
-    "tab.plantillas": "Plantillas por defecto",
-    "plantillasDefecto.desc": "Plantilla que Hermes deja cargada al abrir la conversación. Se elige entre todas las plantillas del catálogo: primero las de cada grupo y al final las que no están en ningún grupo.",
+    "tab.vistaCliente": "Vista del cliente",
+    "plantillasDefecto.titulo": "Primer mensaje",
+    "plantillasDefecto.desc": "La plantilla que Hermes deja cargada cuando el chat llega al asesor. Se elige entre todas las plantillas del catálogo: primero las de cada grupo y al final las que no están en ningún grupo.",
     "plantillasDefecto.sinGrupo": "Sin grupo",
     "plantillasDefecto.vacio": "No hay plantillas de ese canal.",
     "parametros.aConversarConPedro": "A conversar con Pedro.",
@@ -210,7 +210,7 @@ export const campanias: NamespaceDict = {
     "parametros.alcanceChats": "Chat, y el chat de Webcall y Videollamada",
     "parametros.alcanceTiempoRealYChat": "Chat, Webcall, Videollamada",
     "parametros.alcanceChat": "Chat",
-    "parametros.alcanceWebcall": "Webcall",
+    "parametros.alcanceTelefoniaWebcall": "Telefonía, Webcall",
     "parametros.alcanceVideollamada": "Videollamada",
     "parametros.minutos": "minutos",
     "parametros.segundos": "segundos",
@@ -234,6 +234,7 @@ export const campanias: NamespaceDict = {
     "parametros.durationAlert": "Alerta de duración",
     "parametros.durationAlertDesc": "El cronómetro de la interacción pasa a rojo cuando dura más de lo indicado.",
     "parametros.holdAlert": "Alerta de espera",
+    "parametros.holdAlertDependeHold": "Deshabilitada porque esta campaña no permite poner interacciones en espera (Controles del agente → Permitir espera).",
     "parametros.holdAlertDesc": "El cronómetro de espera pasa a rojo cuando el cliente lleva en espera más de lo indicado.",
     "parametros.noReplyAlert": "Alerta de cliente sin respuesta",
     "parametros.noReplyAlertDesc": "La fila del chat se marca cuando el asesor tarda en contestar el último mensaje del cliente. Con varios chats a la vez, le dice a quién atender primero.",
@@ -246,7 +247,7 @@ export const campanias: NamespaceDict = {
     "parametros.enviarAutomaticoDesc": "La plantilla se completa con los datos del cliente y se manda sola cuando el chat llega al asesor. Si falta algún dato, no se manda: queda cargada para que la complete el asesor.",
     "parametros.enviarAutomaticoSinPlantilla": "Elegí una plantilla de chat para poder enviarla automáticamente.",
     "parametros.clienteTitulo": "Espera y fondo",
-    "parametros.clienteDesc": "Lo que recibe el cliente en la webcall y la videollamada mientras está en espera, y el fondo del asesor.",
+    "parametros.clienteDesc": "Lo que escucha o ve el cliente mientras está en espera, y el fondo del asesor en la videollamada.",
     "parametros.holdAudio": "Audio en espera",
     "parametros.holdAudioDesc": "Lo que escucha el cliente cuando el asesor lo pone en espera. Sin archivo, suena la música de espera de la cola.",
     "parametros.holdVideo": "Imagen o video en espera",
