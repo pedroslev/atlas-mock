@@ -133,10 +133,10 @@ export const campanias: NamespaceDict = {
       "Qué acciones puede usar el agente durante la interacción, según canal.",
     "parametros.allowHold": "Permitir espera (hold)",
     "parametros.allowHoldDesc": "Permite poner la interacción en espera (hold).",
-    "parametros.allowHoldAlcance": "Llamada, Webcall, Videollamada",
+    "parametros.allowHoldAlcance": "Telefonía, Webcall, Videollamada",
     "parametros.allowHangup": "Permitir cortar llamada",
     "parametros.allowHangupDesc": "Permite cortar la llamada en curso.",
-    "parametros.allowHangupAlcance": "Llamada, Webcall, Videollamada (no aplica al chat)",
+    "parametros.allowHangupAlcance": "Telefonía, Webcall, Videollamada (no aplica al chat)",
     "parametros.allowAddBookmark": "Permitir agregar bookmark",
     "parametros.allowAddBookmarkDesc":
       "Permite agregar un bookmark durante la llamada.",
@@ -144,7 +144,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowMute": "Permitir silenciar (mute)",
     "parametros.allowMuteDesc":
       "Permite usar el botón de silenciar (mute) durante la llamada.",
-    "parametros.allowMuteAlcance": "Llamada, Webcall, Videollamada",
+    "parametros.allowMuteAlcance": "Telefonía, Webcall, Videollamada",
     "parametros.allowClassification": "Permitir tipificar",
     "parametros.allowClassificationDesc":
       "Permite que el agente cargue un resultado de gestión en la interacción.",
@@ -176,7 +176,7 @@ export const campanias: NamespaceDict = {
     "parametros.forcedAnswer": "Atención forzada",
     "parametros.forcedAnswerDesc":
       "Permite que la llamada o el chat entrante se atienda automáticamente, sin que el agente tenga que aceptarlo.",
-    "parametros.forcedAnswerAlcance": "Llamada, Chat, Webcall, Videollamada",
+    "parametros.forcedAnswerAlcance": "Telefonía, Chat, Webcall, Videollamada",
 
     "parametros.urlInteraccionTitulo": "URLs externas",
     "parametros.urlInteraccionDesc":
@@ -206,7 +206,7 @@ export const campanias: NamespaceDict = {
     "plantillasDefecto.vacio": "No hay plantillas de ese canal.",
     "parametros.aConversarConPedro": "A conversar con Pedro.",
     "parametros.alcanceTodos": "Omnicanal",
-    "parametros.alcanceConEspera": "Llamada, Webcall, Videollamada",
+    "parametros.alcanceConEspera": "Telefonía, Webcall, Videollamada",
     "parametros.alcanceChats": "Chat, y el chat de Webcall y Videollamada",
     "parametros.alcanceTiempoRealYChat": "Chat, Webcall, Videollamada",
     "parametros.alcanceChat": "Chat",
