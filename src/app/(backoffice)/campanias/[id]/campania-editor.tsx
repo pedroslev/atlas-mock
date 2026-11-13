@@ -248,7 +248,6 @@ export function CampaniaEditor({
       <TabsContent forceMount value="plantillas" className="data-[state=inactive]:hidden">
         <PlantillasDefectoTab
           initialChatId={campania.plantillaDefaultChatId}
-          initialEmailId={campania.plantillaDefaultEmailId}
         />
       </TabsContent>
 

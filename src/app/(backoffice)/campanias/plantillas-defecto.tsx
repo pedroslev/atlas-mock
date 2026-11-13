@@ -113,20 +113,17 @@ function SelectorPlantilla({
   );
 }
 
-// ATLAS-1227: la plantilla por defecto sale de la solapa General y se elige
+// ATLAS-1227: sin email por ahora (no hay canal de mail). La plantilla por defecto sale de la solapa General y se elige
 // entre TODAS las plantillas del catálogo (agrupadas por grupo, y al final
 // las que no tienen grupo), no solo las del grupo de la campaña. La casilla
 // de envío automático reemplaza al "saludo al atender" del legacy.
 export function PlantillasDefectoTab({
   initialChatId,
-  initialEmailId,
 }: {
   initialChatId?: string;
-  initialEmailId?: string;
 }) {
   const t = useT();
   const [chatId, setChatId] = useState(initialChatId);
-  const [emailId, setEmailId] = useState(initialEmailId);
   const [enviarAutomatico, setEnviarAutomatico] = useState(false);
 
   return (
@@ -162,10 +159,6 @@ export function PlantillasDefectoTab({
               </span>
             </span>
           </label>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="plantilla-email">{t("plantillas.campania.defaultEmail")}</Label>
-          <SelectorPlantilla id="plantilla-email" canal="email" value={emailId} onChange={setEmailId} />
         </div>
       </CardContent>
     </Card>
