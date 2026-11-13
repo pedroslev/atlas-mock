@@ -56,6 +56,7 @@ export const clasificaciones: NamespaceDict = {
     "miembros.descripcion":
       "Se agregan desde el catálogo. Una misma clasificación puede estar en varios grupos; quitarla de este grupo no la elimina del catálogo.",
     "miembros.agregar": "Agregar del catálogo",
+    "miembros.agregarAyuda": "Agregar una hija trae también a su clasificación padre. Agregar un padre no trae a sus hijas: marcalas con \"Marcar sus hijas\".",
     "miembros.sinDisponibles":
       "No quedan clasificaciones sin asignar. Creá nuevas desde el catálogo en Clasificaciones.",
     "miembros.vacio": "Este grupo todavía no tiene clasificaciones.",

@@ -9,7 +9,11 @@ import type { MRT_Column, MRT_RowData } from "material-react-table";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { campanias, gruposTrabajo } from "@/lib/mock-data";
-import { ListaSeleccionable, opcionesDeCampanias } from "./acciones-masivas";
+import {
+  ListaSeleccionable,
+  opcionesDeCampanias,
+  type Opcion,
+} from "@/components/asignacion/lista-seleccionable";
 
 export const NINGUNO = "__ninguno__";
 
@@ -41,12 +45,31 @@ export function describirPertenencia(
   return `${t(`usuarios.masivo.filtro.${valor.modo}`)} ${valor.ids.map(nombre).join(", ")}`;
 }
 
+/** Igual que describirPertenencia, para listas propias (por ejemplo, grupos de un catálogo). */
+export function describirPertenenciaCon(
+  valor: ValorPertenencia,
+  nombreDe: (id: string) => string,
+  textoSin: string,
+  t: (k: string) => string
+): string {
+  const nombre = (id: string) => (id === NINGUNO ? textoSin : nombreDe(id));
+  return `${t(`usuarios.masivo.filtro.${valor.modo}`)} ${valor.ids.map(nombre).join(", ")}`;
+}
+
+/**
+ * Con `tipo` usa los grupos de trabajo o las campañas. Con `opciones` y
+ * `textoSin` sirve para cualquier lista (por ejemplo, los grupos de un catálogo).
+ */
 export function FiltroPertenencia<T extends MRT_RowData>({
   column,
   tipo,
+  opciones: opcionesPropias,
+  textoSin,
 }: {
   column: MRT_Column<T>;
-  tipo: "grupos" | "campanias";
+  tipo?: "grupos" | "campanias";
+  opciones?: Opcion[];
+  textoSin?: string;
 }) {
   const t = useT();
   const guardado = column.getFilterValue() as ValorPertenencia | undefined;
@@ -57,11 +80,14 @@ export function FiltroPertenencia<T extends MRT_RowData>({
   const opciones = [
     {
       id: NINGUNO,
-      nombre: t(tipo === "grupos" ? "usuarios.masivo.filtro.sinGrupo" : "usuarios.masivo.filtro.sinCampanias"),
+      nombre:
+        textoSin ??
+        t(tipo === "campanias" ? "usuarios.masivo.filtro.sinCampanias" : "usuarios.masivo.filtro.sinGrupo"),
     },
-    ...(tipo === "grupos"
-      ? gruposTrabajo.map((g) => ({ id: g.id, nombre: g.nombre }))
-      : opcionesDeCampanias()),
+    ...(opcionesPropias ??
+      (tipo === "campanias"
+        ? opcionesDeCampanias()
+        : gruposTrabajo.map((g) => ({ id: g.id, nombre: g.nombre })))),
   ];
 
   function cambiar(nuevo: ValorPertenencia) {
@@ -89,7 +115,7 @@ export function FiltroPertenencia<T extends MRT_RowData>({
         opciones={opciones}
         elegidos={valor.ids}
         onChange={(ids) => cambiar({ ...valor, ids })}
-        placeholder={t(tipo === "grupos" ? "usuarios.masivo.buscarGrupo" : "usuarios.masivo.buscarCampania")}
+        placeholder={t(tipo === "campanias" ? "usuarios.masivo.buscarCampania" : "usuarios.masivo.buscarGrupo")}
         vacio={t("usuarios.masivo.sinResultados")}
       />
     </div>
