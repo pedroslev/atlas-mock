@@ -47,8 +47,6 @@ export function CampaniaHerencia({
   initialGrupoClasificacionId,
   initialGrupoBookmarksId,
   initialGrupoPlantillasId,
-  initialPlantillaDefaultChatId,
-  initialPlantillaDefaultEmailId,
   initialFeriadosId,
   initialListaExclusionId,
 }: {
@@ -56,8 +54,6 @@ export function CampaniaHerencia({
   initialGrupoClasificacionId?: string;
   initialGrupoBookmarksId?: string;
   initialGrupoPlantillasId?: string;
-  initialPlantillaDefaultChatId?: string;
-  initialPlantillaDefaultEmailId?: string;
   initialFeriadosId?: string;
   initialListaExclusionId?: string;
 }) {
@@ -68,28 +64,11 @@ export function CampaniaHerencia({
   const [grupoBookmarksId, setGrupoBookmarksId] = useState(
     initialGrupoBookmarksId
   );
-  // Plantillas de mensajes (ATLAS-1191): un grupo por campaña + una plantilla
-  // por defecto por canal escrito, elegida entre las del grupo. Cambiar de
-  // grupo limpia los defaults, que ya no pertenecen a él.
-  const [grupoPlantillasId, setGrupoPlantillasIdRaw] = useState(
+  // Plantillas de mensajes (ATLAS-1191): un grupo por campaña. Las
+  // plantillas por defecto pasaron a su propia solapa (ATLAS-1227).
+  const [grupoPlantillasId, setGrupoPlantillasId] = useState(
     initialGrupoPlantillasId
   );
-  const [plantillaChatId, setPlantillaChatId] = useState(
-    initialPlantillaDefaultChatId
-  );
-  const [plantillaEmailId, setPlantillaEmailId] = useState(
-    initialPlantillaDefaultEmailId
-  );
-  function setGrupoPlantillasId(id: string | undefined) {
-    setGrupoPlantillasIdRaw(id);
-    setPlantillaChatId(undefined);
-    setPlantillaEmailId(undefined);
-  }
-  const plantillasDelGrupo = getPlantillasDeGrupo(grupoPlantillasId ?? "").filter(
-    (p) => p.activa
-  );
-  const plantillasChat = plantillasDelGrupo.filter((p) => p.canales.includes("chat"));
-  const plantillasEmail = plantillasDelGrupo.filter((p) => p.canales.includes("email"));
   const [feriadosId, setFeriadosId] = useState(initialFeriadosId);
   const [listaExclusionId, setListaExclusionId] = useState(
     initialListaExclusionId
@@ -180,50 +159,6 @@ export function CampaniaHerencia({
                 <Eye />
               </Button>
             </ActionTooltip>
-          </div>
-          <div className="mt-1 flex flex-col gap-2 rounded-lg border p-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">
-                {t("plantillas.campania.defaultTitulo")}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {grupoPlantillasId
-                  ? t("plantillas.campania.defaultAyuda")
-                  : t("plantillas.campania.elegirGrupoPrimero")}
-              </span>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="plantilla-chat" className="text-xs text-muted-foreground">
-                  {t("plantillas.campania.defaultChat")}
-                </Label>
-                <EntityCombobox
-                  id="plantilla-chat"
-                  items={plantillasChat}
-                  value={plantillaChatId}
-                  onChange={setPlantillaChatId}
-                  placeholder={t("plantillas.campania.sinDefault")}
-                  searchPlaceholder={t("plantillas.campania.buscarDefault")}
-                  emptyLabel={t("plantillas.campania.vacioDefault")}
-                  className={!grupoPlantillasId ? "pointer-events-none opacity-50" : undefined}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="plantilla-email" className="text-xs text-muted-foreground">
-                  {t("plantillas.campania.defaultEmail")}
-                </Label>
-                <EntityCombobox
-                  id="plantilla-email"
-                  items={plantillasEmail}
-                  value={plantillaEmailId}
-                  onChange={setPlantillaEmailId}
-                  placeholder={t("plantillas.campania.sinDefault")}
-                  searchPlaceholder={t("plantillas.campania.buscarDefault")}
-                  emptyLabel={t("plantillas.campania.vacioDefault")}
-                  className={!grupoPlantillasId ? "pointer-events-none opacity-50" : undefined}
-                />
-              </div>
-            </div>
           </div>
         </div>
 

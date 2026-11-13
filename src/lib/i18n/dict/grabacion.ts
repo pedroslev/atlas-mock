@@ -12,6 +12,8 @@ export const grabacion: NamespaceDict = {
     "queTitulo": "¿Qué se graba?",
     "audio": "Audio",
     "audioDesc": "La conversación entre el agente y el cliente.",
+    // ATLAS-1227: el audio y la espera también se graban en webcall y videollamada.
+    "alcanceAudio": "Telefonía, Webcall, Videollamada",
     "pantalla": "Pantalla",
     "pantallaDesc": "Lo que el agente ve y hace en su pantalla.",
 

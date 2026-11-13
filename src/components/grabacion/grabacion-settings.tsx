@@ -120,6 +120,7 @@ export function GrabacionSettings({
               icon={Mic}
               label={t("grabacion.audio")}
               description={t("grabacion.audioDesc")}
+              alcance={t("grabacion.alcanceAudio")}
               checked={value.recordAudio}
               onCheckedChange={(v) => set("recordAudio", v)}
             />
@@ -172,6 +173,7 @@ export function GrabacionSettings({
               id={`rec-hold-${ambito}`}
               label={t("grabacion.hold")}
               description={t("grabacion.holdDesc")}
+              alcance={t("grabacion.alcanceAudio")}
               disabled={!holdDisponible}
               disabledReason={
                 !graba ? t("grabacion.sinGrabacion") : t("grabacion.dependeHold")

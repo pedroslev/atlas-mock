@@ -60,7 +60,9 @@ import {
   GrabacionTab,
   ConfigOperativaTab,
   UrlsExternasTab,
+  ClienteTab,
 } from "../campania-parametros";
+import { PlantillasDefectoTab } from "../plantillas-defecto";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -95,6 +97,11 @@ export function CampaniaEditor({
           {t("campanias.tab.controlesAgente")}
         </TabsTrigger>
         <TabsTrigger value="visualizacion">{t("campanias.tab.visualizacion")}</TabsTrigger>
+        {/* Al lado de Visualización: esa es la vista del asesor, esta la del
+            cliente (ATLAS-1227). */}
+        <TabsTrigger value="vista-cliente">
+          {t("campanias.tab.vistaCliente")}
+        </TabsTrigger>
         <TabsTrigger value="grabacion">{t("campanias.tab.grabacion")}</TabsTrigger>
         <TabsTrigger value="config-operativa">
           {t("campanias.tab.configOperativa")}
@@ -177,8 +184,6 @@ export function CampaniaEditor({
                 initialGrupoClasificacionId={campania.grupoClasificacionId}
                 initialGrupoBookmarksId={campania.grupoBookmarksId}
                 initialGrupoPlantillasId={campania.grupoPlantillasId}
-                initialPlantillaDefaultChatId={campania.plantillaDefaultChatId}
-                initialPlantillaDefaultEmailId={campania.plantillaDefaultEmailId}
                 initialFeriadosId={campania.feriadosId}
                 initialListaExclusionId={campania.listaExclusionId}
               />
@@ -212,6 +217,18 @@ export function CampaniaEditor({
         <VisualizacionTab
           value={parametros.displaySettings}
           onChange={(v) => setParametros((p) => ({ ...p, displaySettings: v }))}
+          holdHabilitado={parametros.agentControls.allowHold}
+        />
+      </TabsContent>
+
+      <TabsContent forceMount value="vista-cliente" className="flex flex-col gap-6 data-[state=inactive]:hidden">
+        <PlantillasDefectoTab
+          grupoPlantillasId={campania.grupoPlantillasId}
+          initialChatId={campania.plantillaDefaultChatId}
+        />
+        <ClienteTab
+          value={parametros.clientMedia}
+          onChange={(v) => setParametros((p) => ({ ...p, clientMedia: v }))}
         />
       </TabsContent>
 
