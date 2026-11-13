@@ -435,7 +435,7 @@ export function DialogoCopiar({
                       {[
                         ...c.campaniasQuitar.map(nombreCamp),
                         ...c.gruposQuitar.map(nombreGrp),
-                        ...c.permisosQuitar,
+                        ...c.permisosQuitar.map((k) => { const [m, ac] = k.split(":"); return `${m} (${ac})`; }),
                       ].join(", ")}
                     </li>
                   ))}

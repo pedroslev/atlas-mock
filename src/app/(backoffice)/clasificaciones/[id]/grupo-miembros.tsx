@@ -4,11 +4,19 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AgregarVariosDialog,
   CasillaTodos,
   QuitarVarios,
 } from "@/components/asignacion/agregar-varios";
-import { descendientes } from "@/components/asignacion/lista-seleccionable";
+import { ancestros, descendientes } from "@/components/asignacion/lista-seleccionable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,6 +61,8 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
   const [ids, setIds] = useState<string[]>(initialIds);
   const [agregando, setAgregando] = useState(false);
   const [marcados, setMarcados] = useState<string[]>([]);
+  // Quitar con la ✕ un padre que tiene hijas en el grupo pide confirmación.
+  const [padreAQuitar, setPadreAQuitar] = useState<string | null>(null);
 
   // Quitar se lleva también a las hijas que estén en el grupo.
   const conHijas = (quitar: string[]) => [
@@ -113,7 +123,7 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
             aria-label={t("clasificaciones.miembros.quitarAria", {
               nombre: c.nombre,
             })}
-            onClick={() => quitar([c.id])}
+            onClick={() => (conHijas([c.id]).length > 1 ? setPadreAQuitar(c.id) : quitar([c.id]))}
             className="flex size-7 shrink-0 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10"
           >
             <X className="size-3.5" />
@@ -171,6 +181,42 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
           .map((c) => fila(c, false))}
       </CardContent>
 
+      <Dialog open={padreAQuitar !== null} onOpenChange={(o) => !o && setPadreAQuitar(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {t("asignacion.quitarTitulo", { n: 1 })}
+            </DialogTitle>
+            <DialogDescription>
+              {clasificaciones.find((c) => c.id === padreAQuitar)?.nombre}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-destructive">
+            {t("asignacion.quitarHijas", {
+              nombres: clasificaciones
+                .filter((c) => padreAQuitar && conHijas([padreAQuitar]).includes(c.id) && c.id !== padreAQuitar)
+                .map((c) => c.nombre)
+                .join(", "),
+            })}
+          </p>
+          <p className="text-sm text-muted-foreground">{t("asignacion.quitarAyuda")}</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPadreAQuitar(null)}>
+              {t("common.acciones.cancelar")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (padreAQuitar) quitar([padreAQuitar]);
+                setPadreAQuitar(null);
+              }}
+            >
+              {t("asignacion.quitarN", { n: 1 })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {agregando && (
         <AgregarVariosDialog
           titulo={t("clasificaciones.miembros.agregar")}
@@ -196,7 +242,9 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
           vacio={t("clasificaciones.miembros.sinDisponibles")}
           onClose={() => setAgregando(false)}
           onAgregar={(nuevos) => {
-            setIds((prev) => [...new Set([...prev, ...nuevos])]);
+            // La hija trae siempre a su padre, aunque el filtro lo haya dejado afuera.
+            const conPadres = nuevos.flatMap((id) => [id, ...ancestros(id, padreDe)]);
+            setIds((prev) => [...new Set([...prev, ...conPadres])]);
             setAgregando(false);
           }}
         />

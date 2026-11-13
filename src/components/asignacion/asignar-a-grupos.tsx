@@ -52,18 +52,22 @@ export function AsignarAGruposDialog({
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [actualizados, setActualizados] = useState(0);
 
-  // Agregar una hija trae a su padre; quitar un padre se lleva a sus hijas.
+  const gruposElegidos = grupos.filter((g) => elegidos.includes(g.id));
+  // Agregar una hija trae a su padre; quitar un padre se lleva a sus hijas,
+  // pero solo las que están en alguno de los grupos elegidos.
+  const enGruposElegidos = new Set(gruposElegidos.flatMap((g) => g.ids));
   const extra = padreDe
     ? [
         ...new Set(
           elementoIds.flatMap((id) =>
-            modo === "agregar" ? ancestros(id, padreDe) : descendientes(id, todosLosIds, padreDe)
+            modo === "agregar"
+              ? ancestros(id, padreDe)
+              : descendientes(id, todosLosIds, padreDe).filter((h) => enGruposElegidos.has(h))
           )
         ),
       ].filter((id) => !elementoIds.includes(id))
     : [];
   const afectados = [...elementoIds, ...extra];
-  const gruposElegidos = grupos.filter((g) => elegidos.includes(g.id));
 
   const sinCambio = elementoIds.filter((id) =>
     modo === "agregar"
