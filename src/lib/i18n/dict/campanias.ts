@@ -208,7 +208,7 @@ export const campanias: NamespaceDict = {
     "parametros.alcanceTodos": "Omnicanal",
     "parametros.alcanceConEspera": "Telefonía, Webcall, Videollamada",
     "parametros.alcanceChats": "Chat, y el chat de Webcall y Videollamada",
-    "parametros.alcanceTiempoRealYChat": "Chat, Webcall, Videollamada",
+    "parametros.alcanceTiempoReal": "Webcall, Videollamada",
     "parametros.alcanceChat": "Chat",
     "parametros.alcanceTelefoniaWebcall": "Telefonía, Webcall",
     "parametros.alcanceVideollamada": "Videollamada",

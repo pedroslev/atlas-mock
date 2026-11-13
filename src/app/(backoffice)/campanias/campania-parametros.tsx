@@ -225,7 +225,7 @@ export function ControlesAgenteTab({
           id="allow-screen-share"
           label={t("campanias.parametros.allowScreenShare")}
           description={t("campanias.parametros.allowScreenShareDesc")}
-          alcance={t("campanias.parametros.alcanceTiempoRealYChat")}
+          alcance={t("campanias.parametros.alcanceTiempoReal")}
           checked={value.allowScreenShare}
           onCheckedChange={(v) => set("allowScreenShare", v)}
         />
