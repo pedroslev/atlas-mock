@@ -233,8 +233,7 @@ export default function AgentesPage() {
         data={data}
         options={{
           getRowId: (a) => a.id,
-          // Grupos y Campañas filtran con un valor compuesto ("está en" /
-          // "no está en" + lista): el aviso del filtro activo no lo muestra.
+          // Aviso al pasar el mouse por el ícono de una columna filtrada.
           localization: { filteringByColumn: t("usuarios.masivo.filtroActivo") },
           // Filtro desde la cabecera de cada columna (ícono en el título).
           columnFilterDisplayMode: "popover",

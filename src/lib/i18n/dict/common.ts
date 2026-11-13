@@ -55,8 +55,6 @@ export const common: NamespaceDict = {
     "acciones.buscar": "Buscar",
     // Vista recordada de las tablas (ATLAS-1353).
     "tabla.restablecer": "Restablecer filtros y columnas",
-    "tabla.filtrosActivos": "Filtros:",
-    "tabla.quitarFiltro": "Quitar el filtro de {columna}",
     "acciones.agregar": "Agregar",
     "acciones.quitar": "Quitar",
     "acciones.cerrar": "Cerrar",

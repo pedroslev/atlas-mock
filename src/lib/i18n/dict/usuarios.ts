@@ -113,7 +113,7 @@ export const usuarios: NamespaceDict = {
     "masivo.copiar.modo.sumarAyuda": "Conservan sus asignaciones y suman las de {nombre}.",
     "masivo.copiar.modo.igualar": "Dejarlos igual que el usuario de origen",
     "masivo.copiar.modo.igualarAyuda": "Además se les quita lo que {nombre} no tiene.",
-    "masivo.filtroActivo": "Filtrando por {column}",
+    "masivo.filtroActivo": "Filtrando por {column}: {filterValue}",
     "masivo.filtro.en": "Está en",
     "masivo.filtro.no": "No está en",
     "masivo.filtro.sinGrupo": "Sin grupo",

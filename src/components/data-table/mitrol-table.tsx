@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { RotateCcw, X } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import {
   MaterialReactTable,
   MRT_ShowHideColumnsButton,
@@ -110,18 +110,6 @@ function limpiarFiltros(
   ids: string[]
 ): MRT_ColumnFiltersState {
   return filtros.filter((f) => ids.includes(f.id) && visibles[f.id] !== false);
-}
-
-/**
- * Texto de un filtro activo para el aviso de filtros. Una columna puede dar su
- * propio formato con `meta.formatoFiltro` (por ejemplo, Grupos y Campañas en
- * Usuarios, que filtran con "está en" / "no está en").
- */
-function textoFiltro<T extends MRT_RowData>(col: MRT_ColumnDef<T> | undefined, valor: unknown): string {
-  const meta = col?.meta as { formatoFiltro?: (v: unknown) => string } | undefined;
-  if (meta?.formatoFiltro) return meta.formatoFiltro(valor);
-  if (Array.isArray(valor)) return valor.filter((v) => v !== undefined && v !== "").join(" – ");
-  return String(valor);
 }
 
 function idDeColumna<T extends MRT_RowData>(c: MRT_ColumnDef<T>): string {
@@ -264,6 +252,24 @@ export function MitrolTable<T extends MRT_RowData>({
     });
   }
 
+  // El aviso del ícono de filtro arma el texto con el valor del filtro. Para
+  // valores compuestos (por ejemplo "está en" + lista), la columna da su
+  // propio texto con meta.formatoFiltro; acá se le enseña al valor a
+  // mostrarse así, sin cambiar lo que se guarda.
+  const filtrosConTexto = useMemo(
+    () =>
+      vista.columnFilters.map((f) => {
+        const col = columns.find((c) => idDeColumna(c) === f.id);
+        const formato = (col?.meta as { formatoFiltro?: (v: unknown) => string } | undefined)
+          ?.formatoFiltro;
+        if (!formato || typeof f.value !== "object" || f.value === null || Array.isArray(f.value)) return f;
+        const valor = { ...(f.value as object) };
+        Object.defineProperty(valor, "toString", { value: () => formato(f.value), enumerable: false });
+        return { ...f, value: valor };
+      }),
+    [vista.columnFilters, columns]
+  );
+
   const visibilidadPorDefecto = (id: string) => porDefecto.columnVisibility[id] !== false;
   const esPorDefecto =
     JSON.stringify(vista.columnFilters) === JSON.stringify(porDefecto.columnFilters) &&
@@ -302,7 +308,7 @@ export function MitrolTable<T extends MRT_RowData>({
     },
     // Header de columnas visualmente distinto del cuerpo: en dark el cuerpo
     // y el header compartían casi el mismo gris y no se leía la estructura.
-    muiTableHeadCellProps: {
+    muiTableHeadCellProps: ({ column }) => ({
       sx: {
         fontWeight: 600,
         // Siempre presentes (ver muiTableBodyCellProps): en dark, header con
@@ -312,8 +318,13 @@ export function MitrolTable<T extends MRT_RowData>({
         color: dark ? "#F1F5F9" : undefined,
         borderBottom: dark ? "1px solid #334155" : undefined,
         "& .MuiTableSortLabel-icon, & svg": { color: dark ? "#CBD5E1" : undefined },
+        // Columna filtrada (ATLAS-1353): el ícono de filtro de la cabecera
+        // pasa al color primario; al pasar el mouse dice qué filtro aplica.
+        ...(column.getIsFiltered() && {
+          "& svg[data-testid='FilterAltIcon']": { color: dark ? "#6B93FF" : "#084AF3" },
+        }),
       },
-    },
+    }),
     // Siempre presente (nunca `...(dark && {...})`): tanstack-table mergea las
     // opciones contra las del render anterior, así que omitir esta key en
     // light dejaba el borderBottom de dark pegado al volver.
@@ -393,7 +404,7 @@ export function MitrolTable<T extends MRT_RowData>({
     ...restOptions,
     state: {
       columnVisibility: vista.columnVisibility,
-      columnFilters: vista.columnFilters,
+      columnFilters: filtrosConTexto,
       ...optionsState,
     },
     onColumnVisibilityChange: (u) =>
@@ -402,12 +413,6 @@ export function MitrolTable<T extends MRT_RowData>({
       cambiarVista((v) => ({ ...v, columnFilters: resolver(u, v.columnFilters) })),
   });
 
-  // Aviso de filtros activos: siempre a la vista, aunque la fila de filtros
-  // esté cerrada o el filtro venga de la vista recordada.
-  const activos = vista.columnFilters.map((f) => {
-    const col = columns.find((c) => idDeColumna(c) === f.id);
-    return { id: f.id, titulo: String(col?.header ?? f.id), texto: textoFiltro(col, f.value) };
-  });
 
   // Placeholder determinístico (mismo en server y primer render de cliente):
   // reserva alto para evitar salto de layout y usa tokens, así se ve bien en
@@ -420,27 +425,6 @@ export function MitrolTable<T extends MRT_RowData>({
 
   return (
     <ThemeProvider theme={theme}>
-      {activos.length > 0 && (
-        <div className="mb-2 flex flex-wrap items-center gap-2 text-sm" data-testid="filtros-activos">
-          <span className="text-muted-foreground">{t("common.tabla.filtrosActivos")}</span>
-          {activos.map((f) => (
-            <span
-              key={f.id}
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pr-1 pl-2.5 text-primary"
-            >
-              <span className="font-medium">{f.titulo}:</span> {f.texto}
-              <button
-                type="button"
-                aria-label={t("common.tabla.quitarFiltro", { columna: f.titulo })}
-                className="rounded-full p-0.5 hover:bg-primary/15"
-                onClick={() => table.getColumn(f.id)?.setFilterValue(undefined)}
-              >
-                <X className="size-3.5" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
       <MaterialReactTable table={table} />
     </ThemeProvider>
   );
