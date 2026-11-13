@@ -64,6 +64,9 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
     setMarcados((m) => m.filter((id) => !todas.includes(id)));
   }
   const hijasExtra = conHijas(marcados).filter((id) => !marcados.includes(id));
+  // Padre con hijas en el catálogo pero ninguna en el grupo.
+  const sinSusHijas = (c: Clasificacion) =>
+    clasificaciones.some((h) => h.parentId === c.id) && !ids.some((id) => padreDe(id) === c.id);
 
   const miembros = clasificaciones.filter((c) => ids.includes(c.id));
   // Las de sistema no van en grupos: aplican solas en todas las campañas.
@@ -96,6 +99,13 @@ export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initia
           <Badge variant={tipoVariant[c.tipo]}>
             {t(`clasificaciones.tipo.${tipoClave(c.tipo)}`)}
           </Badge>
+          {/* Un padre puede ser el resultado final, así que puede quedar solo
+              en el grupo; se avisa para que no sea un descuido. */}
+          {sinSusHijas(c) && (
+            <span className="truncate text-xs text-amber-600 dark:text-amber-400">
+              {t("clasificaciones.miembros.padreSinHijas")}
+            </span>
+          )}
         </span>
         <ActionTooltip label={t("clasificaciones.miembros.quitar")}>
           <button
