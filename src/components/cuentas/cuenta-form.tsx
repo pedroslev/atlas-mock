@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { TIPOS_CUENTA, esTelefonia, type TipoCuenta } from "@/components/cuentas/tipos";
 import { useT } from "@/lib/i18n";
+import { ParametrosCuentaPropuesta } from "@/components/cuentas/parametros-propuesta";
 import type { Cuenta, UsoDeLinea as TipoUso } from "@/lib/mock-data";
 
 // Cuerpo de alta y detalle de cuenta: datos generales y flujo en el mismo
@@ -157,6 +158,13 @@ export function CuentaForm({
               </label>
             </CardContent>
           </Card>
+        )}
+
+        {/* ATLAS-1227: parámetros nuevos de la cuenta (chat y videollamada). */}
+        {(tipo === "Chat" || tipo === "Videollamada") && (
+          <div className="mt-4">
+            <ParametrosCuentaPropuesta tipo={tipo} />
+          </div>
         )}
 
         {telefonia && (

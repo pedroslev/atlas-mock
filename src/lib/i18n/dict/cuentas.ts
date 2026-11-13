@@ -5,6 +5,25 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 // `components/workflow/workflow-editor.tsx`.
 export const cuentas: NamespaceDict = {
   es: {
+    // ATLAS-1227 — propuesta de parámetros (sin acordar con Pedro). Solo español.
+    "propuesta.chatTitulo": "Cierre del chat",
+    "propuesta.chatDesc": "Qué pasa cuando el cliente deja de escribir.",
+    "propuesta.cierre": "Cierre por inactividad",
+    "propuesta.cierreDesc": "Minutos sin mensajes del cliente después de los cuales el chat se cierra solo.",
+    "propuesta.minutos": "minutos",
+    "propuesta.minutosAntes": "minutos antes del cierre",
+    "propuesta.aviso": "Aviso antes del cierre",
+    "propuesta.avisoMinutos": "Minutos antes del cierre",
+    "propuesta.avisoDesc": "El cliente recibe un mensaje automático (\u201cEl chat se va a cerrar en N minutos si no respondés\u201d) y la fila del chat se marca en Hermes. Si el cliente escribe, la cuenta vuelve a empezar.",
+    "propuesta.videoTitulo": "Video",
+    "propuesta.videoDesc": "Cómo se ve la videollamada y qué ve el cliente antes de que lo atiendan.",
+    "propuesta.calidad": "Calidad de video",
+    "propuesta.calidadBaja": "Baja",
+    "propuesta.calidadMedia": "Media",
+    "propuesta.calidadAlta": "Alta",
+    "propuesta.calidadDesc": "Reemplaza a la resolución de cámara y los cuadros por segundo. A confirmar con Pedro que va en la cuenta.",
+    "propuesta.espera": "Imagen o video mientras espera un asesor",
+    "propuesta.esperaDesc": "Lo que ve el cliente en la cola, antes de que lo atiendan.",
     "flujo.nota": "Nota",
     "flujo.nota.descripcion": "Un recordatorio para quien arma el flujo. No hace nada en la interacción.",
     "flujo.nota.placeholder": "Escribí una nota…",

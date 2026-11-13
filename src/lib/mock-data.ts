@@ -61,10 +61,30 @@ export type AgentControlsParams = {
   allowMute: boolean;
   allowClassification: boolean;
   forceClassification: boolean;
+  // ATLAS-1227 (propuesta, sin acordar con Pedro): controles nuevos del
+  // asesor en chat, webcall y videollamada.
+  allowScreenShare: boolean;
+  allowAttachments: boolean;
+  allowDownloadClientFiles: boolean;
+  allowEmojiPicker: boolean;
+  allowImageCapture: boolean;
 };
+
+// ATLAS-1227: qué suena con el timbre. "propio" es un archivo que sube el
+// administrador (ringSoundFile guarda solo el nombre, es un mock).
+export type RingSound = "clasico" | "suave" | "digital" | "propio";
+export type AlertaConSonido = { enabled: boolean; valor: number; sound: boolean };
 
 export type DisplaySettingsParams = {
   allowRinging: boolean;
+  ringSound: RingSound;
+  ringSoundFile?: string;
+  // Minutos de interacción antes de que el cronómetro pase a rojo.
+  durationAlert: AlertaConSonido;
+  // Segundos con el cliente en espera antes de que el cronómetro pase a rojo.
+  holdAlert: AlertaConSonido;
+  // Segundos sin que el asesor conteste el último mensaje (solo chat).
+  noReplyAlert: { enabled: boolean; valor: number };
 };
 
 // Cómo se maneja la grabación. Se configura en la campaña Y en el grupo de
@@ -90,6 +110,18 @@ export type RecordingSettingsParams = {
 
 export type AgentOperationSettingsParams = {
   forcedAnswer: boolean;
+  // ATLAS-1227: segundos en ACW antes de que el asesor quede disponible solo.
+  maxAcwSeconds: number;
+};
+
+// ATLAS-1227: lo que ve y escucha el cliente (webcall y videollamada).
+// Los archivos guardan solo el nombre: es un mock.
+export type FondoAsesor = "ninguno" | "desenfocado" | "imagen";
+export type ClientMediaParams = {
+  holdAudioFile?: string;
+  holdVideoFile?: string;
+  agentBackground: FondoAsesor;
+  agentBackgroundFile?: string;
 };
 
 // A pedido: ya no es una URL única — se van agregando de a una, sin
@@ -107,6 +139,9 @@ export type InteractionUrlEntry = {
   url: string;
   openAs: InteractionUrlOpenAs;
   mode: InteractionUrlMode;
+  // ATLAS-1227: solo para "blank" — la pestaña se cierra al terminar la
+  // interacción.
+  closeOnEnd?: boolean;
 };
 
 export type CampaniaParametros = {
@@ -115,6 +150,7 @@ export type CampaniaParametros = {
   recordingSettings: RecordingSettingsParams;
   agentOperationSettings: AgentOperationSettingsParams;
   interactionUrlSettings: InteractionUrlEntry[];
+  clientMedia: ClientMediaParams;
 };
 
 // Valores por defecto — columna "Valor default" del documento. Función (no
@@ -129,9 +165,18 @@ export function defaultParametros(): CampaniaParametros {
       allowMute: true,
       allowClassification: true,
       forceClassification: false,
+      allowScreenShare: true,
+      allowAttachments: true,
+      allowDownloadClientFiles: true,
+      allowEmojiPicker: true,
+      allowImageCapture: true,
     },
     displaySettings: {
       allowRinging: true,
+      ringSound: "clasico",
+      durationAlert: { enabled: false, valor: 10, sound: false },
+      holdAlert: { enabled: false, valor: 60, sound: false },
+      noReplyAlert: { enabled: false, valor: 90 },
     },
     recordingSettings: {
       recordAudio: true,
@@ -141,8 +186,10 @@ export function defaultParametros(): CampaniaParametros {
     },
     agentOperationSettings: {
       forcedAnswer: true,
+      maxAcwSeconds: 60,
     },
     interactionUrlSettings: [],
+    clientMedia: { agentBackground: "ninguno" },
   };
 }
 
@@ -603,7 +650,7 @@ export const campanias: Campania[] = [
     // turno) y con el ticket relacionado abriéndose aparte, no embebido.
     parametros: {
       ...defaultParametros(),
-      displaySettings: { allowRinging: false },
+      displaySettings: { ...defaultParametros().displaySettings, allowRinging: false },
       interactionUrlSettings: [
         {
           id: "url-camp4-1",

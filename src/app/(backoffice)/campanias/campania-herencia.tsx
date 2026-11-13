@@ -28,6 +28,9 @@ import {
   getPlantillasDeGrupo,
 } from "@/lib/mock-data";
 import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
+import { Checkbox } from "@/components/ui/checkbox";
+import { NUEVO_RING, NuevoBadge } from "@/components/propuesta/nuevo";
+import { cn } from "@/lib/utils";
 
 type Grupo =
   | "clasificacion"
@@ -80,6 +83,10 @@ export function CampaniaHerencia({
   const [plantillaEmailId, setPlantillaEmailId] = useState(
     initialPlantillaDefaultEmailId
   );
+  // ATLAS-1227: reemplaza al "saludo al atender" del legacy. Prendida, la
+  // plantilla de chat se completa con las variables y se manda sola cuando
+  // el chat llega al asesor; si falta un dato, no se manda y queda cargada.
+  const [enviarAutomatico, setEnviarAutomatico] = useState(false);
   function setGrupoPlantillasId(id: string | undefined) {
     setGrupoPlantillasIdRaw(id);
     setPlantillaChatId(undefined);
@@ -207,6 +214,33 @@ export function CampaniaHerencia({
                   emptyLabel={t("plantillas.campania.vacioDefault")}
                   className={!grupoPlantillasId ? "pointer-events-none opacity-50" : undefined}
                 />
+                <label
+                  htmlFor="plantilla-chat-automatica"
+                  className={cn(
+                    "mt-1 flex items-start gap-2 rounded-md p-2",
+                    NUEVO_RING,
+                    !plantillaChatId && "opacity-50"
+                  )}
+                >
+                  <Checkbox
+                    id="plantilla-chat-automatica"
+                    className="mt-0.5"
+                    disabled={!plantillaChatId}
+                    checked={!!plantillaChatId && enviarAutomatico}
+                    onCheckedChange={(c) => setEnviarAutomatico(c === true)}
+                  />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="flex items-center gap-2 text-xs font-medium">
+                      {t("campanias.parametros.enviarAutomatico")}
+                      <NuevoBadge />
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {plantillaChatId
+                        ? t("campanias.parametros.enviarAutomaticoDesc")
+                        : t("campanias.parametros.enviarAutomaticoSinPlantilla")}
+                    </span>
+                  </span>
+                </label>
               </div>
               <div className="flex flex-col gap-1">
                 <Label htmlFor="plantilla-email" className="text-xs text-muted-foreground">

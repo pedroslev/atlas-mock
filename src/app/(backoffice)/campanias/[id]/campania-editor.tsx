@@ -60,7 +60,9 @@ import {
   GrabacionTab,
   ConfigOperativaTab,
   UrlsExternasTab,
+  ClienteTab,
 } from "../campania-parametros";
+import { NUEVO_TEXTO } from "@/components/propuesta/nuevo";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -101,6 +103,10 @@ export function CampaniaEditor({
         </TabsTrigger>
         <TabsTrigger value="url-interaccion">
           {t("campanias.tab.urlInteraccion")}
+        </TabsTrigger>
+        {/* ATLAS-1227: solapa nueva, en violeta hasta pasarla al color final. */}
+        <TabsTrigger value="cliente" className={NUEVO_TEXTO}>
+          {t("campanias.tab.cliente")}
         </TabsTrigger>
         <TabsTrigger value="usuarios">{t("common.nav.usuarios")}</TabsTrigger>
       </TabsList>
@@ -234,6 +240,13 @@ export function CampaniaEditor({
         <UrlsExternasTab
           value={parametros.interactionUrlSettings}
           onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent forceMount value="cliente" className="data-[state=inactive]:hidden">
+        <ClienteTab
+          value={parametros.clientMedia}
+          onChange={(v) => setParametros((p) => ({ ...p, clientMedia: v }))}
         />
       </TabsContent>
 
