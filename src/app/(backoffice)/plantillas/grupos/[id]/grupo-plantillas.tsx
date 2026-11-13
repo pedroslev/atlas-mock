@@ -6,7 +6,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, X, Check } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AgregarVariosDialog,
+  CasillaTodos,
+  QuitarVarios,
+} from "@/components/asignacion/agregar-varios";
+import type { Opcion } from "@/components/asignacion/lista-seleccionable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,31 +23,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { CanalBadges } from "@/components/plantillas/mensaje-renderizado";
-import { plantillas } from "@/lib/mock-data";
+import { plantillaGrupos, plantillas, type Plantilla } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 
 // Membresía del grupo: agrega plantillas EXISTENTES del catálogo (buscador,
 // nunca duplica) y las quita del grupo sin borrarlas del catálogo. Mismo
 // patrón que los grupos de marcas.
-export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
+//
+// ATLAS-1353: agregar varias a la vez, agrupadas por tipo de canal (Email,
+// SMS, Mensajería) con una casilla por tipo y filtro por otro grupo, y quitar
+// varias a la vez.
+export function tipoDeCanal(p: Plantilla): "email" | "sms" | "mensajeria" {
+  if (p.canales.includes("email")) return "email";
+  if (p.canales.includes("sms")) return "sms";
+  return "mensajeria";
+}
+
+export function opcionesDePlantillas(
+  lista: Plantilla[],
+  t: (k: string) => string
+): Opcion[] {
+  const orden = ["mensajeria", "email", "sms"] as const;
+  return orden.flatMap((tipo) =>
+    lista
+      .filter((p) => tipoDeCanal(p) === tipo)
+      .map((p) => ({ id: p.id, nombre: p.nombre, grupo: { id: tipo, nombre: t(`asignacion.canal.${tipo}`) } }))
+  );
+}
+
+export function GrupoPlantillas({ grupoId, initialIds }: { grupoId: string; initialIds: string[] }) {
   const t = useT();
   const [ids, setIds] = useState<string[]>(initialIds);
-  const [open, setOpen] = useState(false);
+  const [agregando, setAgregando] = useState(false);
+  const [marcados, setMarcados] = useState<string[]>([]);
+
+  function quitar(lista: string[]) {
+    setIds((prev) => prev.filter((id) => !lista.includes(id)));
+    setMarcados((m) => m.filter((id) => !lista.includes(id)));
+  }
 
   const miembros = plantillas.filter((p) => ids.includes(p.id));
   const disponibles = plantillas.filter((p) => !ids.includes(p.id));
@@ -52,49 +74,39 @@ export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
           <CardTitle>{t("plantillas.miembros.titulo")}</CardTitle>
           <CardDescription>{t("plantillas.miembros.descripcion")}</CardDescription>
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <Plus />
-              {t("plantillas.miembros.agregar")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="end">
-            <Command>
-              <CommandInput placeholder={t("plantillas.miembros.buscar")} />
-              <CommandList>
-                <CommandEmpty>{t("plantillas.miembros.sinDisponibles")}</CommandEmpty>
-                <CommandGroup>
-                  {disponibles.map((p) => (
-                    <CommandItem
-                      key={p.id}
-                      value={p.nombre}
-                      onSelect={() => {
-                        setIds((prev) => [...prev, p.id]);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check className="opacity-0" />
-                      {p.nombre}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          <QuitarVarios
+            nombres={miembros.filter((p) => marcados.includes(p.id)).map((p) => p.nombre)}
+            onConfirmar={() => quitar(marcados)}
+          />
+          <Button variant="outline" onClick={() => setAgregando(true)}>
+            <Plus />
+            {t("plantillas.miembros.agregar")}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5">
-        {miembros.length === 0 && (
+        {miembros.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {t("plantillas.miembros.vacio")}
           </p>
+        ) : (
+          <CasillaTodos ids={miembros.map((p) => p.id)} marcados={marcados} onChange={setMarcados} />
         )}
         {miembros.map((p) => (
           <div
             key={p.id}
             className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-foreground/10"
           >
+            <span className="flex min-w-0 items-start gap-2">
+            <Checkbox
+              className="mt-0.5"
+              aria-label={p.nombre}
+              checked={marcados.includes(p.id)}
+              onCheckedChange={(v) =>
+                setMarcados((prev) => (v === true ? [...prev, p.id] : prev.filter((id) => id !== p.id)))
+              }
+            />
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex items-center gap-2">
                 <Link
@@ -114,11 +126,12 @@ export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
               )}
               <CanalBadges canales={p.canales} />
             </span>
+            </span>
             <ActionTooltip label={t("plantillas.miembros.quitar")}>
               <button
                 type="button"
                 aria-label={t("plantillas.miembros.quitarAria", { nombre: p.nombre })}
-                onClick={() => setIds((prev) => prev.filter((id) => id !== p.id))}
+                onClick={() => quitar([p.id])}
                 className="flex size-7 shrink-0 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10"
               >
                 <X className="size-3.5" />
@@ -127,6 +140,35 @@ export function GrupoPlantillas({ initialIds }: { initialIds: string[] }) {
           </div>
         ))}
       </CardContent>
+
+      {agregando && (
+        <AgregarVariosDialog
+          titulo={t("plantillas.miembros.agregar")}
+          opciones={opcionesDePlantillas(disponibles, t)}
+          filtros={[
+            {
+              id: "grupo",
+              etiqueta: t("asignacion.filtroOtroGrupo"),
+              textoTodos: t("asignacion.todosLosGrupos"),
+              grupos: [
+                {
+                  opciones: plantillaGrupos
+                    .filter((g) => g.id !== grupoId)
+                    .map((g) => ({ value: g.id, label: g.nombre })),
+                },
+              ],
+              pasa: (v, id) => plantillaGrupos.find((g) => g.id === v)?.plantillaIds.includes(id) ?? false,
+            },
+          ]}
+          placeholder={t("plantillas.miembros.buscar")}
+          vacio={t("plantillas.miembros.sinDisponibles")}
+          onClose={() => setAgregando(false)}
+          onAgregar={(nuevos) => {
+            setIds((prev) => [...new Set([...prev, ...nuevos])]);
+            setAgregando(false);
+          }}
+        />
+      )}
     </Card>
   );
 }

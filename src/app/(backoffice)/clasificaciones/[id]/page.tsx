@@ -51,7 +51,7 @@ export default async function GrupoClasificacionPage({
           existentes={clasificacionGrupos.filter((g) => g.id !== id).map((g) => g.nombre)}
         />
 
-        <GrupoMiembros initialIds={grupo.clasificacionIds} />
+        <GrupoMiembros grupoId={grupo.id} initialIds={grupo.clasificacionIds} />
       </div>
     </div>
     </CamposUnicos>

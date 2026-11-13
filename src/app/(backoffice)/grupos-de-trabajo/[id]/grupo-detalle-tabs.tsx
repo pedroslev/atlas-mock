@@ -90,7 +90,7 @@ export function GrupoDetalleTabs({
           </CardContent>
         </Card>
 
-        <GrupoMiembros agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
+        <GrupoMiembros grupoId={grupo.id} agentes={agentes} initialUsuarioIds={grupo.usuarioIds} />
       </TabsContent>
 
       <TabsContent forceMount value="permisos" className="data-[state=inactive]:hidden">

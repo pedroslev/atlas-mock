@@ -24,6 +24,7 @@ import { tour } from "@/lib/i18n/dict/tour";
 import { clientes } from "@/lib/i18n/dict/clientes";
 import { clavesApi } from "@/lib/i18n/dict/claves-api";
 import { documentacion } from "@/lib/i18n/dict/documentacion";
+import { asignacion } from "@/lib/i18n/dict/asignacion";
 
 // Registro de diccionarios. La clave del objeto es el PREFIJO de la clave de
 // traducción: `t("campanias.titulo")` busca "titulo" dentro de `campanias`.
@@ -51,6 +52,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   clientes,
   clavesApi,
   documentacion,
+  asignacion,
 };
 
 /**

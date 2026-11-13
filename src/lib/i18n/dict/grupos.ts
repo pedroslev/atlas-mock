@@ -52,7 +52,9 @@ export const grupos: NamespaceDict = {
 
     "miembros.titulo": "Usuarios del grupo",
     "miembros.conteo": "{n} usuario(s).",
-    "miembros.agregar": "Agregar usuario",
+    "miembros.agregar": "Agregar usuarios",
+    "miembros.agregarAyuda": "Marcá a quienes quieras sumar al grupo.",
+    "miembros.quitarVariosAyuda": "Dejan de estar en el grupo cuando confirmes los cambios. Los usuarios no se borran.",
     "miembros.buscar": "Buscar usuario...",
     "miembros.sinDisponibles": "No hay más usuarios para agregar.",
     "miembros.vacio": "Todavía no hay usuarios en este grupo.",

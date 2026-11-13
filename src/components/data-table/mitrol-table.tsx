@@ -1,13 +1,22 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { RotateCcw } from "lucide-react";
 import {
   MaterialReactTable,
+  MRT_ShowHideColumnsButton,
+  MRT_ToggleFiltersButton,
   useMaterialReactTable,
   type MRT_ColumnDef,
+  type MRT_ColumnFiltersState,
   type MRT_RowData,
   type MRT_TableOptions,
+  type MRT_Updater,
+  type MRT_VisibilityState,
 } from "material-react-table";
+import { IconButton, Tooltip } from "@mui/material";
+import { agentes } from "@/lib/mock-data";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import { MRT_Localization_EN } from "material-react-table/locales/en";
 import { MRT_Localization_PT_BR } from "material-react-table/locales/pt-BR";
@@ -57,6 +66,54 @@ function useThemeMode(): "server" | "light" | "dark" {
     getThemeSnapshot,
     () => "server" as const
   );
+}
+
+// --- Vista recordada (ATLAS-1353) -----------------------------------------
+// Cada tabla recuerda, por usuario y por pantalla, las columnas visibles y los
+// filtros de columna. "Restablecer filtros y columnas" vuelve a la vista por
+// defecto de la pantalla (su initialState).
+// MOCK: se guarda en el navegador (localStorage), con el primer usuario de los
+// datos de ejemplo como usuario conectado.
+// REAL: se guarda por usuario autenticado y por pantalla; a definir con el
+// Architect si vive en el navegador (como el AW) o en el servicio, para que
+// siga a la persona entre equipos.
+const USUARIO_CONECTADO = agentes[0]?.id ?? "anonimo";
+
+type Vista = { columnVisibility: MRT_VisibilityState; columnFilters: MRT_ColumnFiltersState };
+
+function leerVista(clave: string): Vista | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const crudo = window.localStorage.getItem(clave);
+    return crudo ? (JSON.parse(crudo) as Vista) : null;
+  } catch {
+    return null;
+  }
+}
+
+function guardarVista(clave: string, vista: Vista) {
+  try {
+    window.localStorage.setItem(clave, JSON.stringify(vista));
+  } catch {
+    // Sin almacenamiento disponible: la vista dura lo que la pantalla abierta.
+  }
+}
+
+function resolver<V>(updater: MRT_Updater<V>, previo: V): V {
+  return typeof updater === "function" ? (updater as (v: V) => V)(previo) : updater;
+}
+
+/** Saca los filtros de columnas ocultas o que ya no existen: un filtro siempre se ve. */
+function limpiarFiltros(
+  filtros: MRT_ColumnFiltersState,
+  visibles: MRT_VisibilityState,
+  ids: string[]
+): MRT_ColumnFiltersState {
+  return filtros.filter((f) => ids.includes(f.id) && visibles[f.id] !== false);
+}
+
+function idDeColumna<T extends MRT_RowData>(c: MRT_ColumnDef<T>): string {
+  return (c.id ?? (c.accessorKey as string | undefined) ?? "") as string;
 }
 
 export function MitrolTable<T extends MRT_RowData>({
@@ -170,13 +227,59 @@ export function MitrolTable<T extends MRT_RowData>({
   const {
     initialState: optionsInitialState,
     displayColumnDefOptions: optionsDisplayColumnDefOptions,
+    localization: optionsLocalization,
+    state: optionsState,
     ...restOptions
   } = options ?? {};
+
+  // Vista recordada: la clave combina usuario, pantalla y columnas, así dos
+  // tablas de la misma pantalla (por ejemplo, solapas) no se pisan.
+  const pathname = usePathname();
+  const idsColumnas = columns.map(idDeColumna).filter(Boolean);
+  const clave = `atlas-mock:vista:${USUARIO_CONECTADO}:${pathname}:${idsColumnas.join(",")}`;
+  const porDefecto: Vista = {
+    columnVisibility: optionsInitialState?.columnVisibility ?? {},
+    columnFilters: optionsInitialState?.columnFilters ?? [],
+  };
+  const [vista, setVista] = useState<Vista>(() => leerVista(clave) ?? porDefecto);
+
+  function cambiarVista(cambio: (v: Vista) => Vista) {
+    setVista((previa) => {
+      const nueva = cambio(previa);
+      nueva.columnFilters = limpiarFiltros(nueva.columnFilters, nueva.columnVisibility, idsColumnas);
+      guardarVista(clave, nueva);
+      return nueva;
+    });
+  }
+
+  // El aviso del ícono de filtro arma el texto con el valor del filtro. Para
+  // valores compuestos (por ejemplo "está en" + lista), la columna da su
+  // propio texto con meta.formatoFiltro; acá se le enseña al valor a
+  // mostrarse así, sin cambiar lo que se guarda.
+  const filtrosConTexto = useMemo(
+    () =>
+      vista.columnFilters.map((f) => {
+        const col = columns.find((c) => idDeColumna(c) === f.id);
+        const formato = (col?.meta as { formatoFiltro?: (v: unknown) => string } | undefined)
+          ?.formatoFiltro;
+        if (!formato || typeof f.value !== "object" || f.value === null || Array.isArray(f.value)) return f;
+        const valor = { ...(f.value as object) };
+        Object.defineProperty(valor, "toString", { value: () => formato(f.value), enumerable: false });
+        return { ...f, value: valor };
+      }),
+    [vista.columnFilters, columns]
+  );
+
+  const visibilidadPorDefecto = (id: string) => porDefecto.columnVisibility[id] !== false;
+  const esPorDefecto =
+    JSON.stringify(vista.columnFilters) === JSON.stringify(porDefecto.columnFilters) &&
+    idsColumnas.every((id) => (vista.columnVisibility[id] !== false) === visibilidadPorDefecto(id));
 
   const table = useMaterialReactTable<T>({
     columns,
     data,
-    localization: MRT_LOCALIZATION[locale],
+    // Una pantalla puede pisar textos puntuales sin perder el resto del idioma.
+    localization: { ...MRT_LOCALIZATION[locale], ...optionsLocalization },
     enableDensityToggle: false,
     enableFullScreenToggle: false,
     positionActionsColumn: "last",
@@ -205,7 +308,7 @@ export function MitrolTable<T extends MRT_RowData>({
     },
     // Header de columnas visualmente distinto del cuerpo: en dark el cuerpo
     // y el header compartían casi el mismo gris y no se leía la estructura.
-    muiTableHeadCellProps: {
+    muiTableHeadCellProps: ({ column }) => ({
       sx: {
         fontWeight: 600,
         // Siempre presentes (ver muiTableBodyCellProps): en dark, header con
@@ -215,8 +318,13 @@ export function MitrolTable<T extends MRT_RowData>({
         color: dark ? "#F1F5F9" : undefined,
         borderBottom: dark ? "1px solid #334155" : undefined,
         "& .MuiTableSortLabel-icon, & svg": { color: dark ? "#CBD5E1" : undefined },
+        // Columna filtrada (ATLAS-1353): el ícono de filtro de la cabecera
+        // pasa al color primario; al pasar el mouse dice qué filtro aplica.
+        ...(column.getIsFiltered() && {
+          "& svg[data-testid='FilterAltIcon']": { color: dark ? "#6B93FF" : "#084AF3" },
+        }),
       },
-    },
+    }),
     // Siempre presente (nunca `...(dark && {...})`): tanstack-table mergea las
     // opciones contra las del render anterior, así que omitir esta key en
     // light dejaba el borderBottom de dark pegado al volver.
@@ -268,8 +376,43 @@ export function MitrolTable<T extends MRT_RowData>({
       },
     },
     muiTopToolbarProps: { sx: { minHeight: "52px" } },
+    renderToolbarInternalActions: ({ table }) => (
+      <>
+        <Tooltip title={t("common.tabla.restablecer")}>
+          <span>
+            <IconButton
+              aria-label={t("common.tabla.restablecer")}
+              disabled={esPorDefecto}
+              onClick={() => {
+                cambiarVista(() => ({
+                  columnVisibility: { ...porDefecto.columnVisibility },
+                  columnFilters: [...porDefecto.columnFilters],
+                }));
+                table.setGlobalFilter(undefined);
+              }}
+            >
+              <RotateCcw className="size-5" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        {table.options.columnFilterDisplayMode !== "popover" && (
+          <MRT_ToggleFiltersButton table={table} />
+        )}
+        <MRT_ShowHideColumnsButton table={table} />
+      </>
+    ),
     ...restOptions,
+    state: {
+      columnVisibility: vista.columnVisibility,
+      columnFilters: filtrosConTexto,
+      ...optionsState,
+    },
+    onColumnVisibilityChange: (u) =>
+      cambiarVista((v) => ({ ...v, columnVisibility: resolver(u, v.columnVisibility) })),
+    onColumnFiltersChange: (u) =>
+      cambiarVista((v) => ({ ...v, columnFilters: resolver(u, v.columnFilters) })),
   });
+
 
   // Placeholder determinístico (mismo en server y primer render de cliente):
   // reserva alto para evitar salto de layout y usa tokens, así se ve bien en
