@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useT } from "@/lib/i18n";
+import { NUEVO_TEXTO } from "@/components/propuesta/nuevo";
 import type { RecordingSettingsParams } from "@/lib/mock-data";
 
 // Dos preguntas separadas, en ese orden: QUÉ se graba (audio, pantalla) y EN
@@ -71,8 +72,9 @@ function ToggleRow({
       <p className="text-xs text-muted-foreground">
         {disabled && disabledReason ? disabledReason : description}
       </p>
+      {/* ATLAS-1227: el alcance es nuevo; en violeta hasta pasarlo al color final. */}
       {alcance && (
-        <Badge variant="outline" className="w-fit text-[0.65rem] font-normal">
+        <Badge variant="outline" className={`w-fit border-violet-500/60 text-[0.65rem] font-normal ${NUEVO_TEXTO}`}>
           {alcance}
         </Badge>
       )}
@@ -120,6 +122,7 @@ export function GrabacionSettings({
               icon={Mic}
               label={t("grabacion.audio")}
               description={t("grabacion.audioDesc")}
+              alcance={t("grabacion.alcanceAudio")}
               checked={value.recordAudio}
               onCheckedChange={(v) => set("recordAudio", v)}
             />
@@ -172,6 +175,7 @@ export function GrabacionSettings({
               id={`rec-hold-${ambito}`}
               label={t("grabacion.hold")}
               description={t("grabacion.holdDesc")}
+              alcance={t("grabacion.alcanceAudio")}
               disabled={!holdDisponible}
               disabledReason={
                 !graba ? t("grabacion.sinGrabacion") : t("grabacion.dependeHold")
