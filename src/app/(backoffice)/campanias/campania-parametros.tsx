@@ -23,10 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
-import { ArchivoCampo } from "@/components/propuesta/archivo-campo";
-import { NUEVO_RING, NUEVO_TEXTO, NuevoBadge } from "@/components/propuesta/nuevo";
+import { ArchivoCampo } from "@/components/archivos/archivo-campo";
 import { useT } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 import type {
   AgentControlsParams,
   AgentOperationSettingsParams,
@@ -59,8 +57,6 @@ function ToggleRow({
   onCheckedChange,
   disabled,
   disabledReason,
-  nuevo,
-  alcanceNuevo,
   children,
 }: {
   id: string;
@@ -71,22 +67,13 @@ function ToggleRow({
   onCheckedChange: (v: boolean) => void;
   disabled?: boolean;
   disabledReason?: string;
-  // ATLAS-1227: el parámetro entero es nuevo, o solo cambió su alcance.
-  nuevo?: boolean;
-  alcanceNuevo?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-2 rounded-lg p-3",
-        nuevo ? NUEVO_RING : "ring-1 ring-foreground/10"
-      )}
-    >
+    <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
         <Label htmlFor={id} className="flex items-center gap-2 text-sm font-medium">
           {label}
-          {nuevo && <NuevoBadge />}
         </Label>
         <Switch
           id={id}
@@ -99,13 +86,7 @@ function ToggleRow({
         {disabled && disabledReason ? disabledReason : description}
       </p>
       {alcance && (
-        <Badge
-          variant="outline"
-          className={cn(
-            "w-fit text-[0.65rem] font-normal",
-            alcanceNuevo && cn("border-violet-500/60", NUEVO_TEXTO)
-          )}
-        >
+        <Badge variant="outline" className="w-fit text-[0.65rem] font-normal">
           {alcance}
         </Badge>
       )}
@@ -172,7 +153,6 @@ export function ControlesAgenteTab({
           label={t("campanias.parametros.allowHold")}
           description={t("campanias.parametros.allowHoldDesc")}
           alcance={t("campanias.parametros.allowHoldAlcance")}
-          alcanceNuevo
           checked={value.allowHold}
           onCheckedChange={(v) => set("allowHold", v)}
         />
@@ -181,7 +161,6 @@ export function ControlesAgenteTab({
           label={t("campanias.parametros.allowHangup")}
           description={t("campanias.parametros.allowHangupDesc")}
           alcance={t("campanias.parametros.allowHangupAlcance")}
-          alcanceNuevo
           checked={value.allowHangup}
           onCheckedChange={(v) => set("allowHangup", v)}
         />
@@ -198,7 +177,6 @@ export function ControlesAgenteTab({
           label={t("campanias.parametros.allowMute")}
           description={t("campanias.parametros.allowMuteDesc")}
           alcance={t("campanias.parametros.allowMuteAlcance")}
-          alcanceNuevo
           checked={value.allowMute}
           onCheckedChange={(v) => set("allowMute", v)}
         />
@@ -221,7 +199,6 @@ export function ControlesAgenteTab({
           onCheckedChange={(v) => set("forceClassification", v)}
         />
         <ToggleRow
-          nuevo
           id="allow-screen-share"
           label={t("campanias.parametros.allowScreenShare")}
           description={t("campanias.parametros.allowScreenShareDesc")}
@@ -230,7 +207,6 @@ export function ControlesAgenteTab({
           onCheckedChange={(v) => set("allowScreenShare", v)}
         />
         <ToggleRow
-          nuevo
           id="allow-attachments"
           label={t("campanias.parametros.allowAttachments")}
           description={t("campanias.parametros.allowAttachmentsDesc")}
@@ -239,7 +215,6 @@ export function ControlesAgenteTab({
           onCheckedChange={(v) => set("allowAttachments", v)}
         />
         <ToggleRow
-          nuevo
           id="allow-download-client-files"
           label={t("campanias.parametros.allowDownloadClientFiles")}
           description={t("campanias.parametros.allowDownloadClientFilesDesc")}
@@ -247,12 +222,8 @@ export function ControlesAgenteTab({
           checked={value.allowDownloadClientFiles}
           onCheckedChange={(v) => set("allowDownloadClientFiles", v)}
         >
-          <p className={cn("text-xs font-medium", NUEVO_TEXTO)}>
-            {t("campanias.parametros.aConversarConPedro")}
-          </p>
         </ToggleRow>
         <ToggleRow
-          nuevo
           id="allow-emoji-picker"
           label={t("campanias.parametros.allowEmojiPicker")}
           description={t("campanias.parametros.allowEmojiPickerDesc")}
@@ -261,7 +232,6 @@ export function ControlesAgenteTab({
           onCheckedChange={(v) => set("allowEmojiPicker", v)}
         />
         <ToggleRow
-          nuevo
           id="allow-image-capture"
           label={t("campanias.parametros.allowImageCapture")}
           description={t("campanias.parametros.allowImageCaptureDesc")}
@@ -301,7 +271,6 @@ function AlertaRow({
   const t = useT();
   return (
     <ToggleRow
-      nuevo
       id={id}
       label={label}
       description={description}
@@ -363,10 +332,9 @@ export function VisualizacionTab({
         >
           {/* ATLAS-1227: con el timbre prendido, se elige qué suena. */}
           {value.allowRinging && (
-            <div className={cn("flex flex-col gap-2 rounded-md p-2", NUEVO_RING)}>
+            <div className="flex flex-col gap-2 rounded-md p-2 ring-1 ring-foreground/10">
               <Label htmlFor="ring-sound" className="flex items-center gap-2 text-xs">
                 {t("campanias.parametros.ringSound")}
-                <NuevoBadge />
               </Label>
               <Select
                 value={value.ringSound}
@@ -382,9 +350,6 @@ export function VisualizacionTab({
                   <SelectItem value="propio">{t("campanias.parametros.ringPropio")}</SelectItem>
                 </SelectContent>
               </Select>
-              <p className={cn("text-xs font-medium", NUEVO_TEXTO)}>
-                {t("campanias.parametros.ringSoundPedro")}
-              </p>
               {value.ringSound === "propio" && (
                 <ArchivoCampo
                   id="ring-sound-file"
@@ -478,10 +443,9 @@ export function ConfigOperativaTab({
         />
         {/* ATLAS-1227: siempre hay un tope (Atlas ya aplica 60 s); lo que
             suma la propuesta es poder elegirlo. Por eso no lleva switch. */}
-        <div className={cn("flex flex-col gap-2 rounded-lg p-3", NUEVO_RING)}>
+        <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
           <Label htmlFor="max-acw" className="flex items-center gap-2 text-sm font-medium">
             {t("campanias.parametros.maxAcw")}
-            <NuevoBadge />
           </Label>
           <p className="text-xs text-muted-foreground">{t("campanias.parametros.maxAcwDesc")}</p>
           <CampoNumero
@@ -617,7 +581,7 @@ export function UrlsExternasTab({
             {entry.openAs === "blank" && (
               <label
                 htmlFor={`url-close-${entry.id}`}
-                className={cn("flex items-start gap-2 rounded-md p-2", NUEVO_RING)}
+                className="flex items-start gap-2 rounded-md p-2 ring-1 ring-foreground/10"
               >
                 <Checkbox
                   id={`url-close-${entry.id}`}
@@ -628,7 +592,6 @@ export function UrlsExternasTab({
                 <span className="flex flex-col gap-0.5">
                   <span className="flex items-center gap-2 text-sm font-medium">
                     {t("campanias.parametros.closeOnEnd")}
-                    <NuevoBadge />
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {t("campanias.parametros.closeOnEndDesc")}
@@ -664,11 +627,10 @@ export function ClienteTab({
 }) {
   const t = useT();
   return (
-    <Card className={NUEVO_RING}>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {t("campanias.parametros.clienteTitulo")}
-          <NuevoBadge />
         </CardTitle>
         <CardDescription>{t("campanias.parametros.clienteDesc")}</CardDescription>
       </CardHeader>

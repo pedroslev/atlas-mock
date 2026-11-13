@@ -15,7 +15,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { NUEVO_RING, NuevoBadge } from "@/components/propuesta/nuevo";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { plantillaGrupos, plantillas, type CanalPlantilla, type Plantilla } from "@/lib/mock-data";
@@ -139,7 +138,7 @@ export function PlantillasDefectoTab({
           <SelectorPlantilla id="plantilla-chat" canal="chat" value={chatId} onChange={setChatId} />
           <label
             htmlFor="plantilla-chat-automatica"
-            className={cn("mt-1 flex items-start gap-2 rounded-md p-2", NUEVO_RING, !chatId && "opacity-50")}
+            className={cn("mt-1 flex items-start gap-2 rounded-md p-2 ring-1 ring-foreground/10", !chatId && "opacity-50")}
           >
             <Checkbox
               id="plantilla-chat-automatica"
@@ -151,7 +150,6 @@ export function PlantillasDefectoTab({
             <span className="flex flex-col gap-0.5">
               <span className="flex items-center gap-2 text-sm font-medium">
                 {t("campanias.parametros.enviarAutomatico")}
-                <NuevoBadge />
               </span>
               <span className="text-xs text-muted-foreground">
                 {chatId

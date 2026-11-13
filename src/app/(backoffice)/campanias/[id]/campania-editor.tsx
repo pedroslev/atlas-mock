@@ -62,7 +62,6 @@ import {
   UrlsExternasTab,
   ClienteTab,
 } from "../campania-parametros";
-import { NUEVO_TEXTO } from "@/components/propuesta/nuevo";
 import { PlantillasDefectoTab } from "../plantillas-defecto";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
@@ -98,10 +97,9 @@ export function CampaniaEditor({
           {t("campanias.tab.controlesAgente")}
         </TabsTrigger>
         <TabsTrigger value="visualizacion">{t("campanias.tab.visualizacion")}</TabsTrigger>
-        {/* ATLAS-1227: solapa nueva, en violeta hasta pasarla al color final.
-            Va al lado de Visualización: esa es la vista del asesor, esta la
-            del cliente. */}
-        <TabsTrigger value="vista-cliente" className={NUEVO_TEXTO}>
+        {/* Al lado de Visualización: esa es la vista del asesor, esta la del
+            cliente (ATLAS-1227). */}
+        <TabsTrigger value="vista-cliente">
           {t("campanias.tab.vistaCliente")}
         </TabsTrigger>
         <TabsTrigger value="grabacion">{t("campanias.tab.grabacion")}</TabsTrigger>

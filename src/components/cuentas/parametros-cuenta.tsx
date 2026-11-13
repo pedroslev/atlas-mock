@@ -12,29 +12,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArchivoCampo } from "@/components/propuesta/archivo-campo";
-import { NUEVO_RING, NuevoBadge } from "@/components/propuesta/nuevo";
+import { ArchivoCampo } from "@/components/archivos/archivo-campo";
 import { useT } from "@/lib/i18n";
 
 type Calidad = "baja" | "media" | "alta";
 
-// ATLAS-1227 (propuesta, sin acordar con Pedro): lo nuevo de la cuenta.
+// ATLAS-1227: parámetros de la cuenta de chat y de videollamada.
 // - Chat: cierre por inactividad y aviso antes del cierre.
 // - Videollamada: calidad de video (reemplaza resolución de cámara y
 //   cuadros por segundo) y lo que ve el cliente mientras espera un asesor.
 // Estado local: en el mock no se guarda.
-export function ParametrosCuentaPropuesta({ tipo }: { tipo: "Chat" | "Videollamada" }) {
+export function ParametrosCuenta({ tipo }: { tipo: "Chat" | "Videollamada" }) {
   const t = useT();
   const [cierre, setCierre] = useState({ minutos: 10, aviso: true, avisoMinutos: 2 });
   const [calidad, setCalidad] = useState<Calidad>("media");
   const [esperaArchivo, setEsperaArchivo] = useState<string | undefined>();
 
   return (
-    <Card className={NUEVO_RING}>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {tipo === "Chat" ? t("cuentas.propuesta.chatTitulo") : t("cuentas.propuesta.videoTitulo")}
-          <NuevoBadge />
         </CardTitle>
         <CardDescription>
           {tipo === "Chat" ? t("cuentas.propuesta.chatDesc") : t("cuentas.propuesta.videoDesc")}
