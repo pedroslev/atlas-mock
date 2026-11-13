@@ -43,7 +43,9 @@ import {
 } from "./acciones-masivas";
 import {
   FiltroPertenencia,
+  describirPertenencia,
   filtrarPertenencia,
+  type ValorPertenencia,
 } from "./filtro-pertenencia";
 
 function iniciales(nombre: string) {
@@ -167,6 +169,9 @@ export default function AgentesPage() {
             ? t("usuarios.habilitado")
             : t("usuarios.deshabilitado"),
         filterVariant: "select",
+        // Opciones explícitas: sin ellas el desplegable del filtro salía vacío.
+        filterSelectOptions: [t("usuarios.habilitado"), t("usuarios.deshabilitado")],
+        filterFn: "equals",
         Cell: ({ row }) => (
           <Badge variant={row.original.habilitado ? "default" : "neutral"}>
             {row.original.habilitado
@@ -184,6 +189,7 @@ export default function AgentesPage() {
         filterFn: (row, _id, valor) =>
           filtrarPertenencia(getGruposDeUsuario(row.original.id).map((g) => g.id), valor),
         Filter: ({ column }) => <FiltroPertenencia column={column} tipo="grupos" />,
+        meta: { formatoFiltro: (v: unknown) => describirPertenencia(v as ValorPertenencia, "grupos", t) },
         Cell: ({ row }) => (
           <Etiquetas nombres={getGruposDeUsuario(row.original.id).map((g) => g.nombre)} />
         ),
@@ -195,6 +201,7 @@ export default function AgentesPage() {
         filterFn: (row, _id, valor) =>
           filtrarPertenencia(getCampaniasDeUsuario(row.original.id).map((c) => c.id), valor),
         Filter: ({ column }) => <FiltroPertenencia column={column} tipo="campanias" />,
+        meta: { formatoFiltro: (v: unknown) => describirPertenencia(v as ValorPertenencia, "campanias", t) },
         Cell: ({ row }) => (
           <Etiquetas nombres={getCampaniasDeUsuario(row.original.id).map((c) => c.nombre)} />
         ),

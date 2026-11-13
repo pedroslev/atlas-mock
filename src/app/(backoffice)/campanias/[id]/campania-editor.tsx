@@ -51,6 +51,7 @@ import { RowActions } from "@/components/data-table/row-actions";
 import { useT } from "@/lib/i18n";
 import {
   agentes,
+  campanias,
   getGruposDeUsuario,
   gruposTrabajo,
   getProyecto,
@@ -263,7 +264,7 @@ export function CampaniaEditor({
       </TabsContent>
 
       <TabsContent forceMount value="usuarios" className="data-[state=inactive]:hidden">
-        <UsuariosTab initialUsuarioIds={campania.usuariosAsignados} />
+        <UsuariosTab campaniaId={campania.id} initialUsuarioIds={campania.usuariosAsignados} />
       </TabsContent>
     </Tabs>
   );
@@ -274,7 +275,13 @@ export function CampaniaEditor({
 // (copia de los miembros de ese momento: quien entre después al grupo no queda
 // asignado), y quitar varios a la vez. Se guarda con Confirmar, como el resto
 // de la campaña.
-function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
+function UsuariosTab({
+  campaniaId,
+  initialUsuarioIds,
+}: {
+  campaniaId: string;
+  initialUsuarioIds: string[];
+}) {
   const t = useT();
   const [usuarioIds, setUsuarioIds] = useState<string[]>(initialUsuarioIds);
   const [agregarAbierto, setAgregarAbierto] = useState(false);
@@ -403,6 +410,7 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
 
       {agregarAbierto && (
         <AgregarUsuariosDialog
+          campaniaId={campaniaId}
           yaAsignados={usuarioIds}
           onClose={() => setAgregarAbierto(false)}
           onAgregar={(ids) => {
@@ -439,24 +447,32 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
 }
 
 function AgregarUsuariosDialog({
+  campaniaId,
   yaAsignados,
   onClose,
   onAgregar,
 }: {
+  campaniaId: string;
   yaAsignados: string[];
   onClose: () => void;
   onAgregar: (ids: string[]) => void;
 }) {
   const t = useT();
   const [grupoId, setGrupoId] = useState<string>("todos");
+  const [otraCampaniaId, setOtraCampaniaId] = useState<string>("todas");
   const [elegidos, setElegidos] = useState<string[]>([]);
 
   // Los que ya están en la campaña no se ofrecen.
   const disponibles = agentes.filter((a) => !yaAsignados.includes(a.id));
-  const delGrupo =
-    grupoId === "todos"
-      ? disponibles
-      : disponibles.filter((a) => getGruposDeUsuario(a.id).some((g) => g.id === grupoId));
+  // Los dos filtros se combinan: del grupo elegido Y de la campaña elegida.
+  // Igual que el grupo, filtrar por otra campaña toma a sus usuarios de hoy.
+  const delGrupo = disponibles
+    .filter((a) => grupoId === "todos" || getGruposDeUsuario(a.id).some((g) => g.id === grupoId))
+    .filter(
+      (a) =>
+        otraCampaniaId === "todas" ||
+        campanias.find((c) => c.id === otraCampaniaId)?.usuariosAsignados.includes(a.id)
+    );
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -465,19 +481,37 @@ function AgregarUsuariosDialog({
           <DialogTitle>{t("campanias.masivo.agregar")}</DialogTitle>
           <DialogDescription>{t("campanias.masivo.agregarAyuda")}</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-1.5">
-          <Label>{t("campanias.masivo.filtrarGrupo")}</Label>
-          <Select value={grupoId} onValueChange={setGrupoId}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">{t("campanias.masivo.todosLosGrupos")}</SelectItem>
-              {gruposTrabajo.map((g) => (
-                <SelectItem key={g.id} value={g.id}>{g.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("campanias.masivo.filtrarGrupo")}</Label>
+            <Select value={grupoId} onValueChange={setGrupoId}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">{t("campanias.masivo.todosLosGrupos")}</SelectItem>
+                {gruposTrabajo.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("campanias.masivo.filtrarCampania")}</Label>
+            <Select value={otraCampaniaId} onValueChange={setOtraCampaniaId}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">{t("campanias.masivo.todasLasCampanias")}</SelectItem>
+                {campanias
+                  .filter((c) => c.id !== campaniaId)
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <ListaSeleccionable
           opciones={delGrupo.map((a) => ({ id: a.id, nombre: `${a.nombre} · ${a.email}` }))}

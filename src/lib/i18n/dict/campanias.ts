@@ -62,10 +62,12 @@ export const campanias: NamespaceDict = {
     desasignarConfirm: "{nombre} deja de operar esta campaña.",
     // Asignación masiva (ATLAS-1353). Solo en español por ahora.
     "masivo.agregar": "Agregar usuarios",
-    "masivo.agregarAyuda": "Marcá a quienes quieras sumar. Filtrar por grupo toma a los miembros de hoy: quien entre después al grupo no queda asignado a la campaña.",
+    "masivo.agregarAyuda": "Marcá a quienes quieras sumar. Filtrar por grupo o por otra campaña toma a sus usuarios de hoy: quien se sume después no queda asignado a esta campaña.",
     "masivo.agregarN": "Agregar ({n})",
     "masivo.filtrarGrupo": "Grupo de trabajo",
     "masivo.todosLosGrupos": "Todos los grupos",
+    "masivo.filtrarCampania": "Usuarios de la campaña",
+    "masivo.todasLasCampanias": "Todas las campañas",
     "masivo.quitar": "Quitar ({n})",
     "masivo.quitarTitulo": "¿Quitar {n} usuarios de la campaña?",
     "masivo.quitarAyuda": "Dejan de operar esta campaña cuando confirmes los cambios.",

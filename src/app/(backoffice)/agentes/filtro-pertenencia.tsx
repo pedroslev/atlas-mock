@@ -28,6 +28,19 @@ export function filtrarPertenencia(
   return valor.modo === "en" ? coincide : !coincide;
 }
 
+/** Texto del filtro para el aviso de filtros activos: "Está en Cobranzas, Ventas". */
+export function describirPertenencia(
+  valor: ValorPertenencia,
+  tipo: "grupos" | "campanias",
+  t: (k: string) => string
+): string {
+  const nombre = (id: string) =>
+    id === NINGUNO
+      ? t(tipo === "grupos" ? "usuarios.masivo.filtro.sinGrupo" : "usuarios.masivo.filtro.sinCampanias")
+      : (tipo === "grupos" ? gruposTrabajo : campanias).find((e) => e.id === id)?.nombre ?? id;
+  return `${t(`usuarios.masivo.filtro.${valor.modo}`)} ${valor.ids.map(nombre).join(", ")}`;
+}
+
 export function FiltroPertenencia<T extends MRT_RowData>({
   column,
   tipo,
