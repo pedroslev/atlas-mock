@@ -550,6 +550,10 @@ export function anchorRoute(
   to: Point,
   fromSide: "right" | "bottom",
 ): Point[] | undefined {
+  // Una L (salida por la derecha que dobla una vez y baja a la entrada): el codo sigue a las dos
+  // puntas. Una vertical directa solo sirve mientras la salida siga encima de la entrada.
+  if (route.length === 3 && fromSide === "right") return [from, [to[0], from[1]], to];
+  if (route.length === 2) return from[0] === to[0] ? [from, to] : undefined;
   if (route.length < 4) return undefined;
   const pts = route.map((p) => [p[0], p[1]] as Point);
   const last = pts.length - 1;
@@ -584,6 +588,30 @@ export function draggableSegments(route: Point[]): { index: number; axis: "x" | 
  * la línea quedaría saliendo por debajo del nodo y no se vería de dónde sale.
  */
 export function moveSegment(route: Point[], index: number, value: number, originRight?: number): Point[] {
+  return simplify(shiftSegment(route, index, value, originRight));
+}
+
+// Distancia hasta la que un tramo que se suelta se pega a la altura de la salida o a la vertical
+// de la entrada, antes que a la grilla.
+const ALIGN_SNAP = 8;
+
+/**
+ * A dónde cae un tramo que se suelta en `value`: a la altura de la salida (si es horizontal) o a
+ * la vertical de la entrada (si es vertical) cuando queda a menos de ALIGN_SNAP, así la línea se
+ * puede dejar recta aunque la salida no esté sobre la grilla; si no, a la grilla (`grid`) o
+ * donde se soltó.
+ */
+export function snapSegment(route: Point[], index: number, value: number, grid?: number): number {
+  const vertical = route[index][0] === route[index + 1][0];
+  const from = route[0];
+  const to = route[route.length - 1];
+  const anchors = vertical ? [to[0], from[0]] : [from[1]];
+  const anchor = anchors.find((a) => Math.abs(a - value) <= ALIGN_SNAP);
+  if (anchor !== undefined) return anchor;
+  return grid ? Math.round(value / grid) * grid : value;
+}
+
+function shiftSegment(route: Point[], index: number, value: number, originRight?: number): Point[] {
   const pts = route.map((p) => [p[0], p[1]] as Point);
   const vertical = pts[index][0] === pts[index + 1][0];
   if (vertical) {

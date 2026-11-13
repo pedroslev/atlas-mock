@@ -85,6 +85,7 @@ import {
   edgesToReroute,
   moveSegment,
   routeEdges,
+  snapSegment,
   type Point,
   type Rect,
   type RouteRequest,
@@ -527,14 +528,16 @@ function ConexionQuitable({
     [targetX, targetY],
     sourcePosition === Position.Bottom,
   );
-  // Arrastrar un tramo deja la conexión acomodada a mano, con la ruta que se ve ahora. Con el
-  // imán, el tramo cae sobre la grilla (también el límite junto al nodo de origen).
+  // Arrastrar un tramo deja la conexión acomodada a mano, con la ruta que se ve ahora. El tramo se
+  // pega a la altura de la salida o a la vertical de la entrada si queda cerca (así la línea se
+  // puede dejar recta); si no, con el imán cae sobre la grilla (también el límite junto al nodo
+  // de origen).
   const acomodar = (indice: number, valor: number) => {
     const limite =
       bordeOrigen === undefined || !iman
         ? bordeOrigen
         : Math.ceil((bordeOrigen + GRILLA) / GRILLA) * GRILLA - GRILLA;
-    const ruta = moveSegment(puntos, indice, iman ? enGrilla(valor) : valor, limite);
+    const ruta = moveSegment(puntos, indice, snapSegment(puntos, indice, valor, iman ? GRILLA : undefined), limite);
     setEdges((eds) => eds.map((e) => (e.id === id ? { ...e, data: { ...e.data, ruta } } : e)));
   };
   const [quitarX, quitarY] = remove;
