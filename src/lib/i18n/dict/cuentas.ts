@@ -21,7 +21,7 @@ export const cuentas: NamespaceDict = {
     "propuesta.calidadBaja": "Baja",
     "propuesta.calidadMedia": "Media",
     "propuesta.calidadAlta": "Alta",
-    "propuesta.calidadDesc": "Reemplaza a la resolución de cámara y los cuadros por segundo. A confirmar con Pedro que va en la cuenta.",
+    "propuesta.calidadDesc": "Reemplaza a la resolución de cámara y los cuadros por segundo.",
     "propuesta.espera": "Imagen o video mientras espera un asesor",
     "propuesta.esperaDesc": "Lo que ve el cliente en la cola, antes de que lo atiendan.",
     "flujo.nota": "Nota",

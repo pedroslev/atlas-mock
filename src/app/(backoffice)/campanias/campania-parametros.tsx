@@ -123,7 +123,7 @@ function CampoNumero({
         className="h-8 w-24"
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(Math.max(1, Number(e.target.value) || 1))}
+        onChange={(e) => onChange(Math.max(1, Math.round(Number(e.target.value)) || 1))}
       />
       <span className="text-xs text-muted-foreground">{unidad}</span>
     </div>

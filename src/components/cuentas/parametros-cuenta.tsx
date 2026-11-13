@@ -47,11 +47,17 @@ export function ParametrosCuenta({ tipo }: { tipo: "Chat" | "Videollamada" }) {
               <Input
                 id="cierre-inactividad"
                 type="number"
-                min={1}
+                min={cierre.aviso ? 2 : 1}
                 className="w-24"
                 value={cierre.minutos}
                 onChange={(e) =>
-                  setCierre((c) => ({ ...c, minutos: Math.max(1, Number(e.target.value) || 1) }))
+                  setCierre((c) => {
+                    // Con aviso, el cierre es de al menos 2 minutos y el aviso
+                    // queda siempre al menos un minuto antes: si el cierre baja,
+                    // el aviso baja con él.
+                    const minutos = Math.max(c.aviso ? 2 : 1, Math.round(Number(e.target.value)) || 1);
+                    return { ...c, minutos, avisoMinutos: Math.min(c.avisoMinutos, minutos - 1) || 1 };
+                  })
                 }
               />
               <span className="text-sm text-muted-foreground">{t("cuentas.propuesta.minutos")}</span>
@@ -65,7 +71,13 @@ export function ParametrosCuenta({ tipo }: { tipo: "Chat" | "Videollamada" }) {
               <Switch
                 id="aviso-cierre"
                 checked={cierre.aviso}
-                onCheckedChange={(v) => setCierre((c) => ({ ...c, aviso: v }))}
+                onCheckedChange={(v) =>
+                  setCierre((c) => {
+                    if (!v) return { ...c, aviso: false };
+                    const minutos = Math.max(2, c.minutos);
+                    return { ...c, aviso: true, minutos, avisoMinutos: Math.min(c.avisoMinutos, minutos - 1) };
+                  })
+                }
               />
             </label>
             {cierre.aviso && (
@@ -83,7 +95,7 @@ export function ParametrosCuenta({ tipo }: { tipo: "Chat" | "Videollamada" }) {
                       ...c,
                       avisoMinutos: Math.min(
                         Math.max(1, c.minutos - 1),
-                        Math.max(1, Number(e.target.value) || 1)
+                        Math.max(1, Math.round(Number(e.target.value)) || 1)
                       ),
                     }))
                   }
