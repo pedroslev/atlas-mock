@@ -35,6 +35,7 @@ import {
   type Edge,
   type EdgeProps,
   type Node,
+  type NodeChange,
   MarkerType,
   type OnConnectStart,
   type OnConnectEnd,
@@ -307,7 +308,7 @@ function ordenar(nodes: Node[], edges: Edge[]): Node[] {
     const total = capa.reduce((acc, n) => acc + ancho(n), 0) + SEPARACION_X * (capa.length - 1);
     let x = -total / 2;
     for (const n of capa) {
-      posiciones.set(n.id, { x: enGrilla(x), y: enGrilla(y) });
+      posiciones.set(n.id, centroEnGrilla({ x, y }, ancho(n)));
       x += ancho(n) + SEPARACION_X;
     }
     y += Math.max(...capa.map(alto)) + SEPARACION_Y;
@@ -656,6 +657,13 @@ const ENCUADRE = { padding: 0.15, maxZoom: 1 };
 // nodo: con los nodos alineados, más conexiones salen derechas y los pasillos quedan parejos.
 const GRILLA = 16;
 const enGrilla = (v: number) => Math.round(v / GRILLA) * GRILLA;
+// Lo que se engancha es el centro del borde de arriba del nodo, no su esquina: por ahí entran
+// las conexiones (y sale la del inicio), así dos nodos uno debajo del otro quedan con los
+// puntos en la misma vertical aunque tengan anchos distintos, y la línea baja derecha.
+const centroEnGrilla = (posicion: { x: number; y: number }, ancho: number) => ({
+  x: enGrilla(posicion.x + ancho / 2) - ancho / 2,
+  y: enGrilla(posicion.y),
+});
 // Si el imán está encendido es una preferencia de cada usuario, guardada en su navegador.
 const CLAVE_IMAN = "atlas.flujo.iman";
 const COLOR_CONEXION = "var(--foreground)";
@@ -998,6 +1006,28 @@ export function WorkflowEditor({
     }
   }, [edges, conFueraDeHorario, setEdges]);
 
+  // Con el imán encendido, cada nodo que se arrastra se engancha por su centro (centroEnGrilla).
+  // No se usa el snapToGrid de React Flow porque engancha la esquina del nodo.
+  const moverNodos = useCallback(
+    (cambios: NodeChange<Node>[]) =>
+      onNodesChange(
+        iman
+          ? cambios.map((c) =>
+              c.type === "position" && c.position
+                ? {
+                    ...c,
+                    position: centroEnGrilla(
+                      c.position,
+                      flowRef.current?.getNode(c.id)?.measured?.width ?? 0,
+                    ),
+                  }
+                : c,
+            )
+          : cambios,
+      ),
+    [iman, onNodesChange],
+  );
+
   // Al abrir, acomoda el flujo una vez que todos los nodos están medidos.
   const ordenadoInicial = useRef(false);
   const [flujoOrdenado, setFlujoOrdenado] = useState(false);
@@ -1132,7 +1162,7 @@ export function WorkflowEditor({
           onInit={(instancia) => {
             flowRef.current = instancia;
           }}
-          onNodesChange={onNodesChange}
+          onNodesChange={moverNodos}
           onEdgesChange={onEdgesChange}
           onConnect={(conexion) => {
             if (conexion.target !== PUNTA_ID) onConnect(conexion);
@@ -1169,8 +1199,6 @@ export function WorkflowEditor({
           minZoom={0.1}
           // Al arrastrar una conexión, engancha al punto de entrada desde más lejos.
           connectionRadius={40}
-          snapToGrid={iman}
-          snapGrid={[GRILLA, GRILLA]}
           fitView
           fitViewOptions={ENCUADRE}
           proOptions={{ hideAttribution: true }}
