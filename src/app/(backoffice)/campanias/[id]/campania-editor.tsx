@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus } from "lucide-react";
+import { UserMinus, UserPlus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { CampoUnico } from "@/components/layout/campos-unicos";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,19 +21,23 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ListaSeleccionable } from "@/app/(backoffice)/agentes/acciones-masivas";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -47,6 +52,7 @@ import { useT } from "@/lib/i18n";
 import {
   agentes,
   getGruposDeUsuario,
+  gruposTrabajo,
   getProyecto,
   type Campania,
   type CampaniaParametros,
@@ -88,9 +94,11 @@ export function CampaniaEditor({
   // Grabación necesita saber si Controles del agente tiene el hold
   // habilitado — ver ADR-BD-002 / parametrizacion-propuesta.md.
   const [parametros, setParametros] = useState<CampaniaParametros>(campania.parametros);
+  // "Asignar usuarios" del listado de campañas abre directamente esta solapa.
+  const solapa = useSearchParams().get("tab") === "usuarios" ? "usuarios" : "general";
 
   return (
-    <Tabs defaultValue="general">
+    <Tabs defaultValue={solapa}>
       <TabsList>
         <TabsTrigger value="general">{t("campanias.tab.general")}</TabsTrigger>
         <TabsTrigger value="controles-agente">
@@ -261,13 +269,27 @@ export function CampaniaEditor({
   );
 }
 
+
+// Solapa Usuarios (ATLAS-1353): agregar varios a la vez, con filtro por grupo
+// (copia de los miembros de ese momento: quien entre después al grupo no queda
+// asignado), y quitar varios a la vez. Se guarda con Confirmar, como el resto
+// de la campaña.
 function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
   const t = useT();
   const [usuarioIds, setUsuarioIds] = useState<string[]>(initialUsuarioIds);
-  const [open, setOpen] = useState(false);
+  const [agregarAbierto, setAgregarAbierto] = useState(false);
+  const [marcados, setMarcados] = useState<string[]>([]);
+  const [confirmarQuitar, setConfirmarQuitar] = useState(false);
 
   const asignados = agentes.filter((a) => usuarioIds.includes(a.id));
-  const disponibles = agentes.filter((a) => !usuarioIds.includes(a.id));
+  const todos = asignados.length > 0 && asignados.every((a) => marcados.includes(a.id));
+  const alguno = asignados.some((a) => marcados.includes(a.id));
+
+  function quitarMarcados() {
+    setUsuarioIds((ids) => ids.filter((id) => !marcados.includes(id)));
+    setMarcados([]);
+    setConfirmarQuitar(false);
+  }
 
   return (
     <Card>
@@ -278,54 +300,31 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
             {t("campanias.usuariosOperan", { n: asignados.length })}
           </CardDescription>
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <UserPlus />
-              {t("campanias.asignarUsuario")}
+        <div className="flex items-center gap-2">
+          {marcados.length > 0 && (
+            <Button variant="outline" className="text-destructive" onClick={() => setConfirmarQuitar(true)}>
+              <UserMinus />
+              {t("campanias.masivo.quitar", { n: marcados.length })}
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 p-0" align="end">
-            <Command>
-              <CommandInput placeholder={t("campanias.buscarUsuario")} />
-              <CommandList>
-                <CommandEmpty>
-                  {t("campanias.sinUsuariosDisponibles")}
-                </CommandEmpty>
-                <CommandGroup>
-                  {disponibles.map((a) => (
-                    <CommandItem
-                      key={a.id}
-                      value={a.nombre}
-                      onSelect={() => {
-                        setUsuarioIds((ids) => [...ids, a.id]);
-                        setOpen(false);
-                      }}
-                    >
-                      <Avatar className="size-6">
-                        <AvatarFallback className="text-xs">
-                          {iniciales(a.nombre)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="flex flex-col">
-                        <span>{a.nombre}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {a.email}
-                        </span>
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+          )}
+          <Button variant="outline" onClick={() => setAgregarAbierto(true)}>
+            <UserPlus />
+            {t("campanias.masivo.agregar")}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-xl ring-1 ring-foreground/10">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label={t("campanias.masivo.marcarTodos")}
+                    checked={todos ? true : alguno ? "indeterminate" : false}
+                    onCheckedChange={(v) => setMarcados(v === true ? asignados.map((a) => a.id) : [])}
+                  />
+                </TableHead>
                 <TableHead>{t("campanias.colUsuario")}</TableHead>
                 <TableHead>{t("campanias.colEmail")}</TableHead>
                 <TableHead>{t("common.comunes.estado")}</TableHead>
@@ -335,60 +334,49 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
             <TableBody>
               {asignados.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center text-muted-foreground"
-                  >
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     {t("campanias.sinUsuariosAsignados")}
                   </TableCell>
                 </TableRow>
               )}
               {asignados.map((a) => (
-                <TableRow key={a.id}>
+                <TableRow key={a.id} data-state={marcados.includes(a.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      aria-label={a.nombre}
+                      checked={marcados.includes(a.id)}
+                      onCheckedChange={(v) =>
+                        setMarcados((m) => (v === true ? [...m, a.id] : m.filter((id) => id !== a.id)))
+                      }
+                    />
+                  </TableCell>
                   <TableCell>
                     <HoverCard>
                       <HoverCardTrigger asChild>
                         <div className="flex w-fit cursor-default items-center gap-2 font-medium">
                           <Avatar className="size-7">
-                            <AvatarFallback className="text-xs">
-                              {iniciales(a.nombre)}
-                            </AvatarFallback>
+                            <AvatarFallback className="text-xs">{iniciales(a.nombre)}</AvatarFallback>
                           </Avatar>
                           {a.nombre}
                         </div>
                       </HoverCardTrigger>
                       <HoverCardContent className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="size-9">
-                            <AvatarFallback className="text-sm">
-                              {iniciales(a.nombre)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{a.nombre}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {a.email}
-                            </span>
-                          </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{a.nombre}</span>
+                          <span className="text-xs text-muted-foreground">{a.email}</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {getGruposDeUsuario(a.id).map((grupo) => (
-                            <Badge key={grupo.id} variant="outline">
-                              {grupo.nombre}
-                            </Badge>
+                            <Badge key={grupo.id} variant="outline">{grupo.nombre}</Badge>
                           ))}
                         </div>
                       </HoverCardContent>
                     </HoverCard>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {a.email}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground">{a.email}</TableCell>
                   <TableCell>
                     <Badge variant={a.habilitado ? "default" : "secondary"}>
-                      {a.habilitado
-                        ? t("campanias.habilitado")
-                        : t("campanias.deshabilitado")}
+                      {a.habilitado ? t("campanias.habilitado") : t("campanias.deshabilitado")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -397,13 +385,11 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
                         {
                           label: t("campanias.desasignar"),
                           destructive: true,
-                          confirmDescription: t("campanias.desasignarConfirm", {
-                            nombre: a.nombre,
-                          }),
-                          onSelect: () =>
-                            setUsuarioIds((ids) =>
-                              ids.filter((id) => id !== a.id)
-                            ),
+                          confirmDescription: t("campanias.desasignarConfirm", { nombre: a.nombre }),
+                          onSelect: () => {
+                            setUsuarioIds((ids) => ids.filter((id) => id !== a.id));
+                            setMarcados((m) => m.filter((id) => id !== a.id));
+                          },
                         },
                       ]}
                     />
@@ -414,6 +400,99 @@ function UsuariosTab({ initialUsuarioIds }: { initialUsuarioIds: string[] }) {
           </Table>
         </div>
       </CardContent>
+
+      {agregarAbierto && (
+        <AgregarUsuariosDialog
+          yaAsignados={usuarioIds}
+          onClose={() => setAgregarAbierto(false)}
+          onAgregar={(ids) => {
+            setUsuarioIds((actuales) => [...actuales, ...ids]);
+            setAgregarAbierto(false);
+          }}
+        />
+      )}
+
+      <Dialog open={confirmarQuitar} onOpenChange={setConfirmarQuitar}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("campanias.masivo.quitarTitulo", { n: marcados.length })}</DialogTitle>
+            <DialogDescription>
+              {agentes
+                .filter((a) => marcados.includes(a.id))
+                .map((a) => a.nombre)
+                .join(", ")}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("campanias.masivo.quitarAyuda")}</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmarQuitar(false)}>
+              {t("common.acciones.cancelar")}
+            </Button>
+            <Button variant="destructive" onClick={quitarMarcados}>
+              {t("campanias.masivo.quitar", { n: marcados.length })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
+  );
+}
+
+function AgregarUsuariosDialog({
+  yaAsignados,
+  onClose,
+  onAgregar,
+}: {
+  yaAsignados: string[];
+  onClose: () => void;
+  onAgregar: (ids: string[]) => void;
+}) {
+  const t = useT();
+  const [grupoId, setGrupoId] = useState<string>("todos");
+  const [elegidos, setElegidos] = useState<string[]>([]);
+
+  // Los que ya están en la campaña no se ofrecen.
+  const disponibles = agentes.filter((a) => !yaAsignados.includes(a.id));
+  const delGrupo =
+    grupoId === "todos"
+      ? disponibles
+      : disponibles.filter((a) => getGruposDeUsuario(a.id).some((g) => g.id === grupoId));
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("campanias.masivo.agregar")}</DialogTitle>
+          <DialogDescription>{t("campanias.masivo.agregarAyuda")}</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-1.5">
+          <Label>{t("campanias.masivo.filtrarGrupo")}</Label>
+          <Select value={grupoId} onValueChange={setGrupoId}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">{t("campanias.masivo.todosLosGrupos")}</SelectItem>
+              {gruposTrabajo.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <ListaSeleccionable
+          opciones={delGrupo.map((a) => ({ id: a.id, nombre: `${a.nombre} · ${a.email}` }))}
+          elegidos={elegidos}
+          onChange={setElegidos}
+          placeholder={t("campanias.buscarUsuario")}
+          vacio={t("campanias.sinUsuariosDisponibles")}
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>{t("common.acciones.cancelar")}</Button>
+          <Button disabled={elegidos.length === 0} onClick={() => onAgregar(elegidos)}>
+            {t("campanias.masivo.agregarN", { n: elegidos.length })}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

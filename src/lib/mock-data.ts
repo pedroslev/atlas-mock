@@ -591,7 +591,7 @@ export const campanias: Campania[] = [
     descripcion: "Discado predictivo sobre cartera en mora temprana",
     objetivo: "Recupero temprano",
     proyectoId: "proj-1",
-    usuariosAsignados: ["ag-1", "ag-2", "ag-3"],
+    usuariosAsignados: ["ag-1", "ag-2", "ag-3", "ag-6", "ag-7"],
     grupoClasificacionId: "cg-cobranzas",
     grupoBookmarksId: "bg-cobranzas",
     grupoPlantillasId: "pg-cobranzas",
@@ -643,7 +643,7 @@ export const campanias: Campania[] = [
     id: "camp-4",
     nombre: "Soporte técnico Nivel 1",
     proyectoId: "proj-2",
-    usuariosAsignados: ["ag-3", "ag-5"],
+    usuariosAsignados: ["ag-3", "ag-5", "ag-10", "ag-11"],
     grupoClasificacionId: "cg-atencion",
     outboundAccountIds: ["acc-2"],
     // Personalizada: mesa inbound sin ring (agentes con headset todo el
@@ -674,7 +674,7 @@ export const campanias: Campania[] = [
     id: "camp-6",
     nombre: "Lanzamiento Tarjeta Plus",
     proyectoId: "proj-3",
-    usuariosAsignados: ["ag-1", "ag-2"],
+    usuariosAsignados: ["ag-1", "ag-2", "ag-15", "ag-16"],
     outboundAccountIds: ["acc-3"],
     parametros: defaultParametros(),
   },
@@ -1161,6 +1161,22 @@ export const agentes: Agente[] = [
   { id: "ag-3", nombre: "Rocío Benítez", email: "rocio.benitez@bancosur.com", habilitado: true },
   { id: "ag-4", nombre: "Tomás Ibarra", email: "tomas.ibarra@bancosur.com", habilitado: false },
   { id: "ag-5", nombre: "Lucía Márquez", email: "lucia.marquez@bancosur.com", habilitado: true },
+  // ATLAS-1353: más usuarios para que la asignación masiva tenga volumen.
+  { id: "ag-6", nombre: "Diego Sosa", email: "diego.sosa@bancosur.com", habilitado: true },
+  { id: "ag-7", nombre: "Valentina Ríos", email: "valentina.rios@bancosur.com", habilitado: true },
+  { id: "ag-8", nombre: "Federico Paz", email: "federico.paz@bancosur.com", habilitado: true },
+  { id: "ag-9", nombre: "Camila Herrera", email: "camila.herrera@bancosur.com", habilitado: true },
+  { id: "ag-10", nombre: "Nicolás Vega", email: "nicolas.vega@bancosur.com", habilitado: true },
+  { id: "ag-11", nombre: "Sofía Romero", email: "sofia.romero@bancosur.com", habilitado: true },
+  { id: "ag-12", nombre: "Martín Quiroga", email: "martin.quiroga@bancosur.com", habilitado: false },
+  { id: "ag-13", nombre: "Agustina Luna", email: "agustina.luna@bancosur.com", habilitado: true },
+  { id: "ag-14", nombre: "Pablo Medina", email: "pablo.medina@bancosur.com", habilitado: true },
+  { id: "ag-15", nombre: "Carla Domínguez", email: "carla.dominguez@bancosur.com", habilitado: true },
+  { id: "ag-16", nombre: "Ezequiel Funes", email: "ezequiel.funes@bancosur.com", habilitado: true },
+  { id: "ag-17", nombre: "Florencia Godoy", email: "florencia.godoy@bancosur.com", habilitado: true },
+  { id: "ag-18", nombre: "Ramiro Castro", email: "ramiro.castro@bancosur.com", habilitado: true },
+  { id: "ag-19", nombre: "Paula Navarro", email: "paula.navarro@bancosur.com", habilitado: false },
+  { id: "ag-20", nombre: "Gonzalo Peralta", email: "gonzalo.peralta@bancosur.com", habilitado: true },
 ];
 
 // El catálogo de auxiliares puede crecer mucho por tenant (decenas o cientos):
@@ -1198,7 +1214,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     id: "wg-cobranzas",
     nombre: "Cobranzas",
     descripcion: "Equipo de gestión de cobranzas",
-    usuarioIds: ["ag-1", "ag-2", "ag-4"],
+    usuarioIds: ["ag-1", "ag-2", "ag-4", "ag-6", "ag-7", "ag-8", "ag-9", "ag-12"],
     estadosAuxiliares: ["aux-almuerzo", "aux-capacitacion"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura", "escritura", "eliminacion"] },
@@ -1234,7 +1250,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     id: "wg-atencion",
     nombre: "Atención al cliente",
     descripcion: "Equipo de soporte N1",
-    usuarioIds: ["ag-3", "ag-5"],
+    usuarioIds: ["ag-3", "ag-5", "ag-10", "ag-11", "ag-13", "ag-14", "ag-19"],
     estadosAuxiliares: ["aux-almuerzo"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura"] },
@@ -1270,7 +1286,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     id: "wg-ventas",
     nombre: "Ventas",
     descripcion: "Equipo comercial de ventas salientes",
-    usuarioIds: ["ag-2"],
+    usuarioIds: ["ag-2", "ag-15", "ag-16", "ag-17", "ag-18"],
     estadosAuxiliares: ["aux-almuerzo", "aux-reunion"],
     permisos: [
       { modulo: "Campañas", acciones: ["lectura", "escritura"] },
@@ -1330,6 +1346,10 @@ export function getGrupoTrabajo(id: string) {
 
 export function getGruposDeUsuario(usuarioId: string) {
   return gruposTrabajo.filter((g) => g.usuarioIds.includes(usuarioId));
+}
+
+export function getCampaniasDeUsuario(usuarioId: string) {
+  return campanias.filter((c) => c.usuariosAsignados.includes(usuarioId));
 }
 
 export function getOverrideDeUsuario(usuarioId: string) {

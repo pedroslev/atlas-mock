@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotonConfirmar, CamposUnicos } from "@/components/layout/campos-unicos";
@@ -48,11 +49,14 @@ export default async function EditarCampaniaPage({
         }
       />
 
-      <CampaniaEditor
-        campania={campania}
-        nombreProyecto={proyecto?.nombre}
-        nombresExistentes={campanias.filter((c) => c.id !== id).map((c) => c.nombre)}
-      />
+      {/* Suspense: el editor lee ?tab= de la URL (useSearchParams). */}
+      <Suspense>
+        <CampaniaEditor
+          campania={campania}
+          nombreProyecto={proyecto?.nombre}
+          nombresExistentes={campanias.filter((c) => c.id !== id).map((c) => c.nombre)}
+        />
+      </Suspense>
     </div>
     </CamposUnicos>
   );

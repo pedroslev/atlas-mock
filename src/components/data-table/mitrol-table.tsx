@@ -170,13 +170,15 @@ export function MitrolTable<T extends MRT_RowData>({
   const {
     initialState: optionsInitialState,
     displayColumnDefOptions: optionsDisplayColumnDefOptions,
+    localization: optionsLocalization,
     ...restOptions
   } = options ?? {};
 
   const table = useMaterialReactTable<T>({
     columns,
     data,
-    localization: MRT_LOCALIZATION[locale],
+    // Una pantalla puede pisar textos puntuales sin perder el resto del idioma.
+    localization: { ...MRT_LOCALIZATION[locale], ...optionsLocalization },
     enableDensityToggle: false,
     enableFullScreenToggle: false,
     positionActionsColumn: "last",
