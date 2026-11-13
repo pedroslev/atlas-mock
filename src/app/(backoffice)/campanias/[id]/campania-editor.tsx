@@ -33,7 +33,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -54,6 +56,7 @@ import {
   campanias,
   getGruposDeUsuario,
   gruposTrabajo,
+  proyectos,
   getProyecto,
   type Campania,
   type CampaniaParametros,
@@ -468,11 +471,16 @@ function AgregarUsuariosDialog({
   // Igual que el grupo, filtrar por otra campaña toma a sus usuarios de hoy.
   const delGrupo = disponibles
     .filter((a) => grupoId === "todos" || getGruposDeUsuario(a.id).some((g) => g.id === grupoId))
-    .filter(
-      (a) =>
-        otraCampaniaId === "todas" ||
-        campanias.find((c) => c.id === otraCampaniaId)?.usuariosAsignados.includes(a.id)
-    );
+    .filter((a) => {
+      if (otraCampaniaId === "todas") return true;
+      // "Todas las campañas de <proyecto>": usuarios de cualquiera de ellas.
+      const origen = otraCampaniaId.startsWith("proyecto:")
+        ? campanias.filter(
+            (c) => c.proyectoId === otraCampaniaId.slice("proyecto:".length) && c.id !== campaniaId
+          )
+        : campanias.filter((c) => c.id === otraCampaniaId);
+      return origen.some((c) => c.usuariosAsignados.includes(a.id));
+    });
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -504,11 +512,24 @@ function AgregarUsuariosDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">{t("campanias.masivo.todasLasCampanias")}</SelectItem>
-                {campanias
-                  .filter((c) => c.id !== campaniaId)
-                  .map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-                  ))}
+                {/* Agrupadas por proyecto. */}
+                {proyectos.map((p) => {
+                  const delProyecto = campanias.filter(
+                    (c) => c.proyectoId === p.id && c.id !== campaniaId
+                  );
+                  if (delProyecto.length === 0) return null;
+                  return (
+                    <SelectGroup key={p.id}>
+                      <SelectLabel>{p.nombre}</SelectLabel>
+                      <SelectItem value={`proyecto:${p.id}`}>
+                        {t("campanias.masivo.todasDelProyecto", { proyecto: p.nombre })}
+                      </SelectItem>
+                      {delProyecto.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

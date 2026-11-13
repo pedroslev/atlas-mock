@@ -9,7 +9,7 @@ import type { MRT_Column, MRT_RowData } from "material-react-table";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { campanias, gruposTrabajo } from "@/lib/mock-data";
-import { ListaSeleccionable } from "./acciones-masivas";
+import { ListaSeleccionable, opcionesDeCampanias } from "./acciones-masivas";
 
 export const NINGUNO = "__ninguno__";
 
@@ -61,7 +61,7 @@ export function FiltroPertenencia<T extends MRT_RowData>({
     },
     ...(tipo === "grupos"
       ? gruposTrabajo.map((g) => ({ id: g.id, nombre: g.nombre }))
-      : campanias.map((c) => ({ id: c.id, nombre: c.nombre }))),
+      : opcionesDeCampanias()),
   ];
 
   function cambiar(nuevo: ValorPertenencia) {

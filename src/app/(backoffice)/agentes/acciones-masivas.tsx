@@ -28,6 +28,7 @@ import {
   campanias,
   getAgente,
   gruposTrabajo,
+  proyectos,
 } from "@/lib/mock-data";
 import {
   agregarACampanias,
@@ -54,11 +55,13 @@ export type AccionMasiva =
   | "deshabilitar"
   | "copiar";
 
-type Opcion = { id: string; nombre: string };
+type Opcion = { id: string; nombre: string; grupo?: { id: string; nombre: string } };
 
 const nombreDe = (id: string) => getAgente(id)?.nombre ?? id;
 
 // --- Lista con buscador y casillas ----------------------------------------
+// Si las opciones traen `grupo` (las campañas traen su proyecto), la lista se
+// agrupa: cada grupo tiene su propia casilla para marcar todas las suyas.
 
 export function ListaSeleccionable({
   opciones,
@@ -75,11 +78,41 @@ export function ListaSeleccionable({
 }) {
   const t = useT();
   const [consulta, setConsulta] = useState("");
-  const visibles = opciones.filter((o) =>
-    o.nombre.toLowerCase().includes(consulta.trim().toLowerCase())
+  const q = consulta.trim().toLowerCase();
+  // La búsqueda encuentra por el nombre del elemento o por el de su grupo
+  // (buscar un proyecto trae todas sus campañas).
+  const visibles = opciones.filter(
+    (o) => o.nombre.toLowerCase().includes(q) || (o.grupo?.nombre.toLowerCase().includes(q) ?? false)
   );
-  const todos = visibles.length > 0 && visibles.every((o) => elegidos.includes(o.id));
-  const alguno = visibles.some((o) => elegidos.includes(o.id));
+  const agrupada = opciones.some((o) => o.grupo);
+
+  function estado(ids: string[]): boolean | "indeterminate" {
+    const n = ids.filter((id) => elegidos.includes(id)).length;
+    return n === 0 ? false : n === ids.length ? true : "indeterminate";
+  }
+  function marcar(ids: string[], v: boolean) {
+    onChange(v ? [...new Set([...elegidos, ...ids])] : elegidos.filter((id) => !ids.includes(id)));
+  }
+
+  const idsVisibles = visibles.map((o) => o.id);
+  const grupos: { id: string; nombre: string; items: Opcion[] }[] = [];
+  if (agrupada) {
+    for (const o of visibles) {
+      const g = o.grupo ?? { id: "", nombre: "" };
+      let grupo = grupos.find((x) => x.id === g.id);
+      if (!grupo) grupos.push((grupo = { ...g, items: [] }));
+      grupo.items.push(o);
+    }
+  }
+
+  const fila = (o: Opcion, sangria = false) => (
+    <li key={o.id}>
+      <label className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted ${sangria ? "pl-7" : ""}`}>
+        <Checkbox checked={elegidos.includes(o.id)} onCheckedChange={(v) => marcar([o.id], v === true)} />
+        <span className="min-w-0 truncate">{o.nombre}</span>
+      </label>
+    </li>
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -91,15 +124,8 @@ export function ListaSeleccionable({
       {visibles.length > 1 && (
         <label className="flex items-center gap-2 px-1 text-sm">
           <Checkbox
-            checked={todos ? true : alguno ? "indeterminate" : false}
-            onCheckedChange={(v) => {
-              const ids = visibles.map((o) => o.id);
-              onChange(
-                v === true
-                  ? [...new Set([...elegidos, ...ids])]
-                  : elegidos.filter((id) => !ids.includes(id))
-              );
-            }}
+            checked={estado(idsVisibles)}
+            onCheckedChange={(v) => marcar(idsVisibles, v === true)}
           />
           {t("usuarios.masivo.seleccionarTodos", { n: visibles.length })}
         </label>
@@ -108,23 +134,38 @@ export function ListaSeleccionable({
         {visibles.length === 0 && (
           <li className="px-2 py-3 text-center text-sm text-muted-foreground">{vacio}</li>
         )}
-        {visibles.map((o) => (
-          <li key={o.id}>
-            <label className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
-              <Checkbox
-                checked={elegidos.includes(o.id)}
-                onCheckedChange={(v) =>
-                  onChange(
-                    v === true ? [...elegidos, o.id] : elegidos.filter((id) => id !== o.id)
-                  )
-                }
-              />
-              <span className="min-w-0 truncate">{o.nombre}</span>
-            </label>
-          </li>
-        ))}
+        {!agrupada && visibles.map((o) => fila(o))}
+        {agrupada &&
+          grupos.map((g) => {
+            const ids = g.items.map((o) => o.id);
+            return (
+              <li key={g.id || "sin-grupo"}>
+                {g.nombre ? (
+                  <label className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted">
+                    <Checkbox
+                      aria-label={t("usuarios.masivo.todasDelProyecto", { proyecto: g.nombre })}
+                      checked={estado(ids)}
+                      onCheckedChange={(v) => marcar(ids, v === true)}
+                    />
+                    <span className="min-w-0 truncate">{g.nombre}</span>
+                    <span className="text-xs font-normal text-muted-foreground">({ids.length})</span>
+                  </label>
+                ) : null}
+                <ul className="flex flex-col gap-0.5">{g.items.map((o) => fila(o, !!g.nombre))}</ul>
+              </li>
+            );
+          })}
       </ul>
     </div>
+  );
+}
+
+/** Campañas agrupadas por proyecto, en el orden de los proyectos. */
+export function opcionesDeCampanias(lista = campanias): Opcion[] {
+  return proyectos.flatMap((p) =>
+    lista
+      .filter((c) => c.proyectoId === p.id)
+      .map((c) => ({ id: c.id, nombre: c.nombre, grupo: { id: p.id, nombre: p.nombre } }))
   );
 }
 
@@ -208,7 +249,7 @@ export function DialogoAccionMasiva({
   const [resultado, setResultado] = useState<ResultadoMasivo | null>(null);
 
   const opciones: Opcion[] = esCampania
-    ? campanias.map((c) => ({ id: c.id, nombre: c.nombre }))
+    ? opcionesDeCampanias()
     : gruposTrabajo.map((g) => ({ id: g.id, nombre: g.nombre }));
   const nombresElegidos = opciones.filter((o) => elegidos.includes(o.id)).map((o) => o.nombre);
 

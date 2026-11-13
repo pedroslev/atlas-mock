@@ -68,6 +68,7 @@ export const campanias: NamespaceDict = {
     "masivo.todosLosGrupos": "Todos los grupos",
     "masivo.filtrarCampania": "Usuarios de la campaña",
     "masivo.todasLasCampanias": "Todas las campañas",
+    "masivo.todasDelProyecto": "Todas las campañas de {proyecto}",
     "masivo.quitar": "Quitar ({n})",
     "masivo.quitarTitulo": "¿Quitar {n} usuarios de la campaña?",
     "masivo.quitarAyuda": "Dejan de operar esta campaña cuando confirmes los cambios.",

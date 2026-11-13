@@ -70,6 +70,7 @@ export const usuarios: NamespaceDict = {
     "masivo.acciones": "Acciones ({n})",
     "masivo.seleccionados": "{n} usuarios seleccionados",
     "masivo.seleccionarTodos": "Seleccionar todos ({n})",
+    "masivo.todasDelProyecto": "Todas las campañas de {proyecto}",
     "masivo.buscarCampania": "Buscar campaña...",
     "masivo.buscarGrupo": "Buscar grupo de trabajo...",
     "masivo.sinResultados": "No hay resultados.",
