@@ -225,6 +225,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowImageCapture": "Permitir captura de imagen",
     "parametros.allowImageCaptureDesc": "El asesor puede sacar una foto del video del cliente.",
     "parametros.ringSound": "Qué suena",
+    "parametros.ringSoundPedro": "A conversar con Pedro: si se elige acá, suena igual en todos los canales de la campaña.",
     "parametros.ringClasico": "Clásico",
     "parametros.ringSuave": "Suave",
     "parametros.ringDigital": "Digital",

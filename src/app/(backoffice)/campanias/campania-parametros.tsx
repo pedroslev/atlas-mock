@@ -382,6 +382,9 @@ export function VisualizacionTab({
                   <SelectItem value="propio">{t("campanias.parametros.ringPropio")}</SelectItem>
                 </SelectContent>
               </Select>
+              <p className={cn("text-xs font-medium", NUEVO_TEXTO)}>
+                {t("campanias.parametros.ringSoundPedro")}
+              </p>
               {value.ringSound === "propio" && (
                 <ArchivoCampo
                   id="ring-sound-file"
