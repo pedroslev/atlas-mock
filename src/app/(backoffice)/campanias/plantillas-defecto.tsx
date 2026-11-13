@@ -17,39 +17,29 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { plantillaGrupos, plantillas, type CanalPlantilla, type Plantilla } from "@/lib/mock-data";
+import { getPlantillasDeGrupo, plantillas, type CanalPlantilla, type Plantilla } from "@/lib/mock-data";
 
-// Secciones del selector: una por grupo de plantillas y, al final, las que no
-// están en ningún grupo. Una plantilla que está en varios grupos aparece en
-// cada uno. Solo las activas y del canal pedido.
-function seccionesPorGrupo(canal: CanalPlantilla) {
-  const delCanal = (p: Plantilla) => p.activa && p.canales.includes(canal);
-  const enAlgunGrupo = new Set(plantillaGrupos.flatMap((g) => g.plantillaIds));
-  const secciones = plantillaGrupos
-    .map((g) => ({
-      id: g.id,
-      nombre: g.nombre,
-      items: plantillas.filter((p) => g.plantillaIds.includes(p.id) && delCanal(p)),
-    }))
-    .filter((s) => s.items.length > 0);
-  const sueltas = plantillas.filter((p) => !enAlgunGrupo.has(p.id) && delCanal(p));
-  return { secciones, sueltas };
-}
-
+// Selector de la plantilla por defecto: solo las plantillas activas del canal
+// que están en el grupo de plantillas de la campaña (solapa General), como
+// define plantillas-de-mensajes (ATLAS-1191). Sin grupo, queda deshabilitado.
 function SelectorPlantilla({
   id,
   canal,
+  grupoId,
   value,
   onChange,
 }: {
   id: string;
   canal: CanalPlantilla;
+  grupoId?: string;
   value?: string;
   onChange: (id: string | undefined) => void;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const { secciones, sueltas } = seccionesPorGrupo(canal);
+  const items = getPlantillasDeGrupo(grupoId ?? "").filter(
+    (p) => p.activa && p.canales.includes(canal)
+  );
   const elegida = plantillas.find((p) => p.id === value);
 
   function item(p: Plantilla, clave: string) {
@@ -71,7 +61,13 @@ function SelectorPlantilla({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button id={id} variant="outline" role="combobox" className="w-full justify-between font-normal">
+        <Button
+          id={id}
+          variant="outline"
+          role="combobox"
+          disabled={!grupoId}
+          className="w-full justify-between font-normal"
+        >
           <span className={cn("truncate", !elegida && "text-muted-foreground")}>
             {elegida?.nombre ?? t("plantillas.campania.sinDefault")}
           </span>
@@ -82,7 +78,7 @@ function SelectorPlantilla({
         <Command>
           <CommandInput placeholder={t("plantillas.campania.buscarDefault")} />
           <CommandList>
-            <CommandEmpty>{t("campanias.plantillasDefecto.vacio")}</CommandEmpty>
+            <CommandEmpty>{t("plantillas.campania.vacioDefault")}</CommandEmpty>
             <CommandGroup>
               <CommandItem
                 value="__ninguna"
@@ -95,16 +91,7 @@ function SelectorPlantilla({
                 {t("plantillas.campania.sinDefault")}
               </CommandItem>
             </CommandGroup>
-            {secciones.map((s) => (
-              <CommandGroup key={s.id} heading={s.nombre}>
-                {s.items.map((p) => item(p, `${s.id}-${p.id}`))}
-              </CommandGroup>
-            ))}
-            {sueltas.length > 0 && (
-              <CommandGroup heading={t("campanias.plantillasDefecto.sinGrupo")}>
-                {sueltas.map((p) => item(p, `suelta-${p.id}`))}
-              </CommandGroup>
-            )}
+            <CommandGroup>{items.map((p) => item(p, p.id))}</CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
@@ -112,13 +99,17 @@ function SelectorPlantilla({
   );
 }
 
-// ATLAS-1227: sin email por ahora (no hay canal de mail). La plantilla por defecto sale de la solapa General y se elige
-// entre TODAS las plantillas del catálogo (agrupadas por grupo, y al final
-// las que no tienen grupo), no solo las del grupo de la campaña. La casilla
-// de envío automático reemplaza al "saludo al atender" del legacy.
+// ATLAS-1227: la plantilla por defecto sale de la solapa General y vive acá,
+// en Vista del cliente. Se elige solo entre las del grupo de plantillas de la
+// campaña. Sin email por ahora (no hay canal de mail). La casilla de envío
+// automático reemplaza al "saludo al atender" del legacy.
+// En el mock el grupo se lee de los datos de la campaña, no del estado de la
+// solapa General: cambiar el grupo ahí no refresca este selector.
 export function PlantillasDefectoTab({
+  grupoPlantillasId,
   initialChatId,
 }: {
+  grupoPlantillasId?: string;
   initialChatId?: string;
 }) {
   const t = useT();
@@ -135,7 +126,16 @@ export function PlantillasDefectoTab({
         {/* Por ahora solo chat: todavía no hay canal de mail. */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="plantilla-chat">{t("plantillas.campania.defaultChat")}</Label>
-          <SelectorPlantilla id="plantilla-chat" canal="chat" value={chatId} onChange={setChatId} />
+          <SelectorPlantilla
+            id="plantilla-chat"
+            canal="chat"
+            grupoId={grupoPlantillasId}
+            value={chatId}
+            onChange={setChatId}
+          />
+          {!grupoPlantillasId && (
+            <p className="text-xs text-muted-foreground">{t("plantillas.campania.elegirGrupoPrimero")}</p>
+          )}
           <label
             htmlFor="plantilla-chat-automatica"
             className={cn("mt-1 flex items-start gap-2 rounded-md p-2 ring-1 ring-foreground/10", !chatId && "opacity-50")}

@@ -197,13 +197,11 @@ export const campanias: NamespaceDict = {
     "parametros.modeEnd": "Al finalizar la interacción",
     "parametros.modeManual": "Manual",
 
-    // ATLAS-1227 — propuesta de parámetros de chat, webcall y videollamada
-    // (sin acordar con Pedro). Por ahora solo en español.
+    // ATLAS-1227 — parámetros de chat, webcall y videollamada, acordados con
+    // el Chief Innovation Architect el 2026-11-13. Por ahora solo en español.
     "tab.vistaCliente": "Vista del cliente",
     "plantillasDefecto.titulo": "Primer mensaje",
-    "plantillasDefecto.desc": "La plantilla que Hermes deja cargada cuando el chat llega al asesor. Se elige entre todas las plantillas del catálogo: primero las de cada grupo y al final las que no están en ningún grupo.",
-    "plantillasDefecto.sinGrupo": "Sin grupo",
-    "plantillasDefecto.vacio": "No hay plantillas de ese canal.",
+    "plantillasDefecto.desc": "La plantilla que Hermes deja cargada cuando el chat llega al asesor. Se elige entre las plantillas de chat del grupo de plantillas de la campaña (solapa General).",
     "parametros.alcanceTodos": "Omnicanal",
     "parametros.alcanceConEspera": "Telefonía, Webcall, Videollamada",
     "parametros.alcanceChats": "Chat, y el chat de Webcall y Videollamada",
@@ -242,8 +240,8 @@ export const campanias: NamespaceDict = {
     "parametros.maxAcwCampo": "Máximo",
     "parametros.closeOnEnd": "Cerrar al finalizar la interacción",
     "parametros.closeOnEndDesc": "La pestaña se cierra sola cuando termina la interacción.",
-    "parametros.enviarAutomatico": "Enviar automáticamente al recibir el chat",
-    "parametros.enviarAutomaticoDesc": "La plantilla se completa con los datos del cliente y se manda sola cuando el chat llega al asesor. Si falta algún dato, no se manda: queda cargada para que la complete el asesor.",
+    "parametros.enviarAutomatico": "Enviar automáticamente al iniciar",
+    "parametros.enviarAutomaticoDesc": "La plantilla se completa con los datos del cliente y se manda sola cuando la interacción llega al asesor, siempre que tenga chat: chat, redes sociales, webcall y videollamada con chat. No aplica a SMS ni email. Si falta algún dato, no se manda: queda cargada para que la complete el asesor.",
     "parametros.enviarAutomaticoSinPlantilla": "Elegí una plantilla de chat para poder enviarla automáticamente.",
     "parametros.clienteTitulo": "Espera y fondo",
     "parametros.clienteDesc": "Lo que escucha o ve el cliente mientras está en espera, y el fondo del asesor en la videollamada.",
@@ -260,6 +258,8 @@ export const campanias: NamespaceDict = {
     "archivo.quitar": "Quitar archivo",
     "archivo.permitidos": "Permitidos: {tipos}.",
     "archivo.permitidosConTamano": "Permitidos: {tipos}, hasta {mb} MB.",
+    "archivo.permitidosVarios": "Permitidos: {grupos}.",
+    "archivo.grupoTamano": "{tipos} hasta {mb} MB",
     "archivo.rechazadoTitulo": "Este archivo no se puede usar",
     "archivo.tipoNoSoportado": "Este tipo de archivo no se puede usar acá.",
     "archivo.muyGrande": "Pesa más de {mb} MB.",

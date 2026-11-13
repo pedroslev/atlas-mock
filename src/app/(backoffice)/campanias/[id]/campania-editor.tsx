@@ -222,7 +222,10 @@ export function CampaniaEditor({
       </TabsContent>
 
       <TabsContent forceMount value="vista-cliente" className="flex flex-col gap-6 data-[state=inactive]:hidden">
-        <PlantillasDefectoTab initialChatId={campania.plantillaDefaultChatId} />
+        <PlantillasDefectoTab
+          grupoPlantillasId={campania.grupoPlantillasId}
+          initialChatId={campania.plantillaDefaultChatId}
+        />
         <ClienteTab
           value={parametros.clientMedia}
           onChange={(v) => setParametros((p) => ({ ...p, clientMedia: v }))}

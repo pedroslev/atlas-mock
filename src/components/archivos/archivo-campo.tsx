@@ -15,7 +15,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useT } from "@/lib/i18n";
 
-type Rechazo = { nombre: string; motivo: "tipo" | "tamano" };
+type Rechazo = { nombre: string; motivo: "tipo" | "tamano"; mb?: number };
+
+// Tope de tamaño: un número para todos los tipos, o uno por extensión (la
+// imagen y el video en espera comparten campo con topes distintos).
+type MaxMB = number | Record<string, number>;
+
+function topeDe(maxMB: MaxMB | undefined, ext: string) {
+  if (maxMB === undefined) return undefined;
+  return typeof maxMB === "number" ? maxMB : maxMB[ext];
+}
 
 // Campo para subir un archivo de configuración (sonido del timbre, audio o
 // video en espera, fondo del asesor). Valida antes y después, como todo
@@ -35,19 +44,36 @@ export function ArchivoCampo({
   value?: string;
   onChange: (nombre: string | undefined) => void;
   extensiones: string[];
-  maxMB?: number;
+  maxMB?: MaxMB;
   disabled?: boolean;
 }) {
   const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [rechazo, setRechazo] = useState<Rechazo | null>(null);
+  // Texto de lo permitido. Con un tope por extensión, agrupa los tipos que
+  // comparten tope: "JPG, JPEG, PNG hasta 20 MB; MP4, WEBM hasta 50 MB".
   const permitidos = extensiones.map((e) => e.toUpperCase()).join(", ");
+  let textoPermitidos: string;
+  if (maxMB === undefined) textoPermitidos = t("campanias.archivo.permitidos", { tipos: permitidos });
+  else if (typeof maxMB === "number")
+    textoPermitidos = t("campanias.archivo.permitidosConTamano", { tipos: permitidos, mb: maxMB });
+  else {
+    const porTope = new Map<number, string[]>();
+    for (const e of extensiones) {
+      const mb = maxMB[e];
+      porTope.set(mb, [...(porTope.get(mb) ?? []), e.toUpperCase()]);
+    }
+    textoPermitidos = t("campanias.archivo.permitidosVarios", {
+      grupos: [...porTope].map(([mb, tipos]) => t("campanias.archivo.grupoTamano", { tipos: tipos.join(", "), mb })).join("; "),
+    });
+  }
 
   function elegir(f: File | undefined) {
     if (!f) return;
     const ext = f.name.includes(".") ? f.name.split(".").pop()!.toLowerCase() : "";
+    const tope = topeDe(maxMB, ext);
     if (!extensiones.includes(ext)) setRechazo({ nombre: f.name, motivo: "tipo" });
-    else if (maxMB && f.size > maxMB * 1024 * 1024) setRechazo({ nombre: f.name, motivo: "tamano" });
+    else if (tope && f.size > tope * 1024 * 1024) setRechazo({ nombre: f.name, motivo: "tamano", mb: tope });
     else onChange(f.name);
   }
 
@@ -93,11 +119,7 @@ export function ArchivoCampo({
           </Button>
         )}
       </div>
-      <p className="text-xs text-muted-foreground">
-        {maxMB
-          ? t("campanias.archivo.permitidosConTamano", { tipos: permitidos, mb: maxMB })
-          : t("campanias.archivo.permitidos", { tipos: permitidos })}
-      </p>
+      <p className="text-xs text-muted-foreground">{textoPermitidos}</p>
 
       <AlertDialog open={rechazo !== null} onOpenChange={(o) => !o && setRechazo(null)}>
         <AlertDialogContent>
@@ -110,14 +132,10 @@ export function ArchivoCampo({
                   <span>
                     {rechazo?.motivo === "tipo"
                       ? t("campanias.archivo.tipoNoSoportado")
-                      : t("campanias.archivo.muyGrande", { mb: maxMB ?? 0 })}
+                      : t("campanias.archivo.muyGrande", { mb: rechazo?.mb ?? 0 })}
                   </span>
                 </div>
-                <p className="text-xs">
-                  {maxMB
-                    ? t("campanias.archivo.permitidosConTamano", { tipos: permitidos, mb: maxMB })
-                    : t("campanias.archivo.permitidos", { tipos: permitidos })}
-                </p>
+                <p className="text-xs">{textoPermitidos}</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

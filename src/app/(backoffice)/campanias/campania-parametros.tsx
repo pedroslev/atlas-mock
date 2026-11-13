@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { GrabacionSettings } from "@/components/grabacion/grabacion-settings";
 import { ArchivoCampo } from "@/components/archivos/archivo-campo";
+import { MAX_MB_IMAGEN_VIDEO } from "@/components/cuentas/parametros-cuenta";
 import { useT } from "@/lib/i18n";
 import type {
   AgentControlsParams,
@@ -645,6 +646,7 @@ export function ClienteTab({
             value={value.holdAudioFile}
             onChange={(f) => onChange({ ...value, holdAudioFile: f })}
             extensiones={EXT_AUDIO}
+            maxMB={5}
           />
           <Badge variant="outline" className="w-fit text-[0.65rem] font-normal">
             {t("campanias.parametros.alcanceTelefoniaWebcall")}
@@ -661,6 +663,7 @@ export function ClienteTab({
             value={value.holdVideoFile}
             onChange={(f) => onChange({ ...value, holdVideoFile: f })}
             extensiones={EXT_IMAGEN_VIDEO}
+            maxMB={MAX_MB_IMAGEN_VIDEO}
           />
           <Badge variant="outline" className="w-fit text-[0.65rem] font-normal">
             {t("campanias.parametros.alcanceVideollamada")}
