@@ -527,14 +527,18 @@ export function draggableSegments(route: Point[]): { index: number; axis: "x" | 
  * Corre el tramo `index` (entre los puntos `index` e `index + 1`) a `value`: la x si es
  * vertical, la y si es horizontal. Un tramo horizontal no baja más allá de justo arriba del
  * destino ni sube más allá de justo abajo de una salida por abajo, para que la línea siga
- * entrando y saliendo por esos bordes.
+ * entrando y saliendo por esos bordes. El tramo vertical que sigue a una salida por la derecha
+ * no se acerca a menos del margen del borde derecho del nodo de origen (`originRight`): si no,
+ * la línea quedaría saliendo por debajo del nodo y no se vería de dónde sale.
  */
-export function moveSegment(route: Point[], index: number, value: number): Point[] {
+export function moveSegment(route: Point[], index: number, value: number, originRight?: number): Point[] {
   const pts = route.map((p) => [p[0], p[1]] as Point);
   const vertical = pts[index][0] === pts[index + 1][0];
   if (vertical) {
-    pts[index] = [value, pts[index][1]];
-    pts[index + 1] = [value, pts[index + 1][1]];
+    const leavesRight = index === 1 && pts[0][1] === pts[1][1];
+    const x = leavesRight && originRight !== undefined ? Math.max(value, originRight + MARGIN) : value;
+    pts[index] = [x, pts[index][1]];
+    pts[index + 1] = [x, pts[index + 1][1]];
     return pts;
   }
   let y = value;

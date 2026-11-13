@@ -362,6 +362,8 @@ function conexionesDeRetorno(nodes: Node[], edges: Edge[]): Set<string> {
 // Rutas de todas las conexiones, calculadas juntas por EdgeRouter (ver lib/workflow/edge-routing).
 // Una conexión sin ruta todavía (antes de medir los nodos) usa el trazado simple de edgeGeometry.
 const RutasContext = createContext<RoutesStore>(createRoutesStore());
+// Si el imán a la grilla está encendido: los tramos que se arrastran también se enganchan.
+const ImanContext = createContext(false);
 
 // Ruta que el usuario le dejó a una conexión arrastrando sus tramos (como en draw.io): los puntos
 // de quiebre en coordenadas del lienzo. «Ordenar» la borra; no se guarda con el workflow.
@@ -511,6 +513,12 @@ function ConexionQuitable({
   const tituloDestino = useStore((s) => s.nodeLookup.get(target)?.data.titulo as string | undefined);
   const tipoDestino = useStore((s) => s.nodeLookup.get(target)?.type);
   const soloTextoDestino = useStore((s) => s.nodeLookup.get(target)?.data.soloTexto === true);
+  const iman = useContext(ImanContext);
+  // Borde derecho del nodo de origen: el tramo que sigue a la salida no puede meterse debajo.
+  const bordeOrigen = useStore((s) => {
+    const n = s.nodeLookup.get(source);
+    return n ? n.internals.positionAbsolute.x + (n.measured.width ?? 0) : undefined;
+  });
 
   const { points: puntos, remove, label } = edgeGeometry(
     ruta,
@@ -518,9 +526,14 @@ function ConexionQuitable({
     [targetX, targetY],
     sourcePosition === Position.Bottom,
   );
-  // Arrastrar un tramo deja la conexión acomodada a mano, con la ruta que se ve ahora.
+  // Arrastrar un tramo deja la conexión acomodada a mano, con la ruta que se ve ahora. Con el
+  // imán, el tramo cae sobre la grilla (también el límite junto al nodo de origen).
   const acomodar = (indice: number, valor: number) => {
-    const ruta = moveSegment(puntos, indice, valor);
+    const limite =
+      bordeOrigen === undefined || !iman
+        ? bordeOrigen
+        : Math.ceil((bordeOrigen + GRILLA) / GRILLA) * GRILLA - GRILLA;
+    const ruta = moveSegment(puntos, indice, iman ? enGrilla(valor) : valor, limite);
     setEdges((eds) => eds.map((e) => (e.id === id ? { ...e, data: { ...e.data, ruta } } : e)));
   };
   const [quitarX, quitarY] = remove;
@@ -1156,6 +1169,7 @@ export function WorkflowEditor({
         style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
         <RutasContext.Provider value={rutasStore}>
+        <ImanContext.Provider value={iman}>
         <ReactFlow
           nodes={nodosEnLienzo}
           edges={conexionesEnLienzo}
@@ -1355,6 +1369,7 @@ export function WorkflowEditor({
             </ActionTooltip>
           </Panel>
         </ReactFlow>
+        </ImanContext.Provider>
         </RutasContext.Provider>
       </div>
       </TooltipProvider>
