@@ -133,10 +133,10 @@ export const campanias: NamespaceDict = {
       "Qué acciones puede usar el agente durante la interacción, según canal.",
     "parametros.allowHold": "Permitir espera (hold)",
     "parametros.allowHoldDesc": "Permite poner la interacción en espera (hold).",
-    "parametros.allowHoldAlcance": "Telefonía, Webcall, Videollamada/Audio",
+    "parametros.allowHoldAlcance": "Llamada, Webcall, Videollamada",
     "parametros.allowHangup": "Permitir cortar llamada",
     "parametros.allowHangupDesc": "Permite cortar la llamada en curso.",
-    "parametros.allowHangupAlcance": "Telefonía, Webcall, Videollamada/Audio (no aplica al chat)",
+    "parametros.allowHangupAlcance": "Llamada, Webcall, Videollamada (no aplica al chat)",
     "parametros.allowAddBookmark": "Permitir agregar bookmark",
     "parametros.allowAddBookmarkDesc":
       "Permite agregar un bookmark durante la llamada.",
@@ -144,7 +144,7 @@ export const campanias: NamespaceDict = {
     "parametros.allowMute": "Permitir silenciar (mute)",
     "parametros.allowMuteDesc":
       "Permite usar el botón de silenciar (mute) durante la llamada.",
-    "parametros.allowMuteAlcance": "Telefonía, Webcall, Videollamada/Audio",
+    "parametros.allowMuteAlcance": "Llamada, Webcall, Videollamada",
     "parametros.allowClassification": "Permitir tipificar",
     "parametros.allowClassificationDesc":
       "Permite que el agente cargue un resultado de gestión en la interacción.",
@@ -176,7 +176,7 @@ export const campanias: NamespaceDict = {
     "parametros.forcedAnswer": "Atención forzada",
     "parametros.forcedAnswerDesc":
       "Permite que la llamada o el chat entrante se atienda automáticamente, sin que el agente tenga que aceptarlo.",
-    "parametros.forcedAnswerAlcance": "Inbound, Discador Predictivo, Chat, Webcall, Videollamada",
+    "parametros.forcedAnswerAlcance": "Llamada, Chat, Webcall, Videollamada",
 
     "parametros.urlInteraccionTitulo": "URLs externas",
     "parametros.urlInteraccionDesc":
@@ -199,9 +199,13 @@ export const campanias: NamespaceDict = {
 
     // ATLAS-1227 — propuesta de parámetros de chat, webcall y videollamada
     // (sin acordar con Pedro). Por ahora solo en español.
-    "tab.cliente": "Lo que ve y escucha el cliente",
+    "tab.cliente": "Espera y fondo",
+    "tab.plantillas": "Plantillas por defecto",
+    "plantillasDefecto.desc": "Plantilla que Hermes deja cargada al abrir la conversación. Se elige entre todas las plantillas del catálogo: primero las de cada grupo y al final las que no están en ningún grupo.",
+    "plantillasDefecto.sinGrupo": "Sin grupo",
+    "plantillasDefecto.vacio": "No hay plantillas de ese canal.",
     "parametros.aConversarConPedro": "A conversar con Pedro.",
-    "parametros.alcanceTodos": "Llamada, Chat, Webcall, Videollamada",
+    "parametros.alcanceTodos": "Omnicanal",
     "parametros.alcanceConEspera": "Llamada, Webcall, Videollamada",
     "parametros.alcanceChats": "Chat, y el chat de Webcall y Videollamada",
     "parametros.alcanceTiempoRealYChat": "Chat, Webcall, Videollamada",
@@ -241,7 +245,7 @@ export const campanias: NamespaceDict = {
     "parametros.enviarAutomatico": "Enviar automáticamente al recibir el chat",
     "parametros.enviarAutomaticoDesc": "La plantilla se completa con los datos del cliente y se manda sola cuando el chat llega al asesor. Si falta algún dato, no se manda: queda cargada para que la complete el asesor.",
     "parametros.enviarAutomaticoSinPlantilla": "Elegí una plantilla de chat para poder enviarla automáticamente.",
-    "parametros.clienteTitulo": "Lo que ve y escucha el cliente",
+    "parametros.clienteTitulo": "Espera y fondo",
     "parametros.clienteDesc": "Lo que recibe el cliente en la webcall y la videollamada mientras está en espera, y el fondo del asesor.",
     "parametros.holdAudio": "Audio en espera",
     "parametros.holdAudioDesc": "Lo que escucha el cliente cuando el asesor lo pone en espera. Sin archivo, suena la música de espera de la cola.",

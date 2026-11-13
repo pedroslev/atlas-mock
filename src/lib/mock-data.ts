@@ -1066,6 +1066,17 @@ export const plantillas: Plantilla[] = [
     adjuntos: [],
     activa: true,
   },
+  // ATLAS-1227: de ejemplo, sin ningún grupo, para que el selector de
+  // plantillas por defecto muestre la sección "Sin grupo".
+  {
+    id: "pl-encuesta",
+    nombre: "Invitación a la encuesta",
+    descripcion: "Pide al cliente que califique la atención.",
+    canales: ["chat", "whatsapp"],
+    contenido: "Gracias por comunicarte con nosotros. ¿Nos ayudás a mejorar respondiendo una encuesta de un minuto?",
+    adjuntos: [],
+    activa: true,
+  },
 ];
 
 // MOCK: grupos de ejemplo con sus plantillas por id.

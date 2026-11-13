@@ -63,6 +63,7 @@ import {
   ClienteTab,
 } from "../campania-parametros";
 import { NUEVO_TEXTO } from "@/components/propuesta/nuevo";
+import { PlantillasDefectoTab } from "../plantillas-defecto";
 
 // Sin campo de estado (campaigns no tiene estado en el DER) y sin solapa de
 // listas de contactos (contact_list queda fuera de fase 0) — feedback de
@@ -104,7 +105,10 @@ export function CampaniaEditor({
         <TabsTrigger value="url-interaccion">
           {t("campanias.tab.urlInteraccion")}
         </TabsTrigger>
-        {/* ATLAS-1227: solapa nueva, en violeta hasta pasarla al color final. */}
+        {/* ATLAS-1227: solapas nuevas, en violeta hasta pasarlas al color final. */}
+        <TabsTrigger value="plantillas" className={NUEVO_TEXTO}>
+          {t("campanias.tab.plantillas")}
+        </TabsTrigger>
         <TabsTrigger value="cliente" className={NUEVO_TEXTO}>
           {t("campanias.tab.cliente")}
         </TabsTrigger>
@@ -183,8 +187,6 @@ export function CampaniaEditor({
                 initialGrupoClasificacionId={campania.grupoClasificacionId}
                 initialGrupoBookmarksId={campania.grupoBookmarksId}
                 initialGrupoPlantillasId={campania.grupoPlantillasId}
-                initialPlantillaDefaultChatId={campania.plantillaDefaultChatId}
-                initialPlantillaDefaultEmailId={campania.plantillaDefaultEmailId}
                 initialFeriadosId={campania.feriadosId}
                 initialListaExclusionId={campania.listaExclusionId}
               />
@@ -240,6 +242,13 @@ export function CampaniaEditor({
         <UrlsExternasTab
           value={parametros.interactionUrlSettings}
           onChange={(v) => setParametros((p) => ({ ...p, interactionUrlSettings: v }))}
+        />
+      </TabsContent>
+
+      <TabsContent forceMount value="plantillas" className="data-[state=inactive]:hidden">
+        <PlantillasDefectoTab
+          initialChatId={campania.plantillaDefaultChatId}
+          initialEmailId={campania.plantillaDefaultEmailId}
         />
       </TabsContent>
 

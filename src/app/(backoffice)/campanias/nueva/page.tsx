@@ -134,8 +134,6 @@ export default function NuevaCampaniaPage({
               initialGrupoClasificacionId={original?.grupoClasificacionId}
               initialGrupoBookmarksId={original?.grupoBookmarksId}
               initialGrupoPlantillasId={original?.grupoPlantillasId}
-              initialPlantillaDefaultChatId={original?.plantillaDefaultChatId}
-              initialPlantillaDefaultEmailId={original?.plantillaDefaultEmailId}
               initialFeriadosId={original?.feriadosId}
               initialListaExclusionId={original?.listaExclusionId}
             />
