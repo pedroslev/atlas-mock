@@ -32,6 +32,8 @@ export type RowAction = {
   separatorBefore?: boolean;
   /** Copy de la confirmación para acciones destructivas. Lo traduce la pantalla que lo pasa; si no se pasa, se usa el genérico de `common`. */
   confirmDescription?: string;
+  /** Título de la confirmación cuando la acción no es una eliminación (ej. "¿Deshabilitar a {nombre}?"). Si no se pasa, se usa el genérico de eliminación. */
+  confirmTitle?: string;
 };
 
 // Ancla siempre sobre el ícono que lo dispara (Radix Popper) — nunca al costado de
@@ -99,7 +101,7 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
         <AlertDialogContent onClick={(event) => event.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("common.comunes.eliminarTitulo")}
+              {confirming?.confirmTitle ?? t("common.comunes.eliminarTitulo")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirming?.confirmDescription ??

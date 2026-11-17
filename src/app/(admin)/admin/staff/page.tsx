@@ -257,6 +257,8 @@ export default function StaffPage() {
                               label: t("staff.accion.deshabilitar"),
                               destructive: true,
                               separatorBefore: true,
+                              // Misma confirmación que al apagar el interruptor en el detalle.
+                              confirmTitle: t("staff.accion.deshabilitarTitulo", { nombre: u.name }),
                               confirmDescription: t("staff.accion.deshabilitarDescripcion", {
                                 nombre: u.name,
                               }),
