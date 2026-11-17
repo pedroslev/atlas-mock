@@ -72,6 +72,17 @@ export const staffActions = {
       ),
     });
   },
+  /**
+   * Sincronización manual con el directorio. Devuelve cuántas personas quedaron.
+   * MOCK: el directorio no cambia; solo actualiza "Última sincronización" de
+   * todas las personas a `cuando`.
+   * REAL: POST /staff-users/sync en `zeus-api` corre la misma sincronización
+   * que la nocturna (altas, bajas y cambios de nombre o mail).
+   */
+  syncDirectory(cuando: string): number {
+    setState({ ...state, users: state.users.map((u) => ({ ...u, lastSync: cuando })) });
+    return state.users.length;
+  },
   /** Recuerda la pestaña activa para volver a ella desde un detalle. */
   setTab(tab: StaffTab) {
     setState({ ...state, tab });
