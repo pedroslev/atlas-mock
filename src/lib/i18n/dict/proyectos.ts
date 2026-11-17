@@ -29,9 +29,8 @@ export const proyectos: NamespaceDict = {
     "eliminar.dialogoTitulo": "¿Eliminar el proyecto «{nombre}»?",
     "eliminar.dialogoDescripcion":
       "El proyecto se elimina junto con su configuración: horarios de atención, grupos heredados y todo lo que las campañas tomaban de él.",
-    "eliminar.avisoTitulo": "Esto no se puede deshacer.",
     "eliminar.aviso":
-      "Se pierde toda la información histórica de las campañas que este proyecto tuvo alguna vez, incluidas las que ya fueron eliminadas: llamadas, gestiones y reportes dejan de estar disponibles.",
+      "Solo se puede eliminar un proyecto sin campañas. Esta acción no se puede deshacer.",
     "eliminar.confirmar": "Eliminar definitivamente",
 
     "acciones.titulo": "Acciones rápidas",
@@ -91,9 +90,8 @@ export const proyectos: NamespaceDict = {
     "eliminar.dialogoTitulo": "Delete the project “{nombre}”?",
     "eliminar.dialogoDescripcion":
       "The project is deleted along with its configuration: business hours, inherited groups and everything campaigns took from it.",
-    "eliminar.avisoTitulo": "This can't be undone.",
     "eliminar.aviso":
-      "All historical data from every campaign this project ever had is lost, including campaigns already deleted: calls, interactions and reports stop being available.",
+      "Only a project without campaigns can be deleted. This action can't be undone.",
     "eliminar.confirmar": "Delete permanently",
 
     "acciones.titulo": "Quick actions",
@@ -152,9 +150,8 @@ export const proyectos: NamespaceDict = {
     "eliminar.dialogoTitulo": "Excluir o projeto “{nombre}”?",
     "eliminar.dialogoDescripcion":
       "O projeto é excluído junto com sua configuração: horários de atendimento, grupos herdados e tudo o que as campanhas tomavam dele.",
-    "eliminar.avisoTitulo": "Isso não pode ser desfeito.",
     "eliminar.aviso":
-      "Perde-se toda a informação histórica das campanhas que este projeto teve alguma vez, incluindo as já excluídas: chamadas, atendimentos e relatórios deixam de estar disponíveis.",
+      "Só é possível excluir um projeto sem campanhas. Esta ação não pode ser desfeita.",
     "eliminar.confirmar": "Excluir definitivamente",
 
     "acciones.titulo": "Ações rápidas",
@@ -214,9 +211,8 @@ export const proyectos: NamespaceDict = {
     "eliminar.dialogoTitulo": "Vols eliminar el projecte «{nombre}»?",
     "eliminar.dialogoDescripcion":
       "El projecte s'elimina juntament amb la seva configuració: horaris d'atenció, grups heretats i tot el que les campanyes en prenien.",
-    "eliminar.avisoTitulo": "Això no es pot desfer.",
     "eliminar.aviso":
-      "Es perd tota la informació històrica de les campanyes que aquest projecte va tenir alguna vegada, incloses les ja eliminades: trucades, gestions i informes deixen d'estar disponibles.",
+      "Només es pot eliminar un projecte sense campanyes. Aquesta acció no es pot desfer.",
     "eliminar.confirmar": "Eliminar definitivament",
 
     "acciones.titulo": "Accions ràpides",

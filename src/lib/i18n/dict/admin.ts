@@ -216,7 +216,7 @@ export const admin: NamespaceDict = {
       "Se eliminará el número “{numero}”. Esta acción no se puede deshacer.",
 
     "telefonia.tarifas.descripcion":
-      "Cuánto cobra cada carrier por minuto según el prefijo de destino, igual en todas sus regiones. Se usa para elegir el carrier más barato cuando la llamada sale con CLI oculto o aleatorio.",
+      "Cuánto cobra cada carrier por minuto según el prefijo de destino, igual en todas sus regiones. Se cargan para cualquier carrier activo: con CLI oculto o aleatorio se elige el más barato para el destino, y con un número propio la llamada sale por su carrier solo si tiene tarifa para ese destino.",
     "telefonia.tarifas.agregar": "Agregar tarifa",
     "telefonia.tarifas.nuevo": "Nueva tarifa",
     "telefonia.tarifas.editarTitulo": "Editar tarifa {prefijo}",
@@ -225,7 +225,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefijo destino",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Solo se listan carriers activos que permiten CLI oculto o aleatorio.",
+      "Solo se listan carriers activos.",
     "telefonia.tarifas.eliminarDescripcion":
       "Se eliminará la tarifa del prefijo “{prefijo}”. Esta acción no se puede deshacer.",
   },
@@ -439,7 +439,7 @@ export const admin: NamespaceDict = {
       "The number “{numero}” will be deleted. This action cannot be undone.",
 
     "telefonia.tarifas.descripcion":
-      "How much each carrier charges per minute by destination prefix, the same in all its regions. Used to pick the cheapest carrier when the call goes out with hidden or random CLI.",
+      "How much each carrier charges per minute by destination prefix, the same in all its regions. Rates are loaded for any active carrier: with hidden or random CLI the cheapest one for the destination is chosen, and with an own number the call goes out through its carrier only if it has a rate for that destination.",
     "telefonia.tarifas.agregar": "Add rate",
     "telefonia.tarifas.nuevo": "New rate",
     "telefonia.tarifas.editarTitulo": "Edit rate {prefijo}",
@@ -448,7 +448,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Destination prefix",
     "telefonia.tarifas.col.tarifa": "Rate",
     "telefonia.tarifas.carrierAyuda":
-      "Only active carriers that allow hidden or random CLI are listed.",
+      "Only active carriers are listed.",
     "telefonia.tarifas.eliminarDescripcion":
       "The rate for prefix “{prefijo}” will be deleted. This action cannot be undone.",
   },
@@ -662,7 +662,7 @@ export const admin: NamespaceDict = {
       "O número “{numero}” será excluído. Esta ação não pode ser desfeita.",
 
     "telefonia.tarifas.descripcion":
-      "Quanto cada carrier cobra por minuto conforme o prefixo de destino, igual em todas as suas regiões. Usado para escolher o carrier mais barato quando a chamada sai com CLI oculto ou aleatório.",
+      "Quanto cada carrier cobra por minuto conforme o prefixo de destino, igual em todas as suas regiões. São cadastradas para qualquer carrier ativo: com CLI oculto ou aleatório escolhe-se o mais barato para o destino, e com um número próprio a chamada sai pelo seu carrier só se ele tiver tarifa para esse destino.",
     "telefonia.tarifas.agregar": "Adicionar tarifa",
     "telefonia.tarifas.nuevo": "Nova tarifa",
     "telefonia.tarifas.editarTitulo": "Editar tarifa {prefijo}",
@@ -671,7 +671,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefixo destino",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Só são listados carriers ativos que permitem CLI oculto ou aleatório.",
+      "Só são listados carriers ativos.",
     "telefonia.tarifas.eliminarDescripcion":
       "A tarifa do prefixo “{prefijo}” será excluída. Esta ação não pode ser desfeita.",
   },
@@ -884,7 +884,7 @@ export const admin: NamespaceDict = {
       "S'eliminarà el número “{numero}”. Aquesta acció no es pot desfer.",
 
     "telefonia.tarifas.descripcion":
-      "Quant cobra cada carrier per minut segons el prefix de destinació, igual a totes les seves regions. S'usa per triar el carrier més barat quan la trucada surt amb CLI ocult o aleatori.",
+      "Quant cobra cada carrier per minut segons el prefix de destinació, igual a totes les seves regions. Es carreguen per a qualsevol carrier actiu: amb CLI ocult o aleatori es tria el més barat per a la destinació, i amb un número propi la trucada surt pel seu carrier només si té tarifa per a aquesta destinació.",
     "telefonia.tarifas.agregar": "Afegeix una tarifa",
     "telefonia.tarifas.nuevo": "Nova tarifa",
     "telefonia.tarifas.editarTitulo": "Edita la tarifa {prefijo}",
@@ -893,7 +893,7 @@ export const admin: NamespaceDict = {
     "telefonia.tarifas.col.prefijo": "Prefix destinació",
     "telefonia.tarifas.col.tarifa": "Tarifa",
     "telefonia.tarifas.carrierAyuda":
-      "Només es llisten carriers actius que permeten CLI ocult o aleatori.",
+      "Només es llisten carriers actius.",
     "telefonia.tarifas.eliminarDescripcion":
       "S'eliminarà la tarifa del prefix “{prefijo}”. Aquesta acció no es pot desfer.",
   },

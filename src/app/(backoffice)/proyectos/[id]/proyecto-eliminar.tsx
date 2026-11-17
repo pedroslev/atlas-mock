@@ -27,12 +27,8 @@ import { useCampanias } from "@/lib/campanias-store";
 // Un proyecto solo se puede eliminar cuando ya no tiene campañas: mientras
 // tenga, el botón queda bloqueado y el tooltip dice cuántas hay que mover o
 // eliminar primero (mismo criterio que el eliminar de un agente, que exige
-// deshabilitarlo antes).
-//
-// Al borrarlo se pierde el histórico de todas las campañas que ese proyecto
-// tuvo alguna vez, no solo el de las que tiene hoy — por eso la advertencia
-// está en el diálogo y no solo en el botón. No hay persistencia, es un mock
-// (ver PRODUCT.md).
+// deshabilitarlo antes). El diálogo repite esa condición y avisa que la acción
+// no se puede deshacer. No hay persistencia, es un mock (ver PRODUCT.md).
 export function ProyectoEliminar({
   nombre,
   proyectoId,
@@ -93,12 +89,7 @@ export function ProyectoEliminar({
 
             <p className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
-              <span>
-                <span className="font-medium">
-                  {t("proyectos.eliminar.avisoTitulo")}
-                </span>{" "}
-                {t("proyectos.eliminar.aviso")}
-              </span>
+              <span>{t("proyectos.eliminar.aviso")}</span>
             </p>
 
             <AlertDialogFooter>
