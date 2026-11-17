@@ -50,7 +50,14 @@ export const staff: NamespaceDict = {
       "{nombre} dejará de poder ingresar a Zeus. Podés volver a habilitarla cuando quieras.",
 
     "habilitar.descripcion":
-      "Asignale un grupo de permisos. Le llegará un mail para fijar su contraseña.",
+      "Elegí un grupo de permisos y habilitala. Le llegará un mail para fijar su contraseña.",
+    "habilitada": "Habilitada en Zeus",
+    "habilitada.ayudaSi":
+      "Puede ingresar a Zeus. Deshabilitarla le quita el acceso en el momento; podés volver a habilitarla cuando quieras.",
+    "habilitada.ayudaNo":
+      "No puede ingresar a Zeus. Al habilitarla le llega un mail para fijar su contraseña.",
+    "habilitada.ayudaSinGrupo":
+      "No puede ingresar a Zeus. Para habilitarla, elegí primero un grupo de permisos.",
     "editar.descripcion":
       "Cambiale el grupo de permisos.",
     "form.persona": "Nombre",

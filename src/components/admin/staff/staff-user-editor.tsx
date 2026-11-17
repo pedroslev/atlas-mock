@@ -7,6 +7,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -45,8 +46,11 @@ import { useT } from "@/lib/i18n";
 // permisos (selección única, obligatorio) y el resumen de solo lectura de lo
 // que da ese grupo (permisos y alcance por región). Siempre se abre sobre una
 // persona del listado: no hay selector de personas. El nombre y el mail son
-// texto, no campos. Una persona Invitada o Activa se puede deshabilitar desde
-// acá, con la misma confirmación que en el listado.
+// texto, no campos. Habilitar y deshabilitar se hacen con el interruptor
+// "Habilitada en Zeus" (el mismo control que el detalle de usuario de Olimpo,
+// /agentes/[id]) y se aplican en el momento: prenderlo exige un grupo elegido y
+// manda el mail de alta; apagarlo pide confirmación. "Confirmar" solo existe
+// para una persona ya habilitada y guarda el cambio de grupo.
 //
 // MOCK: edita un borrador local; "Confirmar" lo guarda en el store en memoria
 // (lib/staff-store.ts) y, al habilitar, la persona pasa a Invitada y se muestra
@@ -83,16 +87,21 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
   const group = groups.find((g) => g.id === groupId);
   const effective = effectivePermissions(group);
 
-  // Guarda en el store: al habilitar la persona pasa a Invitada; al editar
-  // conserva su estado.
+  // Guarda el cambio de grupo de una persona ya habilitada; conserva su estado.
   function confirmar() {
     if (!person || !groupId) return;
-    staffActions.updateUser(person.directoryId, {
-      groupId,
-      ...(editing ? {} : { status: "invitado" as const }),
-    });
-    if (editing) router.push("/admin/staff");
-    else setDone(true);
+    staffActions.updateUser(person.directoryId, { groupId });
+    router.push("/admin/staff");
+  }
+
+  // Interruptor: prenderlo habilita con el grupo elegido (pasa a Invitada y se
+  // avisa del mail enviado); apagarlo abre la confirmación de la baja.
+  function cambiarHabilitada(habilitar: boolean) {
+    if (!person) return;
+    if (!habilitar) return setConfirmandoBaja(true);
+    if (!groupId) return;
+    staffActions.updateUser(person.directoryId, { groupId, status: "invitado" });
+    setDone(true);
   }
 
   return (
@@ -102,23 +111,22 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
         description={t(editing ? "staff.editar.descripcion" : "staff.habilitar.descripcion")}
         backHref="/admin/staff"
         actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href="/admin/staff">{t("common.acciones.cancelar")}</Link>
-            </Button>
-            {editing && (
-              <Button
-                variant="destructive"
-                data-testid="staff-deshabilitar"
-                onClick={() => setConfirmandoBaja(true)}
-              >
-                {t("staff.accion.deshabilitar")}
+          // Sin persona habilitada no hay nada que confirmar: se habilita con
+          // el interruptor y se vuelve con el enlace del encabezado.
+          editing && (
+            <>
+              <Button variant="outline" asChild>
+                <Link href="/admin/staff">{t("common.acciones.cancelar")}</Link>
               </Button>
-            )}
-            <Button data-testid="staff-confirmar" disabled={!person || !groupId} onClick={confirmar}>
-              {t("common.acciones.confirmar")}
-            </Button>
-          </>
+              <Button
+                data-testid="staff-confirmar"
+                disabled={!groupId || groupId === person?.groupId}
+                onClick={confirmar}
+              >
+                {t("common.acciones.confirmar")}
+              </Button>
+            </>
+          )
         }
       />
 
@@ -141,9 +149,33 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
             {person && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">{t("staff.col.estado")}:</span>
-                <Badge variant={staffStatusBadge[person.status]}>{t(`staff.estado.${person.status}`)}</Badge>
+                <Badge variant={staffStatusBadge[person.status]} data-testid="staff-estado">
+                  {t(`staff.estado.${person.status}`)}
+                </Badge>
               </div>
             )}
+            {/* Mismo control que "Habilitado" en el usuario de Olimpo. Apagado y
+                sin grupo elegido queda bloqueado: la ayuda dice qué falta. */}
+            <div className="flex flex-col gap-2 rounded-lg p-3 ring-1 ring-foreground/10">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t("staff.habilitada")}</span>
+                <Switch
+                  data-testid="staff-habilitada"
+                  checked={editing}
+                  disabled={!editing && !groupId}
+                  onCheckedChange={cambiarHabilitada}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground" data-testid="staff-habilitada-ayuda">
+                {t(
+                  editing
+                    ? "staff.habilitada.ayudaSi"
+                    : groupId
+                      ? "staff.habilitada.ayudaNo"
+                      : "staff.habilitada.ayudaSinGrupo",
+                )}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -211,7 +243,7 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
         </div>
       </div>
 
-      {/* Confirmación de la baja; al confirmar vuelve al listado. */}
+      {/* Confirmación de la baja; al confirmar se queda en el detalle, ya Deshabilitada. */}
       <AlertDialog open={confirmandoBaja} onOpenChange={setConfirmandoBaja}>
         <AlertDialogContent data-testid="staff-deshabilitar-confirmacion">
           <AlertDialogHeader>
@@ -230,7 +262,6 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
               onClick={() => {
                 if (!person) return;
                 staffActions.updateUser(person.directoryId, { status: "deshabilitado" });
-                router.push("/admin/staff");
               }}
             >
               {t("staff.accion.deshabilitar")}
@@ -239,7 +270,7 @@ export function StaffUserEditor({ directoryId }: { directoryId: string }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={done} onOpenChange={(open) => !open && router.push("/admin/staff")}>
+      <Dialog open={done} onOpenChange={setDone}>
         <DialogContent data-testid="staff-confirmacion">
           <DialogHeader>
             <DialogTitle>{t("staff.enviado.titulo")}</DialogTitle>
