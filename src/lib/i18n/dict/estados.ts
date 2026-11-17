@@ -20,6 +20,12 @@ export const estados: NamespaceDict = {
       "Nombre, color e ícono con los que el asesor ve este estado en su pantalla de trabajo.",
     "dialogo.placeholderNombre": "Ej: Capacitación",
     "dialogo.iconoAria": "Ícono del estado auxiliar",
+    "col.productivo": "Productivo",
+    "productivo.si": "Sí",
+    "productivo.no": "No",
+    "dialogo.productivo": "Estado productivo",
+    "dialogo.productivoAyuda":
+      "Marcalo si la persona sigue trabajando mientras está en este estado, por ejemplo en una capacitación o atendiendo desde otra herramienta. Qué pasa si bloquea la computadora en un estado productivo se define en cada grupo, en «Grupos y roles».",
   },
   en: {
     descripcion:
@@ -38,6 +44,12 @@ export const estados: NamespaceDict = {
       "Name, color and icon the agent sees for this state on their work screen.",
     "dialogo.placeholderNombre": "E.g.: Training",
     "dialogo.iconoAria": "Auxiliary state icon",
+    "col.productivo": "Productive",
+    "productivo.si": "Yes",
+    "productivo.no": "No",
+    "dialogo.productivo": "Productive state",
+    "dialogo.productivoAyuda":
+      "Check it if the person keeps working while in this state, for example in a training session or handling customers from another tool. What happens if they lock the computer in a productive state is set per group, in “Groups and roles”.",
   },
   pt: {
     descripcion:
@@ -56,6 +68,12 @@ export const estados: NamespaceDict = {
       "Nome, cor e ícone com que o atendente vê este estado na tela de trabalho.",
     "dialogo.placeholderNombre": "Ex.: Treinamento",
     "dialogo.iconoAria": "Ícone do estado auxiliar",
+    "col.productivo": "Produtivo",
+    "productivo.si": "Sim",
+    "productivo.no": "Não",
+    "dialogo.productivo": "Estado produtivo",
+    "dialogo.productivoAyuda":
+      "Marque se a pessoa continua trabalhando enquanto está neste estado, por exemplo em um treinamento ou atendendo por outra ferramenta. O que acontece se ela bloquear o computador em um estado produtivo é definido em cada grupo, em «Grupos e funções».",
   },
   ca: {
     descripcion:
@@ -74,5 +92,11 @@ export const estados: NamespaceDict = {
       "Nom, color i icona amb què l'agent veu aquest estat a la seva pantalla de treball.",
     "dialogo.placeholderNombre": "Ex.: Formació",
     "dialogo.iconoAria": "Icona de l'estat auxiliar",
+    "col.productivo": "Productiu",
+    "productivo.si": "Sí",
+    "productivo.no": "No",
+    "dialogo.productivo": "Estat productiu",
+    "dialogo.productivoAyuda":
+      "Marca'l si la persona continua treballant mentre és en aquest estat, per exemple en una formació o atenent des d'una altra eina. Què passa si bloqueja l'ordinador en un estat productiu es defineix a cada grup, a «Grups i rols».",
   },
 };

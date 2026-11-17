@@ -39,6 +39,7 @@ export const contenido: ContenidoPagina = {
               "Estado — Un punto del color del estado y su nombre.",
               "Color — El código del color (por ejemplo #FFC107). Esta columna no se puede filtrar.",
               "Ícono — El dibujo del ícono, pintado con el color del estado.",
+              "Productivo — «Sí» si el estado está marcado como productivo; «No» si no. Esta columna no se puede filtrar.",
             ],
           },
           {
@@ -59,6 +60,7 @@ export const contenido: ContenidoPagina = {
               "Se abre el cuadro «Nuevo estado auxiliar» (o «Editar <nombre>»). Completá «Nombre».",
               "Elegí un «Color».",
               "Elegí un «Ícono» de la grilla.",
+              "Tildá «Estado productivo» si la persona sigue trabajando mientras está en ese estado.",
               "Tocá «Crear estado» (o «Guardar» si estás editando). Para salir sin cambios, «Cancelar».",
             ],
           },
@@ -68,6 +70,7 @@ export const contenido: ContenidoPagina = {
               "Nombre — Obligatorio (por ejemplo, «Ej: Capacitación»). El botón para guardar queda apagado mientras el nombre esté vacío o tenga solo espacios. Es lo que lee el asesor, así que usá un nombre que se entienda solo.",
               "Color — Se elige con el selector de color. Por defecto es #0074B5. Ayuda a reconocer el estado de un vistazo: por ejemplo, verde para el descanso y rojo para un problema técnico.",
               "Ícono — Se elige con un clic en la grilla; no hay que escribir nada. Por defecto es el círculo. El elegido se resalta y toma el color del estado. Hay 22 opciones: círculo, cubiertos, café, birrete, personas, puerta, portapapeles, mensaje, llave, cama, campana, reloj, pausa, premio, maletín, libro, estetoscopio, auto, corazón, auriculares, luna y prohibido.",
+              "Estado productivo — Casilla, por defecto destildada. Tildala cuando la persona sigue trabajando aunque no atienda en Hermes: una capacitación, una reunión o la atención desde otra herramienta. No cambia cómo se ve el estado ni quién puede usarlo: en un estado productivo tampoco se reciben interacciones nuevas. Sirve para decidir qué pasa si la persona bloquea la computadora (ver «Reglas y relaciones»).",
             ],
           },
         ],
@@ -97,6 +100,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "Dónde se usan — Los grupos habilitan estados desde «Grupos y roles» (con un buscador, pensado para listas largas) y el asesor los elige en su pantalla de trabajo con su nombre, color e ícono.",
               "Nombres — Conviene no repetirlos: si dos estados se llaman igual, el asesor no los distingue.",
+              "Bloqueo de la computadora — En un estado que no es productivo (baño, descanso), bloquear la computadora no cambia nada: la persona sigue en el estado, con la sesión abierta y el tiempo corriendo. En un estado productivo, cada grupo elige en «Grupos y roles», solapa «Config. Hermes», entre tres opciones: sigue en el estado, pasa a No disponible o se cierra la sesión.",
             ],
           },
         ],
@@ -139,6 +143,7 @@ export const contenido: ContenidoPagina = {
               "State — A dot in the state's color and its name.",
               "Color — The color code (for example #FFC107). This column cannot be filtered.",
               "Icon — The icon drawing, painted in the state's color.",
+              "Productive — “Yes” if the state is marked as productive; “No” otherwise. This column cannot be filtered.",
             ],
           },
           {
@@ -159,6 +164,7 @@ export const contenido: ContenidoPagina = {
               "The “New auxiliary state” dialog opens (or “Edit <name>”). Fill in “Name”.",
               "Choose a “Color”.",
               "Choose an “Icon” from the grid.",
+              "Check “Productive state” if the person keeps working while in that state.",
               "Click “Create state” (or “Save” if you are editing). To leave with no changes, “Cancel”.",
             ],
           },
@@ -168,6 +174,7 @@ export const contenido: ContenidoPagina = {
               "Name — Required (for example, “E.g.: Training”). The save button stays off while the name is empty or only spaces. It is what the agent reads, so use a name that explains itself.",
               "Color — Chosen with the color picker. The default is #0074B5. It helps recognize the state at a glance: for example, green for a break and red for a technical problem.",
               "Icon — Chosen with one click on the grid; there is nothing to type. The default is the circle. The chosen one is highlighted and takes the state's color. There are 22 options: circle, utensils, coffee, graduation cap, people, door, clipboard, message, wrench, bed, bell, clock, pause, award, briefcase, book, stethoscope, car, heart, headphones, moon and ban.",
+              "Productive state — Checkbox, unchecked by default. Check it when the person keeps working even though they are not handling interactions in Hermes: a training session, a meeting or handling customers from another tool. It does not change how the state looks or who can use it: no new interactions arrive in a productive state either. It decides what happens if the person locks the computer (see “Rules and relations”).",
             ],
           },
         ],
@@ -197,6 +204,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "Where they are used — Groups enable states from “Groups and roles” (with a search box, built for long lists) and the agent picks them on their work screen with their name, color and icon.",
               "Names — Better not to repeat them: if two states have the same name, the agent cannot tell them apart.",
+              "Computer lock — In a state that is not productive (restroom, break), locking the computer changes nothing: the person stays in the state, with the session open and the time running. In a productive state, each group chooses in “Groups and roles”, “Config. Hermes” tab, among three options: stays in the state, switches to Not available or the session is closed.",
             ],
           },
         ],

@@ -30,6 +30,9 @@ import type {
 } from "@/lib/mock-data";
 import { AuxMultiSelect } from "./aux-multi-select";
 
+// Valores de working_groups.parameters.productive_aux_on_lock.
+type AccionAlBloquear = "keep" | "logout" | "not_available";
+
 function nuevoAccesoRapido(): ShortcutButtonEntry {
   return {
     id: `sb-${crypto.randomUUID()}`,
@@ -96,6 +99,22 @@ export function GrupoConfigHermesTab({
   // las demás llamadas.
   const [grabarInternas, setGrabarInternas] = useState(false);
 
+  // Qué hace Hermes cuando un asesor del grupo bloquea la PC estando en un
+  // auxiliar productivo. En un auxiliar no productivo no hay nada que
+  // configurar: el bloqueo no cambia nada.
+  // MOCK: estado local, arranca en "keep".
+  // REAL: working_groups.parameters.productive_aux_on_lock
+  // ("keep" | "logout" | "not_available", default "keep"). Lo aplica
+  // hermes-worker cuando hermes-front le avisa el bloqueo; con varios grupos
+  // gana lo más estricto (logout > not_available > keep). Ver
+  // documentacion/producto/funcionalidades/estados-auxiliares-productivos/.
+  const [alBloquear, setAlBloquear] = useState<AccionAlBloquear>("keep");
+  const ayudaAlBloquear: Record<AccionAlBloquear, string> = {
+    keep: t("grupos.bloqueo.keepAyuda"),
+    logout: t("grupos.bloqueo.logoutAyuda"),
+    not_available: t("grupos.bloqueo.notAvailableAyuda"),
+  };
+
   function actualizar(id: string, patch: Partial<ShortcutButtonEntry>) {
     setShortcuts((cur) => cur.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   }
@@ -113,6 +132,42 @@ export function GrupoConfigHermesTab({
         </CardHeader>
         <CardContent>
           <AuxMultiSelect initialIds={initialEstadosAuxiliares} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("grupos.bloqueo.titulo")}</CardTitle>
+          <CardDescription>{t("grupos.bloqueo.desc")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-1.5 sm:w-1/2">
+            <Label htmlFor="aux-al-bloquear">{t("grupos.bloqueo.campo")}</Label>
+            <Select
+              value={alBloquear}
+              onValueChange={(v) => setAlBloquear(v as AccionAlBloquear)}
+            >
+              <SelectTrigger
+                id="aux-al-bloquear"
+                data-testid="grupo-aux-al-bloquear"
+                className="w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="keep">{t("grupos.bloqueo.keep")}</SelectItem>
+                <SelectItem value="not_available">{t("grupos.bloqueo.notAvailable")}</SelectItem>
+                <SelectItem value="logout">{t("grupos.bloqueo.logout")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="grupo-aux-al-bloquear-ayuda"
+            >
+              {ayudaAlBloquear[alBloquear]}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("grupos.bloqueo.variosGrupos")}</p>
+          </div>
         </CardContent>
       </Card>
 
