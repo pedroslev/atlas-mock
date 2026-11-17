@@ -87,7 +87,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "General — Nombre, descripción y usuarios del grupo.",
               "Permisos — Tabla de permisos de Olimpo, acceso a Hermes y permisos de las «Claves de acceso API» (las llaves que usan las aplicaciones de tu empresa para conectarse a Atlas).",
-              "Config. Hermes — Solo aparece si el grupo tiene acceso a Hermes. Estados auxiliares, historial, llamadas internas, accesos rápidos y grabación.",
+              "Config. Hermes — Solo aparece si el grupo tiene acceso a Hermes. Estados auxiliares, bloqueo de la computadora, historial, llamadas internas, accesos rápidos y grabación.",
               "Ficha del cliente — También solo con acceso a Hermes. Qué datos del cliente ve y modifica el grupo.",
             ],
           },
@@ -176,12 +176,13 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Reúne lo que el grupo ve y tiene disponible dentro de Hermes. Solo está si el grupo tiene acceso a Hermes. Tiene cinco bloques.",
+              "Reúne lo que el grupo ve y tiene disponible dentro de Hermes. Solo está si el grupo tiene acceso a Hermes. Tiene seis bloques.",
           },
           {
             tipo: "lista",
             items: [
               "Estados auxiliares habilitados — Mismo selector con buscador del alta. Son los estados que los usuarios del grupo pueden elegir cuando no están atendiendo. Se definen en «Estados auxiliares».",
+              "Bloqueo de la computadora en un estado productivo — Campo «Al bloquear la computadora»: qué hace Hermes cuando una persona del grupo bloquea la computadora estando en un estado auxiliar marcado como productivo (ver «Estados auxiliares»). Tres opciones: «Sigue en el estado» (por defecto: no cambia nada y el tiempo sigue corriendo), «Pasa a No disponible» (deja de correr el tiempo del estado productivo) y «Se cierra la sesión» (al volver tiene que ingresar de nuevo). En los estados auxiliares que no son productivos, bloquear la computadora nunca cambia nada.",
               "Historial de interacciones del cliente — Campo «Días de historial»: cuántos días hacia atrás busca Hermes el historial del cliente cuando lo muestra en pantalla. Aplica a los canales digitales (chat y mensajería). Es un número, mínimo 0, y por defecto 30 días. Es por grupo, no por campaña.",
               "Llamadas internas — Llamadas entre agentes desde Hermes, sin cliente en línea. El interruptor «Permitir llamadas internas» las habilita (viene encendido). Apagado, el recuadro queda deshabilitado y los usuarios no ven el directorio en Hermes. Encendido, «¿A quién pueden llamar?» tiene tres opciones que se suman: «Agentes del mismo grupo de trabajo», «Agentes de los mismos proyectos» y «Agentes de las mismas campañas» (las tres vienen tildadas). Quien comparte una campaña comparte su proyecto, así que con «mismos proyectos» tildada, «mismas campañas» queda incluida y no se puede destildar. Definen a quién pueden llamar los usuarios de este grupo, no quién puede llamarlos a ellos. Si no dejás ninguna tildada, aparece un aviso: los usuarios del grupo no pueden hacer llamadas internas. El interruptor «Grabar las llamadas internas» (por defecto apagado) graba el audio de esas llamadas.",
               "Accesos rápidos — Botones en el menú de Hermes para los usuarios del grupo. Con «Agregar acceso rápido» sumás uno; cada uno tiene «Nombre» (ejemplo: «Ej: Manual del agente»), «URL» (ejemplo: «https://…») y «Modo de apertura»: «Dentro de Hermes» (por defecto) o «Pestaña nueva». El tacho lo elimina. Sin ninguno dice «Todavía no hay accesos rápidos configurados para este grupo.». No hay máximo.",
@@ -338,7 +339,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "General — Name, description and the group's users.",
               "Permissions — Olimpo permission table, Hermes access and permissions for the “API access keys” (the keys your company's applications use to connect to Atlas).",
-              "Config. Hermes — Only appears if the group has Hermes access. Auxiliary states, history, internal calls, quick access buttons and recording.",
+              "Config. Hermes — Only appears if the group has Hermes access. Auxiliary states, computer lock, history, internal calls, quick access buttons and recording.",
               "Ficha del cliente — Also only with Hermes access. Which customer data the group sees and modifies.",
             ],
           },
@@ -427,12 +428,13 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "It gathers what the group sees and has available inside Hermes. It is only there if the group has Hermes access. It has five blocks.",
+              "It gathers what the group sees and has available inside Hermes. It is only there if the group has Hermes access. It has six blocks.",
           },
           {
             tipo: "lista",
             items: [
               "Enabled auxiliary states — Same search selector as in creation. These are the states the group's users can pick when they are not handling interactions. They are defined in “Auxiliary states”.",
+              "Computer lock in a productive state — Field “When the computer is locked”: what Hermes does when a person of the group locks the computer while in an auxiliary state marked as productive (see “Auxiliary states”). Three options: “Stays in the state” (default: nothing changes and the time keeps running), “Switches to Not available” (the productive state time stops running) and “The session is closed” (they have to sign in again when they come back). In auxiliary states that are not productive, locking the computer never changes anything.",
               "Customer interaction history («Historial de interacciones del cliente») — Field «Días de historial»: how many days back Hermes looks for the customer's history when showing it on screen. It applies to digital channels (chat and messaging). It is a number, minimum 0, default 30 days. It is per group, not per campaign.",
               "Internal calls («Llamadas internas») — Calls between agents from Hermes, with no customer on the line. The «Permitir llamadas internas» switch enables them (it starts on). When off, the box is disabled and the users do not see the directory in Hermes. When on, «¿A quién pueden llamar?» has three options that add up: «Agentes del mismo grupo de trabajo», «Agentes de los mismos proyectos» and «Agentes de las mismas campañas» (all three start ticked). Whoever shares a campaign shares its project, so with «mismos proyectos» ticked, «mismas campañas» is included and cannot be unticked. They define whom this group's users can call, not who can call them. If you leave none ticked, a warning appears: the group's users cannot make internal calls. The «Grabar las llamadas internas» switch (off by default) records the audio of those calls.",
               "Quick access buttons («Accesos rápidos») — Buttons in the Hermes menu for the group's users. «Agregar acceso rápido» adds one; each has «Nombre» (example: «Ej: Manual del agente»), «URL» (example: «https://…») and «Modo de apertura»: «Dentro de Hermes» (default) or «Pestaña nueva». The trash can removes it. With none it says «Todavía no hay accesos rápidos configurados para este grupo.». There is no maximum.",
