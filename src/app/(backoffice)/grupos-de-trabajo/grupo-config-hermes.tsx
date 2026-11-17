@@ -105,8 +105,7 @@ export function GrupoConfigHermesTab({
   // MOCK: estado local, arranca en "keep".
   // REAL: working_groups.parameters.productive_aux_on_lock
   // ("keep" | "logout" | "not_available", default "keep"). Lo aplica
-  // hermes-worker cuando hermes-front le avisa el bloqueo; con varios grupos
-  // gana lo más estricto (logout > not_available > keep). Ver
+  // hermes-worker cuando hermes-front le avisa el bloqueo. Ver
   // documentacion/producto/funcionalidades/estados-auxiliares-productivos/.
   const [alBloquear, setAlBloquear] = useState<AccionAlBloquear>("keep");
   const ayudaAlBloquear: Record<AccionAlBloquear, string> = {
@@ -166,7 +165,6 @@ export function GrupoConfigHermesTab({
             >
               {ayudaAlBloquear[alBloquear]}
             </p>
-            <p className="text-xs text-muted-foreground">{t("grupos.bloqueo.variosGrupos")}</p>
           </div>
         </CardContent>
       </Card>

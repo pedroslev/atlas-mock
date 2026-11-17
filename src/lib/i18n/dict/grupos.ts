@@ -38,7 +38,6 @@ export const grupos: NamespaceDict = {
     "bloqueo.logoutAyuda": "Hermes cierra la sesión del asesor. Al volver tiene que ingresar de nuevo.",
     "bloqueo.notAvailable": "Pasa a No disponible",
     "bloqueo.notAvailableAyuda": "El asesor pasa a No disponible y el tiempo del estado productivo deja de correr.",
-    "bloqueo.variosGrupos": "Si una persona está en varios grupos, se aplica la opción más estricta: primero cerrar la sesión, después No disponible.",
 
     "permisos.titulo": "Permisos",
     "permisos.descripcion":
@@ -168,7 +167,6 @@ export const grupos: NamespaceDict = {
     "bloqueo.logoutAyuda": "Hermes closes the agent session. They have to sign in again when they come back.",
     "bloqueo.notAvailable": "Switches to Not available",
     "bloqueo.notAvailableAyuda": "The agent switches to Not available and the productive state time stops running.",
-    "bloqueo.variosGrupos": "If a person is in several groups, the strictest option applies: first closing the session, then Not available.",
 
     "permisos.titulo": "Permissions",
     "permisos.descripcion":
@@ -236,7 +234,6 @@ export const grupos: NamespaceDict = {
     "bloqueo.logoutAyuda": "O Hermes encerra a sessão do atendente. Ao voltar, ele precisa entrar de novo.",
     "bloqueo.notAvailable": "Passa para Não disponível",
     "bloqueo.notAvailableAyuda": "O atendente passa para Não disponível e o tempo do estado produtivo para de correr.",
-    "bloqueo.variosGrupos": "Se uma pessoa está em vários grupos, vale a opção mais rígida: primeiro encerrar a sessão, depois Não disponível.",
 
     "permisos.titulo": "Permissões",
     "permisos.descripcion":
@@ -304,7 +301,6 @@ export const grupos: NamespaceDict = {
     "bloqueo.logoutAyuda": "Hermes tanca la sessió de l'agent. En tornar ha d'entrar de nou.",
     "bloqueo.notAvailable": "Passa a No disponible",
     "bloqueo.notAvailableAyuda": "L'agent passa a No disponible i el temps de l'estat productiu deixa de córrer.",
-    "bloqueo.variosGrupos": "Si una persona és a diversos grups, s'aplica l'opció més estricta: primer tancar la sessió, després No disponible.",
 
     "permisos.titulo": "Permisos",
     "permisos.descripcion":
