@@ -254,6 +254,10 @@ export type WorkflowEdge = {
   // "out_of_hours" (salida transversal, ver decisiones/workflows/
   // propuesta-motor-workflows.md §4.2). undefined = salida principal del nodo.
   sourceHandle?: string;
+  // Acomodo a mano de la conexión: los puntos de la línea, de la salida a la entrada, en
+  // coordenadas del lienzo. Se guarda en el documento como ui[<nodo>].edges[<salida>]
+  // (decisiones/workflows/propuesta-motor-workflows.md §4); sin acomodo, trazado automático.
+  ruta?: [number, number][];
 };
 export type Workflow = { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
@@ -708,7 +712,14 @@ export const cuentas: Cuenta[] = [
         { id: "e-p1-next", source: "play-1", target: "collect-1", sourceHandle: "next" },
         { id: "e-p1-error", source: "play-1", target: "derivacion-2", sourceHandle: "error" },
         { id: "e-c1-complete", source: "collect-1", target: "if-1", sourceHandle: "complete" },
-        { id: "e-c1-timeout", source: "collect-1", target: "play-1", sourceHandle: "timeout" },
+        // Retorno acomodado a mano: sube por la derecha de los nodos y entra por arriba.
+        {
+          id: "e-c1-timeout",
+          source: "collect-1",
+          target: "play-1",
+          sourceHandle: "timeout",
+          ruta: [[144, 560], [208, 560], [208, 96], [0, 96], [0, 120]],
+        },
         { id: "e-if-true", source: "if-1", target: "derivacion-1", sourceHandle: "true" },
         { id: "e-if-false", source: "if-1", target: "play-2", sourceHandle: "false" },
         { id: "e-p2-next", source: "play-2", target: "derivacion-2", sourceHandle: "next" },

@@ -763,6 +763,8 @@ export function WorkflowEditor({
       source: e.source,
       target: e.target,
       sourceHandle: e.sourceHandle,
+      // El acomodo guardado vuelve como ruta a mano (ver EdgeRouter).
+      ...(e.ruta ? { data: { ruta: e.ruta } } : {}),
       // La salida out_of_hours se dibuja distinta (punteada, tono neutro):
       // es la excepción transversal, no el camino principal del nodo.
       ...(e.sourceHandle === "out_of_hours"
@@ -1045,13 +1047,18 @@ export function WorkflowEditor({
     [iman, onNodesChange],
   );
 
-  // Al abrir, acomoda el flujo una vez que todos los nodos están medidos.
+  // Al abrir, acomoda el flujo una vez que todos los nodos están medidos. Un flujo con conexiones
+  // acomodadas a mano se abre como se guardó: ordenarlo desarmaría esos acomodos.
   const ordenadoInicial = useRef(false);
   const [flujoOrdenado, setFlujoOrdenado] = useState(false);
   useEffect(() => {
     if (ordenadoInicial.current || !nodes.every((n) => n.measured?.width)) return;
     ordenadoInicial.current = true;
     setFlujoOrdenado(true);
+    if (edges.some((e) => (e.data as DatosConexion | undefined)?.ruta)) {
+      setTimeout(() => flowRef.current?.fitView(ENCUADRE), 0);
+      return;
+    }
     setNodes((nds) => ordenar(nds, edges));
     setTimeout(() => flowRef.current?.fitView(ENCUADRE), 0);
   }, [nodes, edges, setNodes]);
