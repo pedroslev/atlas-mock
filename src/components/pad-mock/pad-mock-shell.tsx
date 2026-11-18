@@ -8,6 +8,7 @@ import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
 import { ChatEntranteAviso, ChatEntrantePanel } from "@/components/pad-mock/chat-entrante";
+import { ChatInternoPanel } from "@/components/pad-mock/chat-interno-panel";
 import { useT } from "@/lib/i18n";
 import { VentanitaVideo, usePipNavegador, type FuenteVideo } from "@/components/pad-mock/video-panel";
 import { formatDuration } from "@/lib/pad-mock/use-now";
@@ -41,7 +42,9 @@ const DERIVACION_CHAT_MS = 3000;
 // Capacidad del asesor (Olimpo → Cuentas): una llamada, una webcall o una
 // videollamada lo ocupan entero. Con una en curso no se le deriva nada; y
 // una webcall o videollamada solo llega con el asesor libre.
-function puedeLlegar(entrante: InteraccionEntrante, cola: FilaCola[]) {
+// Un chat interno no ocupa capacidad: no cuenta para ninguna de las dos reglas.
+function puedeLlegar(entrante: InteraccionEntrante, colaCompleta: FilaCola[]) {
+  const cola = colaCompleta.filter((f) => !f.chatInterno);
   if (cola.some((f) => ocupaAlAsesorEntero(f.canal))) return false;
   return !(ocupaAlAsesorEntero(entrante.canal) && cola.length > 0);
 }
@@ -70,7 +73,10 @@ export function PadMockShell() {
   const nuevaFilaRef = useRef(1);
   // Llamada interna entrante sonando (aviso abajo a la derecha).
   const [entrante, setEntrante] = useState<AgenteDirectorio | null>(null);
+  // Chat interno entrante esperando que el agente lo acepte (mismo aviso).
+  const [chatInternoEntrante, setChatInternoEntrante] = useState<AgenteDirectorio | null>(null);
   // Historial del agente: las llamadas internas que terminan se suman arriba.
+  // Los chats internos no dejan historial.
   const [historial, setHistorial] = useState<HistorialAgenteEntrada[]>(historialAgenteMock);
 
   // Estado del agente (Disponible/No disponible/Ausente/Aux) — vive ACÁ
@@ -167,6 +173,52 @@ export function PadMockShell() {
     },
     [seleccionarInteraccion]
   );
+
+  // Chat interno desde el directorio: entra a la cola como una fila más y
+  // queda "Esperando…" hasta que el otro agente acepta (en el mock, siempre a
+  // los 3 segundos). No cambia el estado del agente ni frena lo que le llega.
+  // MOCK: no vence, cada "Chatear" abre una fila nueva aunque ya haya un chat
+  // con ese agente, y el rechazo simulado vuelve a Inicio sin aviso.
+  // REAL: POST /api/internal-chats; el otro agente tiene 30 s para aceptar. Si
+  // rechaza o no responde, la fila se va y un aviso lo dice. Con un chat ya
+  // abierto o esperando con ese agente, "Chatear" lleva a ese chat.
+  const iniciarChatInterno = useCallback(
+    (agente: AgenteDirectorio) => {
+      const id = `q-chat-interno-${nuevaFilaRef.current++}`;
+      setCola((cur) => [
+        ...cur,
+        { id, numeroCliente: agente.nombre, canal: "chat", esperaSeg: 0, interno: true, chatInterno: true, sonando: true },
+      ]);
+      seleccionarInteraccion(id);
+      window.setTimeout(() => {
+        setCola((cur) =>
+          cur.map((f) => (f.id === id ? { ...f, sonando: false, iniciadaEn: Date.now() } : f))
+        );
+      }, RING_INTERNO_MS);
+    },
+    [seleccionarInteraccion]
+  );
+
+  // Aceptar el chat interno entrante: se abre ya conectado. Si el agente está
+  // en otra interacción no lo saca de ahí: queda la fila en la cola.
+  const aceptarChatInterno = useCallback(() => {
+    if (!chatInternoEntrante) return;
+    const id = `q-chat-interno-${nuevaFilaRef.current++}`;
+    setCola((cur) => [
+      ...cur,
+      {
+        id,
+        numeroCliente: chatInternoEntrante.nombre,
+        canal: "chat",
+        esperaSeg: 0,
+        interno: true,
+        chatInterno: true,
+        iniciadaEn: Date.now(),
+      },
+    ]);
+    setChatInternoEntrante(null);
+    if (interaccionActivaId === null) seleccionarInteraccion(id);
+  }, [chatInternoEntrante, interaccionActivaId, seleccionarInteraccion]);
 
   // Interacción derivada por el sistema. Con atención forzada entra a la
   // cola y pasa al frente. Sin atención forzada entra como "Por aceptar": si
@@ -282,7 +334,7 @@ export function PadMockShell() {
     (id: string) => {
       const fila = cola.find((f) => f.id === id);
       // Llamada interna atendida: queda en el historial del agente.
-      if (fila?.interno && fila.iniciadaEn) {
+      if (fila?.interno && !fila.chatInterno && fila.iniciadaEn) {
         const inicio = new Date(fila.iniciadaEn);
         const entrada: HistorialAgenteEntrada = {
           id: `ha-${id}`,
@@ -442,7 +494,8 @@ export function PadMockShell() {
   // (ADR-IDIGITALES-007). El cronómetro arranca con la interacción
   // (iniciadaEn); sin eso no se muestra.
   const estadoForzado = (() => {
-    if (!filaActiva || filaActiva.porAceptar) return undefined;
+    // El chat interno no fuerza ningún estado: el agente sigue en el suyo.
+    if (!filaActiva || filaActiva.porAceptar || filaActiva.chatInterno) return undefined;
     const desde = filaActiva.iniciadaEn;
     const eligeDespues = filaActiva.canal !== "chat";
     if (filaActiva.sonando) return { ...estadosForzados.conectando, desde, eligeDespues };
@@ -462,6 +515,7 @@ export function PadMockShell() {
         onSeleccionarInteraccion={seleccionarFila}
         onIniciarInteraccion={iniciarInteraccion}
         onLlamarInterno={iniciarLlamadaInterna}
+        onChatearInterno={iniciarChatInterno}
         accesoActivoId={accesoAbiertoId}
         onAbrirAcceso={setAccesoAbiertoId}
         enEspera={enEspera}
@@ -485,10 +539,26 @@ export function PadMockShell() {
           cuentaIdInicial={ultimaCuentaId}
           onContactar={iniciarInteraccion}
           onLlamarInterno={iniciarLlamadaInterna}
+          onChatearInterno={iniciarChatInterno}
           onSimularEntrante={() => setEntrante(agenteLlamadaEntrante)}
+          onSimularChatEntrante={() => setChatInternoEntrante(agenteLlamadaEntrante)}
           entrantesSimulables={entrantesMock.map((e) => ({ entrante: e, disponible: puedeLlegar(e, cola) }))}
           onSimularEntranteCliente={simularEntrante}
           historial={historial}
+        />
+      ) : filaActiva?.chatInterno ? (
+        // Chat interno: no hay cliente, así que ocupa el centro entero, sin
+        // columna de contexto. Rechazo y cancelación sacan la fila sin más.
+        <ChatInternoPanel
+          key={`chat-interno-${filaActiva.id}`}
+          nombre={filaActiva.numeroCliente}
+          esperando={!!filaActiva.sonando}
+          finalizadoPorElOtro={!!filaActiva.finalizadoPorElOtro}
+          onFinalizar={() => cerrarInteraccion(filaActiva.id)}
+          onSimularRechazo={() => rechazarSaliente(filaActiva.id)}
+          onSimularFinDelOtro={() =>
+            setCola((cur) => cur.map((f) => (f.id === filaActiva.id ? { ...f, finalizadoPorElOtro: true } : f)))
+          }
         />
       ) : (
         <>
@@ -563,6 +633,15 @@ export function PadMockShell() {
           fuente={fuenteALaVista}
           webcall={!filaVideoEsVideo}
           onVolver={volverAlVideo}
+        />
+      )}
+
+      {chatInternoEntrante && (
+        <LlamadaInternaEntrante
+          chat
+          agente={chatInternoEntrante}
+          onAtender={aceptarChatInterno}
+          onRechazar={() => setChatInternoEntrante(null)}
         />
       )}
 

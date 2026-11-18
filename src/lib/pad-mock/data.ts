@@ -114,8 +114,14 @@ export type FilaCola = {
   esperaSeg: number;
   /** Llamada interna a otro agente: numeroCliente lleva el nombre del agente. */
   interno?: boolean;
-  /** Llamada interna saliente que todavía no atendió el otro agente. */
+  /** Llamada interna saliente que todavía no atendió el otro agente, o chat
+   *  interno que el otro agente todavía no aceptó. */
   sonando?: boolean;
+  /** Chat interno con otro agente (va junto con interno y canal "chat"). No
+   *  ocupa al asesor: no cambia su estado ni frena lo que le llega. */
+  chatInterno?: boolean;
+  /** Chat interno que el otro agente ya finalizó: queda de solo lectura. */
+  finalizadoPorElOtro?: boolean;
   /** Momento en que la llamada interna quedó en espera sin estar activa
    *  (la puso en Hold una entrante con atención forzada). */
   retenidaDesde?: number;
@@ -688,32 +694,43 @@ export type EstadoDirectorio = {
   nombre: string;
   dotClass: string;
   llamable: boolean;
+  /** Se le puede iniciar un chat interno: Disponible o atendiendo solo chats. */
+  chateable: boolean;
 };
 
 export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
-  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
-  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
+  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true, chateable: true },
+  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false, chateable: false },
+  // Conectado solo por chats: no se lo puede llamar, pero sí escribirle.
+  "en-chat": { nombre: "Atendiendo chats", dotClass: "bg-info", llamable: false, chateable: true },
   // Estado propio para distinguir una llamada interna de una llamada productiva.
-  "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false },
-  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
-  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },
-  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false },
-  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false },
+  "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false, chateable: false },
+  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false, chateable: false },
+  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false, chateable: false },
+  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false, chateable: false },
+  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false, chateable: false },
 };
 
 export type AgenteDirectorio = {
   id: string;
   nombre: string;
   estadoId: keyof typeof ESTADOS_DIRECTORIO;
+  /** Permiso del grupo de quien mira el directorio: llamadas y chats se
+   *  configuran por separado, así que un agente puede venir con uno solo.
+   *  Ausente = permitido. REAL: can_call / can_chat de GET /api/agent/agents. */
+  puedeLlamar?: boolean;
+  puedeChatear?: boolean;
 };
 
 export const agentesDirectorioMock: AgenteDirectorio[] = [
   { id: "ad-1", nombre: "Lucas Ferreyra", estadoId: "disponible" },
-  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-interaccion" },
+  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-chat" },
   { id: "ad-3", nombre: "Julián Pereyra", estadoId: "disponible" },
   { id: "ad-4", nombre: "Carla Domínguez", estadoId: "acw" },
   { id: "ad-5", nombre: "Tomás Giménez", estadoId: "almuerzo" },
-  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible" },
+  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible", puedeLlamar: false },
+  { id: "ad-10", nombre: "Diego Acosta", estadoId: "disponible", puedeChatear: false },
+  { id: "ad-11", nombre: "Romina Vega", estadoId: "en-interaccion" },
   { id: "ad-7", nombre: "Martín Sosa", estadoId: "no-disponible" },
   { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
   { id: "ad-9", nombre: "Paula Herrera", estadoId: "en-llamada-interna" },

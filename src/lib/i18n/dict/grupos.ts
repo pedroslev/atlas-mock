@@ -122,6 +122,21 @@ export const grupos: NamespaceDict = {
     "directorio.mismosProyectos": "Agentes de los mismos proyectos",
     "directorio.mismosProyectosAyuda": "Asignados a campañas de los mismos proyectos.",
     "directorio.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden hacer llamadas internas.",
+    // Chats internos: misma tarjeta y mismo criterio que las llamadas
+    // internas (documentacion/producto/funcionalidades/chats-internos/). Las
+    // tres reglas reutilizan los textos de "directorio.*".
+    "chatInterno.titulo": "Chats internos",
+    "chatInterno.desc":
+      "Chats entre agentes desde el PAD, sin cliente: con quién pueden chatear los usuarios de este grupo y si se guardan.",
+    "chatInterno.permitir": "Permitir chats internos",
+    "chatInterno.deshabilitadas":
+      "Los usuarios de este grupo no pueden iniciar chats internos: no ven el botón Chatear en el PAD.",
+    "chatInterno.aQuien": "¿Con quién pueden chatear?",
+    "chatInterno.noReciproco":
+      "Las opciones se suman: se ven los agentes conectados que cumplan al menos una. Definen a quién pueden escribirle los usuarios de este grupo, no quién les puede escribir a ellos: eso depende del grupo del que inicia el chat.",
+    "chatInterno.grabar": "Guardar los chats internos",
+    "chatInterno.grabarAudio": "Se guarda el texto de la conversación al terminar el chat.",
+    "chatInterno.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden iniciar chats internos.",
     "shortcuts.agregar": "Agregar acceso rápido",
     "shortcuts.eliminar": "Eliminar acceso rápido",
     "shortcuts.sin": "Todavía no hay accesos rápidos configurados para este grupo.",

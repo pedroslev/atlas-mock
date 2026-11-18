@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Phone, Search } from "lucide-react";
+import { MessagesSquare, Phone, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -17,16 +17,24 @@ import {
 // InicioPanel) — propuesta opción A de llamadas internas: lista de agentes
 // conectados habilitados por el grupo de trabajo, con su estado actual. Solo
 // se llama a los que están en Disponible; el resto se ve con el botón
-// deshabilitado. El switch "Simular grupo sin reglas" existe solo para poder
+// deshabilitado. Cada agente tiene además "Chatear" (chat interno): se
+// habilita en Disponible o atendiendo solo chats. Llamadas y chats se
+// permiten por separado en el grupo, así que un agente puede traer un solo
+// botón. El switch "Simular grupo sin reglas" existe solo para poder
 // mostrar el estado vacío en la reunión.
 export function LlamadaInternaDirectorio({
   onLlamar,
+  onChatear,
   onSimularEntrante,
+  onSimularChatEntrante,
   compacto = false,
 }: {
   onLlamar: (agente: AgenteDirectorio) => void;
+  onChatear: (agente: AgenteDirectorio) => void;
   /** Solo para la reunión: dispara el aviso de llamada interna entrante. */
   onSimularEntrante?: () => void;
+  /** Solo para la reunión: dispara el aviso de chat interno entrante. */
+  onSimularChatEntrante?: () => void;
   /** Lista más baja para la barra de la pantalla de inicio. */
   compacto?: boolean;
 }) {
@@ -80,17 +88,34 @@ export function LlamadaInternaDirectorio({
                       {estado.nombre}
                     </span>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={estado.llamable ? "default" : "outline"}
-                    disabled={!estado.llamable}
-                    className="gap-1.5"
-                    onClick={() => onLlamar(a)}
-                  >
-                    <Phone className="size-3.5" />
-                    {t("padMock.llamadaInterna.llamar")}
-                  </Button>
+                  {a.puedeChatear !== false && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!estado.chateable}
+                      className="gap-1.5"
+                      data-testid={`directorio-chatear-${a.id}`}
+                      onClick={() => onChatear(a)}
+                    >
+                      <MessagesSquare className="size-3.5" />
+                      {t("padMock.llamadaInterna.chatear")}
+                    </Button>
+                  )}
+                  {a.puedeLlamar !== false && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={estado.llamable ? "default" : "outline"}
+                      disabled={!estado.llamable}
+                      className="gap-1.5"
+                      data-testid={`directorio-llamar-${a.id}`}
+                      onClick={() => onLlamar(a)}
+                    >
+                      <Phone className="size-3.5" />
+                      {t("padMock.llamadaInterna.llamar")}
+                    </Button>
+                  )}
                 </li>
               );
             })}
@@ -101,6 +126,15 @@ export function LlamadaInternaDirectorio({
       )}
 
       <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+        {onSimularChatEntrante && (
+          <button
+            type="button"
+            onClick={onSimularChatEntrante}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {t("padMock.chatInterno.simularEntrante")}
+          </button>
+        )}
         {onSimularEntrante && (
           <button
             type="button"

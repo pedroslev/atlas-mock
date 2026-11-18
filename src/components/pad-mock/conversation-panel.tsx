@@ -77,7 +77,7 @@ const UMBRAL_VIVO_PX = 48;
 // con el foco en el cuadro de texto, y solo actúa si el vivo está perdido.
 const ATAJO_VIVO: AtajoFormato = { shift: true, code: "ArrowDown", tecla: "↓" };
 
-function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
+export function HiloChat({ mensajes }: { mensajes: MensajeChat[] }) {
   const t = useT();
   const isMac = useIsMac();
   const hiloRef = useRef<HTMLDivElement>(null);

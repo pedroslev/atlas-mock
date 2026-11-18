@@ -50,6 +50,7 @@ export function LeftNav({
   onSeleccionarInteraccion,
   onIniciarInteraccion,
   onLlamarInterno,
+  onChatearInterno,
   accesoActivoId,
   onAbrirAcceso,
   enEspera,
@@ -68,6 +69,7 @@ export function LeftNav({
   onSeleccionarInteraccion: (id: string) => void;
   onIniciarInteraccion: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
+  onChatearInterno: (agente: AgenteDirectorio) => void;
   accesoActivoId: string | null;
   onAbrirAcceso: (id: string) => void;
   enEspera: boolean;
@@ -115,6 +117,7 @@ export function LeftNav({
         onOpenChange={setNuevaInteraccionAbierta}
         onContactar={onIniciarInteraccion}
         onLlamarInterno={onLlamarInterno}
+        onChatearInterno={onChatearInterno}
         campaniaIdInicial={ultimaCampaniaId}
         cuentaIdInicial={ultimaCuentaId}
       />
@@ -281,7 +284,13 @@ export function LeftNav({
                   )}
                   {f.interno && (
                     <span className="truncate text-[0.65rem] text-muted-foreground">
-                      {f.sonando ? "Llamando…" : t("padMock.llamadaInterna.titulo")}
+                      {f.chatInterno
+                        ? f.sonando
+                          ? t("padMock.chatInterno.esperandoFila")
+                          : t("padMock.chatInterno.titulo")
+                        : f.sonando
+                          ? "Llamando…"
+                          : t("padMock.llamadaInterna.titulo")}
                     </span>
                   )}
                 </span>
