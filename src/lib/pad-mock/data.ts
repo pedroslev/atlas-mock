@@ -407,15 +407,15 @@ export const marcasDisponibles: MarcaDisponible[] = [
 // --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el
 // acordeón de contexto — brief §5.2). Distinto del historial del agente
 // (abajo): acá es "qué pasó con este cliente", no "qué gestionó el agente".
-// Cada entrada tiene el detalle completo para el modal "Ver más": el hilo
-// (transcripción o conversación, según el canal), tipificación, bookmarks,
-// el agente que la atendió y un resumen generado por IA.
 // Marca puesta durante una interacción pasada: el nombre, el segundo de la
 // interacción en que se puso y el comentario opcional — lo mismo que la
 // marca de la línea de tiempo de la llamada en curso (call-controls). Sin
 // segundo cuando la interacción no tiene inicio (p. ej. un mail).
 export type MarcaHistorial = { nombre: string; segundo?: number; comentario?: string };
 
+// Cada entrada tiene el detalle completo para el modal "Ver más": el hilo
+// (transcripción o conversación, según el canal), tipificación, bookmarks,
+// el agente que la atendió y un resumen generado por IA.
 export type HistorialEntrada = {
   id: string;
   fecha: string;
