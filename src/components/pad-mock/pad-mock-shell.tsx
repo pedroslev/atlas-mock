@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LeftNav, type Modo } from "@/components/pad-mock/left-nav";
 import { CenterColumn } from "@/components/pad-mock/center-column";
 import { ContextColumn } from "@/components/pad-mock/context-column";
@@ -8,7 +8,7 @@ import { QuickAccessOverlay } from "@/components/pad-mock/quick-access-overlay";
 import { InicioPanel } from "@/components/pad-mock/inicio-panel";
 import { LlamadaInternaEntrante } from "@/components/pad-mock/llamada-interna-entrante";
 import { ChatEntranteAviso, ChatEntrantePanel } from "@/components/pad-mock/chat-entrante";
-import { ChatInternoPanel } from "@/components/pad-mock/chat-interno-panel";
+import { ChatInternoVentana } from "@/components/pad-mock/chat-interno-panel";
 import { useT } from "@/lib/i18n";
 import { VentanitaVideo, usePipNavegador, type FuenteVideo } from "@/components/pad-mock/video-panel";
 import { formatDuration } from "@/lib/pad-mock/use-now";
@@ -75,6 +75,19 @@ export function PadMockShell() {
   const [entrante, setEntrante] = useState<AgenteDirectorio | null>(null);
   // Chat interno entrante esperando que el agente lo acepte (mismo aviso).
   const [chatInternoEntrante, setChatInternoEntrante] = useState<AgenteDirectorio | null>(null);
+  // Ventanas flotantes de chat interno abiertas (no minimizadas), en orden
+  // de capa: la última es la que está encima. Un chat interno que no está acá
+  // está minimizado: sigue en "Internas" del menú izquierdo.
+  const [ventanasChat, setVentanasChat] = useState<string[]>([]);
+  const abrirVentanaChat = useCallback(
+    (id: string) =>
+      setVentanasChat((cur) => (cur[cur.length - 1] === id ? cur : [...cur.filter((v) => v !== id), id])),
+    []
+  );
+  const minimizarVentanaChat = useCallback(
+    (id: string) => setVentanasChat((cur) => cur.filter((v) => v !== id)),
+    []
+  );
   // Historial del agente: las llamadas internas que terminan se suman arriba.
   // Los chats internos no dejan historial.
   const [historial, setHistorial] = useState<HistorialAgenteEntrada[]>(historialAgenteMock);
@@ -127,9 +140,15 @@ export function PadMockShell() {
     }
   }, []);
 
+  // Una fila de chat interno no cambia la interacción activa: abre su
+  // ventana flotante (o la trae al frente).
   const seleccionarFila = useCallback(
-    (id: string) => seleccionarInteraccion(id, cola.find((f) => f.id === id)?.retenidaDesde),
-    [cola, seleccionarInteraccion]
+    (id: string) => {
+      const fila = cola.find((f) => f.id === id);
+      if (fila?.chatInterno) abrirVentanaChat(id);
+      else seleccionarInteraccion(id, fila?.retenidaDesde);
+    },
+    [cola, seleccionarInteraccion, abrirVentanaChat]
   );
 
   // "Contactar" (desde el modal del "+" o desde InicioPanel) — a
@@ -174,11 +193,12 @@ export function PadMockShell() {
     [seleccionarInteraccion]
   );
 
-  // Chat interno desde el directorio: entra a la cola como una fila más y
-  // queda "Esperando…" hasta que el otro agente acepta (en el mock, siempre a
+  // Chat interno desde el directorio: entra a "Internas" del menú izquierdo
+  // y abre su ventana flotante, sin tocar la interacción activa. Queda
+  // "Esperando…" hasta que el otro agente acepta (en el mock, siempre a
   // los 3 segundos). No cambia el estado del agente ni frena lo que le llega.
   // MOCK: no vence, cada "Chatear" abre una fila nueva aunque ya haya un chat
-  // con ese agente, y el rechazo simulado vuelve a Inicio sin aviso.
+  // con ese agente, y el rechazo simulado saca la fila sin aviso.
   // REAL: POST /api/internal-chats; el otro agente tiene 30 s para aceptar. Si
   // rechaza o no responde, la fila se va y un aviso lo dice. Con un chat ya
   // abierto o esperando con ese agente, "Chatear" lleva a ese chat.
@@ -189,18 +209,18 @@ export function PadMockShell() {
         ...cur,
         { id, numeroCliente: agente.nombre, canal: "chat", esperaSeg: 0, interno: true, chatInterno: true, sonando: true },
       ]);
-      seleccionarInteraccion(id);
+      abrirVentanaChat(id);
       window.setTimeout(() => {
         setCola((cur) =>
           cur.map((f) => (f.id === id ? { ...f, sonando: false, iniciadaEn: Date.now() } : f))
         );
       }, RING_INTERNO_MS);
     },
-    [seleccionarInteraccion]
+    [abrirVentanaChat]
   );
 
-  // Aceptar el chat interno entrante: se abre ya conectado. Si el agente está
-  // en otra interacción no lo saca de ahí: queda la fila en la cola.
+  // Aceptar el chat interno entrante: se abre ya conectado, en su ventana
+  // flotante. No saca al agente de la interacción que esté atendiendo.
   const aceptarChatInterno = useCallback(() => {
     if (!chatInternoEntrante) return;
     const id = `q-chat-interno-${nuevaFilaRef.current++}`;
@@ -217,8 +237,15 @@ export function PadMockShell() {
       },
     ]);
     setChatInternoEntrante(null);
-    if (interaccionActivaId === null) seleccionarInteraccion(id);
-  }, [chatInternoEntrante, interaccionActivaId, seleccionarInteraccion]);
+    abrirVentanaChat(id);
+  }, [chatInternoEntrante, abrirVentanaChat]);
+
+  // Saca un chat interno (cancelado, rechazado, finalizado o cerrado): se va
+  // su fila y su ventana. No toca la interacción activa.
+  const quitarChatInterno = useCallback((id: string) => {
+    setCola((cur) => cur.filter((f) => f.id !== id));
+    setVentanasChat((cur) => cur.filter((v) => v !== id));
+  }, []);
 
   // Interacción derivada por el sistema. Con atención forzada entra a la
   // cola y pasa al frente. Sin atención forzada entra como "Por aceptar": si
@@ -272,7 +299,7 @@ export function PadMockShell() {
       // próximo paso a Disponible la vuelve a intentar.
       if (!puedeLlegar(entrante, cola)) return;
       proximoChatRef.current++;
-      derivarEntrante(entrante, cola.length === 0);
+      derivarEntrante(entrante, cola.every((f) => f.chatInterno));
     }, DERIVACION_CHAT_MS);
     return () => window.clearTimeout(timer);
     // estadoAgenteDesde: cada nuevo paso a Disponible deriva otra interacción.
@@ -285,7 +312,7 @@ export function PadMockShell() {
     (id: string) => {
       const entrante = entrantesMock.find((e) => e.id === id);
       if (!entrante || !puedeLlegar(entrante, colaRef.current)) return;
-      derivarEntrante(entrante, colaRef.current.length === 0);
+      derivarEntrante(entrante, colaRef.current.every((f) => f.chatInterno));
     },
     [derivarEntrante]
   );
@@ -350,7 +377,7 @@ export function PadMockShell() {
       }
       setCola((cur) => cur.filter((f) => f.id !== id));
       if (interaccionActivaId !== id) return;
-      const siguiente = cola.find((f) => f.id !== id);
+      const siguiente = cola.find((f) => f.id !== id && !f.chatInterno);
       if (siguiente) {
         seleccionarInteraccion(siguiente.id, siguiente.retenidaDesde);
       } else {
@@ -385,6 +412,11 @@ export function PadMockShell() {
     setAccesoAbiertoId(null);
   }
 
+  // El menú izquierdo muestra primero las interacciones de cliente y debajo
+  // las internas (llamadas y chats); Alt+N sigue ese orden.
+  const colaOrdenada = useMemo(() => [...cola.filter((f) => !f.interno), ...cola.filter((f) => f.interno)], [cola]);
+  const chatsInternos = cola.filter((f) => f.chatInterno);
+
   // Alt+1, Alt+2… salta directo a esa fila de la cola — Alt y no Ctrl/Cmd
   // porque Ctrl/Cmd+número ya lo usan Chrome/Firefox para cambiar de pestaña
   // del navegador. Funciona en cualquier modo (también sirve para volver a
@@ -403,13 +435,13 @@ export function PadMockShell() {
         return;
       }
       const idx = Number(e.key) - 1;
-      if (Number.isNaN(idx) || idx < 0 || idx >= cola.length) return;
+      if (Number.isNaN(idx) || idx < 0 || idx >= colaOrdenada.length) return;
       e.preventDefault();
-      seleccionarFila(cola[idx].id);
+      seleccionarFila(colaOrdenada[idx].id);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cola, seleccionarFila]);
+  }, [colaOrdenada, seleccionarFila]);
 
   // Videollamada o webcall en curso (ya atendida; hay una sola a la vez por
   // la capacidad del asesor). Lo que el asesor mira en ella sigue a la vista aunque no esté
@@ -510,7 +542,8 @@ export function PadMockShell() {
       <LeftNav
         modo={modo}
         onModo={cambiarModo}
-        cola={cola}
+        cola={colaOrdenada}
+        chatsInternosAbiertos={ventanasChat}
         interaccionActivaId={interaccionActivaId}
         onSeleccionarInteraccion={seleccionarFila}
         onIniciarInteraccion={iniciarInteraccion}
@@ -545,20 +578,6 @@ export function PadMockShell() {
           entrantesSimulables={entrantesMock.map((e) => ({ entrante: e, disponible: puedeLlegar(e, cola) }))}
           onSimularEntranteCliente={simularEntrante}
           historial={historial}
-        />
-      ) : filaActiva?.chatInterno ? (
-        // Chat interno: no hay cliente, así que ocupa el centro entero, sin
-        // columna de contexto. Rechazo y cancelación sacan la fila sin más.
-        <ChatInternoPanel
-          key={`chat-interno-${filaActiva.id}`}
-          nombre={filaActiva.numeroCliente}
-          esperando={!!filaActiva.sonando}
-          finalizadoPorElOtro={!!filaActiva.finalizadoPorElOtro}
-          onFinalizar={() => cerrarInteraccion(filaActiva.id)}
-          onSimularRechazo={() => rechazarSaliente(filaActiva.id)}
-          onSimularFinDelOtro={() =>
-            setCola((cur) => cur.map((f) => (f.id === filaActiva.id ? { ...f, finalizadoPorElOtro: true } : f)))
-          }
         />
       ) : (
         <>
@@ -635,6 +654,28 @@ export function PadMockShell() {
           onVolver={volverAlVideo}
         />
       )}
+
+      {/* Chats internos: una ventana flotante por chat, encima del pad. Las
+          minimizadas siguen montadas (ocultas) para conservar el hilo. Van por
+          debajo de los avisos de entrante (z-50). */}
+      {chatsInternos.map((f, i) => (
+        <ChatInternoVentana
+          key={f.id}
+          nombre={f.numeroCliente}
+          esperando={!!f.sonando}
+          finalizadoPorElOtro={!!f.finalizadoPorElOtro}
+          minimizada={!ventanasChat.includes(f.id)}
+          orden={i}
+          capa={30 + ventanasChat.indexOf(f.id)}
+          onEnfocar={() => abrirVentanaChat(f.id)}
+          onMinimizar={() => minimizarVentanaChat(f.id)}
+          onFinalizar={() => quitarChatInterno(f.id)}
+          onSimularRechazo={() => quitarChatInterno(f.id)}
+          onSimularFinDelOtro={() =>
+            setCola((cur) => cur.map((x) => (x.id === f.id ? { ...x, finalizadoPorElOtro: true } : x)))
+          }
+        />
+      ))}
 
       {chatInternoEntrante && (
         <LlamadaInternaEntrante

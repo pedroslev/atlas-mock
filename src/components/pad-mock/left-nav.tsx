@@ -46,6 +46,7 @@ export function LeftNav({
   modo,
   onModo,
   cola,
+  chatsInternosAbiertos,
   interaccionActivaId,
   onSeleccionarInteraccion,
   onIniciarInteraccion,
@@ -64,7 +65,10 @@ export function LeftNav({
 }: {
   modo: Modo;
   onModo: (m: Modo) => void;
+  /** Ordenada: primero las interacciones de cliente, después las internas. */
   cola: FilaCola[];
+  /** Chats internos con la ventana flotante abierta (no minimizada). */
+  chatsInternosAbiertos: string[];
   interaccionActivaId: string | null;
   onSeleccionarInteraccion: (id: string) => void;
   onIniciarInteraccion: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
@@ -124,6 +128,98 @@ export function LeftNav({
     </>
   );
 
+  // La cola llega ordenada: primero las interacciones de cliente, después
+  // las internas. El número de Alt+N es la posición en esa lista completa.
+  const clientes = cola.filter((f) => !f.interno);
+  const internas = cola.filter((f) => f.interno);
+  // Una interacción está activa si es la que se ve en el centro; un chat
+  // interno, si su ventana flotante está abierta.
+  const esActiva = (f: FilaCola) =>
+    f.chatInterno
+      ? chatsInternosAbiertos.includes(f.id)
+      : accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
+
+  // Fila del menú expandido (la misma para las dos secciones).
+  const filaExpandida = (f: FilaCola) => {
+    const i = cola.indexOf(f);
+    const Icon = CANAL_ICON[f.canal];
+            const activa = esActiva(f);
+            // En espera: la activa con Hold, o una llamada interna que quedó
+            // retenida por una entrante con atención forzada.
+            const desdeHold = activa && enEspera ? holdStartedAt : (f.retenidaDesde ?? null);
+            const enHold = desdeHold !== null;
+            const tiempo = enHold
+              ? formatDuration(Math.max(0, Math.floor((now - desdeHold) / 1000)))
+              : formatEspera(f.esperaSeg);
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => onSeleccionarInteraccion(f.id)}
+                aria-current={activa ? "true" : undefined}
+                aria-keyshortcuts={`Alt+${i + 1}`}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
+                  activa
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                )}
+              >
+                <Icon className={cn("size-3.5 shrink-0", f.porAceptar && "animate-pulse text-primary")} />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
+                  {f.porAceptar && (
+                    <span className="truncate text-[0.65rem] font-medium text-primary">
+                      {f.canal !== "chat" ? t("padMock.webcallEntrante.sonando") : t("padMock.chatEntrante.porAceptar")}
+                    </span>
+                  )}
+                  {f.interno && (
+                    <span className="truncate text-[0.65rem] text-muted-foreground">
+                      {f.chatInterno
+                        ? f.sonando
+                          ? t("padMock.chatInterno.esperandoFila")
+                          : t("padMock.chatInterno.titulo")
+                        : f.sonando
+                          ? "Llamando…"
+                          : t("padMock.llamadaInterna.titulo")}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 font-mono text-[0.65rem] tabular-nums",
+                    enHold ? "font-semibold text-warning" : "text-muted-foreground"
+                  )}
+                >
+                  {tiempo}
+                </span>
+                <Kbd className="shrink-0">Alt {i + 1}</Kbd>
+              </button>
+            );
+  };
+
+  // Fila del menú colapsado: solo el ícono.
+  const filaColapsada = (f: FilaCola) => {
+    const i = cola.indexOf(f);
+    const Icon = CANAL_ICON[f.canal];
+    const activa = esActiva(f);
+    return (
+      <button
+        key={f.id}
+        type="button"
+        title={`${f.numeroCliente} · Alt+${i + 1}`}
+        onClick={() => onSeleccionarInteraccion(f.id)}
+        aria-current={activa ? "true" : undefined}
+        className={cn(
+          "flex size-8 items-center justify-center rounded-lg transition-colors",
+          activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+        )}
+      >
+        <Icon className={cn("size-4", f.porAceptar && "animate-pulse text-primary")} />
+      </button>
+    );
+  };
+
   if (colapsado) {
     return (
       <aside className="flex h-full w-12 shrink-0 flex-col items-center gap-2 border-r border-sidebar-border bg-sidebar p-1.5 text-sidebar-foreground">
@@ -143,25 +239,9 @@ export function LeftNav({
             cuando hay muchas filas — a diferencia de flex-1, no fuerza el
             bloque a estirarse cuando está vacía o corta. */}
         <div className="flex max-h-[50vh] min-h-0 flex-col gap-1 overflow-y-auto">
-          {cola.map((f, i) => {
-            const Icon = CANAL_ICON[f.canal];
-            const activa = accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                title={`${f.numeroCliente} · Alt+${i + 1}`}
-                onClick={() => onSeleccionarInteraccion(f.id)}
-                aria-current={activa ? "true" : undefined}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-lg transition-colors",
-                  activa ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
-                )}
-              >
-                <Icon className={cn("size-4", f.porAceptar && "animate-pulse text-primary")} />
-              </button>
-            );
-          })}
+          {clientes.map(filaColapsada)}
+          {internas.length > 0 && <span className="my-0.5 border-t border-sidebar-border" aria-hidden />}
+          {internas.map(filaColapsada)}
         </div>
 
         {/* Accesos rápidos — a pedido, siempre justificado abajo (mt-auto),
@@ -247,66 +327,25 @@ export function LeftNav({
           </button>
         </div>
         <div className="flex flex-col gap-0.5">
-          {cola.length === 0 && (
+          {clientes.length === 0 && (
             <p className="px-1.5 py-1 text-xs text-muted-foreground italic">{t("padMock.leftNav.sinInteracciones")}</p>
           )}
-          {cola.map((f, i) => {
-            const Icon = CANAL_ICON[f.canal];
-            const activa = accesoActivoId === null && modo === "interaccion" && f.id === interaccionActivaId;
-            // En espera: la activa con Hold, o una llamada interna que quedó
-            // retenida por una entrante con atención forzada.
-            const desdeHold = activa && enEspera ? holdStartedAt : (f.retenidaDesde ?? null);
-            const enHold = desdeHold !== null;
-            const tiempo = enHold
-              ? formatDuration(Math.max(0, Math.floor((now - desdeHold) / 1000)))
-              : formatEspera(f.esperaSeg);
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => onSeleccionarInteraccion(f.id)}
-                aria-current={activa ? "true" : undefined}
-                aria-keyshortcuts={`Alt+${i + 1}`}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-left text-xs transition-colors",
-                  activa
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
-                )}
-              >
-                <Icon className={cn("size-3.5 shrink-0", f.porAceptar && "animate-pulse text-primary")} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-medium tabular-nums">{f.numeroCliente}</span>
-                  {f.porAceptar && (
-                    <span className="truncate text-[0.65rem] font-medium text-primary">
-                      {f.canal !== "chat" ? t("padMock.webcallEntrante.sonando") : t("padMock.chatEntrante.porAceptar")}
-                    </span>
-                  )}
-                  {f.interno && (
-                    <span className="truncate text-[0.65rem] text-muted-foreground">
-                      {f.chatInterno
-                        ? f.sonando
-                          ? t("padMock.chatInterno.esperandoFila")
-                          : t("padMock.chatInterno.titulo")
-                        : f.sonando
-                          ? "Llamando…"
-                          : t("padMock.llamadaInterna.titulo")}
-                    </span>
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 font-mono text-[0.65rem] tabular-nums",
-                    enHold ? "font-semibold text-warning" : "text-muted-foreground"
-                  )}
-                >
-                  {tiempo}
-                </span>
-                <Kbd className="shrink-0">Alt {i + 1}</Kbd>
-              </button>
-            );
-          })}
+          {clientes.map(filaExpandida)}
         </div>
+        {/* Internas: llamadas y chats con otros agentes, siempre debajo de
+            las de cliente. La fila de un chat interno abre su ventana
+            flotante, no cambia la interacción activa. */}
+        {internas.length > 0 && (
+          <>
+            <span
+              className="mt-1 border-t border-sidebar-border px-1 pt-2 text-[0.65rem] font-medium text-muted-foreground"
+              data-testid="left-nav-internas"
+            >
+              {t("padMock.leftNav.internas")}
+            </span>
+            <div className="flex flex-col gap-0.5">{internas.map(filaExpandida)}</div>
+          </>
+        )}
       </div>
 
       {/* Accesos rápidos ("shortcut buttons") — no pertenecen a ninguna

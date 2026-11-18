@@ -21,6 +21,8 @@ export const padMock: NamespaceDict = {
     "leftNav.miEstado": "Mi estado",
     "leftNav.contraerMenu": "Contraer menú",
     "leftNav.interaccionesEnCurso": "Interacciones en curso",
+    // Segunda sección de la cola: llamadas y chats con otros agentes.
+    "leftNav.internas": "Internas",
     "leftNav.iniciarInteraccion": "Iniciar nueva interacción",
     "leftNav.sinInteracciones": "Sin interacciones en curso.",
     "leftNav.accesosRapidos": "Accesos rápidos",
@@ -200,6 +202,7 @@ export const padMock: NamespaceDict = {
     "chatInterno.vacio": "Chat interno con {nombre}. Escribí el primer mensaje.",
     "chatInterno.placeholder": "Escribí tu mensaje… (Enter para enviar, Shift+Enter para salto de línea)",
     "chatInterno.cancelar": "Cancelar",
+    "chatInterno.minimizar": "Minimizar",
     "chatInterno.finalizar": "Finalizar chat",
     "chatInterno.cerrar": "Cerrar",
     "chatInterno.finalizadoPorElOtro": "{nombre} finalizó el chat.",
