@@ -19,7 +19,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Las marcas se crean una sola vez en el «Catálogo» y se reutilizan. Un grupo de marcas es el conjunto que ofrecés para trabajar, y el grupo es lo que se asigna a una campaña: en «Campañas», el campo «Grupo de marcas» te deja elegirlo.",
+              "Las marcas se crean una sola vez en el «Catálogo» y se reutilizan. Un grupo de marcas es el conjunto que ofrecés para trabajar, y el grupo es lo que se asigna a un proyecto o a una campaña: en «Proyectos» y en «Campañas», el campo «Grupo de marcas» te deja elegirlo. Si la campaña no tiene uno, hereda el del proyecto.",
           },
           { tipo: "p", texto: "La pantalla tiene dos solapas: «Grupos» y «Catálogo»." },
         ],
@@ -129,7 +129,7 @@ export const contenido: ContenidoPagina = {
               "Eliminar un grupo — Se elimina el grupo; las marcas del catálogo no se borran.",
               "Eliminar una marca — Se quita del catálogo y de todos los grupos que la usan.",
               "Nombres — La pantalla no impide repetir un nombre.",
-              "Dónde se usa — El grupo de marcas se asigna en «Campañas». En «Proyectos» no hay campo de marcas.",
+              "Dónde se usa — El grupo de marcas se asigna en «Proyectos» y en «Campañas». La campaña puede heredar el del proyecto o elegir otro.",
             ],
           },
         ],
@@ -153,7 +153,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Marks are created once in the «Catalog» and reused. A mark group is the set you offer to work with, and the group is what gets assigned to a campaign: in «Campaigns», the «Mark group» field lets you choose it.",
+              "Marks are created once in the «Catalog» and reused. A mark group is the set you offer to work with, and the group is what gets assigned to a project or a campaign: in «Projects» and in «Campaigns», the «Mark group» field lets you choose it. If the campaign has none, it inherits the project's.",
           },
           { tipo: "p", texto: "The screen has two tabs: «Groups» and «Catalog»." },
         ],
@@ -263,7 +263,7 @@ export const contenido: ContenidoPagina = {
               "Deleting a group — The group is deleted; the catalog marks are not removed.",
               "Deleting a mark — It is removed from the catalog and from every group that uses it.",
               "Names — The screen does not prevent repeating a name.",
-              "Where it is used — The mark group is assigned in «Campaigns». «Projects» has no marks field.",
+              "Where it is used — The mark group is assigned in «Projects» and in «Campaigns». A campaign can inherit the project's group or choose another one.",
             ],
           },
         ],

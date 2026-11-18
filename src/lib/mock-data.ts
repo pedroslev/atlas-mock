@@ -38,8 +38,13 @@ export type Proyecto = {
   descripcion?: string;
   objetivo?: string;
   businessHours?: BusinessHours;
+  // Valores por defecto que heredan las campañas del proyecto (ATLAS-1432):
+  // los mismos cinco que la campaña puede redefinir.
   grupoClasificacionId?: string;
+  grupoBookmarksId?: string;
+  grupoPlantillasId?: string;
   feriadosId?: string;
+  listaExclusionId?: string;
   campaniasCount: number;
 };
 
@@ -551,7 +556,10 @@ export const proyectos: Proyecto[] = [
       viernes: [{ inicio: "09:00", fin: "13:00" }, { inicio: "14:00", fin: "18:00" }],
     },
     grupoClasificacionId: "cg-cobranzas",
+    grupoBookmarksId: "bg-cobranzas",
+    grupoPlantillasId: "pg-cobranzas",
     feriadosId: "fer-ar",
+    listaExclusionId: "dnc-1",
     campaniasCount: 3,
   },
   {
@@ -567,6 +575,8 @@ export const proyectos: Proyecto[] = [
       sabado: [{ inicio: "09:00", fin: "13:00" }],
     },
     grupoClasificacionId: "cg-atencion",
+    grupoBookmarksId: "bg-general",
+    grupoPlantillasId: "pg-atencion",
     feriadosId: "fer-ar",
     campaniasCount: 2,
   },

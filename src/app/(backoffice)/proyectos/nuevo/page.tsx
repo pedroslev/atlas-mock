@@ -14,7 +14,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { useT } from "@/lib/i18n";
-import { feriados, clasificacionGrupos } from "@/lib/mock-data";
 import { ProyectoHerencia } from "../[id]/proyecto-herencia";
 import { BusinessHoursEditor } from "../business-hours-editor";
 
@@ -75,10 +74,7 @@ export default function NuevoProyectoPage() {
             </CardContent>
           </Card>
 
-          <ProyectoHerencia
-            gruposClasificacion={clasificacionGrupos}
-            feriados={feriados}
-          />
+          <ProyectoHerencia />
         </div>
 
         <Card>
