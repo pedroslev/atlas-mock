@@ -114,8 +114,15 @@ export type FilaCola = {
   esperaSeg: number;
   /** Llamada interna a otro agente: numeroCliente lleva el nombre del agente. */
   interno?: boolean;
-  /** Llamada interna saliente que todavía no atendió el otro agente. */
+  /** Llamada interna saliente que todavía no atendió el otro agente, o chat
+   *  interno que el otro agente todavía no aceptó. */
   sonando?: boolean;
+  /** Chat interno con otro agente (va junto con interno y canal "chat"). No
+   *  ocupa al asesor: no cambia su estado ni frena lo que le llega, y se
+   *  puede iniciar y recibir en cualquier estado. */
+  chatInterno?: boolean;
+  /** Chat interno que el otro agente ya finalizó: queda de solo lectura. */
+  finalizadoPorElOtro?: boolean;
   /** Momento en que la llamada interna quedó en espera sin estar activa
    *  (la puso en Hold una entrante con atención forzada). */
   retenidaDesde?: number;
@@ -705,6 +712,11 @@ export type AgenteDirectorio = {
   id: string;
   nombre: string;
   estadoId: keyof typeof ESTADOS_DIRECTORIO;
+  /** Permiso del grupo de quien mira el directorio: llamadas y chats se
+   *  configuran por separado, así que un agente puede venir con uno solo.
+   *  Ausente = permitido. REAL: can_call / can_chat de GET /api/agent/agents. */
+  puedeLlamar?: boolean;
+  puedeChatear?: boolean;
 };
 
 export const agentesDirectorioMock: AgenteDirectorio[] = [
@@ -713,7 +725,8 @@ export const agentesDirectorioMock: AgenteDirectorio[] = [
   { id: "ad-3", nombre: "Julián Pereyra", estadoId: "disponible" },
   { id: "ad-4", nombre: "Carla Domínguez", estadoId: "acw" },
   { id: "ad-5", nombre: "Tomás Giménez", estadoId: "almuerzo" },
-  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible" },
+  { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible", puedeLlamar: false },
+  { id: "ad-10", nombre: "Diego Acosta", estadoId: "disponible", puedeChatear: false },
   { id: "ad-7", nombre: "Martín Sosa", estadoId: "no-disponible" },
   { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
   { id: "ad-9", nombre: "Paula Herrera", estadoId: "en-llamada-interna" },
