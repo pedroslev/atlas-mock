@@ -407,6 +407,12 @@ export const marcasDisponibles: MarcaDisponible[] = [
 // --- Historial DE CONTACTO por cliente (vive DENTRO de la interacción, en el
 // acordeón de contexto — brief §5.2). Distinto del historial del agente
 // (abajo): acá es "qué pasó con este cliente", no "qué gestionó el agente".
+// Marca puesta durante una interacción pasada: el nombre, el segundo de la
+// interacción en que se puso y el comentario opcional — lo mismo que la
+// marca de la línea de tiempo de la llamada en curso (call-controls). Sin
+// segundo cuando la interacción no tiene inicio (p. ej. un mail).
+export type MarcaHistorial = { nombre: string; segundo?: number; comentario?: string };
+
 // Cada entrada tiene el detalle completo para el modal "Ver más": el hilo
 // (transcripción o conversación, según el canal), tipificación, bookmarks,
 // el agente que la atendió y un resumen generado por IA.
@@ -422,7 +428,7 @@ export type HistorialEntrada = {
   // tipificación en el catálogo vigente (tipificaciones): un contacto
   // viejo puede referenciar un código que ya no existe o cambió de texto.
   tipificacionDescripcion: string;
-  bookmarks: string[];
+  bookmarks: MarcaHistorial[];
   resumenIA: string;
   duracion: string;
   hilo: { autor: "cliente" | "agente"; texto: string }[];
@@ -463,7 +469,7 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       agente: "Rocío Benítez",
       tipificacion: "Consulta resuelta",
       tipificacionDescripcion: "La consulta del cliente se respondió por completo en esta gestión.",
-      bookmarks: ["Cliente VIP"],
+      bookmarks: [{ nombre: "Cliente VIP", segundo: 72, comentario: "Pidió que la llamen siempre al celular." }],
       resumenIA:
         "La clienta consultó la fecha de vencimiento de su factura de julio. Se le informó el vencimiento (28/07) y las formas de pago disponibles. Quedó conforme.",
       duracion: "2:14",
@@ -482,7 +488,10 @@ export const historialPorCliente: Record<string, HistorialEntrada[]> = {
       agente: "Julián Ferreyra",
       tipificacion: "Sin resolución",
       tipificacionDescripcion: "Se agotaron las opciones disponibles en esta gestión y no se llegó a una resolución.",
-      bookmarks: ["Reclamo activo", "Requiere seguimiento"],
+      bookmarks: [
+        { nombre: "Reclamo activo", comentario: "Cobro duplicado del servicio adicional Premium." },
+        { nombre: "Requiere seguimiento" },
+      ],
       resumenIA:
         "La clienta reportó por mail un cobro duplicado del servicio adicional. Se le pidió el número de comprobante para investigar y no volvió a responder. Reclamo quedó abierto.",
       duracion: "—",

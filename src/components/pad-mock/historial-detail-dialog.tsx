@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
-import { CANAL_ICON, CANAL_LABEL, type HistorialEntrada } from "@/lib/pad-mock/data";
+import { CANAL_ICON, CANAL_LABEL, formatEspera, type HistorialEntrada } from "@/lib/pad-mock/data";
 
 // "Ver más" de una interacción pasada del historial de contacto — a pedido,
 // se sacaron el resumen (IA) y la transcripción/conversación completa;
@@ -64,14 +64,22 @@ export function HistorialDetailDialog({
               <p className="mb-1 text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
                 {t("padMock.historialDetalle.bookmarks")}
               </p>
-              <div className="flex flex-wrap gap-1">
-                {entrada.bookmarks.map((b) => (
-                  <Badge key={b} variant="info" className="gap-1">
-                    <Bookmark className="size-2.5" />
-                    {b}
-                  </Badge>
+              {/* Una fila por marca: el Badge lleva el segundo y el nombre, como la
+                  marca de la llamada en curso, y el comentario va debajo. */}
+              <ul className="flex flex-col gap-1.5">
+                {entrada.bookmarks.map((b, i) => (
+                  <li key={`${b.nombre}-${i}`}>
+                    <Badge variant="info" className="gap-1">
+                      <Bookmark className="size-2.5" />
+                      {b.segundo !== undefined && (
+                        <span className="font-mono tabular-nums">{formatEspera(b.segundo)} ·</span>
+                      )}
+                      {b.nombre}
+                    </Badge>
+                    {b.comentario && <p className="mt-0.5 text-xs text-muted-foreground">{b.comentario}</p>}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
         </div>
