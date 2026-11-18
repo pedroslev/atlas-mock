@@ -32,7 +32,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Proyecto — Toda campaña pertenece a uno. De él hereda horarios, grupo de clasificaciones y grupo de feriados.",
+              "Proyecto — Toda campaña pertenece a uno. De él hereda horarios, grupo de clasificaciones, grupo de marcas, grupo de plantillas, grupo de feriados y lista de exclusión.",
               "Cuentas — Una campaña puede tener asociadas cuentas salientes: las líneas desde las que se hacen las llamadas. Ver «Cuentas salientes» más abajo y la documentación de «Cuentas».",
               "Clasificaciones, Marcas, Feriados y Listas de exclusión — La campaña elige grupos o listas que ya existen en esas secciones. Desde acá solo se asignan y se ven; el contenido se edita en cada sección.",
               "Usuarios — Los agentes asignados son los que operan la campaña.",
@@ -180,15 +180,16 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "La tarjeta «Configuración heredada del proyecto» tiene cuatro campos. En cada uno elegís un grupo o lista que ya existe; la campaña lo usa por referencia, es decir que nunca se edita su contenido desde acá. Al lado de cada campo hay un botón con un ojo para ver, en una ventana de solo lectura, lo que contiene lo elegido. El botón se habilita solo cuando hay algo elegido.",
+              "La tarjeta «Configuración heredada del proyecto» tiene cinco campos. En cada uno elegís un grupo o lista que ya existe; la campaña lo usa por referencia, es decir que nunca se edita su contenido desde acá. Al lado de cada campo hay un botón con un ojo para ver, en una ventana de solo lectura, lo que contiene lo elegido. El botón se habilita solo cuando hay algo elegido.",
           },
           {
             tipo: "lista",
             items: [
               "Grupo de clasificaciones — Las clasificaciones (resultados de gestión) que el agente puede cargar. El ojo («Ver clasificaciones del grupo») muestra cada clasificación con su tipo. Se edita en «Clasificaciones».",
               "Grupo de marcas — Las marcas que el agente puede agregar a la interacción. El ojo («Ver marcas del grupo») muestra cada marca con su descripción, si la tiene. Se edita en «Marcas».",
+              "Grupo de plantillas — Las plantillas de mensajes que el agente puede usar. El ojo («Ver plantillas del grupo») muestra cada plantilla con su descripción y sus canales. Se edita en «Plantillas de mensajes».",
               "Feriados — El grupo de feriados que la campaña respeta. El ojo («Ver fechas del grupo») muestra cada fecha con su descripción. Se edita en «Feriados».",
-              "Lista de exclusión — Contactos a los que la campaña no debe llamar. El ojo («Ver contactos de la lista») muestra cada contacto con su tipo. Se edita en «Listas de exclusión». A diferencia de los otros tres, este campo no se hereda del proyecto: el proyecto no tiene lista de exclusión.",
+              "Lista de exclusión — Contactos a los que la campaña no debe llamar. El ojo («Ver contactos de la lista») muestra cada contacto con su tipo. Se edita en «Listas de exclusión».",
             ],
           },
           { tipo: "sub", texto: "Cómo se elige" },
@@ -203,7 +204,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "nota",
             texto:
-              "Un campo vacío significa «hereda del proyecto». Por eso el texto del campo vacío dice «Sin asignar acá, hereda de <proyecto>» (o «Sin asignar» si no hay proyecto, y siempre «Sin asignar» en la lista de exclusión). Mientras esté vacío, el ojo queda deshabilitado: lo que se hereda se ve en la edición del proyecto, no acá.",
+              "Un campo vacío significa «hereda del proyecto». Por eso el texto del campo vacío dice «Sin asignar acá, hereda de <proyecto>» (o «Sin asignar» si no hay proyecto). Mientras esté vacío, el ojo queda deshabilitado: lo que se hereda se ve en la edición del proyecto, no acá.",
           },
         ],
       },
@@ -428,7 +429,7 @@ export const contenido: ContenidoPagina = {
               "Descripción — Texto libre de varias líneas. Opcional.",
               "Objetivo — Texto libre de varias líneas. Opcional.",
               "Grupo de clasificaciones — Opcional. Las campañas del proyecto lo usan salvo que elijan otro. Los campos de elección funcionan como se describe en «Herencia: grupos y listas».",
-              "Grupo de feriados — Opcional. Mismo criterio.",
+              "Grupo de marcas, grupo de plantillas, grupo de feriados y lista de exclusión — Opcionales. Mismo criterio.",
               "Horarios de atención — Ver «Editar un proyecto».",
             ],
           },
@@ -441,7 +442,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Se llega con el lápiz del encabezado de cada grupo en «Campañas». La descripción de la pantalla lo resume: los horarios, clasificaciones y feriados que definas acá se aplican por defecto a todas las campañas del proyecto, salvo que una campaña los personalice. «Confirmar» guarda los cambios y «Cancelar» vuelve a «Campañas» sin guardar.",
+              "Se llega con el lápiz del encabezado de cada grupo en «Campañas». La descripción de la pantalla lo resume: los horarios, grupos, feriados y la lista de exclusión que definas acá se aplican por defecto a todas las campañas del proyecto, salvo que una campaña los personalice. «Confirmar» guarda los cambios y «Cancelar» vuelve a «Campañas» sin guardar.",
           },
           { tipo: "sub", texto: "Acciones rápidas" },
           {
@@ -463,7 +464,7 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "Grupo de clasificaciones — Se elige de una lista con búsqueda («Buscar grupo de clasificaciones...»). Sin elección dice «Sin asignar». Volver a tocar la opción elegida la quita.",
-              "Grupo de feriados — Igual: «Buscar grupo de feriados...» y «Sin asignar».",
+              "Grupo de marcas, grupo de plantillas, grupo de feriados y lista de exclusión — Igual: cada uno con su búsqueda y «Sin asignar».",
             ],
           },
           { tipo: "sub", texto: "Horarios de atención" },
@@ -525,7 +526,7 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "Pertenencia — Una campaña pertenece a un solo proyecto, que se elige al crearla.",
-              "Herencia — Grupo de clasificaciones, grupo de marcas, grupo de feriados y horarios se heredan del proyecto mientras la campaña no los defina. La lista de exclusión es solo de la campaña.",
+              "Herencia — Grupo de clasificaciones, grupo de marcas, grupo de plantillas, grupo de feriados, lista de exclusión y horarios se heredan del proyecto mientras la campaña no los defina.",
               "Sin copia — La campaña referencia los grupos y listas; si editás un grupo en su sección, el cambio llega a todas las campañas que lo usan.",
               "Eliminar una campaña — Se confirma antes de quitarla. Mientras un proyecto tenga campañas, no se puede eliminar.",
               "Eliminar un proyecto — Definitivo y con pérdida del histórico de todas sus campañas (ver «Eliminar un proyecto»).",
@@ -587,7 +588,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Project — Every campaign belongs to one. It inherits business hours, classification group and holiday group from it.",
+              "Project — Every campaign belongs to one. It inherits business hours, classification group, mark group, template group, holiday group and exclusion list from it.",
               "Accounts — A campaign can have outbound accounts associated: the lines calls are made from. See «Outbound accounts» below and the «Accounts» documentation.",
               "Classifications, Marks, Holidays and Exclusion lists — The campaign picks groups or lists that already exist in those sections. From here they are only assigned and viewed; their content is edited in each section.",
               "Users — The assigned agents are the ones who operate the campaign.",
@@ -735,15 +736,16 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "The «Configuration inherited from the project» card has four fields. In each one you pick a group or list that already exists; the campaign uses it by reference, meaning its content is never edited from here. Next to each field there is an eye button to see, in a read-only window, what the chosen item contains. The button is enabled only when something is chosen.",
+              "The «Configuration inherited from the project» card has five fields. In each one you pick a group or list that already exists; the campaign uses it by reference, meaning its content is never edited from here. Next to each field there is an eye button to see, in a read-only window, what the chosen item contains. The button is enabled only when something is chosen.",
           },
           {
             tipo: "lista",
             items: [
               "Classification group — The classifications (interaction outcomes) the agent can record. The eye («View the group's classifications») shows each classification with its type. It is edited in «Classifications».",
               "Mark group — The marks the agent can add to the interaction. The eye («View the group's marks») shows each mark with its description, if it has one. It is edited in «Marks».",
+              "Template group — The message templates the agent can use. The eye («View the group's templates») shows each template with its description and channels. It is edited in «Message templates».",
               "Holidays — The holiday group the campaign respects. The eye («View the group's dates») shows each date with its description. It is edited in «Holidays».",
-              "Exclusion list — Contacts the campaign must not call. The eye («View the list's contacts») shows each contact with its type. It is edited in «Exclusion lists». Unlike the other three, this field is not inherited from the project: the project has no exclusion list.",
+              "Exclusion list — Contacts the campaign must not call. The eye («View the list's contacts») shows each contact with its type. It is edited in «Exclusion lists».",
             ],
           },
           { tipo: "sub", texto: "How to choose" },
@@ -758,7 +760,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "nota",
             texto:
-              "An empty field means «inherits from the project». That is why the empty field reads «If left unassigned, inherits from <project>» (or «Unassigned» if there is no project, and always «Unassigned» for the exclusion list). While it is empty, the eye stays disabled: what is inherited is seen in the project editor, not here.",
+              "An empty field means «inherits from the project». That is why the empty field reads «If left unassigned, inherits from <project>» (or «Unassigned» if there is no project). While it is empty, the eye stays disabled: what is inherited is seen in the project editor, not here.",
           },
         ],
       },
@@ -983,7 +985,7 @@ export const contenido: ContenidoPagina = {
               "Description — Free multi-line text. Optional.",
               "Objective — Free multi-line text. Optional.",
               "Classification group — Optional. The project's campaigns use it unless they pick another. The selection fields work as described in «Inheritance: groups and lists».",
-              "Holiday group — Optional. Same criterion.",
+              "Mark group, template group, holiday group and exclusion list — Optional. Same criterion.",
               "Business hours — See «Edit a project».",
             ],
           },
@@ -996,7 +998,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "You get there with the pencil in each group header in «Campaigns». The screen description sums it up: the business hours, classifications and holidays you set here apply by default to every campaign in the project, unless a campaign sets its own. «Confirm» saves the changes and «Cancel» goes back to «Campaigns» without saving.",
+              "You get there with the pencil in each group header in «Campaigns». The screen description sums it up: the business hours, groups, holidays and exclusion list you set here apply by default to every campaign in the project, unless a campaign sets its own. «Confirm» saves the changes and «Cancel» goes back to «Campaigns» without saving.",
           },
           { tipo: "sub", texto: "Quick actions" },
           {
@@ -1018,7 +1020,7 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "Classification group — Chosen from a searchable list («Search classification group...»). With no choice it reads «Unassigned». Clicking the chosen option again removes it.",
-              "Holiday group — Same: «Search holiday group...» and «Unassigned».",
+              "Mark group, template group, holiday group and exclusion list — Same: each with its own search and «Unassigned».",
             ],
           },
           { tipo: "sub", texto: "Business hours" },
@@ -1080,7 +1082,7 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "Membership — A campaign belongs to a single project, chosen when it is created.",
-              "Inheritance — Classification group, mark group, holiday group and business hours are inherited from the project while the campaign does not define them. The exclusion list belongs only to the campaign.",
+              "Inheritance — Classification group, mark group, template group, holiday group, exclusion list and business hours are inherited from the project while the campaign does not define them.",
               "No copy — The campaign references groups and lists; if you edit a group in its section, the change reaches every campaign that uses it.",
               "Deleting a campaign — Confirmed before removal. While a project has campaigns, it cannot be deleted.",
               "Deleting a project — Final, and the history of all its campaigns is lost (see «Delete a project»).",

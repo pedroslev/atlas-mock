@@ -115,7 +115,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Dónde se usa — En «Campañas»: una lista por campaña. A diferencia de clasificaciones y feriados, el campo no hereda del proyecto.",
+              "Dónde se usa — En «Proyectos» y en «Campañas»: una lista en cada uno. La campaña puede heredar la del proyecto o elegir otra.",
               "La descripción de la lista no se edita en estas pantallas.",
             ],
           },
@@ -236,7 +236,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Where it is used — In «Campaigns»: one list per campaign. Unlike classifications and holidays, the field does not inherit from the project.",
+              "Where it is used — In «Projects» and in «Campaigns»: one list in each. A campaign can inherit the project's list or choose another one.",
               "The list's description is not edited on these screens.",
             ],
           },

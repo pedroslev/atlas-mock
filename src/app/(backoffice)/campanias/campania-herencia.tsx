@@ -41,7 +41,8 @@ type Grupo =
 // referencia" (nunca edita el contenido del grupo) más un botón "Ver" que
 // abre un modal de solo lectura con lo que hay adentro. Editar el contenido
 // de un grupo pasa por su propia pantalla (/clasificaciones, /marcadores,
-// /feriados) — feedback de producto 2026-07-16.
+// /feriados) — feedback de producto 2026-07-16. Los cinco campos se heredan
+// del proyecto mientras queden vacíos (ATLAS-1432).
 export function CampaniaHerencia({
   nombreProyecto,
   initialGrupoClasificacionId,
@@ -198,7 +199,7 @@ export function CampaniaHerencia({
               items={listasExclusion}
               value={listaExclusionId}
               onChange={setListaExclusionId}
-              placeholder={t("campanias.sinAsignar")}
+              placeholder={heredaCopy}
               searchPlaceholder={t("campanias.buscarListaExclusion")}
               emptyLabel={t("campanias.vacioListaExclusion")}
             />
