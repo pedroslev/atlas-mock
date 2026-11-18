@@ -135,7 +135,7 @@ export const grupos: NamespaceDict = {
     "chatInterno.noReciproco":
       "Las opciones se suman: se ven los agentes conectados que cumplan al menos una. Definen a quién pueden escribirle los usuarios de este grupo, no quién les puede escribir a ellos: eso depende del grupo del que inicia el chat.",
     "chatInterno.grabar": "Guardar los chats internos",
-    "chatInterno.grabarAudio": "Se guarda el texto de la conversación al terminar el chat.",
+    "chatInterno.grabarAudio": "Se guarda la conversación al terminar el chat: el texto, los archivos y las notas de voz.",
     "chatInterno.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden iniciar chats internos.",
     "shortcuts.agregar": "Agregar acceso rápido",
     "shortcuts.eliminar": "Eliminar acceso rápido",

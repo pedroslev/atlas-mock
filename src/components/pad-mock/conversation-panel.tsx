@@ -347,15 +347,20 @@ function tramosDeEnvio(
   return tramos;
 }
 
-function Redactor({
+export function Redactor({
   onEnviar,
   adjuntoNuevo,
   datosCliente,
+  sinPlantillas = false,
 }: {
   onEnviar: (texto: string, adjuntos: AdjuntoChat[]) => void;
   adjuntoNuevo?: AdjuntoExterno;
   /** Datos conocidos del cliente (claves de variable); lo que falta queda como [NOMBRE]. */
   datosCliente?: DatosVariables;
+  /** Chat interno: no hay campaña ni cliente, así que no hay plantillas (ni
+   *  la precargada, ni el selector, ni el atajo "/"). El resto es igual:
+   *  texto con formato, emojis, archivos y notas de voz. */
+  sinPlantillas?: boolean;
 }) {
   const t = useT();
   const isMac = useIsMac();
@@ -370,6 +375,7 @@ function Redactor({
     [datosCliente]
   );
   const precargada = useMemo(() => {
+    if (sinPlantillas) return null;
     const p = getPlantilla(PLANTILLA_DEFAULT_CHAT_MOCK);
     return p ? { plantilla: p, ...renderizarParaCanal(p, CANAL_PLANTILLAS, datos) } : null;
     // Solo al abrir el redactor: la plantilla por defecto viene precargada una vez.
@@ -643,14 +649,16 @@ function Redactor({
         >
           <CaseSensitive className="size-4" />
         </Button>
-        <SelectorPlantillas
-          grupoId={GRUPO_PLANTILLAS_MOCK}
-          canal={CANAL_PLANTILLAS}
-          datos={datos}
-          open={selectorOpen}
-          onOpenChange={setSelectorOpen}
-          onElegir={elegirPlantilla}
-        />
+        {!sinPlantillas && (
+          <SelectorPlantillas
+            grupoId={GRUPO_PLANTILLAS_MOCK}
+            canal={CANAL_PLANTILLAS}
+            datos={datos}
+            open={selectorOpen}
+            onOpenChange={setSelectorOpen}
+            onElegir={elegirPlantilla}
+          />
+        )}
         <Button size="sm" onClick={enviar} disabled={envioBloqueado} className="shrink-0 gap-1.5">
           {t("padMock.conversationPanel.enviar")}
           <Kbd className="bg-primary-foreground/15 text-primary-foreground">Enter</Kbd>
@@ -810,7 +818,7 @@ function Redactor({
         }}
         onKeyDown={(e) => {
           // "/" con el cuadro vacío abre el selector de plantillas.
-          if (e.key === "/" && texto.trim() === "") {
+          if (!sinPlantillas && e.key === "/" && texto.trim() === "") {
             e.preventDefault();
             setSelectorOpen(true);
             return;
@@ -825,7 +833,11 @@ function Redactor({
             enviar();
           }
         }}
-        placeholder={`${t("padMock.conversationPanel.placeholder")} · ${t("plantillas.selector.atajo")}`}
+        placeholder={
+          sinPlantillas
+            ? t("padMock.chatInterno.placeholder")
+            : `${t("padMock.conversationPanel.placeholder")} · ${t("plantillas.selector.atajo")}`
+        }
         rows={3}
         className="resize-none"
       />

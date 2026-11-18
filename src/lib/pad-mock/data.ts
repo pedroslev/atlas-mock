@@ -118,7 +118,8 @@ export type FilaCola = {
    *  interno que el otro agente todavía no aceptó. */
   sonando?: boolean;
   /** Chat interno con otro agente (va junto con interno y canal "chat"). No
-   *  ocupa al asesor: no cambia su estado ni frena lo que le llega. */
+   *  ocupa al asesor: no cambia su estado ni frena lo que le llega, y se
+   *  puede iniciar y recibir en cualquier estado. */
   chatInterno?: boolean;
   /** Chat interno que el otro agente ya finalizó: queda de solo lectura. */
   finalizadoPorElOtro?: boolean;
@@ -694,21 +695,17 @@ export type EstadoDirectorio = {
   nombre: string;
   dotClass: string;
   llamable: boolean;
-  /** Se le puede iniciar un chat interno: Disponible o atendiendo solo chats. */
-  chateable: boolean;
 };
 
 export const ESTADOS_DIRECTORIO: Record<string, EstadoDirectorio> = {
-  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true, chateable: true },
-  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false, chateable: false },
-  // Conectado solo por chats: no se lo puede llamar, pero sí escribirle.
-  "en-chat": { nombre: "Atendiendo chats", dotClass: "bg-info", llamable: false, chateable: true },
+  disponible: { nombre: "Disponible", dotClass: "bg-success", llamable: true },
+  "en-interaccion": { nombre: "En interacción", dotClass: "bg-info", llamable: false },
   // Estado propio para distinguir una llamada interna de una llamada productiva.
-  "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false, chateable: false },
-  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false, chateable: false },
-  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false, chateable: false },
-  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false, chateable: false },
-  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false, chateable: false },
+  "en-llamada-interna": { nombre: "En llamada interna", dotClass: "bg-primary", llamable: false },
+  acw: { nombre: "Post-llamada (ACW)", dotClass: "bg-warning", llamable: false },
+  "no-disponible": { nombre: "No disponible", dotClass: "bg-destructive", llamable: false },
+  almuerzo: { nombre: "Almuerzo", dotClass: "bg-warning", llamable: false },
+  descanso: { nombre: "Descanso", dotClass: "bg-secondary", llamable: false },
 };
 
 export type AgenteDirectorio = {
@@ -724,13 +721,12 @@ export type AgenteDirectorio = {
 
 export const agentesDirectorioMock: AgenteDirectorio[] = [
   { id: "ad-1", nombre: "Lucas Ferreyra", estadoId: "disponible" },
-  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-chat" },
+  { id: "ad-2", nombre: "Sofía Martínez", estadoId: "en-interaccion" },
   { id: "ad-3", nombre: "Julián Pereyra", estadoId: "disponible" },
   { id: "ad-4", nombre: "Carla Domínguez", estadoId: "acw" },
   { id: "ad-5", nombre: "Tomás Giménez", estadoId: "almuerzo" },
   { id: "ad-6", nombre: "Florencia Rivas", estadoId: "disponible", puedeLlamar: false },
   { id: "ad-10", nombre: "Diego Acosta", estadoId: "disponible", puedeChatear: false },
-  { id: "ad-11", nombre: "Romina Vega", estadoId: "en-interaccion" },
   { id: "ad-7", nombre: "Martín Sosa", estadoId: "no-disponible" },
   { id: "ad-8", nombre: "Agustina López", estadoId: "descanso" },
   { id: "ad-9", nombre: "Paula Herrera", estadoId: "en-llamada-interna" },

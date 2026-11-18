@@ -17,8 +17,9 @@ import {
 // InicioPanel) — propuesta opción A de llamadas internas: lista de agentes
 // conectados habilitados por el grupo de trabajo, con su estado actual. Solo
 // se llama a los que están en Disponible; el resto se ve con el botón
-// deshabilitado. Cada agente tiene además "Chatear" (chat interno): se
-// habilita en Disponible o atendiendo solo chats. Llamadas y chats se
+// deshabilitado. Cada agente tiene además "Chatear" (chat interno), siempre
+// habilitado: se puede chatear con cualquier agente conectado, en cualquier
+// estado. Llamadas y chats se
 // permiten por separado en el grupo, así que un agente puede traer un solo
 // botón. El switch "Simular grupo sin reglas" existe solo para poder
 // mostrar el estado vacío en la reunión.
@@ -93,7 +94,6 @@ export function LlamadaInternaDirectorio({
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={!estado.chateable}
                       className="gap-1.5"
                       data-testid={`directorio-chatear-${a.id}`}
                       onClick={() => onChatear(a)}

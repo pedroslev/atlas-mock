@@ -183,7 +183,7 @@ export const padMock: NamespaceDict = {
     "llamadaInterna.buscar": "Buscar agente por nombre…",
     "llamadaInterna.llamar": "Llamar",
     "llamadaInterna.soloDisponibles":
-      "Solo podés llamar a agentes en Disponible. Podés chatear con agentes en Disponible o atendiendo chats.",
+      "Solo podés llamar a agentes en Disponible. Podés chatear con cualquier agente conectado.",
     "llamadaInterna.chatear": "Chatear",
     "llamadaInterna.sinResultados": "Ningún agente conectado coincide con la búsqueda.",
     "llamadaInterna.sinHabilitados":

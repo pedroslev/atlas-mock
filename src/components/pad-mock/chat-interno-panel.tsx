@@ -1,28 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { MessagesSquare, Send, X } from "lucide-react";
+import { MessagesSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { HiloChat } from "@/components/pad-mock/conversation-panel";
+import { HiloChat, Redactor } from "@/components/pad-mock/conversation-panel";
 import { useT } from "@/lib/i18n";
-import type { MensajeChat } from "@/lib/pad-mock/data";
+import type { AdjuntoChat, MensajeChat } from "@/lib/pad-mock/data";
 
 // Chat interno entre dos agentes: ocupa el centro del pad cuando su fila es
 // la activa. Mismo criterio que la llamada interna (no hay cliente: sin
 // columna de contexto, sin páginas externas, sin tipificación), pero con el
-// hilo y un redactor de solo texto.
+// hilo y el redactor del chat con clientes sin plantillas: texto con formato,
+// emojis, archivos y notas de voz.
 //
 // A diferencia de la llamada interna, no ocupa al agente: no cambia su
 // estado y le siguen llegando interacciones mientras el chat está abierto.
 //
 // MOCK: el otro agente acepta siempre a los 3 segundos y nunca contesta; lo
-// que se escribe se suma al hilo local. "Simular…" existen solo para mostrar
+// que se escribe (y los archivos) se suma al hilo local. "Simular…" existen solo para mostrar
 // el rechazo y el cierre del otro lado.
 // REAL: hermes-worker. Iniciar es POST /api/internal-chats; mientras el otro
 // no acepta llega internal_chat.ringing y vence a los 30 s. Aceptado, los
-// mensajes viajan por los mismos chat.send / chat.message del chat con
-// clientes, identificados por internal_chat_id, sobre una conversación de
+// mensajes y los archivos viajan por los mismos chat.send / chat.message /
+// chat.upload_request del chat con clientes, identificados por internal_chat_id, sobre una conversación de
 // atlas-iris con dos participantes de rol asesor. Ver
 // documentacion/producto/funcionalidades/chats-internos/.
 export function ChatInternoPanel({
@@ -46,16 +46,15 @@ export function ChatInternoPanel({
 }) {
   const t = useT();
   const [mensajes, setMensajes] = useState<MensajeChat[]>([]);
-  const [texto, setTexto] = useState("");
 
   // Suma el mensaje al hilo. REAL: chat.send; el mensaje aparece cuando
   // vuelve su chat.message.
-  function enviar() {
-    const limpio = texto.trim();
-    if (!limpio) return;
+  function enviar(texto: string, adjuntos: AdjuntoChat[]) {
     const hora = new Date().toLocaleTimeString("es-AR", { hour12: false });
-    setMensajes((cur) => [...cur, { autor: "agente", texto: limpio, hora }]);
-    setTexto("");
+    setMensajes((cur) => [
+      ...cur,
+      { autor: "agente", texto, hora, adjuntos: adjuntos.length > 0 ? adjuntos : undefined },
+    ]);
   }
 
   return (
@@ -120,40 +119,7 @@ export function ChatInternoPanel({
               {t("padMock.chatInterno.finalizadoPorElOtro", { nombre })}
             </p>
           ) : (
-            <form
-              className="flex shrink-0 items-end gap-2 border-t border-border p-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                enviar();
-              }}
-            >
-              <Textarea
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                onKeyDown={(e) => {
-                  // Enter envía; Shift+Enter es salto de línea. Ctrl/Cmd+Enter
-                  // queda libre: es el atajo de aceptar una entrante.
-                  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-                    e.preventDefault();
-                    enviar();
-                  }
-                }}
-                placeholder={t("padMock.chatInterno.placeholder")}
-                className="max-h-32 min-h-10 flex-1 resize-none"
-                data-testid="chat-interno-texto"
-                autoFocus
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!texto.trim()}
-                className="shrink-0 gap-1.5"
-                data-testid="chat-interno-enviar"
-              >
-                <Send className="size-4" />
-                {t("padMock.conversationPanel.enviar")}
-              </Button>
-            </form>
+            <Redactor onEnviar={enviar} sinPlantillas />
           )}
           {onSimularFinDelOtro && !finalizadoPorElOtro && (
             <button
