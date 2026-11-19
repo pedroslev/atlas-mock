@@ -55,6 +55,16 @@ export function CargarEnCampaniaDialog({
   const omitidos = siEnCurso === "dejar" ? enCurso : 0;
   const hastaInvalido = !!hasta && hasta < hoy;
 
+  // Al cerrar se limpia, igual que en Retirar.
+  function cerrar(abierto: boolean) {
+    if (!abierto) {
+      setCampaniaId("");
+      setHasta("");
+      setSiEnCurso("dejar");
+    }
+    onOpenChange(abierto);
+  }
+
   function confirmar() {
     if (!campania) return;
     onCargar({
@@ -62,11 +72,11 @@ export function CargarEnCampaniaDialog({
       cargados: seleccion.length - omitidos,
       omitidos,
     });
-    onOpenChange(false);
+    cerrar(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={cerrar}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("clientes.cargar.titulo")}</DialogTitle>
@@ -155,7 +165,7 @@ export function CargarEnCampaniaDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => cerrar(false)}>
             {t("common.acciones.cancelar")}
           </Button>
           <Button

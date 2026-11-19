@@ -199,13 +199,13 @@ export function FiltroFecha<T extends MRT_RowData>({ column }: Props<T>) {
         <div className="flex flex-col gap-2">
           <Input
             type="date"
-            aria-label={t("clientes.cargar.desde")}
+            aria-label={t("clientes.filtro.desde")}
             value={v.desde}
             onChange={(e) => cambiar({ ...v, desde: e.target.value })}
           />
           <Input
             type="date"
-            aria-label={t("clientes.cargar.hasta")}
+            aria-label={t("clientes.filtro.hasta")}
             value={v.hasta}
             onChange={(e) => cambiar({ ...v, hasta: e.target.value })}
           />

@@ -14,6 +14,8 @@ type Actividad = {
   /** AAAA-MM-DD */
   ultimoContacto?: string;
   ultimaClasificacionId?: string;
+  /** El de la última interacción que tuvo agente: si la última la cerró el
+   * sistema (no contesta, ocupado), es el de la anterior (Tomás, 2026-11-19). */
   ultimoAgenteId?: string;
   /** Interacciones (llamadas y mensajes) de los últimos 30 días. */
   contactos30d: number;
@@ -21,9 +23,9 @@ type Actividad = {
 
 const actividad: Record<string, Actividad> = {
   "cli-1": { ultimoContacto: "2026-11-14", ultimaClasificacionId: "clas-c-pago", ultimoAgenteId: "ag-1", contactos30d: 4 },
-  "cli-2": { ultimoContacto: "2026-11-12", ultimaClasificacionId: "sys-no-contesta", contactos30d: 9 },
+  "cli-2": { ultimoContacto: "2026-11-12", ultimaClasificacionId: "sys-no-contesta", ultimoAgenteId: "ag-3", contactos30d: 9 },
   "cli-3": { ultimoContacto: "2026-11-03", ultimaClasificacionId: "clas-c-nopago", ultimoAgenteId: "ag-2", contactos30d: 3 },
-  "cli-4": { ultimoContacto: "2026-11-15", ultimaClasificacionId: "sys-ocupado", contactos30d: 12 },
+  "cli-4": { ultimoContacto: "2026-11-15", ultimaClasificacionId: "sys-ocupado", ultimoAgenteId: "ag-1", contactos30d: 12 },
   "cli-5": { ultimoContacto: "2026-10-21", ultimaClasificacionId: "clas-a-resuelto", ultimoAgenteId: "ag-3", contactos30d: 1 },
   "cli-6": { ultimoContacto: "2026-11-10", ultimaClasificacionId: "clas-c-rechazo", ultimoAgenteId: "ag-5", contactos30d: 5 },
   "cli-7": { ultimoContacto: "2026-09-30", ultimaClasificacionId: "sys-apagado", contactos30d: 0 },

@@ -492,7 +492,10 @@ function cumpleCondicion(c: Cliente, n: Condicion): boolean {
       return comparar(op, aNumero(dato), Number(valores[0].replace(",", ".")));
     case "fecha":
       if (typeof dato !== "string" || !dato) {
-        return !!n.campo.sinDatoEsAntiguo && (op === "<" || op === "<=");
+        // Nunca contactado cuenta solo como "hace más de N días" (fecha
+        // relativa), no contra una fecha fija (Tomás, 2026-11-19).
+        const relativa = /^-\d+d$/.test(valores[0]?.trim().toLowerCase() ?? "");
+        return !!n.campo.sinDatoEsAntiguo && relativa && (op === "<" || op === "<=");
       }
       return comparar(op, dato, aFecha(valores[0]) ?? "");
     case "lista":
