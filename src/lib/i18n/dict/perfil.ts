@@ -20,8 +20,6 @@ export const perfil: NamespaceDict = {
     "cuenta.email": "Email",
     "cuenta.alta": "Alta",
     "cuenta.altaValor": "12 de marzo de 2025",
-    "cuenta.ultimoAcceso": "Último acceso",
-    "cuenta.ultimoAccesoValor": "Hoy, 08:42",
 
     "preferencias.titulo": "Preferencias",
     "preferencias.descripcion": "Ajustes personales de cómo ves la plataforma.",
@@ -44,8 +42,6 @@ export const perfil: NamespaceDict = {
     "cuenta.email": "Email",
     "cuenta.alta": "Created",
     "cuenta.altaValor": "March 12, 2025",
-    "cuenta.ultimoAcceso": "Last access",
-    "cuenta.ultimoAccesoValor": "Today, 08:42",
 
     "preferencias.titulo": "Preferences",
     "preferencias.descripcion":
@@ -69,8 +65,6 @@ export const perfil: NamespaceDict = {
     "cuenta.email": "E-mail",
     "cuenta.alta": "Cadastro",
     "cuenta.altaValor": "12 de março de 2025",
-    "cuenta.ultimoAcceso": "Último acesso",
-    "cuenta.ultimoAccesoValor": "Hoje, 08:42",
 
     "preferencias.titulo": "Preferências",
     "preferencias.descripcion":
@@ -94,8 +88,6 @@ export const perfil: NamespaceDict = {
     "cuenta.email": "Correu electrònic",
     "cuenta.alta": "Alta",
     "cuenta.altaValor": "12 de març de 2025",
-    "cuenta.ultimoAcceso": "Últim accés",
-    "cuenta.ultimoAccesoValor": "Avui, 08:42",
 
     "preferencias.titulo": "Preferències",
     "preferencias.descripcion":

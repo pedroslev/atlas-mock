@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Calendar, Clock } from "lucide-react";
+import { Mail, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -42,11 +42,6 @@ function iniciales(nombre: string) {
 const datosCuenta = [
   { icon: Mail, labelKey: "perfil.cuenta.email", valor: usuarioActual.email },
   { icon: Calendar, labelKey: "perfil.cuenta.alta", valorKey: "perfil.cuenta.altaValor" },
-  {
-    icon: Clock,
-    labelKey: "perfil.cuenta.ultimoAcceso",
-    valorKey: "perfil.cuenta.ultimoAccesoValor",
-  },
 ] as const;
 
 export default function PerfilPage() {

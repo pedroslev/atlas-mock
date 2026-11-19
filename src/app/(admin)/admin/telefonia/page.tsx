@@ -157,11 +157,8 @@ export default function TelefoniaPage() {
     () => new Map(organizations.map((org) => [org.tenantId, org])),
     [],
   );
+  // Tarifas para cualquier carrier activo; el LCR elige entre los que permiten el modo de CLI (ADR-TELEFONIA-002).
   const activeCarriers = carriers.filter((c) => c.active);
-  // Candidatos al LCR: carriers activos que permiten salir con CLI oculto o aleatorio.
-  const anonymousCarriers = activeCarriers.filter(
-    (c) => c.allowsHiddenCli || c.allowsRandomCli,
-  );
 
   // Filas de destino con URI cargada; las vacías se descartan al guardar.
   const destinosCargados = form.destinations.filter((d) =>
@@ -373,7 +370,7 @@ export default function TelefoniaPage() {
             prefix: rate.prefix,
             ratePerMinute: String(rate.ratePerMinute),
           }
-        : { ...emptyRateForm, carrierId: anonymousCarriers[0]?.id ?? "" },
+        : { ...emptyRateForm, carrierId: activeCarriers[0]?.id ?? "" },
     );
     setRateDialogOpen(true);
   }
@@ -954,7 +951,7 @@ export default function TelefoniaPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {anonymousCarriers.map((carrier) => (
+                  {activeCarriers.map((carrier) => (
                     <SelectItem key={carrier.id} value={carrier.id}>
                       {carrier.name}
                     </SelectItem>
