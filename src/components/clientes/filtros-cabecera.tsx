@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 // Filtros de cabecera de la tabla de Clientes (ATLAS-1186). Copian la idea de
 // la tabla de Usuarios de la asignación masiva (ATLAS-1353): cada columna se
 // filtra desde su cabecera y los filtros se combinan. Acá el filtro depende
@@ -165,11 +167,12 @@ export function textoRango(v: ValorRango, t: TranslateFn) {
 
 export function FiltroFecha<T extends MRT_RowData>({ column }: Props<T>) {
   const t = useT();
-  const v = (column.getFilterValue() as ValorFecha | undefined) ?? {
-    modo: "proximos" as const,
-    dias: "",
-  };
+  // Borrador: la opción elegida se mantiene aunque todavía no tenga valor
+  // (si no, al elegir «está entre las fechas» volvía a la opción por defecto).
+  const [borrador, setBorrador] = useState<ValorFecha>({ modo: "proximos", dias: "" });
+  const v = (column.getFilterValue() as ValorFecha | undefined) ?? borrador;
   function cambiar(nuevo: ValorFecha) {
+    setBorrador(nuevo);
     const vacio =
       nuevo.modo === "entre" ? !nuevo.desde && !nuevo.hasta : !nuevo.dias;
     column.setFilterValue(vacio ? undefined : conTexto(nuevo, textoFecha(nuevo, t)));
@@ -302,8 +305,10 @@ export function FiltroLista<T extends MRT_RowData>({
 export function FiltroEtiquetas<T extends MRT_RowData>({ column }: Props<T>) {
   const t = useT();
   const guardado = column.getFilterValue() as ValorEtiquetas | undefined;
-  const v: ValorEtiquetas = guardado ?? { modo: "tiene", ids: [] };
+  const [borrador, setBorrador] = useState<ValorEtiquetas>({ modo: "tiene", ids: [] });
+  const v: ValorEtiquetas = guardado ?? borrador;
   function cambiar(nuevo: ValorEtiquetas) {
+    setBorrador(nuevo);
     column.setFilterValue(
       nuevo.ids.length === 0 ? undefined : conTexto(nuevo, textoEtiquetas(nuevo, t))
     );

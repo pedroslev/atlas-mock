@@ -196,6 +196,9 @@ export default function ClientesPage() {
   function pasarAAvanzado() {
     const q = filtrosAConsulta(filtros, orden);
     setTexto(q);
+    // Los filtros de cabecera pasan a la consulta: se limpian para que no
+    // sigan recortando la tabla sin verse.
+    setFiltros([]);
     setNoBasico(null);
     setModo("avanzado");
     buscar(q);

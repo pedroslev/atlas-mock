@@ -43,7 +43,10 @@ export function CargarEnCampaniaDialog({
   onCargar: (resultado: ResultadoCarga) => void;
 }) {
   const t = useT();
-  const hoy = new Date().toISOString().slice(0, 10);
+  // Fecha local (no UTC): si no, después de las 21 h en Argentina hoy figura
+  // como «anterior a hoy».
+  const ahora = new Date();
+  const hoy = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}`;
   const [campaniaId, setCampaniaId] = useState("");
   const [hasta, setHasta] = useState("");
   const [siEnCurso, setSiEnCurso] = useState<"dejar" | "reiniciar">("dejar");
