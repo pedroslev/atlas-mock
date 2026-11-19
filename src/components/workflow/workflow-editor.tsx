@@ -1,7 +1,17 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   ReactFlow,
   Background,
@@ -15,8 +25,9 @@ import {
   EdgeLabelRenderer,
   useNodes,
   useEdges,
-  useInternalNode,
   useNodesInitialized,
+  useStore,
+  useStoreApi,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -24,6 +35,7 @@ import {
   type Edge,
   type EdgeProps,
   type Node,
+  type NodeChange,
   MarkerType,
   type OnConnectStart,
   type OnConnectEnd,
@@ -53,6 +65,7 @@ import {
   PanelLeftOpen,
   StickyNote,
   Trash2,
+  Grid3x3,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -65,6 +78,19 @@ import {
 } from "@/components/workflow/estado-conexiones";
 import { useCambiosDeValor } from "@/components/layout/aviso-cambios";
 import { useT } from "@/lib/i18n";
+import {
+  anchorRoute,
+  draggableSegments,
+  edgeGeometry,
+  edgesToReroute,
+  moveSegment,
+  routeEdges,
+  snapSegment,
+  type Point,
+  type Rect,
+  type RouteRequest,
+} from "@/lib/workflow/edge-routing";
+import { createRoutesStore, type RoutesStore } from "@/lib/workflow/routes-store";
 import { cn } from "@/lib/utils";
 import {
   type Workflow,
@@ -247,8 +273,8 @@ function nodosConFueraDeHorario(nodes: Node[], edges: Edge[]): Set<string> {
 // distancia desde el inicio (el inicio arriba, después los pasos en el orden
 // en que se recorren), con la misma separación entre capas y entre nodos de
 // una capa. Los nodos que no se alcanzan desde el inicio van a una última
-// capa. Las separaciones dejan lugar para los canales por donde corren las
-// conexiones (ver ConexionQuitable).
+// capa. Las separaciones dejan lugar para los pasillos por donde corren las
+// conexiones (ver EdgeRouter). Las posiciones quedan sobre la grilla.
 const SEPARACION_X = 140;
 const SEPARACION_Y = 140;
 function ordenar(nodes: Node[], edges: Edge[]): Node[] {
@@ -283,7 +309,7 @@ function ordenar(nodes: Node[], edges: Edge[]): Node[] {
     const total = capa.reduce((acc, n) => acc + ancho(n), 0) + SEPARACION_X * (capa.length - 1);
     let x = -total / 2;
     for (const n of capa) {
-      posiciones.set(n.id, { x, y });
+      posiciones.set(n.id, centroEnGrilla({ x, y }, ancho(n)));
       x += ancho(n) + SEPARACION_X;
     }
     y += Math.max(...capa.map(alto)) + SEPARACION_Y;
@@ -334,18 +360,83 @@ function conexionesDeRetorno(nodes: Node[], edges: Edge[]): Set<string> {
   return retornos;
 }
 
-// Solo para dibujar: una conexión cuyo destino quedó arriba del nodo de origen
-// (o a su altura) no puede bajar directo al borde superior sin atravesar nodos,
-// así que va por el carril lateral. Es geometría del lienzo, no tiene que ver
-// con si la conexión es de retorno.
-const vaPorCarril = (origen: Node, destino: Node) =>
-  destino.position.y < origen.position.y + (origen.measured?.height ?? 0);
+// Rutas de todas las conexiones, calculadas juntas por EdgeRouter (ver lib/workflow/edge-routing).
+// Una conexión sin ruta todavía (antes de medir los nodos) usa el trazado simple de edgeGeometry.
+const RutasContext = createContext<RoutesStore>(createRoutesStore());
+// Si el imán a la grilla está encendido: los tramos que se arrastran también se enganchan.
+const ImanContext = createContext(false);
 
-// Desvíos que el usuario le puso a una conexión arrastrando sus tramos (como en
-// draw.io): coordenadas absolutas del lienzo. `codo` es la x del tramo vertical
-// que sale del nodo, `canal` la y del tramo horizontal y `carril` la x del
-// carril lateral de un retorno. «Ordenar» los borra.
-type Desvio = { codo?: number; canal?: number; carril?: number };
+// Ruta que el usuario le dejó a una conexión arrastrando sus tramos (como en draw.io): los puntos
+// de quiebre en coordenadas del lienzo. «Ordenar» la borra; no se guarda con el workflow.
+type DatosConexion = { ruta?: Point[] };
+
+// Calcula las rutas cuando cambian los nodos o las conexiones. Incremental, como draw.io: se
+// rutean solo las conexiones que lo necesitan (ver edgesToReroute); las acomodadas a mano no se
+// rutean nunca, solo se estiran su primer y último tramo si se movió un nodo (anchorRoute).
+function EdgeRouter() {
+  const nodes = useStore((s) => s.nodes);
+  const edges = useStore((s) => s.edges);
+  const store = useStoreApi();
+  const rutasStore = useContext(RutasContext);
+  // Qué conexiones vuelven (punteadas): depende de la estructura, no se recalcula al arrastrar.
+  const estructura = nodes.some((n) => n.dragging) ? null : edges;
+  useEffect(() => {
+    if (estructura) rutasStore.setReturns(conexionesDeRetorno(store.getState().nodes, estructura));
+  }, [estructura, store, rutasStore]);
+  // Firma de la geometría que se ruteó por última vez: el lienzo se re-renderiza por muchas
+  // cosas (incluidas las rutas nuevas), y solo hay que rutear de nuevo si algo se movió.
+  const ultimaFirma = useRef("");
+  useEffect(() => {
+    const { nodeLookup } = store.getState();
+    const rects: Rect[] = [];
+    for (const n of nodeLookup.values()) {
+      if (n.id === PUNTA_ID || n.type === "nota" || !n.measured.width || !n.measured.height) continue;
+      const { x, y } = n.internals.positionAbsolute;
+      rects.push({ id: n.id, x, y, width: n.measured.width, height: n.measured.height });
+    }
+    const arrastrando = nodes.some((n) => n.dragging);
+    const pedidos: RouteRequest[] = [];
+    const aMano = new Map<string, Point[]>();
+    for (const e of edges) {
+      if (e.target === PUNTA_ID) continue;
+      const origen = nodeLookup.get(e.source);
+      const destino = nodeLookup.get(e.target);
+      const salidas = origen?.internals.handleBounds?.source ?? [];
+      const salida = salidas.find((h) => h.id === (e.sourceHandle ?? null)) ?? salidas[0];
+      const entrada = destino?.internals.handleBounds?.target?.[0];
+      if (!origen || !destino || !salida || !entrada) continue;
+      const o = origen.internals.positionAbsolute;
+      const d = destino.internals.positionAbsolute;
+      const porAbajo = salida.position === Position.Bottom;
+      const pedido: RouteRequest = {
+        id: e.id,
+        from: porAbajo
+          ? [o.x + salida.x + salida.width / 2, o.y + salida.y + salida.height]
+          : [o.x + salida.x + salida.width, o.y + salida.y + salida.height / 2],
+        fromSide: porAbajo ? "bottom" : "right",
+        to: [d.x + entrada.x + entrada.width / 2, d.y + entrada.y],
+      };
+      const ruta = (e.data as DatosConexion | undefined)?.ruta;
+      const anclada = ruta && anchorRoute(ruta, pedido.from, pedido.to, pedido.fromSide);
+      if (anclada) aMano.set(e.id, anclada);
+      else pedidos.push(pedido);
+    }
+    const firma = JSON.stringify([rects, pedidos, [...aMano], arrastrando]);
+    if (firma === ultimaFirma.current) return;
+    ultimaFirma.current = firma;
+    const actuales = rutasStore.all();
+    // Las automáticas que quedaron encima de una acomodada a mano se corren (la que se movió manda).
+    const rutear = edgesToReroute(actuales, pedidos, rects, !arrastrando, aMano);
+    const fijas = new Map<string, Point[]>(aMano);
+    for (const p of pedidos) {
+      const ruta = actuales.get(p.id);
+      if (ruta && !rutear.has(p.id)) fijas.set(p.id, ruta);
+    }
+    const nuevas = routeEdges(rects, pedidos.filter((p) => rutear.has(p.id)), { fixed: fijas });
+    rutasStore.setRoutes(new Map([...fijas, ...nuevas]));
+  }, [nodes, edges, store, rutasStore]);
+  return null;
+}
 
 // Tramo de una conexión que se puede arrastrar: una franja transparente sobre
 // la línea, con el cursor de mover; al soltar, la conexión queda donde se dejó.
@@ -389,25 +480,20 @@ function TramoArrastrable({
   );
 }
 
-// Conexión ortogonal para un flujo que corre de arriba hacia abajo. Sale por
-// la derecha de la fila de la salida y entra por el borde superior del destino.
-// - Hacia adelante: baja por la separación al costado del nodo y corre por el
-//   canal que hay justo arriba de la capa del destino.
-// - Hacia un destino que quedó arriba: baja al canal de abajo de su capa, sale
-//   al carril lateral derecho —fuera de todos los nodos, un carril por
-//   conexión— y sube hasta el canal de arriba del destino. Así nunca pasa por
-//   detrás de un nodo.
-// - Las de retorno (ver conexionesDeRetorno) van punteadas y llevan una
-//   etiqueta con el nombre del destino, pegada a la salida.
-// Con un nodo seleccionado, las conexiones que no lo tocan se atenúan.
-// El botón para quitarla va en el medio, siempre visible: sin él, la única
-// forma de borrarla era hacer click justo sobre la línea y apretar Backspace.
-// Los tramos rectos se pueden arrastrar para acomodar la línea (ver Desvio).
+// Conexión ortogonal para un flujo que corre de arriba hacia abajo: sigue la ruta que calculó
+// EdgeRouter (sale por la derecha de la fila de la salida, o por abajo en el inicio, rodea los
+// nodos y entra por el borde superior del destino).
+// - Las de retorno (ver conexionesDeRetorno) van punteadas y llevan una etiqueta con el nombre
+//   del destino, pegada a la salida.
+// - Con un nodo seleccionado, las conexiones que no lo tocan se atenúan.
+// - El botón para quitarla va en el medio del tramo más largo, siempre visible.
+// - Los tramos del medio se pueden arrastrar para acomodar la línea; queda como ruta a mano.
+// Cada conexión lee solo lo suyo del store: no se vuelve a dibujar cuando se mueve un nodo que
+// no la toca.
 function ConexionQuitable({
   id,
   source,
   target,
-  sourceHandleId,
   sourceX,
   sourceY,
   sourcePosition,
@@ -416,121 +502,48 @@ function ConexionQuitable({
   style,
   markerEnd,
   selected,
-  data,
 }: EdgeProps) {
   const t = useT();
-  const { deleteElements, setCenter, getZoom, setEdges } = useReactFlow();
-  const desvio = (data ?? {}) as Desvio;
-  // Guarda un desvío de esta conexión (lo que el usuario arrastró).
-  const desviar = (patch: Desvio) =>
-    setEdges((eds) => eds.map((e) => (e.id === id ? { ...e, data: { ...e.data, ...patch } } : e)));
-  const nodes = useNodes();
-  const edges = useEdges();
-  const origen = nodes.find((n) => n.id === source);
-  const destino = nodes.find((n) => n.id === target);
-  const internoOrigen = useInternalNode(source);
-  if (!origen || !destino) return null;
-
-  const porId = new Map(nodes.map((n) => [n.id, n]));
-  const retorno = conexionesDeRetorno(nodes, edges).has(id);
-  const porCarril = vaPorCarril(origen, destino);
-  // Conexiones que comparten el mismo tipo de trazado: sirven para repartir
-  // carriles y canales y que no se superpongan.
-  const hermanas = edges.filter((e) => {
-    const o = porId.get(e.source);
-    const d = porId.get(e.target);
-    if (!o || !d || vaPorCarril(o, d) !== porCarril) return false;
-    return porCarril || Math.round(d.position.y / 10) === Math.round(destino.position.y / 10);
+  const { deleteElements, setCenter, getZoom, getNode, setEdges } = useReactFlow();
+  const rutasStore = useContext(RutasContext);
+  const ruta = useSyncExternalStore(rutasStore.subscribe, () => rutasStore.get(id), () => undefined);
+  const retorno = useSyncExternalStore(rutasStore.subscribe, () => rutasStore.isReturn(id), () => false);
+  const hayNodoSeleccionado = useStore((s) => s.nodes.some((n) => n.selected));
+  const extremoSeleccionado = useStore(
+    (s) => Boolean(s.nodeLookup.get(source)?.selected || s.nodeLookup.get(target)?.selected),
+  );
+  const tituloDestino = useStore((s) => s.nodeLookup.get(target)?.data.titulo as string | undefined);
+  const tipoDestino = useStore((s) => s.nodeLookup.get(target)?.type);
+  const soloTextoDestino = useStore((s) => s.nodeLookup.get(target)?.data.soloTexto === true);
+  const iman = useContext(ImanContext);
+  // Borde derecho del nodo de origen: el tramo que sigue a la salida no puede meterse debajo.
+  const bordeOrigen = useStore((s) => {
+    const n = s.nodeLookup.get(source);
+    return n ? n.internals.positionAbsolute.x + (n.measured.width ?? 0) : undefined;
   });
-  const rango = Math.max(0, hermanas.findIndex((e) => e.id === id));
 
-  // Separación al costado del nodo: la salida más alta es la más lejana, así
-  // las conexiones de una misma tarjeta quedan anidadas y no se cruzan.
-  const salidas = internoOrigen?.internals.handleBounds?.source ?? [];
-  const posSalida = Math.max(0, salidas.findIndex((h) => h.id === (sourceHandleId ?? null)));
-  // El inicio sale por abajo: baja derecho, sin el codo al costado.
-  const gx =
-    desvio.codo ??
-    (sourcePosition === Position.Bottom
-      ? sourceX
-      : sourceX + 14 + 9 * (Math.max(salidas.length, 1) - 1 - posSalida));
-
-  let puntos: [number, number][];
-  // Dónde va la cruz para quitar la conexión (a mitad de tramo) y, solo en los
-  // retornos, la etiqueta con el destino (pegada a la salida).
-  let quitarX: number;
-  let quitarY: number;
-  let etiquetaX = 0;
-  let etiquetaY = 0;
-  // Tramos que se pueden arrastrar, con el desvío que cada uno modifica.
-  const tramos: { de: [number, number]; a: [number, number]; eje: "x" | "y"; clave: keyof Desvio }[] = [];
-  if (porCarril) {
-    const altoOrigen = origen.measured?.height ?? 0;
-    const fondoCapa = Math.max(
-      ...nodes
-        .filter(
-          (n) =>
-            n.position.y < origen.position.y + altoOrigen &&
-            n.position.y + (n.measured?.height ?? 0) > origen.position.y,
-        )
-        .map((n) => n.position.y + (n.measured?.height ?? 0)),
-    );
-    const derecha = Math.max(...nodes.map((n) => n.position.x + (n.measured?.width ?? 0)));
-    const carril = desvio.carril ?? derecha + 36 + rango * 18;
-    // Los retornos de una misma capa bajan a canales separados lo suficiente
-    // para que sus etiquetas, que van sobre este tramo, no se pisen.
-    const rangoCapa = hermanas
-      .filter((e) => Math.round((porId.get(e.source)?.position.y ?? 0) / 10) === Math.round(origen.position.y / 10))
-      .findIndex((e) => e.id === id);
-    const abajo = desvio.canal ?? fondoCapa + 24 + Math.max(0, rangoCapa) * 22;
-    const arriba = targetY - 46 - rango * 9;
-    tramos.push(
-      { de: [gx, sourceY], a: [gx, abajo], eje: "x", clave: "codo" },
-      { de: [gx, abajo], a: [carril, abajo], eje: "y", clave: "canal" },
-      { de: [carril, abajo], a: [carril, arriba], eje: "x", clave: "carril" },
-    );
-    puntos = [
-      [sourceX, sourceY],
-      [gx, sourceY],
-      [gx, abajo],
-      [carril, abajo],
-      [carril, arriba],
-      [targetX, arriba],
-      [targetX, targetY],
-    ];
-    // La etiqueta de un retorno va pegada a donde sale la línea, no a donde
-    // llega: dice a qué nodo vuelve esta salida, leída desde la salida.
-    etiquetaX = gx + 10;
-    etiquetaY = abajo;
-    quitarX = carril;
-    quitarY = (abajo + arriba) / 2;
-  } else {
-    // El tramo horizontal va a mitad de camino entre la salida y la entrada
-    // (las hermanas se reparten alrededor), y baja como mucho hasta justo
-    // arriba del destino: la línea tiene que seguir entrando por su borde superior.
-    const canal = Math.min(
-      desvio.canal ?? Math.max((sourceY + targetY) / 2 + (rango % 5) * 7, sourceY + 8),
-      targetY - 8,
-    );
-    tramos.push(
-      { de: [gx, sourceY], a: [gx, canal], eje: "x", clave: "codo" },
-      { de: [gx, canal], a: [targetX, canal], eje: "y", clave: "canal" },
-    );
-    puntos = [
-      [sourceX, sourceY],
-      [gx, sourceY],
-      [gx, canal],
-      [targetX, canal],
-      [targetX, targetY],
-    ];
-    quitarX = (gx + targetX) / 2;
-    quitarY = canal;
-  }
-
-  const hayNodoSeleccionado = nodes.some((n) => n.selected);
-  const atenuada = hayNodoSeleccionado && !selected && !origen.selected && !destino.selected;
-  const nombreDestino =
-    (destino.data.titulo as string | undefined) ?? t(claveTitulo(destino.type ?? "", destino.data.soloTexto === true));
+  const { points: puntos, remove, label } = edgeGeometry(
+    ruta,
+    [sourceX, sourceY],
+    [targetX, targetY],
+    sourcePosition === Position.Bottom,
+  );
+  // Arrastrar un tramo deja la conexión acomodada a mano, con la ruta que se ve ahora. El tramo se
+  // pega a la altura de la salida o a la vertical de la entrada si queda cerca (así la línea se
+  // puede dejar recta); si no, con el imán cae sobre la grilla (también el límite junto al nodo
+  // de origen).
+  const acomodar = (indice: number, valor: number) => {
+    const limite =
+      bordeOrigen === undefined || !iman
+        ? bordeOrigen
+        : Math.ceil((bordeOrigen + GRILLA) / GRILLA) * GRILLA - GRILLA;
+    const ruta = moveSegment(puntos, indice, snapSegment(puntos, indice, valor, iman ? GRILLA : undefined), limite);
+    setEdges((eds) => eds.map((e) => (e.id === id ? { ...e, data: { ...e.data, ruta } } : e)));
+  };
+  const [quitarX, quitarY] = remove;
+  const [etiquetaX, etiquetaY] = label;
+  const atenuada = hayNodoSeleccionado && !selected && !extremoSeleccionado;
+  const nombreDestino = tituloDestino ?? t(claveTitulo(tipoDestino ?? "", soloTextoDestino));
 
   return (
     <>
@@ -544,13 +557,13 @@ function ConexionQuitable({
         }}
         markerEnd={markerEnd}
       />
-      {tramos.map((tramo) => (
+      {draggableSegments(puntos).map(({ index, axis }) => (
         <TramoArrastrable
-          key={tramo.clave}
-          de={tramo.de}
-          a={tramo.a}
-          eje={tramo.eje}
-          onMover={(valor) => desviar({ [tramo.clave]: valor })}
+          key={index}
+          de={puntos[index]}
+          a={puntos[index + 1]}
+          eje={axis}
+          onMover={(valor) => acomodar(index, valor)}
         />
       ))}
       <EdgeLabelRenderer>
@@ -588,13 +601,15 @@ function ConexionQuitable({
                 type="button"
                 aria-label={`${t("cuentas.flujo.irAlNodo")}: ${nombreDestino}`}
                 data-testid={`retorno-${id}`}
-                onClick={() =>
+                onClick={() => {
+                  const destino = getNode(target);
+                  if (!destino) return;
                   setCenter(
                     destino.position.x + (destino.measured?.width ?? 0) / 2,
                     destino.position.y + (destino.measured?.height ?? 0) / 2,
                     { zoom: Math.max(getZoom(), 0.6), duration: 400 },
-                  )
-                }
+                  );
+                }}
                 className="flex h-5 max-w-40 items-center rounded-full bg-card px-1.5 text-xs text-muted-foreground ring-1 ring-foreground/10 hover:text-foreground"
               >
                 <span className="truncate">↩ {nombreDestino}</span>
@@ -653,6 +668,21 @@ const PALETA: { type: Exclude<WorkflowNodeType, "inicio">; icono: typeof GitBran
 // Encuadre del flujo: nunca más de 100%, así un flujo de un solo nodo no se
 // agranda hasta llenar el lienzo.
 const ENCUADRE = { padding: 0.15, maxZoom: 1 };
+
+// Grilla del lienzo: con el imán encendido los nodos se enganchan cada GRILLA px al arrastrarlos,
+// y «Ordenar» los deja siempre sobre ella. Es el mismo margen que el ruteo deja alrededor de cada
+// nodo: con los nodos alineados, más conexiones salen derechas y los pasillos quedan parejos.
+const GRILLA = 16;
+const enGrilla = (v: number) => Math.round(v / GRILLA) * GRILLA;
+// Lo que se engancha es el centro del borde de arriba del nodo, no su esquina: por ahí entran
+// las conexiones (y sale la del inicio), así dos nodos uno debajo del otro quedan con los
+// puntos en la misma vertical aunque tengan anchos distintos, y la línea baja derecha.
+const centroEnGrilla = (posicion: { x: number; y: number }, ancho: number) => ({
+  x: enGrilla(posicion.x + ancho / 2) - ancho / 2,
+  y: enGrilla(posicion.y),
+});
+// Si el imán está encendido es una preferencia de cada usuario, guardada en su navegador.
+const CLAVE_IMAN = "atlas.flujo.iman";
 const COLOR_CONEXION = "var(--foreground)";
 
 // Alto del lienzo sin pantalla completa: ocupa lo que queda de la ventana
@@ -680,6 +710,25 @@ export function WorkflowEditor({
   // La paleta de macroestados se puede cerrar para ganar lugar en el lienzo.
   const [paletaAbierta, setPaletaAbierta] = useState(true);
   const [alto, setAlto] = useState<number>();
+  // Imán a la grilla, encendido salvo que el usuario lo haya apagado antes.
+  const [iman, setIman] = useState(() => {
+    try {
+      return localStorage.getItem(CLAVE_IMAN) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const alternarIman = () =>
+    setIman((v) => {
+      try {
+        localStorage.setItem(CLAVE_IMAN, v ? "0" : "1");
+      } catch {
+        // Sin almacenamiento (ventana privada): vale solo para esta visita.
+      }
+      return !v;
+    });
+  // Rutas de las conexiones de este editor (ver EdgeRouter).
+  const [rutasStore] = useState(createRoutesStore);
 
   const inicioNode = useMemo<WorkflowNode>(
     () =>
@@ -714,6 +763,8 @@ export function WorkflowEditor({
       source: e.source,
       target: e.target,
       sourceHandle: e.sourceHandle,
+      // El acomodo guardado vuelve como ruta a mano (ver EdgeRouter).
+      ...(e.ruta ? { data: { ruta: e.ruta } } : {}),
       // La salida out_of_hours se dibuja distinta (punteada, tono neutro):
       // es la excepción transversal, no el camino principal del nodo.
       ...(e.sourceHandle === "out_of_hours"
@@ -974,13 +1025,40 @@ export function WorkflowEditor({
     }
   }, [edges, conFueraDeHorario, setEdges]);
 
-  // Al abrir, acomoda el flujo una vez que todos los nodos están medidos.
+  // Con el imán encendido, cada nodo que se arrastra se engancha por su centro (centroEnGrilla).
+  // No se usa el snapToGrid de React Flow porque engancha la esquina del nodo.
+  const moverNodos = useCallback(
+    (cambios: NodeChange<Node>[]) =>
+      onNodesChange(
+        iman
+          ? cambios.map((c) =>
+              c.type === "position" && c.position
+                ? {
+                    ...c,
+                    position: centroEnGrilla(
+                      c.position,
+                      flowRef.current?.getNode(c.id)?.measured?.width ?? 0,
+                    ),
+                  }
+                : c,
+            )
+          : cambios,
+      ),
+    [iman, onNodesChange],
+  );
+
+  // Al abrir, acomoda el flujo una vez que todos los nodos están medidos. Un flujo con conexiones
+  // acomodadas a mano se abre como se guardó: ordenarlo desarmaría esos acomodos.
   const ordenadoInicial = useRef(false);
   const [flujoOrdenado, setFlujoOrdenado] = useState(false);
   useEffect(() => {
     if (ordenadoInicial.current || !nodes.every((n) => n.measured?.width)) return;
     ordenadoInicial.current = true;
     setFlujoOrdenado(true);
+    if (edges.some((e) => (e.data as DatosConexion | undefined)?.ruta)) {
+      setTimeout(() => flowRef.current?.fitView(ENCUADRE), 0);
+      return;
+    }
     setNodes((nds) => ordenar(nds, edges));
     setTimeout(() => flowRef.current?.fitView(ENCUADRE), 0);
   }, [nodes, edges, setNodes]);
@@ -1101,13 +1179,15 @@ export function WorkflowEditor({
         )}
         style={fullscreen || alto === undefined ? undefined : { height: alto }}
       >
+        <RutasContext.Provider value={rutasStore}>
+        <ImanContext.Provider value={iman}>
         <ReactFlow
           nodes={nodosEnLienzo}
           edges={conexionesEnLienzo}
           onInit={(instancia) => {
             flowRef.current = instancia;
           }}
-          onNodesChange={onNodesChange}
+          onNodesChange={moverNodos}
           onEdgesChange={onEdgesChange}
           onConnect={(conexion) => {
             if (conexion.target !== PUNTA_ID) onConnect(conexion);
@@ -1148,7 +1228,9 @@ export function WorkflowEditor({
           fitViewOptions={ENCUADRE}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={16} color="var(--border)" />
+          {/* Fondo de puntos solo con el imán encendido: muestra dónde va a caer el nodo. */}
+          {iman && <Background gap={GRILLA} size={1.5} color="var(--muted-foreground)" className="opacity-40" />}
+          <EdgeRouter />
           <VigilanteConexiones onChange={actualizarSinConectar} />
           {/* Zoom, centrado y acciones sobre todo el lienzo, juntos: así no se
               confunden con los nodos que se agregan desde la paleta. Cada uno
@@ -1188,6 +1270,17 @@ export function WorkflowEditor({
                 data-testid="contraer-expandir-todo"
               >
                 {todosContraidos ? <ChevronsUpDown /> : <ChevronsDownUp />}
+              </ControlButton>
+            </ActionTooltip>
+            <ActionTooltip label={t(iman ? "cuentas.flujo.imanApagar" : "cuentas.flujo.imanEncender")} side="right">
+              <ControlButton
+                onClick={alternarIman}
+                aria-label={t(iman ? "cuentas.flujo.imanApagar" : "cuentas.flujo.imanEncender")}
+                aria-pressed={iman}
+                data-testid="iman-grilla"
+                className={cn(iman && "!bg-accent")}
+              >
+                <Grid3x3 />
               </ControlButton>
             </ActionTooltip>
             <ActionTooltip label={t("cuentas.flujo.ordenarAyuda")} side="right">
@@ -1287,6 +1380,8 @@ export function WorkflowEditor({
             </ActionTooltip>
           </Panel>
         </ReactFlow>
+        </ImanContext.Provider>
+        </RutasContext.Provider>
       </div>
       </TooltipProvider>
     </div>

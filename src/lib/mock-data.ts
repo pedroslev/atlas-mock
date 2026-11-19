@@ -259,6 +259,10 @@ export type WorkflowEdge = {
   // "out_of_hours" (salida transversal, ver decisiones/workflows/
   // propuesta-motor-workflows.md §4.2). undefined = salida principal del nodo.
   sourceHandle?: string;
+  // Acomodo a mano de la conexión: los puntos de la línea, de la salida a la entrada, en
+  // coordenadas del lienzo. Se guarda en el documento como ui[<nodo>].edges[<salida>]
+  // (decisiones/workflows/propuesta-motor-workflows.md §4); sin acomodo, trazado automático.
+  ruta?: [number, number][];
 };
 export type Workflow = { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
@@ -704,6 +708,36 @@ export const cuentas: Cuenta[] = [
     identificador: "1140009911",
     uso: "ambas",
     modoSalida: "misma",
+    // Flujo de ejemplo: menú con reintento (retorno) y una salida que saltea pasos, para ver el
+    // ruteo de las conexiones y el lienzo contraído con un flujo de más de un par de nodos.
+    workflow: {
+      nodes: [
+        { id: "inicio", type: "inicio", position: { x: 0, y: 0 } },
+        { id: "play-1", type: "play", position: { x: -144, y: 120 } },
+        { id: "collect-1", type: "collect", position: { x: -144, y: 420 } },
+        { id: "if-1", type: "if", position: { x: -144, y: 720 } },
+        { id: "play-2", type: "play", position: { x: 260, y: 1000 } },
+        { id: "derivacion-1", type: "derivacion", position: { x: -400, y: 1300 }, campaniaId: "camp-1" },
+        { id: "derivacion-2", type: "derivacion", position: { x: 260, y: 1300 }, campaniaId: "camp-2" },
+      ],
+      edges: [
+        { id: "e-inicio", source: "inicio", target: "play-1" },
+        { id: "e-p1-next", source: "play-1", target: "collect-1", sourceHandle: "next" },
+        { id: "e-p1-error", source: "play-1", target: "derivacion-2", sourceHandle: "error" },
+        { id: "e-c1-complete", source: "collect-1", target: "if-1", sourceHandle: "complete" },
+        // Retorno acomodado a mano: sube por la derecha de los nodos y entra por arriba.
+        {
+          id: "e-c1-timeout",
+          source: "collect-1",
+          target: "play-1",
+          sourceHandle: "timeout",
+          ruta: [[144, 560], [208, 560], [208, 96], [0, 96], [0, 120]],
+        },
+        { id: "e-if-true", source: "if-1", target: "derivacion-1", sourceHandle: "true" },
+        { id: "e-if-false", source: "if-1", target: "play-2", sourceHandle: "false" },
+        { id: "e-p2-next", source: "play-2", target: "derivacion-2", sourceHandle: "next" },
+      ],
+    },
     interactionValue: 100,
     provisioning: 1,
     provisioningLock: 100,
