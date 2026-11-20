@@ -331,6 +331,8 @@ export const clientes: NamespaceDict = {
     "imp.err.problema": "Problema",
     "imp.err.noNumero": "\"{valor}\" no es un importe válido (se importa sin ese dato)",
     "imp.err.mailInvalido": "El mail no tiene un formato válido (se importa sin ese contacto)",
+    "imp.err.enListaExclusion": "Contacto en lista de exclusión \"{lista}\" ({canal}). Se importa igual: no se lo va a contactar desde las campañas que tengan esa lista.",
+    "imp.stat.listaExclusion": "Contactos en lista de exclusión (se importan igual)",
     "imp.descargarErrores": "Descargar el detalle de errores y advertencias (CSV)",
     "imp.listo": "Importación en curso",
     "imp.listoDesc": "Te avisamos cuando termine. El resultado y el detalle de errores quedan en el historial de importaciones.",

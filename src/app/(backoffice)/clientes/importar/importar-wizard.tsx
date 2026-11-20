@@ -247,7 +247,7 @@ type Validaciones = {
 type SiExiste = "reemplazar" | "siVacio" | "noTocar";
 
 // Totales de ejemplo de la importación (mock).
-const TOTALES = { filas: 1240, nuevos: 85, actualizar: 1130, errores: 25, advertencias: 40 };
+const TOTALES = { filas: 1240, nuevos: 85, actualizar: 1130, errores: 25, advertencias: 40, listaExclusion: 12 };
 const n = (x: number) => x.toLocaleString("es-AR");
 
 // Qué hacer con los datos (paso Opciones, pedido de producto 2026-10-15).
@@ -2242,6 +2242,12 @@ function PasoRevision({
     { fila: 233, columna: "SALDO_DEUDA", problema: t("clientes.imp.err.noNumero", { valor: "N/D" }), tipo: "advertencia" },
     { fila: 870, columna: "EMAIL", problema: t("clientes.imp.err.mailInvalido"), tipo: "advertencia" },
     { fila: 991, columna: "FECHA_VTO", problema: t("clientes.imp.err.fechaInvalida", { valor: "31/02/2026" }), tipo: "advertencia" },
+    // ATLAS-1444: se revisa cada contacto contra las listas de exclusión
+    // asignadas a algún proyecto o campaña, solo Saliente o Bidireccional, y
+    // cada dato con su canal (Teléfono con Llamada, WhatsApp con WhatsApp,
+    // Email con Email). Una advertencia por lista. No impide la importación.
+    { fila: 145, columna: "TEL_LABORAL", problema: t("clientes.imp.err.enListaExclusion", { lista: "No llame — Nacional", canal: t("listas.canal.calline") }), tipo: "advertencia" },
+    { fila: 702, columna: "TEL_CEL", problema: t("clientes.imp.err.enListaExclusion", { lista: "No llame — Nacional", canal: t("listas.canal.wsp") }), tipo: "advertencia" },
   ];
 
   const stats = [
@@ -2250,6 +2256,7 @@ function PasoRevision({
     { label: t("clientes.imp.stat.actualizar"), valor: n(TOTALES.actualizar), tono: "text-success" },
     { label: t("clientes.imp.stat.errores"), valor: n(TOTALES.errores), tono: "text-destructive" },
     { label: t("clientes.imp.stat.advertencias"), valor: n(TOTALES.advertencias), tono: "text-warning" },
+    { label: t("clientes.imp.stat.listaExclusion"), valor: n(TOTALES.listaExclusion), tono: "text-warning" },
   ];
 
   const detalleArchivo = [
@@ -2276,7 +2283,7 @@ function PasoRevision({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         {stats.map((s) => (
           <div key={s.label} className="flex flex-col gap-1 rounded-lg border p-3">
             <span className={cn("text-2xl font-semibold tabular-nums", s.tono)}>{s.valor}</span>

@@ -342,6 +342,7 @@ export const contenido: ContenidoPagina = {
               "Clientes a actualizar.",
               "Filas con errores (no se importan).",
               "Advertencias (se importan sin ese dato).",
+              "Contactos en lista de exclusión (se importan igual).",
             ],
           },
           {
@@ -354,6 +355,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "Error — La fila no se importa. Ejemplos: falta el dato con el que se reconoce al cliente, coincide con más de un cliente existente, o no tiene ningún contacto válido.",
               "Advertencia — El cliente se importa, pero sin ese dato. Ejemplos: un importe, un mail o una fecha con formato inválido.",
+              "Contacto en lista de exclusión — Advertencia que no impide nada: el cliente y el contacto se importan igual, pero no se lo va a contactar desde las campañas que tengan esa lista. Se revisa cada contacto contra las listas de exclusión asignadas a algún proyecto o campaña, solo las marcadas como Saliente o Bidireccional, y cada dato con su canal (Teléfono con Llamada, WhatsApp con WhatsApp, Email con Email). Si el contacto está en más de una lista, sale una advertencia por cada una.",
             ],
           },
           {
