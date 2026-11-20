@@ -7,19 +7,15 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { listasExclusion } from "@/lib/mock-data";
 
 // Duplicar (ATLAS-1291) abre esta misma alta con los datos de la lista original.
-// MOCK: la descripción y los contactos no se ven acá y Crear no persiste.
-// REAL: el alta recibe la lista de origen y copia también descripción y contactos.
+// ATLAS-1444: sin tipo de lista. Duplicar copia los contactos con su canal y su
+// sentido; la fecha y el usuario de alta son los de la copia.
+// MOCK: los contactos no se ven acá y Crear no persiste.
+// REAL: el alta recibe la lista de origen y copia también los contactos.
 export default function NuevaListaExclusionPage({
   searchParams,
 }: {
@@ -62,22 +58,13 @@ export default function NuevaListaExclusionPage({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tipo">{t("listas.col.tipo")}</Label>
-            {/* `value` es el valor de dominio (ListaExclusion["tipo"]), en
-                español y sin traducir; lo que se traduce es la etiqueta. */}
-            <Select defaultValue={original?.tipo ?? "Exclusión de tareas"}>
-              <SelectTrigger id="tipo" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Exclusión de tareas">
-                  {t("listas.tipo.tareas")}
-                </SelectItem>
-                <SelectItem value="Gubernamental">
-                  {t("listas.tipo.gubernamental")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="descripcion">{t("common.comunes.descripcion")}</Label>
+            <Textarea
+              id="descripcion"
+              rows={3}
+              defaultValue={original?.descripcion}
+              placeholder={t("listas.placeholderDescripcion")}
+            />
           </div>
         </CardContent>
       </Card>

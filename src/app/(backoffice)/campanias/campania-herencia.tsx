@@ -376,9 +376,10 @@ export function CampaniaHerencia({
                     className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
                   >
                     <span className="font-medium">{c.contacto}</span>
-                    <Badge variant="outline" className="uppercase">
-                      {c.tipo}
-                    </Badge>
+                    <span className="flex gap-1">
+                      <Badge variant="outline">{t(`listas.canal.${c.canal}`)}</Badge>
+                      <Badge variant="neutral">{t(`listas.sentido.${c.sentido}`)}</Badge>
+                    </span>
                   </div>
                 ))}
               </div>

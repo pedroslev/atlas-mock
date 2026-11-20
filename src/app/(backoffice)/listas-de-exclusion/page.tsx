@@ -10,7 +10,6 @@ import {
   type MRT_ColumnDef,
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { listasExclusion, type ListaExclusion } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 
@@ -31,10 +30,11 @@ export default function ListasDeExclusionPage() {
         ),
       },
       {
-        accessorKey: "tipo",
-        header: t("listas.col.tipo"),
-        filterVariant: "select",
-        Cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge>,
+        accessorKey: "descripcion",
+        header: t("common.comunes.descripcion"),
+        Cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.descripcion}</span>
+        ),
       },
       {
         id: "contactos",

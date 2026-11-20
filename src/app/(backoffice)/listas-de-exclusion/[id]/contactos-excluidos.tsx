@@ -1,247 +1,364 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import {
+  Download,
+  FileMinus,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DialogConAviso } from "@/components/layout/aviso-cambios";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
+import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-table";
 import type { ContactoExcluido } from "@/lib/mock-data";
+import { CANALES, SENTIDOS, formatearFecha } from "@/lib/listas-exclusion";
 import { useT } from "@/lib/i18n";
+import { ContactoDialog } from "./contacto-dialog";
+import { ArchivoDialog, type ModoArchivo } from "./archivo-dialog";
 
-// El tipo de contacto es un valor de dominio; su rótulo visible sale del
-// diccionario.
-const tipoKey: Record<ContactoExcluido["tipo"], string> = {
-  wsp: "listas.contactos.tipoWhatsapp",
-  calline: "listas.contactos.tipoLlamada",
-  email: "listas.contactos.tipoEmail",
-};
+const sentidoVariant = {
+  saliente: "info",
+  entrante: "warning",
+  bidireccional: "neutral",
+} as const;
 
-let contadorIdsNuevos = 0;
+type AccionMasiva = "importar" | "quitarArchivo" | "quitarTodos";
 
-// Estado local solo para que agregar/quitar contacto se sienta real en el
-// mock — no hay persistencia (ver PRODUCT.md: esto es un mock sin API).
+// Contactos de una lista de exclusión (ATLAS-1444).
+// - Agregar, Editar y Quitar un contacto quedan pendientes hasta Confirmar.
+// - Importar, Quitar por archivo y Quitar todos se guardan al terminar; si hay
+//   cambios pendientes, primero se confirman o descartan.
+// MOCK: estado local; la tabla pagina en el navegador.
+// REAL: la tabla pagina, filtra y busca en el servicio (listas de 2M+).
 export function ContactosExcluidos({
   initialContactos,
+  listaId,
+  listaNombre,
 }: {
   initialContactos: ContactoExcluido[];
+  listaId: string;
+  listaNombre: string;
 }) {
   const t = useT();
-  const tipoLabel = (tipo: ContactoExcluido["tipo"]) => t(tipoKey[tipo]);
   const [contactos, setContactos] = useState(initialContactos);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [contacto, setContacto] = useState("");
-  const [tipo, setTipo] = useState<ContactoExcluido["tipo"]>("calline");
-  // Buscador local: estas listas suelen ser largas (feedback 2026-07-16),
-  // así que se filtra en vivo por contacto o tipo. Sin persistencia.
-  const [busqueda, setBusqueda] = useState("");
+  // Lo último guardado: para saber si hay cambios pendientes.
+  const [guardados, setGuardados] = useState(initialContactos);
+  const [agregarAbierto, setAgregarAbierto] = useState(false);
+  const [editando, setEditando] = useState<ContactoExcluido | null>(null);
+  const [archivo, setArchivo] = useState<ModoArchivo | null>(null);
+  const [quitarTodosAbierto, setQuitarTodosAbierto] = useState(false);
+  const [pendiente, setPendiente] = useState<AccionMasiva | null>(null);
+  const [mensaje, setMensaje] = useState("");
 
-  const contactosFiltrados = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return contactos;
-    return contactos.filter(
-      (c) =>
-        c.contacto.toLowerCase().includes(q) ||
-        t(tipoKey[c.tipo]).toLowerCase().includes(q)
-    );
-  }, [contactos, busqueda, t]);
+  const hayPendientes = contactos !== guardados;
 
-  function agregarContacto() {
-    const valor = contacto.trim();
-    if (!valor) return;
-    contadorIdsNuevos += 1;
-    setContactos((current) => [
-      ...current,
-      { id: `dnc-nuevo-${contadorIdsNuevos}`, contacto: valor, tipo },
-    ]);
-    setContacto("");
-    setTipo("calline");
-    setDialogOpen(false);
+  function abrir(accion: AccionMasiva) {
+    if (accion === "importar") setArchivo("importar");
+    if (accion === "quitarArchivo") setArchivo("quitar");
+    if (accion === "quitarTodos") setQuitarTodosAbierto(true);
   }
+
+  function antesDeMasiva(accion: AccionMasiva) {
+    if (hayPendientes) setPendiente(accion);
+    else abrir(accion);
+  }
+
+  // Las acciones masivas guardan solas: lo que dejan pasa a ser lo guardado.
+  function guardarMasiva(nuevos: ContactoExcluido[]) {
+    setContactos(nuevos);
+    setGuardados(nuevos);
+  }
+
+  function descargar() {
+    const filas = [
+      ["Contacto", "Canal", "Sentido", "Fecha de alta", "Usuario de alta"],
+      ...contactos.map((c) => [
+        c.contacto,
+        t(`listas.canal.${c.canal}`),
+        t(`listas.sentido.${c.sentido}`),
+        formatearFecha(c.fechaAlta),
+        c.usuarioAlta ?? "",
+      ]),
+    ];
+    const csv = filas.map((f) => f.map((v) => `"${v.replace(/"/g, '""')}"`).join(";")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${listaNombre}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const columns = useMemo<MRT_ColumnDef<ContactoExcluido>[]>(
+    () => [
+      {
+        accessorKey: "contacto",
+        header: t("listas.contactos.contacto"),
+        size: 190,
+        // El buscador de la tabla ya busca por contacto en toda la lista.
+        enableColumnFilter: false,
+        Cell: ({ row }) => <span className="font-mono text-sm">{row.original.contacto}</span>,
+      },
+      {
+        id: "canal",
+        header: t("listas.contactos.canal"),
+        size: 130,
+        accessorFn: (c) => t(`listas.canal.${c.canal}`),
+        filterVariant: "select",
+        filterSelectOptions: CANALES.map((c) => t(`listas.canal.${c}`)),
+        Cell: ({ cell }) => <Badge variant="outline">{cell.getValue<string>()}</Badge>,
+      },
+      {
+        id: "sentido",
+        header: t("listas.contactos.sentido"),
+        size: 150,
+        accessorFn: (c) => t(`listas.sentido.${c.sentido}`),
+        filterVariant: "select",
+        filterSelectOptions: SENTIDOS.map((s) => t(`listas.sentido.${s}`)),
+        Cell: ({ row, cell }) => (
+          <Badge variant={sentidoVariant[row.original.sentido]}>{cell.getValue<string>()}</Badge>
+        ),
+      },
+      {
+        id: "fechaAlta",
+        header: t("listas.contactos.fechaAlta"),
+        size: 150,
+        accessorFn: (c) => c.fechaAlta ?? "",
+        enableColumnFilter: false,
+        Cell: ({ row }) =>
+          row.original.fechaAlta ? (
+            <span className="text-muted-foreground">{formatearFecha(row.original.fechaAlta)}</span>
+          ) : (
+            <span className="text-muted-foreground" title={t("listas.contactos.sinDato")}>
+              —
+            </span>
+          ),
+      },
+      {
+        id: "usuarioAlta",
+        header: t("listas.contactos.usuarioAlta"),
+        accessorFn: (c) => c.usuarioAlta ?? "",
+        enableColumnFilter: false,
+        Cell: ({ row }) => (
+          <span className="text-muted-foreground" title={row.original.usuarioAlta ? undefined : t("listas.contactos.sinDato")}>
+            {row.original.usuarioAlta ?? "—"}
+          </span>
+        ),
+      },
+    ],
+    [t]
+  );
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">
-          {t(
-            contactos.length === 1
-              ? "listas.contactos.uno"
-              : "listas.contactos.varios",
-            { n: contactos.length.toLocaleString("es-AR") }
-          )}
+          {t(contactos.length === 1 ? "listas.contactos.uno" : "listas.contactos.varios", {
+            n: contactos.length.toLocaleString("es-AR"),
+          })}
         </span>
-        <DialogConAviso
-          open={dialogOpen}
-          onOpenChange={(abierto) => {
-            setDialogOpen(abierto);
-            // Descartar limpia lo escrito: al volver a abrir arranca vacío.
-            if (!abierto) {
-              setContacto("");
-              setTipo("calline");
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Plus />
-              {t("listas.contactos.agregar")}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("listas.contactos.agregarTitulo")}</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="contacto">
-                  {t("listas.contactos.contacto")}
-                </Label>
-                <Input
-                  id="contacto"
-                  placeholder="+54 11 4000-0000 / email@ejemplo.com"
-                  value={contacto}
-                  onChange={(event) => setContacto(event.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tipo-contacto">{t("listas.col.tipo")}</Label>
-                <Select
-                  value={tipo}
-                  onValueChange={(value) =>
-                    setTipo(value as ContactoExcluido["tipo"])
-                  }
-                >
-                  <SelectTrigger id="tipo-contacto" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="calline">
-                      {t("listas.contactos.tipoLlamada")}
-                    </SelectItem>
-                    <SelectItem value="wsp">
-                      {t("listas.contactos.tipoWhatsapp")}
-                    </SelectItem>
-                    <SelectItem value="email">
-                      {t("listas.contactos.tipoEmail")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">
-                {t("common.acciones.cancelar")}
-              </Button>
-              </DialogClose>
-              <Button onClick={agregarContacto} disabled={!contacto.trim()}>
-                {t("common.acciones.agregar")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </DialogConAviso>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setAgregarAbierto(true)}>
+            <Plus />
+            {t("listas.contactos.agregar")}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => antesDeMasiva("importar")}>
+            <Upload />
+            {t("listas.contactos.importar")}
+          </Button>
+          <DropdownMenu>
+            <ActionTooltip label={t("listas.contactos.masAcciones")}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon-sm" aria-label={t("listas.contactos.masAcciones")}>
+                  <MoreVertical />
+                </Button>
+              </DropdownMenuTrigger>
+            </ActionTooltip>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={descargar}>
+                <Download />
+                {t("listas.contactos.descargar")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={() => antesDeMasiva("quitarArchivo")}>
+                <FileMinus />
+                {t("listas.contactos.quitarArchivo")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={contactos.length === 0}
+                onSelect={() => antesDeMasiva("quitarTodos")}
+              >
+                <Trash2 />
+                {t("listas.contactos.quitarTodos")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
+      {mensaje && <p className="text-sm text-muted-foreground">{mensaje}</p>}
+
+      {/* Lo que vigila el aviso de cambios sin guardar es la lista, no la vista. */}
+      <span
+        hidden
+        data-valor-vigilado={JSON.stringify(
+          contactos.map((c) => `${c.contacto}|${c.canal}|${c.sentido}`).sort()
+        )}
+      />
+
       {contactos.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("listas.contactos.vacio")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t("listas.contactos.vacio")}</p>
       ) : (
-        <>
-          {/* El buscador solo filtra la vista: lo que cuenta es la lista. */}
-          <span
-            hidden
-            data-valor-vigilado={JSON.stringify(
-              contactos.map((c) => `${c.contacto}|${c.tipo}`).sort()
-            )}
+        <div data-no-vigilar>
+          <MitrolTable
+            columns={columns}
+            data={contactos}
+            options={{
+              enablePagination: true,
+              enableBottomToolbar: true,
+              enableRowActions: true,
+              enableHiding: true,
+              getRowId: (c) => c.id,
+              initialState: {
+                pagination: { pageIndex: 0, pageSize: 10 },
+                sorting: [{ id: "fechaAlta", desc: true }],
+                columnVisibility: { usuarioAlta: false },
+                showColumnFilters: false,
+              },
+              displayColumnDefOptions: { "mrt-row-actions": { header: "", size: 88 } },
+              renderRowActions: ({ row }) => (
+                <div className="flex items-center gap-1">
+                  <ActionTooltip label={t("listas.contactos.editar")}>
+                    <button
+                      type="button"
+                      aria-label={t("listas.contactos.editarAria", { contacto: row.original.contacto })}
+                      onClick={() => setEditando(row.original)}
+                      className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  </ActionTooltip>
+                  <ActionTooltip label={t("listas.contactos.quitar")}>
+                    <button
+                      type="button"
+                      aria-label={t("listas.contactos.quitarAria", { contacto: row.original.contacto })}
+                      onClick={() => setContactos((xs) => xs.filter((x) => x.id !== row.original.id))}
+                      className="flex size-8 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </ActionTooltip>
+                </div>
+              ),
+            }}
           />
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={t("listas.contactos.buscarPlaceholder")}
-              value={busqueda}
-              onChange={(event) => setBusqueda(event.target.value)}
-              className="pl-9"
-              aria-label={t("listas.contactos.buscarAria")}
-            />
-          </div>
-          <div data-no-vigilar className="contents">
-          {contactosFiltrados.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("listas.contactos.sinCoincidencias", { q: busqueda.trim() })}
-            </p>
-          ) : (
-            <div className="rounded-xl ring-1 ring-foreground/10">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("listas.contactos.contacto")}</TableHead>
-                    <TableHead>{t("listas.col.tipo")}</TableHead>
-                    <TableHead className="w-12" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contactosFiltrados.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-mono text-sm">
-                        {c.contacto}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{tipoLabel(c.tipo)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <ActionTooltip label={t("listas.contactos.quitar")}>
-                          <button
-                            type="button"
-                            aria-label={t("listas.contactos.quitarAria", {
-                              contacto: c.contacto,
-                            })}
-                            onClick={() =>
-                              setContactos((current) =>
-                                current.filter((x) => x.id !== c.id)
-                              )
-                            }
-                            className="flex size-8 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10"
-                          >
-                            <X className="size-4" />
-                          </button>
-                        </ActionTooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-          </div>
-        </>
+        </div>
       )}
+
+      <ContactoDialog
+        open={agregarAbierto}
+        onOpenChange={setAgregarAbierto}
+        contactos={contactos}
+        onAplicar={(nuevos, resumen) => {
+          setContactos(nuevos);
+          setMensaje(resumen);
+        }}
+      />
+      <ContactoDialog
+        open={editando !== null}
+        onOpenChange={(abierto) => !abierto && setEditando(null)}
+        contactos={contactos}
+        editando={editando ?? undefined}
+        onAplicar={(nuevos) => setContactos(nuevos)}
+      />
+
+      {archivo && (
+        <ArchivoDialog
+          modo={archivo}
+          listaId={listaId}
+          contactos={contactos}
+          onClose={() => setArchivo(null)}
+          onGuardado={guardarMasiva}
+        />
+      )}
+
+      {/* Quitar todos: se guarda en el momento. */}
+      <AlertDialog open={quitarTodosAbierto} onOpenChange={setQuitarTodosAbierto}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("listas.contactos.quitarTodosTitulo")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("listas.contactos.quitarTodosDesc", { n: contactos.length.toLocaleString("es-AR") })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.acciones.cancelar")}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" data-guarda-cambios onClick={() => guardarMasiva([])}>
+              {t("listas.contactos.quitarTodosConfirmar")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cambios pendientes antes de una acción masiva. Confirmar guarda y deja
+          al usuario en el detalle (el Confirmar de la cabecera vuelve al listado). */}
+      <AlertDialog open={pendiente !== null} onOpenChange={(abierto) => !abierto && setPendiente(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("listas.pendientes.titulo")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("listas.pendientes.desc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.acciones.cancelar")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => {
+                const accion = pendiente;
+                setContactos(guardados);
+                setPendiente(null);
+                if (accion) abrir(accion);
+              }}
+            >
+              {t("listas.pendientes.descartar")}
+            </AlertDialogAction>
+            <AlertDialogAction
+              data-guarda-cambios
+              onClick={() => {
+                const accion = pendiente;
+                setGuardados(contactos);
+                setPendiente(null);
+                if (accion) abrir(accion);
+              }}
+            >
+              {t("listas.pendientes.confirmar")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

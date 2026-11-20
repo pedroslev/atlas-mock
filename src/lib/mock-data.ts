@@ -442,19 +442,50 @@ export type Feriado = {
   holidays: FechaFeriado[];
 };
 
+// Listas de exclusión (ATLAS-1444): la lista ya no tiene tipo; cada contacto
+// suma sentido, fecha y usuario de alta. "Canal" es el antiguo "Tipo".
+export type CanalExclusion = "calline" | "wsp" | "email";
+export type SentidoExclusion = "saliente" | "entrante" | "bidireccional";
+
 export type ContactoExcluido = {
   id: string;
   contacto: string;
-  tipo: "wsp" | "calline" | "email";
+  canal: CanalExclusion;
+  sentido: SentidoExclusion;
+  /** ISO 8601. Vacío en los contactos que existían antes de ATLAS-1444. */
+  fechaAlta?: string;
+  usuarioAlta?: string;
 };
 
 export type ListaExclusion = {
   id: string;
   nombre: string;
   descripcion?: string;
-  tipo: "Exclusión de tareas" | "Gubernamental";
   contactos: ContactoExcluido[];
 };
+
+// Contactos de ejemplo para que la tabla tenga varias páginas.
+function contactosRegistro(): ContactoExcluido[] {
+  const out: ContactoExcluido[] = [
+    { id: "dnc-1-c1", contacto: "541142223344", canal: "calline", sentido: "saliente" },
+    { id: "dnc-1-c2", contacto: "541145551122", canal: "calline", sentido: "bidireccional", fechaAlta: "2026-11-02T10:14:00", usuarioAlta: "Marina Acosta" },
+    { id: "dnc-1-c3", contacto: "5491160112233", canal: "wsp", sentido: "saliente", fechaAlta: "2026-11-02T10:14:00", usuarioAlta: "Marina Acosta" },
+    { id: "dnc-1-c4", contacto: "5491170004455", canal: "calline", sentido: "entrante", fechaAlta: "2026-11-10T16:40:00", usuarioAlta: "Julián Ferreyra" },
+    { id: "dnc-1-c5", contacto: "no-contactar@ejemplo.com", canal: "email", sentido: "saliente", fechaAlta: "2026-11-12T09:05:00", usuarioAlta: "Julián Ferreyra" },
+  ];
+  for (let i = 0; i < 40; i++) {
+    const n = String(43000000 + i * 7919).padStart(8, "0");
+    out.push({
+      id: `dnc-1-r${i}`,
+      contacto: `5411${n}`,
+      canal: "calline",
+      sentido: "saliente",
+      fechaAlta: "2026-10-01T08:00:00",
+      usuarioAlta: "Rocío Benítez",
+    });
+  }
+  return out;
+}
 
 // contact_list queda fuera de fase 0 (feedback de producto 2026-07-16): no se
 // diseña ni se usa por ahora, así que no hay tipo ni mock para listas de
@@ -1149,21 +1180,16 @@ export const listasExclusion: ListaExclusion[] = [
   {
     id: "dnc-1",
     nombre: "No llame — Nacional",
-    descripcion: "Registro nacional \"No llame\" (gubernamental)",
-    tipo: "Gubernamental",
-    contactos: [
-      { id: "dnc-1-c1", contacto: "+54 11 4222-3344", tipo: "calline" },
-      { id: "dnc-1-c2", contacto: "+54 11 4555-1122", tipo: "calline" },
-    ],
+    descripcion: "Registro nacional \"No llame\"",
+    contactos: contactosRegistro(),
   },
   {
     id: "dnc-2",
     nombre: "Excluidos Cobranzas Q3",
     descripcion: "Contactos que pidieron no ser llamados este trimestre",
-    tipo: "Exclusión de tareas",
     contactos: [
-      { id: "dnc-2-c1", contacto: "+54 9 11 6011-2233", tipo: "wsp" },
-      { id: "dnc-2-c2", contacto: "reclamos@ejemplo.com", tipo: "email" },
+      { id: "dnc-2-c1", contacto: "5491160112233", canal: "wsp", sentido: "bidireccional", fechaAlta: "2026-09-15T11:20:00", usuarioAlta: "Lucía Márquez" },
+      { id: "dnc-2-c2", contacto: "reclamos@ejemplo.com", canal: "email", sentido: "saliente", fechaAlta: "2026-09-15T11:20:00", usuarioAlta: "Lucía Márquez" },
     ],
   },
 ];
@@ -1398,4 +1424,19 @@ export function getFeriado(id: string) {
 
 export function getListaExclusion(id: string) {
   return listasExclusion.find((l) => l.id === id);
+}
+
+// "Dónde se usa" una lista (ATLAS-1444): proyectos que la tienen y campañas
+// que la tienen propia o la heredan del proyecto (sin lista propia).
+export function usosListaExclusion(id: string) {
+  const proyectosConLista = proyectos.filter((p) => p.listaExclusionId === id);
+  const campaniasConLista = campanias
+    .map((c) => {
+      if (c.listaExclusionId === id) return { campania: c, heredada: false };
+      const proyecto = proyectos.find((p) => p.id === c.proyectoId);
+      if (!c.listaExclusionId && proyecto?.listaExclusionId === id) return { campania: c, heredada: true };
+      return null;
+    })
+    .filter((x): x is { campania: Campania; heredada: boolean } => x !== null);
+  return { proyectos: proyectosConLista, campanias: campaniasConLista };
 }

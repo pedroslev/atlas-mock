@@ -3,16 +3,11 @@ import { notFound } from "next/navigation";
 import { BotonConfirmar, CamposUnicos, CampoUnico } from "@/components/layout/campos-unicos";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { listasExclusion } from "@/lib/mock-data";
+import { listasExclusion, usosListaExclusion } from "@/lib/mock-data";
 import { T } from "@/lib/i18n";
 import { ContactosExcluidos } from "./contactos-excluidos";
 
@@ -20,6 +15,8 @@ export function generateStaticParams() {
   return listasExclusion.map((l) => ({ id: l.id }));
 }
 
+// Detalle de una lista de exclusión (ATLAS-1444): sin tipo; nombre y
+// descripción editables; "Dónde se usa"; contactos con canal y sentido.
 export default async function EditarListaExclusionPage({
   params,
 }: {
@@ -28,18 +25,14 @@ export default async function EditarListaExclusionPage({
   const { id } = await params;
   const lista = listasExclusion.find((l) => l.id === id);
   if (!lista) notFound();
+  const usos = usosListaExclusion(id);
+  const sinUsos = usos.proyectos.length === 0 && usos.campanias.length === 0;
 
   return (
     <CamposUnicos>
     <div className="flex flex-col gap-6">
       <PageHeader
         title={lista.nombre}
-        description={
-          <T
-            k="listas.contactosCount"
-            vars={{ n: lista.contactos.length.toLocaleString("es-AR") }}
-          />
-        }
         backHref="/listas-de-exclusion"
         actions={
           <>
@@ -48,7 +41,7 @@ export default async function EditarListaExclusionPage({
                 <T k="common.acciones.cancelar" />
               </Link>
             </Button>
-            <BotonConfirmar>
+            <BotonConfirmar href="/listas-de-exclusion">
               <T k="common.acciones.confirmar" />
             </BotonConfirmar>
           </>
@@ -56,56 +49,97 @@ export default async function EditarListaExclusionPage({
       />
 
       {/* Cards lado a lado a ancho completo, no apiladas (feedback 2026-07-16). */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(280px,420px)_1fr]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>
-              <T k="listas.datos" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nombre">
-                <T k="common.comunes.nombre" />
-              </Label>
-              <CampoUnico
-                id="nombre"
-                existentes={listasExclusion.filter((l) => l.id !== id).map((l) => l.nombre)}
-                defaultValue={lista.nombre}
-                obligatorio
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tipo">
-                <T k="listas.col.tipo" />
-              </Label>
-              {/* `value` es el valor de dominio (ListaExclusion["tipo"]), en
-                  español y sin traducir; lo que se traduce es la etiqueta. */}
-              <Select defaultValue={lista.tipo}>
-                <SelectTrigger id="tipo" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Exclusión de tareas">
-                    <T k="listas.tipo.tareas" />
-                  </SelectItem>
-                  <SelectItem value="Gubernamental">
-                    <T k="listas.tipo.gubernamental" />
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <div className="flex flex-col gap-6">
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>
+                <T k="listas.datos" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="nombre">
+                  <T k="common.comunes.nombre" />
+                </Label>
+                <CampoUnico
+                  id="nombre"
+                  existentes={listasExclusion.filter((l) => l.id !== id).map((l) => l.nombre)}
+                  defaultValue={lista.nombre}
+                  obligatorio
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="descripcion">
+                  <T k="common.comunes.descripcion" />
+                </Label>
+                <Textarea id="descripcion" rows={3} defaultValue={lista.descripcion} />
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>
+                <T k="listas.usos.titulo" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 text-sm">
+              {sinUsos ? (
+                <p className="text-muted-foreground">
+                  <T k="listas.usos.vacio" />
+                </p>
+              ) : (
+                <>
+                  {usos.proyectos.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        <T k="listas.usos.proyectos" />
+                      </span>
+                      {usos.proyectos.map((p) => (
+                        <Link key={p.id} href={`/proyectos/${p.id}`} className="hover:underline">
+                          {p.nombre}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {usos.campanias.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        <T k="listas.usos.campanias" />
+                      </span>
+                      {usos.campanias.map(({ campania, heredada }) => (
+                        <div key={campania.id} className="flex flex-wrap items-center gap-2">
+                          <Link href={`/campanias/${campania.id}`} className="hover:underline">
+                            {campania.nombre}
+                          </Link>
+                          {heredada && (
+                            <Badge variant="neutral">
+                              <T k="listas.usos.heredada" />
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>
               <T k="listas.contactos.titulo" />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ContactosExcluidos initialContactos={lista.contactos} />
+            <ContactosExcluidos
+              initialContactos={lista.contactos}
+              listaId={lista.id}
+              listaNombre={lista.nombre}
+            />
           </CardContent>
         </Card>
       </div>

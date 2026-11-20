@@ -1,6 +1,8 @@
 import type { ContenidoPagina } from "@/lib/docs/tipos";
 
 // Listas de exclusión: listas de contactos que no deben ser contactados.
+// ATLAS-1444: sin tipo de lista; canal y sentido por contacto; importar y quitar
+// por archivo; "Dónde se usa".
 export const contenido: ContenidoPagina = {
   es: {
     titulo: "Listas de exclusión",
@@ -14,19 +16,12 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "Una lista de exclusión reúne teléfonos, WhatsApp o mails a los que no se debe contactar. Cada lista tiene un «Tipo»:",
-          },
-          {
-            tipo: "lista",
-            items: [
-              "Exclusión de tareas — Una lista propia: por ejemplo, contactos que pidieron no ser llamados este trimestre.",
-              "Gubernamental — Un registro oficial de no-llame.",
-            ],
+              "Una lista de exclusión reúne teléfonos, WhatsApp o mails a los que no se debe contactar. Las listas no tienen tipo: todas funcionan igual, sean de un registro oficial o propias.",
           },
           {
             tipo: "p",
             texto:
-              "Se asigna en «Campañas», en el campo «Lista de exclusión». Cada campaña usa una sola lista, y si no elegís ninguna queda «Sin asignar».",
+              "Se asigna en «Proyectos» y en «Campañas»: una lista en cada uno. La campaña usa la del proyecto si no tiene una propia.",
           },
         ],
       },
@@ -37,15 +32,15 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Nombre — Nombre de la lista. Al hacer click se abre su edición.",
-              "Tipo — «Exclusión de tareas» o «Gubernamental». Se puede filtrar por tipo.",
+              "Nombre — Nombre de la lista. Al hacer click se abre su detalle.",
+              "Descripción — Para qué se usa la lista.",
               "Contactos — Cantidad de contactos excluidos.",
             ],
           },
           {
             tipo: "p",
             texto:
-              "Arriba de la tabla hay un buscador, y los encabezados permiten ordenar y filtrar. El botón «Nueva lista» está arriba a la derecha. El menú de cada fila (los tres puntos) ofrece «Editar», «Descargar» y «Eliminar» (en rojo, con confirmación). No hay acciones masivas.",
+              "Arriba de la tabla hay un buscador, y los encabezados permiten ordenar y filtrar. El botón «Nueva lista» está arriba a la derecha. El menú de cada fila (los tres puntos) ofrece «Editar», «Duplicar», «Descargar» y «Eliminar» (en rojo, con confirmación).",
           },
         ],
       },
@@ -57,22 +52,23 @@ export const contenido: ContenidoPagina = {
             tipo: "pasos",
             items: [
               "Tocá «Nueva lista». Para editar una existente, tocá su nombre o «Editar».",
-              "En «Datos de la lista», escribí el «Nombre» y elegí el «Tipo».",
+              "En «Datos de la lista», escribí el «Nombre» y, si querés, la «Descripción».",
               "Tocá «Crear lista» (o «Confirmar» si estás editando). «Cancelar» sale sin guardar.",
-              "Cargá los contactos excluidos desde la edición de la lista (ver la sección siguiente).",
+              "Cargá los contactos desde el detalle de la lista (ver la sección siguiente).",
             ],
           },
           {
             tipo: "lista",
             items: [
-              "Nombre — Ej: «Excluidos Cobranzas Q4». Es lo que vas a elegir después en la campaña.",
-              "Tipo — «Exclusión de tareas» o «Gubernamental». Por defecto, «Exclusión de tareas».",
+              "Nombre — Obligatorio y único. Ej: «Excluidos Cobranzas Q4». Es lo que vas a elegir después en el proyecto o la campaña.",
+              "Descripción — Opcional. Se edita también desde el detalle.",
+              "Duplicar — Abre el alta con los datos de la lista original y copia sus contactos con su canal y su sentido. La fecha y el usuario de alta son los de la copia.",
             ],
           },
           {
             tipo: "p",
             texto:
-              "La pantalla de alta solo pide estos dos datos: los contactos se agregan después, abriendo la lista.",
+              "En el detalle, la tarjeta «Dónde se usa» muestra los proyectos y las campañas que tienen la lista, con un enlace a cada uno. Las campañas que la heredan del proyecto llevan la marca «Heredada del proyecto». Si no está asignada a ninguno, dice que no excluye a nadie.",
           },
         ],
       },
@@ -83,40 +79,80 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "En la edición de la lista, la tarjeta «Contactos excluidos» muestra cuántos hay («1 contacto excluido», «2 contactos excluidos») y una tabla con «Contacto» y «Tipo». Si la lista está vacía dice «Todavía no hay contactos excluidos en esta lista.».",
+              "La tarjeta «Contactos excluidos» muestra cuántos hay y una tabla paginada, ordenada por fecha de alta (lo más nuevo primero). El buscador busca en toda la lista y el filtro (el embudo) permite filtrar por «Canal» y por «Sentido». Con el selector de columnas se enciende «Usuario de alta», que viene oculta.",
+          },
+          {
+            tipo: "lista",
+            items: [
+              "Contacto — El número (solo dígitos) o el email (en minúsculas).",
+              "Canal — «Llamada», «WhatsApp» o «Email».",
+              "Sentido — «Saliente» (no se lo contacta desde Atlas), «Entrante» (cuando inicia una interacción, el workflow puede desviarla) o «Bidireccional» (las dos cosas).",
+              "Fecha de alta y Usuario de alta — Cuándo y quién lo cargó. Los contactos cargados antes de que se registraran estos datos muestran «—».",
+            ],
           },
           {
             tipo: "pasos",
             items: [
-              "Tocá «Agregar contacto».",
-              "Escribí el «Contacto»: un teléfono (+54 11 4000-0000) o un mail (email@ejemplo.com).",
-              "Elegí el «Tipo»: «Llamada», «WhatsApp» o «Email». Por defecto, «Llamada».",
-              "Tocá «Agregar». El botón está deshabilitado mientras el contacto esté vacío.",
+              "Tocá «Agregar contactos».",
+              "En «Contactos», escribí o pegá uno por línea: teléfonos (+54 11 4000-0000) o mails.",
+              "Elegí el «Canal» y el «Sentido» (por defecto, «Llamada» y «Saliente»). Se aplican a todo lo cargado.",
+              "Tocá «Agregar».",
             ],
           },
           {
             tipo: "lista",
             items: [
-              "Buscar — El buscador «Buscar por contacto o tipo…» filtra la tabla mientras escribís. Si nada coincide, dice «No hay contactos que coincidan con» lo que escribiste. Solo aparece cuando la lista tiene contactos.",
-              "Quitar — La cruz roja «Quitar contacto» de cada fila lo saca de la lista, sin pedir confirmación.",
+              "Validación — Los números quedan solo con dígitos (sin el + inicial, espacios, guiones ni paréntesis) y tienen que tener entre 8 y 15. Los mails tienen que tener formato texto@dominio. Un mail no se acepta como «Llamada» ni un número como «Email».",
+              "Líneas no válidas — Lo válido se agrega y lo que no queda en el cuadro, en rojo, para corregirlo. «Cerrar» se queda con lo agregado.",
+              "Repetidos — Si el contacto ya está con ese canal, no se duplica: se combina el sentido (Saliente + Entrante = Bidireccional). El diálogo informa cuántos se agregaron y cuántos ya estaban.",
+              "Editar — El lápiz de cada fila abre el mismo diálogo con el contacto, el canal y el sentido cargados. Si el resultado queda igual a otro contacto de la lista con ese canal, avisa «Ese contacto ya está en la lista.» y no guarda. Para achicar un sentido (de Bidireccional a Saliente), se edita el contacto.",
+              "Quitar — La cruz roja de cada fila lo saca de la lista, sin pedir confirmación.",
             ],
           },
           {
             tipo: "nota",
             texto:
-              "El tipo del contacto lo elegís vos: la pantalla no revisa que el texto sea coherente con el tipo (por ejemplo, un mail marcado como «Llamada») ni que el contacto no esté repetido.",
+              "Agregar, Editar y Quitar quedan pendientes hasta tocar «Confirmar» arriba a la derecha. Salir antes muestra el aviso de cambios sin guardar.",
           },
         ],
       },
       {
-        id: "reglas",
-        titulo: "Reglas y relaciones",
+        id: "archivo",
+        titulo: "Importar y quitar por archivo",
+        bloques: [
+          {
+            tipo: "p",
+            texto:
+              "«Importar archivo» y, en el menú de los tres puntos, «Quitar por archivo» abren el mismo asistente de tres pasos. Se guardan en el momento, al terminar. Si hay cambios pendientes, antes pregunta: «Confirmar y seguir» los guarda y deja en el detalle; «Descartar y seguir» los descarta.",
+          },
+          {
+            tipo: "pasos",
+            items: [
+              "Archivo — .txt (uno por línea), .csv, .xlsx o .xls (primera hoja). Con una sola columna se toma como Contacto, sin fila de títulos. Con varias, la primera fila lleva los títulos: se usan Contacto, Canal y Sentido, y el resto se ignora. Si el archivo no trae Canal o Sentido, se elige un valor para todo el archivo.",
+              "Limpieza (y Modo, al importar) — Reglas opcionales para números: reemplazar prefijos (solo al comienzo del número) y quitar caracteres. La lista recuerda las reglas de su última importación. Modo «Agregar» suma lo del archivo y combina el sentido de los que ya estaban; «Reemplazar la lista» deja la lista igual al archivo solo para las combinaciones de canal y sentido que trae, y a los que ya estaban les deja el sentido del archivo.",
+              "Vista previa — Contadores que también filtran (Total, Válidos, Repetidos en el archivo, No válidos; al quitar, además Están y No están en la lista) y una tabla con el valor original, el valor después de limpiar y el estado. Lo no válido y lo repetido aparece primero.",
+            ],
+          },
+          {
+            tipo: "lista",
+            items: [
+              "Canal y Sentido en el archivo — Aceptan los nombres sin importar mayúsculas (llamada, WHATSAPP, Saliente…). Un valor que no se reconoce marca la fila como no válida.",
+              "Reemplazar — Pide confirmación y avisa qué combinaciones de canal y sentido se van a vaciar de lo que no viene en el archivo.",
+              "Quitar por archivo — Quita el contacto del canal indicado; el sentido no importa. Un número que está como Llamada y como WhatsApp, quitado de Llamada, sigue como WhatsApp.",
+              "Al confirmar — Barra de progreso, cancelable: lo procesado hasta el momento queda guardado. El resultado muestra Agregados, Ya estaban, Actualizados (cambió el sentido), Quitados y No válidos, con descarga de los no válidos.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "masivas",
+        titulo: "Descargar y quitar todos",
         bloques: [
           {
             tipo: "lista",
             items: [
-              "Dónde se usa — En «Proyectos» y en «Campañas»: una lista en cada uno. La campaña puede heredar la del proyecto o elegir otra.",
-              "La descripción de la lista no se edita en estas pantallas.",
+              "Descargar — En el menú de los tres puntos del detalle (y en el del listado). Baja un .csv con Contacto, Canal, Sentido, Fecha de alta y Usuario de alta, con los mismos títulos que la importación.",
+              "Quitar todos — En el mismo menú, en rojo. Pide confirmación y se guarda en el momento.",
             ],
           },
         ],
@@ -135,19 +171,12 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "An exclusion list gathers phones, WhatsApp numbers or emails that must not be contacted. Each list has a «Type»:",
-          },
-          {
-            tipo: "lista",
-            items: [
-              "Exclusión de tareas (task exclusion) — Your own list: for example, contacts who asked not to be called this quarter.",
-              "Gubernamental (government) — An official do-not-call registry.",
-            ],
+              "An exclusion list gathers phones, WhatsApp numbers or emails that must not be contacted. Lists have no type: they all work the same, whether they come from an official registry or are your own.",
           },
           {
             tipo: "p",
             texto:
-              "It is assigned in «Campaigns», in the «Exclusion list» field. Each campaign uses a single list, and if you pick none it stays «Unassigned».",
+              "It is assigned in «Projects» and «Campaigns»: one list in each. A campaign uses the project's list if it has none of its own.",
           },
         ],
       },
@@ -158,15 +187,15 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Name — Name of the list. Click it to open its edit screen.",
-              "Type — «Exclusión de tareas» or «Gubernamental». You can filter by type.",
+              "Name — Name of the list. Click it to open its detail.",
+              "Description — What the list is for.",
               "Contacts — Number of excluded contacts.",
             ],
           },
           {
             tipo: "p",
             texto:
-              "There is a search box above the table, and the headers let you sort and filter. The «New list» button is at the top right. Each row's menu (the three dots) offers «Edit», «Download» and «Delete» (in red, with confirmation). There are no bulk actions.",
+              "There is a search box above the table, and the headers let you sort and filter. The «New list» button is at the top right. Each row's menu offers «Edit», «Duplicate», «Download» and «Delete» (in red, with confirmation).",
           },
         ],
       },
@@ -178,22 +207,15 @@ export const contenido: ContenidoPagina = {
             tipo: "pasos",
             items: [
               "Click «New list». To edit an existing one, click its name or «Edit».",
-              "In «List details», type the «Name» and choose the «Type».",
+              "In «List details», type the «Name» and, optionally, the «Description».",
               "Click «Create list» (or «Confirm» if you are editing). «Cancel» leaves without saving.",
-              "Load the excluded contacts from the list's edit screen (see the next section).",
-            ],
-          },
-          {
-            tipo: "lista",
-            items: [
-              "Name — E.g. «Excluidos Cobranzas Q4». It is what you will pick later in the campaign.",
-              "Type — «Task exclusion» or «Government». Default «Task exclusion».",
+              "Load the contacts from the list's detail (see the next section).",
             ],
           },
           {
             tipo: "p",
             texto:
-              "The creation screen only asks for these two fields: contacts are added afterwards, by opening the list.",
+              "In the detail, the «Where it is used» card lists the projects and campaigns that have the list, with a link to each. Campaigns that inherit it from the project are marked «Inherited from the project».",
           },
         ],
       },
@@ -204,41 +226,31 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "On the list's edit screen, the «Excluded contacts» card shows how many there are («1 excluded contact», «2 excluded contacts») and a table with «Contact» and «Type». If the list is empty it says «There are no excluded contacts in this list yet.».",
-          },
-          {
-            tipo: "pasos",
-            items: [
-              "Click «Add contact».",
-              "Type the «Contact»: a phone (+54 11 4000-0000) or an email (email@ejemplo.com).",
-              "Choose the «Type»: «Call», «WhatsApp» or «Email». Default «Call».",
-              "Click «Add». The button is disabled while the contact is empty.",
-            ],
+              "The «Excluded contacts» card shows a paginated table sorted by date added. Search looks through the whole list, and the filter lets you filter by «Channel» and «Direction». «Added by» is hidden and can be turned on from the column selector.",
           },
           {
             tipo: "lista",
             items: [
-              "Search — The «Search by contact or type…» box filters the table as you type. If nothing matches, it says «No contacts match» followed by what you typed. It only appears when the list has contacts.",
-              "Remove — The red cross «Remove contact» on each row takes it off the list, without asking for confirmation.",
+              "Add contacts — One per line, with a Channel and a Direction for all of them. Invalid lines stay in the box to fix. If a contact is already there with that channel, the direction is combined.",
+              "Edit — Opens the same dialog with the contact loaded. If it ends up equal to another contact with that channel, it says «That contact is already in the list.» and does not save.",
+              "Remove — The red cross removes it, without confirmation.",
             ],
           },
           {
             tipo: "nota",
             texto:
-              "You choose the contact's type: the screen does not check that the text matches the type (for example, an email marked as «Call») nor that the contact isn't repeated.",
+              "Adding, editing and removing stay pending until you click «Confirm». Import, Remove from file and Remove all are saved right away.",
           },
         ],
       },
       {
-        id: "reglas",
-        titulo: "Rules and relationships",
+        id: "archivo",
+        titulo: "Import and remove from a file",
         bloques: [
           {
-            tipo: "lista",
-            items: [
-              "Where it is used — In «Projects» and in «Campaigns»: one list in each. A campaign can inherit the project's list or choose another one.",
-              "The list's description is not edited on these screens.",
-            ],
+            tipo: "p",
+            texto:
+              "A three-step wizard: File, Cleanup (and Mode, when importing), Preview. «Add» mode combines directions; «Replace the list» leaves the list equal to the file for the channel and direction combinations it contains. Processing shows a cancellable progress bar and a result summary.",
           },
         ],
       },
