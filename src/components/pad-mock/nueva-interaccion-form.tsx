@@ -21,6 +21,26 @@ import {
   type CampaniaSaliente,
   type CuentaSaliente,
 } from "@/lib/pad-mock/data";
+import { campanias, listaExclusionDeCampania } from "@/lib/mock-data";
+import { validarContacto } from "@/lib/listas-exclusion";
+
+// ATLAS-1444: la llamada manual se controla contra la lista de exclusión de la
+// campaña elegida (propia o heredada del proyecto). Si el número está como
+// Saliente o Bidireccional en el canal de la cuenta, Atlas no deja marcar.
+// MOCK: se compara en el navegador contra los datos de ejemplo.
+// REAL: lo controla el servicio al iniciar la interacción.
+function listaQueBloquea(campaniaId: string, canal: string, numero: string) {
+  const c = campanias.find((x) => x.id === campaniaId);
+  const lista = c ? listaExclusionDeCampania(c) : undefined;
+  const canalLista = canal === "llamada" ? "calline" : canal === "whatsapp" ? "wsp" : null;
+  if (!lista || !canalLista) return undefined;
+  const v = validarContacto(numero, canalLista);
+  if (!v.ok) return undefined;
+  const bloquea = lista.contactos.some(
+    (x) => x.canal === canalLista && x.contacto === v.valor && x.sentido !== "entrante"
+  );
+  return bloquea ? lista.nombre : undefined;
+}
 
 // Formulario compartido entre el modal "Nueva interacción" (el "+" de la
 // cola, ver new-interaction-dialog.tsx) y la barra que se ve al ingresar sin
@@ -56,6 +76,7 @@ export function NuevaInteraccionForm({
   const [campaniaId, setCampaniaId] = useState<string | undefined>(primeraCampania?.id);
   const [cuentaId, setCuentaId] = useState<string | undefined>(primeraCuenta?.id);
   const [numero, setNumero] = useState("");
+  const [bloqueo, setBloqueo] = useState<string>();
   const fila = layout === "row";
 
   const campania = campaniasSalientesMock.find((c) => c.id === campaniaId);
@@ -64,6 +85,11 @@ export function NuevaInteraccionForm({
 
   function contactar() {
     if (!campania || !cuenta || !numero.trim()) return;
+    const lista = listaQueBloquea(campania.id, cuenta.canal, numero);
+    if (lista) {
+      setBloqueo(lista);
+      return;
+    }
     onContactar(campania, cuenta, numero.trim());
     setNumero("");
   }
@@ -137,7 +163,11 @@ export function NuevaInteraccionForm({
           <Input
             id={`${idPrefix}-numero`}
             value={numero}
-            onChange={(e) => setNumero(e.target.value)}
+            onChange={(e) => {
+              setNumero(e.target.value);
+              setBloqueo(undefined);
+            }}
+            aria-invalid={!!bloqueo}
             autoFocus={fila}
             placeholder={
               cuenta.canal === "sms"
@@ -145,6 +175,11 @@ export function NuevaInteraccionForm({
                 : t("padMock.nuevaInteraccion.numeroPlaceholderDefault")
             }
           />
+          {bloqueo && (
+            <span className="text-xs text-destructive">
+              {t("padMock.nuevaInteraccion.enListaExclusion", { lista: bloqueo })}
+            </span>
+          )}
         </div>
       )}
 

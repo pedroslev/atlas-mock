@@ -168,6 +168,7 @@ export const padMock: NamespaceDict = {
     "nuevaInteraccion.campania": "Campaña",
     "nuevaInteraccion.cuenta": "Cuenta",
     "nuevaInteraccion.numero": "Número",
+    "nuevaInteraccion.enListaExclusion": "Este número está en la lista de exclusión \"{lista}\".",
     "nuevaInteraccion.elegirCampania": "Elegir campaña…",
     "nuevaInteraccion.elegirCuenta": "Elegir cuenta…",
     "nuevaInteraccion.numeroPlaceholderSms": "Número o contacto…",
