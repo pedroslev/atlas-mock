@@ -904,6 +904,17 @@ const clasificacionesSistema: Clasificacion[] = [
       explicacion: "Del otro lado atendió un fax o un módem, no un teléfono.",
     },
   },
+  // ATLAS-1444: no viene de un corte telefónico (no tiene código Q.850): la
+  // asigna Atlas antes de llamar, así que se muestra siempre.
+  {
+    id: "sys-lista-exclusion",
+    efecto: "Dejar este medio",
+    nombre: "Contacto en lista de exclusión",
+    tipo: "No efectivo",
+    sistema: {
+      explicacion: "Está en la lista de exclusión de la campaña: no se lo contacta.",
+    },
+  },
 ];
 
 export const clasificaciones: Clasificacion[] = [

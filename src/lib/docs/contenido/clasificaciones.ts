@@ -192,6 +192,7 @@ export const contenido: ContenidoPagina = {
               "Número cambiado — El número ya no está en uso y fue reemplazado. Efecto: «Dejar este medio».",
               "No acepta llamadas — El teléfono tiene bloqueadas las llamadas entrantes. Efecto: «Dejar este medio».",
               "Fax o módem — Del otro lado atendió un fax o un módem. Efecto: «Dejar este medio».",
+              "Contacto en lista de exclusión — El contacto está en la lista de exclusión de la campaña (propia o heredada del proyecto) como Saliente o Bidireccional: no se lo contacta. Efecto: «Dejar este medio», así se sigue con los otros medios del cliente. Atlas la asigna antes de contactar, sin llamada de por medio.",
             ],
           },
         ],
