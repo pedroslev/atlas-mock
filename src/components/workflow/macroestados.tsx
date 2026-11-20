@@ -25,6 +25,7 @@ import {
   ChevronUp,
   GitBranch,
   Moon,
+  ShieldOff,
   Globe,
   Calculator,
   Info,
@@ -313,6 +314,40 @@ export function SalidaFueraDeHorario() {
       <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
         <Moon className="size-3.5" />
         <span>{t("cuentas.flujo.outOfHours")}</span>
+        {punto}
+      </div>
+    </ActionTooltip>
+  );
+}
+
+// Salida "En lista de exclusión" de la Derivación a campaña (ATLAS-1444): si
+// quien inicia la interacción está en la lista de la campaña (propia o heredada
+// del proyecto) con sentido Entrante o Bidireccional, no se deriva y sigue por
+// acá. Opcional, igual que "Fuera de horario": sin conectar, no hay desvío.
+// Si además la campaña está fuera de horario, manda esta salida.
+function SalidaListaExclusion({ lista }: { lista: string }) {
+  const t = useT();
+  const compacto = useContext(Compacto);
+  const punto = (
+    <Handle
+      type="source"
+      id="in_exclusion_list"
+      position={Position.Right}
+      className={cn(PUNTO_SALIDA, "!bg-muted-foreground")}
+    />
+  );
+  if (compacto) {
+    return (
+      <ActionTooltip label={t("cuentas.flujo.enListaExclusion")} side="right">
+        <span className="flex">{punto}</span>
+      </ActionTooltip>
+    );
+  }
+  return (
+    <ActionTooltip label={t("cuentas.flujo.enListaExclusionAyuda", { lista })}>
+      <div className="relative flex items-center justify-end gap-1.5 pr-1 text-xs text-muted-foreground">
+        <ShieldOff className="size-3.5" />
+        <span>{t("cuentas.flujo.enListaExclusion")}</span>
         {punto}
       </div>
     </ActionTooltip>
@@ -1369,17 +1404,26 @@ export function CaseNode({ id, data }: NodeProps & { data: CaseData }) {
 
 // ---------------------------------------------------------------------------
 // Derivación a campaña — deriva la interacción a la campaña elegida. Es
-// terminal: no tiene salidas (propuesta §4.1). La salida "Fuera de horario"
+// terminal: no tiene salidas de flujo (propuesta §4.1), salvo las
+// transversales opcionales ("En lista de exclusión", ATLAS-1444). La salida "Fuera de horario"
 // la ofrecen los nodos anteriores cuando todos sus caminos llegan acá (§4.2).
 
 export type DerivacionData = Comun & {
   campaniaId?: string;
-  campanias: { id: string; nombre: string }[];
+  campanias: { id: string; nombre: string; listaExclusion?: string }[];
+  admiteListaExclusion?: boolean;
 };
 
 export function DerivacionNode({ id, data }: NodeProps & { data: DerivacionData }) {
   const t = useT();
   const campania = data.campanias.find((c) => c.id === data.campaniaId);
+  const lista = data.admiteListaExclusion ? campania?.listaExclusion : undefined;
+  const updateNodeInternals = useUpdateNodeInternals();
+  // La salida aparece o desaparece al cambiar de campaña: hay que volver a
+  // medir los puntos de conexión.
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, lista, updateNodeInternals]);
   return (
     <NodoMacroestado
       icono={<GitBranch className="size-4 text-secondary" />}
@@ -1388,6 +1432,7 @@ export function DerivacionNode({ id, data }: NodeProps & { data: DerivacionData 
       ayuda="derivacion"
       data={data}
       resumen={campania?.nombre}
+      salidas={lista ? <SalidaListaExclusion lista={lista} /> : undefined}
     >
       <Select value={data.campaniaId} onValueChange={(v) => data.onChange({ campaniaId: v })}>
         <SelectTrigger id={`${id}-campania`} size="sm" className="w-full">

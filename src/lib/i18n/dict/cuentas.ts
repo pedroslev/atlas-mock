@@ -140,6 +140,9 @@ export const cuentas: NamespaceDict = {
     "flujo.pantallaCompleta": "Pantalla completa",
     "flujo.salirPantallaCompleta": "Salir de pantalla completa",
     "flujo.outOfHours": "Fuera de horario",
+    "flujo.enListaExclusion": "En lista de exclusión",
+    "flujo.enListaExclusionAyuda":
+      "Salida opcional: a dónde sigue si quien llama está en la lista de exclusión «{lista}» de la campaña, como Entrante o Bidireccional. Se ofrece porque la campaña tiene lista. Sin conectar, se deriva como siempre. Si además está fuera de horario, manda esta salida.",
     "flujo.outOfHoursAyuda":
       "Salida opcional: a dónde deriva si la llamada cae fuera del horario de atención o en un feriado de la campaña elegida. Sin conectar, no se aplica ningún desvío.",
     "flujo.play.descripcion": "Reproduce un audio en la llamada. Si está permitido, el llamante lo puede cortar marcando una tecla.",
@@ -402,6 +405,9 @@ export const cuentas: NamespaceDict = {
     "flujo.pantallaCompleta": "Full screen",
     "flujo.salirPantallaCompleta": "Exit full screen",
     "flujo.outOfHours": "Out of hours",
+    "flujo.enListaExclusion": "In exclusion list",
+    "flujo.enListaExclusionAyuda":
+      "Optional exit: where it goes if the caller is in the campaign's exclusion list «{lista}» as Inbound or Both ways. Offered because the campaign has a list. If left unconnected, it is routed as usual. If it is also out of hours, this exit wins.",
     "flujo.outOfHoursAyuda":
       "Optional exit: where to route the call when it falls outside the chosen campaign's business hours or on a holiday. Unconnected, no diversion is applied.",
     "flujo.play.descripcion": "Plays an audio in the call. If allowed, the caller can cut it short by pressing a key.",

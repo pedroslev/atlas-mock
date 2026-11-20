@@ -157,7 +157,7 @@ function NotaNode({ data }: { data: { texto?: string; onChange: (p: Record<strin
 
 // Salidas que pueden quedar sin conectar sin que falte nada
 // (propuesta-motor-workflows.md §5): el camino termina ahí.
-const SALIDAS_OPCIONALES = new Set(["error", "timeout", "other", "out_of_hours"]);
+const SALIDAS_OPCIONALES = new Set(["error", "timeout", "other", "out_of_hours", "in_exclusion_list"]);
 
 // Nodos con algo sin conectar: una salida obligatoria sin destino, o un nodo al
 // que no llega ninguna conexión. Las salidas se leen de los puntos realmente
@@ -669,11 +669,16 @@ export function WorkflowEditor({
   initialWorkflow,
   campanias,
   soloTexto,
+  admiteListaExclusion = false,
 }: {
   initialWorkflow?: Workflow;
-  campanias: { id: string; nombre: string }[];
+  campanias: { id: string; nombre: string; listaExclusion?: string }[];
   // Chat y videollamada: el PLAY solo envía texto.
   soloTexto: boolean;
+  // ATLAS-1444: la cuenta identifica al cliente por un contacto de la lista
+  // (llamada; WhatsApp cuando entre al roadmap), así que la Derivación a
+  // campaña puede ofrecer la salida "En lista de exclusión".
+  admiteListaExclusion?: boolean;
 }) {
   const t = useT();
   const [fullscreen, setFullscreen] = useState(false);
@@ -716,7 +721,7 @@ export function WorkflowEditor({
       sourceHandle: e.sourceHandle,
       // La salida out_of_hours se dibuja distinta (punteada, tono neutro):
       // es la excepción transversal, no el camino principal del nodo.
-      ...(e.sourceHandle === "out_of_hours"
+      ...(e.sourceHandle === "out_of_hours" || e.sourceHandle === "in_exclusion_list"
         ? { style: { strokeDasharray: "4 3" }, className: "!stroke-muted-foreground" }
         : {}),
     })) ?? [],
@@ -740,7 +745,7 @@ export function WorkflowEditor({
     (connection: Connection) => {
       if (!isValidConnection(connection)) return;
       const extra =
-        connection.sourceHandle === "out_of_hours"
+        connection.sourceHandle === "out_of_hours" || connection.sourceHandle === "in_exclusion_list"
           ? { style: { strokeDasharray: "4 3" }, className: "!stroke-muted-foreground" }
           : {};
       setEdges((eds) => addEdge({ ...connection, ...extra, type: "quitable" }, eds));
@@ -974,6 +979,31 @@ export function WorkflowEditor({
     }
   }, [edges, conFueraDeHorario, setEdges]);
 
+  // ATLAS-1444: si la campaña de la derivación ya no tiene lista de exclusión
+  // (o se eligió otra sin lista), la conexión "En lista de exclusión" se quita.
+  const conListaExclusion = useMemo(
+    () =>
+      new Set(
+        admiteListaExclusion
+          ? nodes
+              .filter(
+                (n) =>
+                  n.type === "derivacion" &&
+                  campanias.some((c) => c.id === n.data.campaniaId && c.listaExclusion),
+              )
+              .map((n) => n.id)
+          : [],
+      ),
+    [nodes, campanias, admiteListaExclusion],
+  );
+  useEffect(() => {
+    if (edges.some((e) => e.sourceHandle === "in_exclusion_list" && !conListaExclusion.has(e.source))) {
+      setEdges((eds) =>
+        eds.filter((e) => e.sourceHandle !== "in_exclusion_list" || conListaExclusion.has(e.source)),
+      );
+    }
+  }, [edges, conListaExclusion, setEdges]);
+
   // Al abrir, acomoda el flujo una vez que todos los nodos están medidos.
   const ordenadoInicial = useRef(false);
   const [flujoOrdenado, setFlujoOrdenado] = useState(false);
@@ -1034,6 +1064,7 @@ export function WorkflowEditor({
             onRemoveExit: (handleId: string) => removeExit(n.id, handleId),
             // Derivación
             campanias,
+            admiteListaExclusion,
             // PLAY
             soloTexto,
             onSubirAudio: subirAudio,

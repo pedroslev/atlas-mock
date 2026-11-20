@@ -33,7 +33,7 @@ export function CuentaForm({
   campanias,
 }: {
   cuenta?: Cuenta;
-  campanias: { id: string; nombre: string }[];
+  campanias: { id: string; nombre: string; listaExclusion?: string }[];
 }) {
   const t = useT();
   const [uso, setUso] = useState<TipoUso | undefined>(cuenta?.uso);
@@ -201,6 +201,7 @@ export function CuentaForm({
               initialWorkflow={cuenta?.workflow}
               campanias={campanias}
               soloTexto={!telefonia}
+              admiteListaExclusion={telefonia}
             />
           </CardContent>
         </Card>

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { ConfirmarCuenta } from "@/components/cuentas/confirmar-cuenta";
 import { T } from "@/lib/i18n";
-import { cuentas, campanias } from "@/lib/mock-data";
+import { cuentas, campanias, listaExclusionDeCampania } from "@/lib/mock-data";
 import { CuentaForm } from "@/components/cuentas/cuenta-form";
 
 export function generateStaticParams() {
@@ -43,7 +43,7 @@ export default async function EditarCuentaPage({
 
       <CuentaForm
         cuenta={cuenta}
-        campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre }))}
+        campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre, listaExclusion: listaExclusionDeCampania(c)?.nombre }))}
       />
     </div>
   );

@@ -407,7 +407,8 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "lista",
             "items": [
-              "Fuera de horario — Si la campaña está cerrada o es feriado, la interacción no deriva y sigue por acá, por ejemplo hacia otra campaña de guardia. Sin conectar, no se aplica ningún desvío."
+              "En lista de exclusión — Aparece en las cuentas telefónicas cuando la campaña elegida tiene lista de exclusión (propia o heredada del proyecto). Si quien llama está en esa lista, con canal Llamada y sentido Entrante o Bidireccional, la interacción no deriva y sigue por acá: por ejemplo, un mensaje y fin, u otra campaña. Sin conectar, se deriva como siempre. Si al cambiar de campaña la nueva no tiene lista, la salida y su conexión desaparecen.",
+              "Fuera de horario — Si la campaña está cerrada o es feriado, la interacción no deriva y sigue por acá, por ejemplo hacia otra campaña de guardia. Sin conectar, no se aplica ningún desvío. Si además quien llama está en la lista de exclusión, manda «En lista de exclusión»."
             ]
           }
         ]
@@ -817,7 +818,8 @@ export const contenido: ContenidoPagina = {
           {
             "tipo": "lista",
             "items": [
-              "Out of hours — If the campaign is closed or it is a holiday, the interaction is not routed and continues here, for example to another on-call campaign. Unconnected, no diversion is applied."
+              "In exclusion list — Shown on phone accounts when the chosen campaign has an exclusion list (its own or the project's). If the caller is in that list, with channel Call and direction Inbound or Both ways, the interaction is not routed and continues here. Unconnected, it is routed as usual.",
+              "Out of hours — If the campaign is closed or it is a holiday, the interaction is not routed and continues here, for example to another on-call campaign. Unconnected, no diversion is applied. If the caller is also in the exclusion list, «In exclusion list» wins."
             ]
           }
         ]

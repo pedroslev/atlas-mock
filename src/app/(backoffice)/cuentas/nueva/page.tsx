@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { ConfirmarCuenta } from "@/components/cuentas/confirmar-cuenta";
 import { T } from "@/lib/i18n";
-import { campanias } from "@/lib/mock-data";
+import { campanias, listaExclusionDeCampania } from "@/lib/mock-data";
 import { CuentaForm } from "@/components/cuentas/cuenta-form";
 
 // Alta de cuenta: datos generales y flujo en la misma pantalla (CuentaForm),
@@ -27,7 +27,7 @@ export default function NuevaCuentaPage() {
         }
       />
 
-      <CuentaForm campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre }))} />
+      <CuentaForm campanias={campanias.map((c) => ({ id: c.id, nombre: c.nombre, listaExclusion: listaExclusionDeCampania(c)?.nombre }))} />
     </div>
   );
 }

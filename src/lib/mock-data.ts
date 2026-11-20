@@ -1426,6 +1426,12 @@ export function getListaExclusion(id: string) {
   return listasExclusion.find((l) => l.id === id);
 }
 
+// Lista de exclusión que aplica a una campaña: la propia o la del proyecto.
+export function listaExclusionDeCampania(c: Campania) {
+  const id = c.listaExclusionId ?? proyectos.find((p) => p.id === c.proyectoId)?.listaExclusionId;
+  return id ? getListaExclusion(id) : undefined;
+}
+
 // "Dónde se usa" una lista (ATLAS-1444): proyectos que la tienen y campañas
 // que la tienen propia o la heredan del proyecto (sin lista propia).
 export function usosListaExclusion(id: string) {
