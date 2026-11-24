@@ -105,7 +105,7 @@ export const contenido: ContenidoPagina = {
               "Validación — Los números quedan solo con dígitos (sin el + inicial, espacios, guiones ni paréntesis) y tienen que tener entre 8 y 15. Los mails tienen que tener formato texto@dominio. Un mail no se acepta como «Llamada» ni un número como «Email».",
               "Líneas no válidas — Lo válido se agrega y lo que no queda en el cuadro, en rojo, para corregirlo. «Cerrar» se queda con lo agregado.",
               "Repetidos — Si el contacto ya está con ese canal, no se duplica. Si está con otro sentido, un aviso lista esos contactos con su sentido actual y elegís: dejarlos con el sentido nuevo o pasarlos a Bidireccional. El diálogo informa cuántos se agregaron, cuántos cambiaron de sentido y cuántos ya estaban.",
-              "Editar — El lápiz de cada fila abre el mismo diálogo con el contacto, el canal y el sentido cargados. Si el resultado queda igual a otro contacto de la lista con ese canal, avisa «Ese contacto ya está en la lista.» y no guarda. Para achicar un sentido (de Bidireccional a Saliente), se edita el contacto.",
+              "Editar — El lápiz de cada fila abre el mismo diálogo con el contacto, el canal y el sentido cargados. Si el resultado queda igual a otro contacto de la lista con ese canal, avisa «Ese contacto ya está en la lista.» y no guarda. Para achicar un sentido (de Bidireccional a Saliente), se edita el contacto, o se lo vuelve a cargar con el sentido nuevo y se elige dejarlo así.",
               "Quitar — La cruz roja de cada fila lo saca de la lista, sin pedir confirmación.",
             ],
           },

@@ -11,6 +11,7 @@ import {
 } from "@/components/data-table/mitrol-table";
 import { Button } from "@/components/ui/button";
 import { listasExclusion, type ListaExclusion } from "@/lib/mock-data";
+import { descargarLista } from "@/lib/listas-exclusion";
 import { useT } from "@/lib/i18n";
 
 export default function ListasDeExclusionPage() {
@@ -81,7 +82,10 @@ export default function ListasDeExclusionPage() {
                   label: t("common.acciones.duplicar"),
                   href: `/listas-de-exclusion/nueva?duplicar=${row.original.id}`,
                 },
-                { label: t("listas.descargar") },
+                {
+                  label: t("listas.descargar"),
+                  onSelect: () => descargarLista(row.original.nombre, row.original.contactos, t),
+                },
                 {
                   label: t("common.acciones.eliminar"),
                   destructive: true,

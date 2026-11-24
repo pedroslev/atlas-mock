@@ -33,7 +33,7 @@ import {
 import { ActionTooltip } from "@/components/layout/action-tooltip";
 import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-table";
 import type { ContactoExcluido } from "@/lib/mock-data";
-import { CANALES, SENTIDOS, formatearFecha } from "@/lib/listas-exclusion";
+import { CANALES, SENTIDOS, descargarLista, formatearFecha } from "@/lib/listas-exclusion";
 import { useT } from "@/lib/i18n";
 import { ContactoDialog } from "./contacto-dialog";
 import { ArchivoDialog, type ModoArchivo } from "./archivo-dialog";
@@ -91,25 +91,7 @@ export function ContactosExcluidos({
     setGuardados(nuevos);
   }
 
-  function descargar() {
-    const filas = [
-      ["Contacto", "Canal", "Sentido", "Fecha de alta", "Usuario de alta"],
-      ...contactos.map((c) => [
-        c.contacto,
-        t(`listas.canal.${c.canal}`),
-        t(`listas.sentido.${c.sentido}`),
-        formatearFecha(c.fechaAlta),
-        c.usuarioAlta ?? "",
-      ]),
-    ];
-    const csv = filas.map((f) => f.map((v) => `"${v.replace(/"/g, '""')}"`).join(";")).join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${listaNombre}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  const descargar = () => descargarLista(listaNombre, contactos, t);
 
   const columns = useMemo<MRT_ColumnDef<ContactoExcluido>[]>(
     () => [

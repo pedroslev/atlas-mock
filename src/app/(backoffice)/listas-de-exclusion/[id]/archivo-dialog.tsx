@@ -53,6 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { EleccionSentido, type DecisionSentido } from "./eleccion-sentido";
+import { listas as listasDict } from "@/lib/i18n/dict/listas";
 
 // Importar contactos y Quitar contactos por archivo (ATLAS-1444). Es el mismo
 // asistente: Archivo → Limpieza (y Modo, al importar) → Vista previa. Se guarda
@@ -112,10 +113,14 @@ const REGLAS_RECORDADAS: Record<string, Limpieza> = {
   "dnc-1": { prefijos: [{ id: "r1", prefijo: "0", reemplazo: "54" }], caracteres: "." },
 };
 
+// Canal y Sentido se reconocen por su nombre en cualquier idioma de Atlas, así
+// se puede volver a importar una lista descargada con la pantalla en otro idioma.
+const nombresEn = (clave: string) =>
+  Object.values(listasDict).map((d) => (d as Record<string, string>)[clave]?.trim().toLowerCase()).filter(Boolean);
 const canalDeTexto = (v: string): CanalExclusion | null =>
-  ({ llamada: "calline", whatsapp: "wsp", email: "email" } as const)[v.trim().toLowerCase() as "llamada"] ?? null;
+  CANALES.find((c) => nombresEn(`canal.${c}`).includes(v.trim().toLowerCase())) ?? null;
 const sentidoDeTexto = (v: string): SentidoExclusion | null =>
-  SENTIDOS.find((s) => s === v.trim().toLowerCase()) ?? null;
+  SENTIDOS.find((s) => nombresEn(`sentido.${s}`).includes(v.trim().toLowerCase())) ?? null;
 
 type Fila = {
   original: string;

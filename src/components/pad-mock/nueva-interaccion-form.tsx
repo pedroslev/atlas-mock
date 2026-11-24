@@ -111,6 +111,7 @@ export function NuevaInteraccionForm({
             const nueva = campaniasSalientesMock.find((c) => c.id === v);
             setCuentaId(nueva?.cuentas[0]?.id);
             setNumero("");
+            setBloqueo(undefined);
           }}
         >
           <SelectTrigger id={`${idPrefix}-campania`} className="w-full">
@@ -133,6 +134,7 @@ export function NuevaInteraccionForm({
             value={cuentaId}
             onValueChange={(v) => {
               setCuentaId(v);
+              setBloqueo(undefined);
               setNumero("");
             }}
           >

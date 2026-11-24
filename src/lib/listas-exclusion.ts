@@ -78,6 +78,37 @@ export function formatearFecha(iso?: string) {
   });
 }
 
+/**
+ * Baja la lista en un .csv (separado por «;») con los mismos títulos que lee
+ * la importación, así se puede volver a importar. Canal y Sentido salen en el
+ * idioma de la pantalla; la importación los reconoce en cualquier idioma.
+ * MOCK: arma el archivo en el navegador.
+ * REAL: lo arma el servicio y registra la descarga (quién, qué lista, cuántos).
+ */
+export function descargarLista(
+  nombre: string,
+  contactos: ContactoExcluido[],
+  t: (k: string) => string
+) {
+  const filas = [
+    ["Contacto", "Canal", "Sentido", "Fecha de alta", "Usuario de alta"],
+    ...contactos.map((c) => [
+      c.contacto,
+      t(`listas.canal.${c.canal}`),
+      t(`listas.sentido.${c.sentido}`),
+      formatearFecha(c.fechaAlta),
+      c.usuarioAlta ?? "",
+    ]),
+  ];
+  const csv = filas.map((f) => f.map((v) => `"${v.replace(/"/g, '""')}"`).join(";")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${nombre}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // MOCK: usuario de la sesión.
 export const USUARIO_ACTUAL = "Marina Acosta";
 
