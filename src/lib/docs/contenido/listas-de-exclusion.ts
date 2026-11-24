@@ -104,7 +104,7 @@ export const contenido: ContenidoPagina = {
             items: [
               "Validación — Los números quedan solo con dígitos (sin el + inicial, espacios, guiones ni paréntesis) y tienen que tener entre 8 y 15. Los mails tienen que tener formato texto@dominio. Un mail no se acepta como «Llamada» ni un número como «Email».",
               "Líneas no válidas — Lo válido se agrega y lo que no queda en el cuadro, en rojo, para corregirlo. «Cerrar» se queda con lo agregado.",
-              "Repetidos — Si el contacto ya está con ese canal, no se duplica: se combina el sentido (Saliente + Entrante = Bidireccional). El diálogo informa cuántos se agregaron y cuántos ya estaban.",
+              "Repetidos — Si el contacto ya está con ese canal, no se duplica. Si está con otro sentido, un aviso lista esos contactos con su sentido actual y elegís: dejarlos con el sentido nuevo o pasarlos a Bidireccional. El diálogo informa cuántos se agregaron, cuántos cambiaron de sentido y cuántos ya estaban.",
               "Editar — El lápiz de cada fila abre el mismo diálogo con el contacto, el canal y el sentido cargados. Si el resultado queda igual a otro contacto de la lista con ese canal, avisa «Ese contacto ya está en la lista.» y no guarda. Para achicar un sentido (de Bidireccional a Saliente), se edita el contacto.",
               "Quitar — La cruz roja de cada fila lo saca de la lista, sin pedir confirmación.",
             ],
@@ -129,7 +129,7 @@ export const contenido: ContenidoPagina = {
             tipo: "pasos",
             items: [
               "Archivo — .txt (uno por línea), .csv, .xlsx o .xls (primera hoja). Con una sola columna se toma como Contacto, sin fila de títulos. Con varias, la primera fila lleva los títulos: se usan Contacto, Canal y Sentido, y el resto se ignora. Si el archivo no trae Canal o Sentido, se elige un valor para todo el archivo.",
-              "Limpieza (y Modo, al importar) — Reglas opcionales para números: reemplazar prefijos (solo al comienzo del número) y quitar caracteres. La lista recuerda las reglas de su última importación. Modo «Agregar» suma lo del archivo y combina el sentido de los que ya estaban; «Reemplazar la lista» deja la lista igual al archivo solo para las combinaciones de canal y sentido que trae, y a los que ya estaban les deja el sentido del archivo.",
+              "Limpieza (y Modo, al importar) — Reglas opcionales para números: reemplazar prefijos (solo al comienzo del número) y quitar caracteres. La lista recuerda las reglas de su última importación. Modo «Agregar» suma lo del archivo; si alguno ya estaba con otro sentido, la vista previa lo marca y elegís si queda con el sentido del archivo o pasa a Bidireccional; «Reemplazar la lista» deja la lista igual al archivo solo para las combinaciones de canal y sentido que trae, y a los que ya estaban les deja el sentido del archivo.",
               "Vista previa — Contadores que también filtran (Total, Válidos, Repetidos en el archivo, No válidos; al quitar, además Están y No están en la lista) y una tabla con el valor original, el valor después de limpiar y el estado. Lo no válido y lo repetido aparece primero.",
             ],
           },
@@ -231,7 +231,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "lista",
             items: [
-              "Add contacts — One per line, with a Channel and a Direction for all of them. Invalid lines stay in the box to fix. If a contact is already there with that channel, the direction is combined.",
+              "Add contacts — One per line, with a Channel and a Direction for all of them. Invalid lines stay in the box to fix. If a contact is already there with another direction, you choose whether it keeps the new direction or becomes Bidirectional.",
               "Edit — Opens the same dialog with the contact loaded. If it ends up equal to another contact with that channel, it says «That contact is already in the list.» and does not save.",
               "Remove — The red cross removes it, without confirmation.",
             ],
@@ -250,7 +250,7 @@ export const contenido: ContenidoPagina = {
           {
             tipo: "p",
             texto:
-              "A three-step wizard: File, Cleanup (and Mode, when importing), Preview. «Add» mode combines directions; «Replace the list» leaves the list equal to the file for the channel and direction combinations it contains. Processing shows a cancellable progress bar and a result summary.",
+              "A three-step wizard: File, Cleanup (and Mode, when importing), Preview. «Add» mode lets you choose, in the preview, how contacts already on the list with another direction end up; «Replace the list» leaves the list equal to the file for the channel and direction combinations it contains. Processing shows a cancellable progress bar and a result summary.",
           },
         ],
       },

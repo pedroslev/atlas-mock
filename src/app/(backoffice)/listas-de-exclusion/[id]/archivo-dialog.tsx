@@ -52,6 +52,7 @@ import {
 } from "@/lib/listas-exclusion";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { EleccionSentido, type DecisionSentido } from "./eleccion-sentido";
 
 // Importar contactos y Quitar contactos por archivo (ATLAS-1444). Es el mismo
 // asistente: Archivo → Limpieza (y Modo, al importar) → Vista previa. Se guarda
@@ -123,6 +124,8 @@ type Fila = {
   sentido: SentidoExclusion | null;
   estado: Estado;
   enLista?: boolean;
+  /** Sentido que tiene hoy en la lista, si ya está. */
+  actual?: SentidoExclusion;
 };
 
 type Resultado = {
@@ -157,7 +160,9 @@ export function ArchivoDialog({
   const recordadas = REGLAS_RECORDADAS[listaId];
   const [limpieza, setLimpieza] = useState<Limpieza>(recordadas ?? { prefijos: [], caracteres: "" });
   const [modoImp, setModoImp] = useState<ModoImportar>("agregar");
-  const [filtro, setFiltro] = useState<"todos" | Estado | "enLista" | "noEnLista">("todos");
+  const [filtro, setFiltro] = useState<"todos" | Estado | "enLista" | "noEnLista" | "otroSentido">("todos");
+  // Importar en modo Agregar: qué pasa con los que ya están con otro sentido.
+  const [decision, setDecision] = useState<DecisionSentido | null>(null);
   const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
   const [progreso, setProgreso] = useState<{ hecho: number; total: number } | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -169,7 +174,7 @@ export function ArchivoDialog({
 
   const filas = useMemo<Fila[]>(() => {
     const vistos = new Set<string>();
-    const enLista = new Set(contactos.map(clave));
+    const enLista = new Map(contactos.map((c) => [clave(c), c.sentido]));
     return archivo.filas.map((f) => {
       const canal = iCanal >= 0 ? canalDeTexto(f[iCanal]) : canalTodo;
       // Al quitar, el sentido no importa: se quita el contacto de ese canal.
@@ -181,11 +186,20 @@ export function ArchivoDialog({
       const k = clave({ contacto: v.valor, canal });
       const estado: Estado = vistos.has(k) ? "repetido" : "valido";
       vistos.add(k);
-      return { original: f[0], limpio: v.valor, canal, sentido, estado, enLista: enLista.has(k) };
+      return { original: f[0], limpio: v.valor, canal, sentido, estado, enLista: enLista.has(k), actual: enLista.get(k) };
     });
   }, [archivo, iCanal, iSentido, canalTodo, sentidoTodo, limpieza, contactos, modo]);
 
   const validas = filas.filter((f) => f.estado === "valido");
+  // Ya están en la lista con otro sentido y elegir cambia el resultado (si el
+  // archivo trae Bidireccional, las dos opciones dan lo mismo).
+  const otroSentido = (f: Fila) =>
+    modo === "importar" &&
+    modoImp === "agregar" &&
+    f.estado === "valido" &&
+    !!f.actual &&
+    f.actual !== f.sentido &&
+    f.sentido !== "bidireccional";
   const cuenta = {
     todos: filas.length,
     valido: validas.length,
@@ -193,6 +207,7 @@ export function ArchivoDialog({
     invalido: filas.filter((f) => f.estado === "invalido").length,
     enLista: validas.filter((f) => f.enLista).length,
     noEnLista: validas.filter((f) => !f.enLista).length,
+    otroSentido: validas.filter(otroSentido).length,
   };
   const orden: Record<Estado, number> = { invalido: 0, repetido: 1, valido: 2 };
   const visibles = [...filas]
@@ -204,7 +219,9 @@ export function ArchivoDialog({
           ? f.estado === "valido" && f.enLista
           : filtro === "noEnLista"
             ? f.estado === "valido" && !f.enLista
-            : f.estado === filtro
+            : filtro === "otroSentido"
+              ? otroSentido(f)
+              : f.estado === filtro
     );
 
   const combinaciones = [...new Set(validas.map((f) => `${f.canal}|${f.sentido}`))];
@@ -238,7 +255,8 @@ export function ArchivoDialog({
           r.quitados++;
         } else r.noEstaban++;
       } else if (j >= 0) {
-        const nuevo = modoImp === "agregar" ? combinarSentido(lista[j].sentido, sentido) : sentido;
+        const nuevo =
+          modoImp === "agregar" && decision !== "nuevo" ? combinarSentido(lista[j].sentido, sentido) : sentido;
         if (nuevo !== lista[j].sentido) r.actualizados++;
         else r.yaEstaban++;
         lista[j] = { ...lista[j], sentido: nuevo };
@@ -370,7 +388,9 @@ export function ArchivoDialog({
               <div className="flex flex-wrap gap-2">
                 {(modo === "quitar"
                   ? (["todos", "enLista", "noEnLista", "repetido", "invalido"] as const)
-                  : (["todos", "valido", "repetido", "invalido"] as const)
+                  : cuenta.otroSentido > 0
+                    ? (["todos", "valido", "otroSentido", "repetido", "invalido"] as const)
+                    : (["todos", "valido", "repetido", "invalido"] as const)
                 ).map((k) => (
                   <button
                     key={k}
@@ -392,6 +412,7 @@ export function ArchivoDialog({
                           invalido: "listas.imp.noValidos",
                           enLista: "listas.imp.enLista",
                           noEnLista: "listas.imp.noEnLista",
+                          otroSentido: "listas.imp.otroSentido",
                         }[k]
                       )}
                     </span>
@@ -403,6 +424,22 @@ export function ArchivoDialog({
                   <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
                   {t("listas.imp.reemplazarAviso", { combinaciones: textoCombinaciones })}
                 </p>
+              )}
+              {cuenta.otroSentido > 0 && (
+                <div className="flex flex-col gap-2 rounded-lg border border-warning/50 bg-warning/10 p-3">
+                  <p className="flex items-start gap-2 text-sm">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
+                    {t(cuenta.otroSentido === 1 ? "listas.imp.otroSentidoAvisoUno" : "listas.imp.otroSentidoAviso", {
+                      n: cuenta.otroSentido,
+                    })}
+                  </p>
+                  <EleccionSentido
+                    name="decision-sentido-archivo"
+                    etiquetaNuevo={t("listas.imp.dejarDelArchivo")}
+                    decision={decision}
+                    onChange={setDecision}
+                  />
+                </div>
               )}
               <div className="overflow-x-auto rounded-lg ring-1 ring-foreground/10">
                 <Table>
@@ -429,6 +466,10 @@ export function ArchivoDialog({
                             <Badge variant="destructive">{t("listas.imp.est.invalido")}</Badge>
                           ) : f.estado === "repetido" ? (
                             <Badge variant="warning">{t("listas.imp.est.repetido")}</Badge>
+                          ) : otroSentido(f) ? (
+                            <Badge variant="info">
+                              {t("listas.imp.est.otroSentido", { sentido: t(`listas.sentido.${f.actual}`) })}
+                            </Badge>
                           ) : modo === "quitar" ? (
                             <Badge variant={f.enLista ? "info" : "neutral"}>
                               {t(f.enLista ? "listas.imp.est.enLista" : "listas.imp.est.noEnLista")}
@@ -468,7 +509,9 @@ export function ArchivoDialog({
               {paso === "vista" ? (
                 <Button
                   variant={modo === "quitar" ? "destructive" : "default"}
-                  disabled={modo === "quitar" ? cuenta.enLista === 0 : cuenta.valido === 0}
+                  disabled={
+                    modo === "quitar" ? cuenta.enLista === 0 : cuenta.valido === 0 || (cuenta.otroSentido > 0 && !decision)
+                  }
                   onClick={() => (modo === "importar" && modoImp === "reemplazar" ? setConfirmarReemplazo(true) : procesar())}
                 >
                   {modo === "quitar"

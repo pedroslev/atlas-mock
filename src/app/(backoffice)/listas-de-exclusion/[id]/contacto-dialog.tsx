@@ -36,10 +36,31 @@ import {
   validarContacto,
 } from "@/lib/listas-exclusion";
 import { useT } from "@/lib/i18n";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EleccionSentido, type DecisionSentido } from "./eleccion-sentido";
 
 // Agregar contactos (varios, uno por línea) y Editar un contacto (ATLAS-1444).
 // Es el mismo diálogo: Editar lo abre con Contacto, Canal y Sentido cargados.
-// - Agregar: si el contacto ya está con ese canal, se combina el sentido.
+// - Agregar: si el contacto ya está con ese canal y otro sentido, un modal
+//   lista esos contactos y el usuario elige: dejarlos con el sentido nuevo o
+//   pasarlos a Bidireccional (una elección para todos). Si el sentido nuevo es
+//   Bidireccional no pregunta: las dos opciones dan lo mismo.
 // - Editar: si queda igual a otro de la lista con ese canal, avisa y no guarda
 //   (editar es corregir un contacto, no juntar dos).
 // Lo aplicado queda pendiente hasta el Confirmar de la pantalla.
@@ -91,15 +112,42 @@ function Formulario({
 
   // Con líneas inválidas, lo válido queda aplicado en el diálogo y lo que no,
   // en el cuadro para corregirlo. "Cerrar" se queda con lo aplicado.
-  const [parcial, setParcial] = useState<{ nuevos: ContactoExcluido[]; agregados: number; ya: number } | null>(null);
-  const resumenDe = (p: { agregados: number; ya: number }) =>
-    t("listas.contactos.resultado", { agregados: p.agregados, ya: p.ya });
+  type Parcial = { nuevos: ContactoExcluido[]; agregados: number; actualizados: number; ya: number };
+  const [parcial, setParcial] = useState<Parcial | null>(null);
+  const resumenDe = (p: Omit<Parcial, "nuevos">) =>
+    t("listas.contactos.resultado", { agregados: p.agregados, actualizados: p.actualizados, ya: p.ya });
 
-  function agregar() {
+  // Contactos que ya están con otro sentido: esperan la elección del modal.
+  const [conflictos, setConflictos] = useState<{ contacto: string; actual: SentidoExclusion }[] | null>(null);
+  const [decision, setDecision] = useState<DecisionSentido | null>(null);
+
+  function agregar(eleccion?: DecisionSentido) {
     const lineas = texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    const resultado = [...(parcial?.nuevos ?? contactos)];
+    const base = parcial?.nuevos ?? contactos;
+    if (!eleccion && sentido !== "bidireccional") {
+      const vistos = new Set<string>();
+      const encontrados: { contacto: string; actual: SentidoExclusion }[] = [];
+      for (const linea of lineas) {
+        const v = validarContacto(linea, canal);
+        if (!v.ok) continue;
+        const k = clave({ contacto: v.valor, canal });
+        if (vistos.has(k)) continue;
+        vistos.add(k);
+        const existente = base.find((c) => clave(c) === k);
+        if (existente && existente.sentido !== sentido) {
+          encontrados.push({ contacto: v.valor, actual: existente.sentido });
+        }
+      }
+      if (encontrados.length > 0) {
+        setConflictos(encontrados);
+        setDecision(null);
+        return;
+      }
+    }
+    const resultado = [...base];
     const malas: string[] = [];
     let agregados = parcial?.agregados ?? 0;
+    let actualizados = parcial?.actualizados ?? 0;
     let ya = parcial?.ya ?? 0;
     for (const linea of lineas) {
       const v = validarContacto(linea, canal);
@@ -109,8 +157,11 @@ function Formulario({
       }
       const i = resultado.findIndex((c) => clave(c) === clave({ contacto: v.valor, canal }));
       if (i >= 0) {
-        resultado[i] = { ...resultado[i], sentido: combinarSentido(resultado[i].sentido, sentido) };
-        ya++;
+        const actual = resultado[i].sentido;
+        const final = eleccion === "nuevo" ? sentido : combinarSentido(actual, sentido);
+        resultado[i] = { ...resultado[i], sentido: final };
+        if (final !== actual) actualizados++;
+        else ya++;
       } else {
         resultado.unshift({
           id: nuevoId(),
@@ -124,12 +175,12 @@ function Formulario({
       }
     }
     if (malas.length > 0) {
-      setParcial({ nuevos: resultado, agregados, ya });
+      setParcial({ nuevos: resultado, agregados, actualizados, ya });
       setTexto(malas.join("\n"));
       setInvalidas(malas);
       return;
     }
-    onAplicar(resultado, resumenDe({ agregados, ya }));
+    onAplicar(resultado, resumenDe({ agregados, actualizados, ya }));
   }
 
   function editar() {
@@ -255,10 +306,64 @@ function Formulario({
             {t("common.acciones.cerrar")}
           </Button>
         )}
-        <Button onClick={editando ? editar : agregar} disabled={!texto.trim()}>
+        <Button onClick={() => (editando ? editar() : agregar())} disabled={!texto.trim()}>
           {t(editando ? "common.acciones.guardar" : "common.acciones.agregar")}
         </Button>
       </DialogFooter>
+
+      <AlertDialog open={conflictos !== null} onOpenChange={(abierto) => !abierto && setConflictos(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t(conflictos?.length === 1 ? "listas.conflicto.tituloUno" : "listas.conflicto.titulo")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(conflictos?.length === 1 ? "listas.conflicto.descUno" : "listas.conflicto.desc", {
+                sentido: t(`listas.sentido.${sentido}`),
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-48 overflow-y-auto rounded-lg ring-1 ring-foreground/10">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("listas.contactos.contacto")}</TableHead>
+                  <TableHead>{t("listas.conflicto.sentidoActual")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {conflictos?.map((c) => (
+                  <TableRow key={c.contacto}>
+                    <TableCell className="font-mono text-xs">{c.contacto}</TableCell>
+                    <TableCell>{t(`listas.sentido.${c.actual}`)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <EleccionSentido
+            name="decision-sentido"
+            etiquetaNuevo={t(conflictos?.length === 1 ? "listas.conflicto.dejarNuevoUno" : "listas.conflicto.dejarNuevo", {
+              sentido: t(`listas.sentido.${sentido}`),
+            })}
+            decision={decision}
+            onChange={setDecision}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("listas.conflicto.volver")}</AlertDialogCancel>
+            <Button
+              disabled={!decision}
+              onClick={() => {
+                const d = decision!;
+                setConflictos(null);
+                agregar(d);
+              }}
+            >
+              {t("listas.conflicto.aplicar")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DialogContent>
   );
 }

@@ -53,7 +53,7 @@ export function validarContacto(
     : { ok: false, motivo: "numero" };
 }
 
-/** Recargar un contacto que ya está combina el sentido (acordado con Tomás). */
+/** Pasar a Bidireccional un contacto que ya está con otro sentido (cuando el usuario lo elige; ver eleccion-sentido.tsx). */
 export function combinarSentido(
   actual: SentidoExclusion,
   nuevo: SentidoExclusion
