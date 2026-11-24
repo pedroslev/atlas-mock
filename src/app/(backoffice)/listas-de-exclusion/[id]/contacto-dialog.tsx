@@ -312,7 +312,7 @@ function Formulario({
       </DialogFooter>
 
       <AlertDialog open={conflictos !== null} onOpenChange={(abierto) => !abierto && setConflictos(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="data-[size=default]:sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {t(conflictos?.length === 1 ? "listas.conflicto.tituloUno" : "listas.conflicto.titulo")}

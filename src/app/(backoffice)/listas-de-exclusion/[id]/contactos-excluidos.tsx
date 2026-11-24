@@ -326,7 +326,8 @@ export function ContactosExcluidos({
       {/* Cambios pendientes antes de una acción masiva. Confirmar guarda y deja
           al usuario en el detalle (el Confirmar de la cabecera vuelve al listado). */}
       <AlertDialog open={pendiente !== null} onOpenChange={(abierto) => !abierto && setPendiente(null)}>
-        <AlertDialogContent>
+        {/* Tres botones: más ancho que el default, como el aviso de cambios sin guardar. */}
+        <AlertDialogContent className="data-[size=default]:sm:max-w-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>{t("listas.pendientes.titulo")}</AlertDialogTitle>
             <AlertDialogDescription>{t("listas.pendientes.desc")}</AlertDialogDescription>
