@@ -1,0 +1,67 @@
+import type { NamespaceDict } from "@/lib/i18n/dict/types";
+
+// Asignación masiva (ATLAS-1353): piezas comunes a usuarios, grupos de
+// trabajo y grupos de clasificaciones, marcas y plantillas. Solo en español
+// por ahora (los demás idiomas caen al español), salvo el resultado de las
+// acciones masivas, que ya está en los cuatro.
+export const asignacion: NamespaceDict = {
+  es: {
+    "seleccionarTodos": "Seleccionar todos ({n})",
+    "todosDelGrupo": "Todos los de {grupo}",
+    "marcarHijas": "Marcar sus hijas ({n})",
+    "agregarN": "Agregar ({n})",
+    "quitarN": "Quitar ({n})",
+    "marcarTodos": "Marcar todos",
+    "sinResultados": "No hay resultados.",
+    "todos": "Todos",
+    "notaCopia": "Filtrar por otro grupo o por una campaña toma a sus elementos de hoy: lo que se sume después no queda agregado acá.",
+    "quitarTitulo": "¿Quitar {n} del grupo?",
+    "quitarAyuda": "Dejan de estar en el grupo cuando confirmes los cambios. No se borran del catálogo.",
+    "quitarHijas": "También se quitan sus hijas: {nombres}.",
+    "continuar": "Continuar",
+    "volver": "Volver",
+    "cerrar": "Cerrar",
+    "acciones": "Acciones ({n})",
+    "seleccionados": "{n} seleccionados",
+    "quitarSeleccion": "Quitar selección",
+    "agregarAGrupos": "Agregar a grupos",
+    "quitarDeGrupos": "Quitar de grupos",
+    "buscarGrupo": "Buscar grupo...",
+    "resumenAgregar": "Vas a agregar {n} elementos a {m} grupos: {nombres}.",
+    "resumenQuitar": "Vas a quitar {n} elementos de {m} grupos: {nombres}.",
+    "resumenPadres": "Se suman también sus padres, que no estaban marcados: {nombres}.",
+    "resumenHijas": "Se quitan también sus hijas: {nombres}.",
+    "sinCambioAgregar": "{n} ya estaban en todos: para ellos no cambia nada.",
+    "sinCambioQuitar": "{n} no estaban en ninguno: para ellos no cambia nada.",
+    "resultado": "Listo. Grupos actualizados: {n}.",
+    "fallidosEn": "No se pudo aplicar en ({n}):",
+    "motivoFallo": "No se pudo guardar el cambio. Volvé a intentarlo.",
+    "reintentar": "Reintentar los que fallaron",
+    "colGrupos": "Grupos",
+    "filtroOtroGrupo": "Elementos de otro grupo",
+    "filtroUsuariosDeGrupo": "Usuarios de otro grupo",
+    "filtroUsuariosDeCampania": "Usuarios de la campaña",
+    "todasLasCampanias": "Todas las campañas",
+    "todasDelProyecto": "Todas las campañas de {proyecto}",
+    "todosLosGrupos": "Todos los grupos",
+    "sinGrupo": "Sin grupo",
+    "canal.mensajeria": "Mensajería",
+    "canal.email": "Email",
+    "canal.sms": "SMS",
+  },
+  en: {
+    "fallidosEn": "Could not apply to ({n}):",
+    "motivoFallo": "The change could not be saved. Please try again.",
+    "reintentar": "Retry the failed ones",
+  },
+  pt: {
+    "fallidosEn": "Não foi possível aplicar em ({n}):",
+    "motivoFallo": "Não foi possível salvar a alteração. Tente novamente.",
+    "reintentar": "Tentar novamente os que falharam",
+  },
+  ca: {
+    "fallidosEn": "No s'ha pogut aplicar a ({n}):",
+    "motivoFallo": "No s'ha pogut desar el canvi. Torna-ho a provar.",
+    "reintentar": "Torna a provar els que han fallat",
+  },
+};

@@ -67,7 +67,7 @@ export default async function GrupoMarcadorPage({
           </CardContent>
         </Card>
 
-        <GrupoMarcadores initialIds={grupo.marcadorIds} />
+        <GrupoMarcadores grupoId={grupo.id} initialIds={grupo.marcadorIds} />
       </div>
     </div>
     </CamposUnicos>

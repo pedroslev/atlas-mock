@@ -6,6 +6,9 @@
 // edición, aislado por tenant); eliminar una plantilla la quita también de todos los grupos.
 
 import { useMemo, useState } from "react";
+import type { MRT_RowSelectionState } from "material-react-table";
+import { columnaGrupos, opcionesDeSeleccion } from "@/components/asignacion/catalogo";
+import { AsignarAGruposDialog } from "@/components/asignacion/asignar-a-grupos";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -59,6 +62,13 @@ export default function PlantillasPage() {
   const t = useT();
   const [items, setItems] = useState<Plantilla[]>(plantillasIniciales);
   const [grupos, setGrupos] = useState<PlantillaGrupo[]>(plantillaGrupos);
+  // Asignación masiva desde el catálogo (ATLAS-1353).
+  const [seleccion, setSeleccion] = useState<MRT_RowSelectionState>({});
+  const [accionGrupo, setAccionGrupo] = useState<"agregar" | "quitar" | null>(null);
+  const gruposDeCatalogo = useMemo(
+    () => grupos.map((g) => ({ id: g.id, nombre: g.nombre, ids: g.plantillaIds })),
+    [grupos]
+  );
   const [grupoDialogOpen, setGrupoDialogOpen] = useState(false);
   const [grupoNombre, setGrupoNombre] = useState("");
   // Grupo de origen al duplicar: la copia apunta a las mismas plantillas del catálogo.
@@ -148,8 +158,9 @@ export default function PlantillasPage() {
             <Badge variant="secondary">{t("common.comunes.inactivo")}</Badge>
           ),
       },
+      columnaGrupos<Plantilla>(t, gruposDeCatalogo),
     ],
-    [t]
+    [t, gruposDeCatalogo]
   );
 
   function eliminarPlantilla(id: string) {
@@ -261,6 +272,7 @@ export default function PlantillasPage() {
             columns={columnasCatalogo}
             data={items}
             options={{
+              ...opcionesDeSeleccion<Plantilla>({ t, seleccion, setSeleccion, onAccion: setAccionGrupo }),
               enableRowActions: true,
               renderRowActions: ({ row }) => (
                 <RowActions
@@ -285,6 +297,21 @@ export default function PlantillasPage() {
               ),
             }}
           />
+          {accionGrupo && (
+            <AsignarAGruposDialog
+              modo={accionGrupo}
+              elementoIds={Object.keys(seleccion).filter((id) => seleccion[id])}
+              nombreDe={(id) => items.find((x) => x.id === id)?.nombre ?? id}
+              todosLosIds={items.map((x) => x.id)}
+              grupos={gruposDeCatalogo}
+              onAplicar={(nuevos) =>
+                setGrupos((prev) =>
+                  prev.map((g) => ({ ...g, plantillaIds: nuevos.find((n) => n.id === g.id)?.ids ?? g.plantillaIds }))
+                )
+              }
+              onClose={() => setAccionGrupo(null)}
+            />
+          )}
         </TabsContent>
       </Tabs>
 

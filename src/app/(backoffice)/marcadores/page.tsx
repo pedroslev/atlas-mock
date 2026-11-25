@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { MRT_RowSelectionState } from "material-react-table";
+import { columnaGrupos, opcionesDeSeleccion } from "@/components/asignacion/catalogo";
+import { AsignarAGruposDialog } from "@/components/asignacion/asignar-a-grupos";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -52,6 +55,13 @@ export default function MarcadoresPage() {
   const t = useT();
   const [items, setItems] = useState<Marcador[]>(marcadoresIniciales);
   const [grupos, setGrupos] = useState<MarcadorGrupo[]>(marcadorGrupos);
+  // Asignación masiva desde el catálogo (ATLAS-1353).
+  const [seleccion, setSeleccion] = useState<MRT_RowSelectionState>({});
+  const [accionGrupo, setAccionGrupo] = useState<"agregar" | "quitar" | null>(null);
+  const gruposDeCatalogo = useMemo(
+    () => grupos.map((g) => ({ id: g.id, nombre: g.nombre, ids: g.marcadorIds })),
+    [grupos]
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Marcador | null>(null);
   const [duplicando, setDuplicando] = useState<Marcador | null>(null);
@@ -107,8 +117,9 @@ export default function MarcadoresPage() {
           </span>
         ),
       },
+      columnaGrupos<Marcador>(t, gruposDeCatalogo),
     ],
-    [t]
+    [t, gruposDeCatalogo]
   );
 
   function guardarMarcador(marcador: Marcador) {
@@ -236,6 +247,7 @@ export default function MarcadoresPage() {
             columns={columnasPool}
             data={items}
             options={{
+              ...opcionesDeSeleccion<Marcador>({ t, seleccion, setSeleccion, onAccion: setAccionGrupo }),
               enableRowActions: true,
               renderRowActions: ({ row }) => (
                 <RowActions
@@ -268,6 +280,21 @@ export default function MarcadoresPage() {
               ),
             }}
           />
+          {accionGrupo && (
+            <AsignarAGruposDialog
+              modo={accionGrupo}
+              elementoIds={Object.keys(seleccion).filter((id) => seleccion[id])}
+              nombreDe={(id) => items.find((x) => x.id === id)?.nombre ?? id}
+              todosLosIds={items.map((x) => x.id)}
+              grupos={gruposDeCatalogo}
+              onAplicar={(nuevos) =>
+                setGrupos((prev) =>
+                  prev.map((g) => ({ ...g, marcadorIds: nuevos.find((n) => n.id === g.id)?.ids ?? g.marcadorIds }))
+                )
+              }
+              onClose={() => setAccionGrupo(null)}
+            />
+          )}
         </TabsContent>
       </Tabs>
 

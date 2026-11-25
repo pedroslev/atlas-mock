@@ -53,7 +53,7 @@ export default async function GrupoPlantillasPage({
           descripcion={grupo.descripcion}
           existentes={plantillaGrupos.filter((g) => g.id !== id).map((g) => g.nombre)}
         />
-        <GrupoPlantillas initialIds={grupo.plantillaIds} />
+        <GrupoPlantillas grupoId={grupo.id} initialIds={grupo.plantillaIds} />
       </div>
     </div>
     </CamposUnicos>

@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { MRT_RowSelectionState } from "material-react-table";
+import { columnaGrupos, opcionesDeSeleccion } from "@/components/asignacion/catalogo";
+import { AsignarAGruposDialog } from "@/components/asignacion/asignar-a-grupos";
 import Link from "next/link";
 import { Lock, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -80,6 +83,13 @@ export default function ClasificacionesPage() {
   const pool = items.filter((c) => !c.sistema);
   const deSistema = items.filter((c) => c.sistema);
   const [grupos, setGrupos] = useState<ClasificacionGrupo[]>(clasificacionGrupos);
+  // Asignación masiva desde el catálogo (ATLAS-1353).
+  const [seleccion, setSeleccion] = useState<MRT_RowSelectionState>({});
+  const [accionGrupo, setAccionGrupo] = useState<"agregar" | "quitar" | null>(null);
+  const gruposDeCatalogo = useMemo(
+    () => grupos.map((g) => ({ id: g.id, nombre: g.nombre, ids: g.clasificacionIds })),
+    [grupos]
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Clasificacion | null>(null);
   const [duplicando, setDuplicando] = useState<Clasificacion | null>(null);
@@ -167,8 +177,9 @@ export default function ClasificacionesPage() {
         ),
       },
       columnaEfecto,
+      columnaGrupos<Clasificacion>(t, gruposDeCatalogo),
     ],
-    [t, columnaEfecto]
+    [t, columnaEfecto, gruposDeCatalogo]
   );
 
   const columnasSistema = useMemo<MRT_ColumnDef<Clasificacion>[]>(
@@ -335,6 +346,7 @@ export default function ClasificacionesPage() {
             columns={columnasPool}
             data={pool}
             options={{
+              ...opcionesDeSeleccion<Clasificacion>({ t, seleccion, setSeleccion, onAccion: setAccionGrupo }),
               enableRowActions: true,
               renderRowActions: ({ row }) => (
                 <RowActions
@@ -369,6 +381,22 @@ export default function ClasificacionesPage() {
               ),
             }}
           />
+          {accionGrupo && (
+            <AsignarAGruposDialog
+              modo={accionGrupo}
+              elementoIds={Object.keys(seleccion).filter((id) => seleccion[id])}
+              nombreDe={(id) => pool.find((x) => x.id === id)?.nombre ?? id}
+              todosLosIds={pool.map((x) => x.id)}
+              grupos={gruposDeCatalogo}
+                padreDe={(id) => pool.find((c) => c.id === id)?.parentId}
+              onAplicar={(nuevos) =>
+                setGrupos((prev) =>
+                  prev.map((g) => ({ ...g, clasificacionIds: nuevos.find((n) => n.id === g.id)?.ids ?? g.clasificacionIds }))
+                )
+              }
+              onClose={() => setAccionGrupo(null)}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="sistema" className="flex flex-col gap-4">
