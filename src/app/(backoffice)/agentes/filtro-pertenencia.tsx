@@ -3,6 +3,9 @@
 // Filtro de cabecera para las columnas Grupos y Campañas de la tabla de
 // Usuarios (ATLAS-1353): "está en" o "no está en", con uno o varios
 // elementos, más la opción "Sin grupo" / "Sin campañas".
+// REAL: en Usuarios se filtra en el navegador, con los usuarios (identity-api)
+// y los grupos de trabajo y las campañas de olimpo-api (los `assigned_users`
+// de cada campaña vienen en el listado de campañas).
 
 import { useState } from "react";
 import type { MRT_Column, MRT_RowData } from "material-react-table";

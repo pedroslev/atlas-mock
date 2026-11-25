@@ -74,9 +74,10 @@ function useThemeMode(): "server" | "light" | "dark" {
 // defecto de la pantalla (su initialState).
 // MOCK: se guarda en el navegador (localStorage), con el primer usuario de los
 // datos de ejemplo como usuario conectado.
-// REAL: se guarda por usuario autenticado y por pantalla; a definir con el
-// Architect si vive en el navegador (como el AW) o en el servicio, para que
-// siga a la persona entre equipos.
+// REAL: olimpo-front la guarda en el localStorage del navegador, con una clave
+// por tenant + usuario autenticado + pantalla; no hay backend. Un filtro
+// guardado que apunta a una campaña, un grupo o un elemento que ya no existe
+// se ignora al cargar la vista.
 const USUARIO_CONECTADO = agentes[0]?.id ?? "anonimo";
 
 type Vista = { columnVisibility: MRT_VisibilityState; columnFilters: MRT_ColumnFiltersState };

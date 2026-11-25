@@ -278,6 +278,9 @@ export function CampaniaEditor({
 // (copia de los miembros de ese momento: quien entre después al grupo no queda
 // asignado), y quitar varios a la vez. Se guarda con Confirmar, como el resto
 // de la campaña.
+// REAL: se guarda con el PUT de la campaña al Confirmar, con la campaña
+// entera; no usa los endpoints de agregar/quitar usuarios de la asignación
+// masiva.
 function UsuariosTab({
   campaniaId,
   initialUsuarioIds,

@@ -54,6 +54,11 @@ const tipoVariant: Record<
 // padres: agregar una hija trae siempre a su padre; agregar un padre no trae a
 // sus hijas, pero se pueden marcar con "Marcar sus hijas". Quitar un padre
 // quita también a sus hijas (una hija no queda en el grupo sin su padre).
+// MOCK: la regla la aplica esta pantalla sobre su estado local.
+// REAL: la regla la aplica olimpo-api. Al guardar el grupo (PUT) o al
+// agregarle clasificaciones, suma el padre (y los padres del padre) de toda
+// hija que llega sin él; quitar un padre quita a sus hijas del grupo. El front
+// aplica la misma regla para que se vea antes de confirmar.
 const padreDe = (id: string) => clasificaciones.find((c) => c.id === id)?.parentId;
 
 export function GrupoMiembros({ grupoId, initialIds }: { grupoId: string; initialIds: string[] }) {

@@ -2,7 +2,8 @@ import type { NamespaceDict } from "@/lib/i18n/dict/types";
 
 // Asignación masiva (ATLAS-1353): piezas comunes a usuarios, grupos de
 // trabajo y grupos de clasificaciones, marcas y plantillas. Solo en español
-// por ahora: los demás idiomas caen al español.
+// por ahora (los demás idiomas caen al español), salvo el resultado de las
+// acciones masivas, que ya está en los cuatro.
 export const asignacion: NamespaceDict = {
   es: {
     "seleccionarTodos": "Seleccionar todos ({n})",
@@ -33,6 +34,9 @@ export const asignacion: NamespaceDict = {
     "sinCambioAgregar": "{n} ya estaban en todos: para ellos no cambia nada.",
     "sinCambioQuitar": "{n} no estaban en ninguno: para ellos no cambia nada.",
     "resultado": "Listo. Grupos actualizados: {n}.",
+    "fallidosEn": "No se pudo aplicar en ({n}):",
+    "motivoFallo": "No se pudo guardar el cambio. Volvé a intentarlo.",
+    "reintentar": "Reintentar los que fallaron",
     "colGrupos": "Grupos",
     "filtroOtroGrupo": "Elementos de otro grupo",
     "filtroUsuariosDeGrupo": "Usuarios de otro grupo",
@@ -45,7 +49,19 @@ export const asignacion: NamespaceDict = {
     "canal.email": "Email",
     "canal.sms": "SMS",
   },
-  en: {},
-  pt: {},
-  ca: {},
+  en: {
+    "fallidosEn": "Could not apply to ({n}):",
+    "motivoFallo": "The change could not be saved. Please try again.",
+    "reintentar": "Retry the failed ones",
+  },
+  pt: {
+    "fallidosEn": "Não foi possível aplicar em ({n}):",
+    "motivoFallo": "Não foi possível salvar a alteração. Tente novamente.",
+    "reintentar": "Tentar novamente os que falharam",
+  },
+  ca: {
+    "fallidosEn": "No s'ha pogut aplicar a ({n}):",
+    "motivoFallo": "No s'ha pogut desar el canvi. Torna-ho a provar.",
+    "reintentar": "Torna a provar els que han fallat",
+  },
 };

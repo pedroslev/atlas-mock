@@ -3,12 +3,13 @@
 // Acciones masivas sobre los usuarios seleccionados en la tabla de Usuarios
 // (ATLAS-1353). Cada acción pasa por tres pasos dentro de la misma ventana:
 // elegir (campañas, grupos o el usuario de origen) → resumen antes de
-// confirmar → resultado, con los que fallaron y "Reintentar los que fallaron".
+// confirmar → resultado, con lo que falló y "Reintentar los que fallaron". En
+// campañas, grupos y copiar lo que falla es una campaña o un grupo; al
+// habilitar o deshabilitar, un usuario.
 // Los cambios se aplican al confirmar la ventana: el listado no tiene
 // "Confirmar" en el encabezado.
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,6 +29,7 @@ import {
   opcionesDeCampanias,
   type Opcion,
 } from "@/components/asignacion/lista-seleccionable";
+import { ResultadoAsignacion } from "@/components/asignacion/resultado-asignacion";
 
 // Se re-exportan para las pantallas que ya las importaban desde acá.
 export { ListaSeleccionable, opcionesDeCampanias };
@@ -44,9 +46,9 @@ import {
   calcularCopia,
   cambiarEstado,
   hayCambios,
-  permisosPropios,
   quitarDeCampanias,
   quitarDeGrupos,
+  sumarResultados,
   type CambioCopia,
   type ModoCopia,
   type QueCopiar,
@@ -64,52 +66,6 @@ export type AccionMasiva =
 
 
 const nombreDe = (id: string) => getAgente(id)?.nombre ?? id;
-
-// --- Resultado --------------------------------------------------------------
-
-function Resultado({
-  resultado,
-  onReintentar,
-}: {
-  resultado: ResultadoMasivo;
-  onReintentar: () => void;
-}) {
-  const t = useT();
-  return (
-    <div className="flex flex-col gap-3 text-sm">
-      {resultado.aplicados.length > 0 && (
-        <p className="flex items-center gap-2">
-          <CheckCircle2 className="size-4 text-emerald-600" />
-          {t("usuarios.masivo.resultado.aplicados", { n: resultado.aplicados.length })}
-        </p>
-      )}
-      {resultado.sinCambios.length > 0 && (
-        <p className="text-muted-foreground">
-          {t("usuarios.masivo.resultado.sinCambios", { n: resultado.sinCambios.length })}
-        </p>
-      )}
-      {resultado.fallidos.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-md bg-destructive/10 p-3">
-          <p className="flex items-center gap-2 font-medium text-destructive">
-            <AlertTriangle className="size-4" />
-            {t("usuarios.masivo.resultado.fallidos", { n: resultado.fallidos.length })}
-          </p>
-          <ul className="flex flex-col gap-1">
-            {resultado.fallidos.map((f) => (
-              <li key={f.usuarioId}>
-                <span className="font-medium">{nombreDe(f.usuarioId)}</span>
-                <span className="text-muted-foreground"> — {f.motivo}</span>
-              </li>
-            ))}
-          </ul>
-          <Button size="sm" variant="outline" className="w-fit" onClick={onReintentar}>
-            {t("usuarios.masivo.reintentar")}
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function Nombres({ ids, max = 5 }: { ids: string[]; max?: number }) {
   const t = useT();
@@ -161,30 +117,31 @@ export function DialogoAccionMasiva({
     });
   }, [paso, usuarioIds, elegidos, esEstado, esCampania, quita, accion]);
 
-  function aplicar(ids: string[]) {
+  // Campañas y grupos se aplican uno por uno (lo que falla es una campaña o
+  // un grupo); habilitar y deshabilitar, usuario por usuario.
+  function aplicar(usuarios: string[], entidades: string[]) {
     switch (accion) {
-      case "campanias-agregar": return agregarACampanias(ids, elegidos);
-      case "campanias-quitar": return quitarDeCampanias(ids, elegidos);
-      case "grupos-agregar": return agregarAGrupos(ids, elegidos);
-      case "grupos-quitar": return quitarDeGrupos(ids, elegidos);
-      case "habilitar": return cambiarEstado(ids, true);
-      case "deshabilitar": return cambiarEstado(ids, false);
+      case "campanias-agregar": return agregarACampanias(usuarios, entidades);
+      case "campanias-quitar": return quitarDeCampanias(usuarios, entidades);
+      case "grupos-agregar": return agregarAGrupos(usuarios, entidades);
+      case "grupos-quitar": return quitarDeGrupos(usuarios, entidades);
+      case "habilitar": return cambiarEstado(usuarios, true);
+      case "deshabilitar": return cambiarEstado(usuarios, false);
     }
   }
 
   function confirmar() {
-    setResultado(aplicar(usuarioIds));
+    setResultado(aplicar(usuarioIds, elegidos));
     setPaso("resultado");
   }
 
+  // Reintenta solo lo que falló: los usuarios fallidos (estado) o las
+  // campañas/grupos fallidos para los mismos usuarios seleccionados.
   function reintentar() {
     if (!resultado) return;
-    const r = aplicar(resultado.fallidos.map((f) => f.usuarioId));
-    setResultado({
-      aplicados: [...resultado.aplicados, ...r.aplicados],
-      sinCambios: [...resultado.sinCambios, ...r.sinCambios],
-      fallidos: r.fallidos,
-    });
+    const fallidos = resultado.fallidos.map((f) => f.id);
+    const r = esEstado ? aplicar(fallidos, elegidos) : aplicar(usuarioIds, fallidos);
+    setResultado(sumarResultados(resultado, r));
   }
 
   const n = usuarioIds.length;
@@ -236,7 +193,24 @@ export function DialogoAccionMasiva({
         )}
 
         {paso === "resultado" && resultado && (
-          <Resultado resultado={resultado} onReintentar={reintentar} />
+          <ResultadoAsignacion
+            exito={
+              resultado.aplicados.length > 0
+                ? t("usuarios.masivo.resultado.aplicados", { n: resultado.aplicados.length })
+                : undefined
+            }
+            sinCambios={
+              resultado.sinCambios.length > 0
+                ? t("usuarios.masivo.resultado.sinCambios", { n: resultado.sinCambios.length })
+                : undefined
+            }
+            tituloFallidos={t(
+              esEstado ? "usuarios.masivo.resultado.fallidos" : "asignacion.fallidosEn",
+              { n: resultado.fallidos.length }
+            )}
+            fallidos={resultado.fallidos}
+            onReintentar={reintentar}
+          />
         )}
 
         <DialogFooter>
@@ -284,7 +258,7 @@ export function DialogoCopiar({
   const [paso, setPaso] = useState<"elegir" | "resumen" | "resultado">("elegir");
   const [origenId, setOrigenId] = useState<string | null>(null);
   const [consulta, setConsulta] = useState("");
-  const [que, setQue] = useState<QueCopiar>({ campanias: true, grupos: true, permisos: false });
+  const [que, setQue] = useState<QueCopiar>({ campanias: true, grupos: true });
   const [modo, setModo] = useState<ModoCopia>("sumar");
   const [cambios, setCambios] = useState<CambioCopia[]>([]);
   const [resultado, setResultado] = useState<ResultadoMasivo | null>(null);
@@ -295,12 +269,11 @@ export function DialogoCopiar({
   const origen = origenId ? getAgente(origenId) : undefined;
   const campOrigen = origenId ? campanias.filter((c) => c.usuariosAsignados.includes(origenId)) : [];
   const grpOrigen = origenId ? gruposTrabajo.filter((g) => g.usuarioIds.includes(origenId)) : [];
-  const permOrigen = origenId ? permisosPropios(origenId) : [];
 
   const conCambios = cambios.filter(hayCambios);
   const sinCambios = usuarioIds.filter((u) => !conCambios.some((c) => c.usuarioId === u));
   const quitan = conCambios.filter(
-    (c) => c.campaniasQuitar.length + c.gruposQuitar.length + c.permisosQuitar.length > 0
+    (c) => c.campaniasQuitar.length + c.gruposQuitar.length > 0
   );
   const nombreCamp = (id: string) => campanias.find((c) => c.id === id)?.nombre ?? id;
   const nombreGrp = (id: string) => gruposTrabajo.find((g) => g.id === id)?.nombre ?? id;
@@ -316,18 +289,15 @@ export function DialogoCopiar({
     setPaso("resultado");
   }
 
+  // Reintenta solo las campañas y grupos que fallaron, con los mismos cambios.
   function reintentar() {
     if (!resultado) return;
-    const r = aplicarCopia(cambios, resultado.fallidos.map((f) => f.usuarioId));
-    setResultado({
-      aplicados: [...resultado.aplicados, ...r.aplicados],
-      sinCambios: [...resultado.sinCambios, ...r.sinCambios],
-      fallidos: r.fallidos,
-    });
+    const r = aplicarCopia(conCambios, resultado.fallidos.map((f) => f.id));
+    setResultado(sumarResultados(resultado, r));
   }
 
   const n = usuarioIds.length;
-  const nadaQueCopiar = !que.campanias && !que.grupos && !que.permisos;
+  const nadaQueCopiar = !que.campanias && !que.grupos;
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -371,7 +341,6 @@ export function DialogoCopiar({
                   [
                     ["campanias", campOrigen.map((c) => c.nombre)],
                     ["grupos", grpOrigen.map((g) => g.nombre)],
-                    ["permisos", permOrigen.map((p) => `${p.modulo} (${p.acciones.join(", ")})`)],
                   ] as const
                 ).map(([clave, items]) => (
                   <label key={clave} className="flex items-start gap-2">
@@ -435,7 +404,6 @@ export function DialogoCopiar({
                       {[
                         ...c.campaniasQuitar.map(nombreCamp),
                         ...c.gruposQuitar.map(nombreGrp),
-                        ...c.permisosQuitar.map((k) => { const [m, ac] = k.split(":"); return `${m} (${ac})`; }),
                       ].join(", ")}
                     </li>
                   ))}
@@ -452,8 +420,18 @@ export function DialogoCopiar({
           </div>
         )}
 
+        {/* Sin "Sin cambios": la copia solo se aplica a quienes tienen algo que cambiar. */}
         {paso === "resultado" && resultado && (
-          <Resultado resultado={resultado} onReintentar={reintentar} />
+          <ResultadoAsignacion
+            exito={
+              resultado.aplicados.length > 0
+                ? t("usuarios.masivo.resultado.aplicados", { n: resultado.aplicados.length })
+                : undefined
+            }
+            tituloFallidos={t("asignacion.fallidosEn", { n: resultado.fallidos.length })}
+            fallidos={resultado.fallidos}
+            onReintentar={reintentar}
+          />
         )}
 
         <DialogFooter>

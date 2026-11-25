@@ -7,11 +7,25 @@
 //
 // MOCK: el cambio se aplica a la lista de grupos de la pantalla (estado local
 // del listado); la ficha de cada grupo, que se arma en el servidor, no lo ve.
-// REAL: una sola operación por grupo contra olimpo-api, que devuelve qué se
-// aplicó y qué falló.
+// En el primer intento de cada acción falla un grupo por catálogo, para ver la
+// lista de fallidos y "Reintentar los que fallaron": "Atención al cliente"
+// (cg-atencion) en clasificaciones, "General" (bg-general) en marcas y
+// "Atención al cliente" (pg-atencion) en plantillas. El reintento se aplica.
+// REAL: olimpo-front llama a olimpo-api una vez por cada grupo elegido:
+// POST /api/classification-groups/{group_id}/classifications/add (o /remove),
+// POST /api/bookmark-groups/{group_id}/bookmarks/add (o /remove) y
+// POST /api/message-template-groups/{group_id}/message-templates/add (o
+// /remove), con el cuerpo { "ids": [...] }. Igual que en Usuarios: son
+// idempotentes, validan los ids contra el catálogo del tenant (uno desconocido
+// responde 400 y no se guarda nada), devuelven el grupo actualizado y, si algo
+// cambió, publican el mismo evento que el PUT del grupo. El grupo que falla se
+// informa con su motivo y se reintenta solo.
+// Regla de padres (clasificaciones), REAL: la aplica olimpo-api. Al guardar un
+// grupo (PUT) o al agregarle clasificaciones, suma el padre (y los padres del
+// padre) de toda hija que llega sin él; quitar un padre quita a sus hijas del
+// grupo. El front aplica la misma regla para que se vea antes de confirmar.
 
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +36,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/lib/i18n";
+import {
+  fallaLaPrimeraVez,
+  MOTIVO_FALLO,
+  type Fallido,
+} from "@/lib/asignacion-masiva";
 import { ancestros, descendientes, ListaSeleccionable } from "./lista-seleccionable";
+import { ResultadoAsignacion } from "./resultado-asignacion";
+
+// MOCK: un grupo por catálogo que falla en el primer intento (ver arriba).
+const GRUPOS_QUE_FALLAN = ["cg-atencion", "bg-general", "pg-atencion"] as const;
 
 export type GrupoDeCatalogo = { id: string; nombre: string; ids: string[] };
 
@@ -51,6 +74,7 @@ export function AsignarAGruposDialog({
   const [paso, setPaso] = useState<"elegir" | "resumen" | "resultado">("elegir");
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [actualizados, setActualizados] = useState(0);
+  const [fallidos, setFallidos] = useState<Fallido[]>([]);
 
   const gruposElegidos = grupos.filter((g) => elegidos.includes(g.id));
   // Agregar una hija trae a su padre; quitar un padre se lleva a sus hijas,
@@ -75,10 +99,18 @@ export function AsignarAGruposDialog({
       : gruposElegidos.every((g) => !g.ids.includes(id))
   );
 
-  function confirmar() {
+  // Aplica la acción grupo por grupo (un pedido por grupo, como olimpo-api).
+  // Los grupos que fallan quedan sin tocar y se listan para el reintento; el
+  // conteo de actualizados se suma al de los intentos anteriores.
+  function aplicarEn(grupoIds: string[]) {
     let n = 0;
+    const nuevosFallidos: Fallido[] = [];
     const nuevos = grupos.map((g) => {
-      if (!elegidos.includes(g.id)) return g;
+      if (!grupoIds.includes(g.id)) return g;
+      if (fallaLaPrimeraVez(`catalogo-${modo}`, g.id, GRUPOS_QUE_FALLAN)) {
+        nuevosFallidos.push({ id: g.id, nombre: g.nombre, motivo: MOTIVO_FALLO });
+        return g;
+      }
       const ids =
         modo === "agregar"
           ? [...new Set([...g.ids, ...afectados])]
@@ -87,7 +119,8 @@ export function AsignarAGruposDialog({
       return { ...g, ids };
     });
     onAplicar(nuevos);
-    setActualizados(n);
+    setActualizados((prev) => prev + n);
+    setFallidos(nuevosFallidos);
     setPaso("resultado");
   }
 
@@ -137,10 +170,12 @@ export function AsignarAGruposDialog({
         )}
 
         {paso === "resultado" && (
-          <p className="flex items-center gap-2 text-sm">
-            <CheckCircle2 className="size-4 text-emerald-600" />
-            {t("asignacion.resultado", { n: actualizados })}
-          </p>
+          <ResultadoAsignacion
+            exito={actualizados > 0 ? t("asignacion.resultado", { n: actualizados }) : undefined}
+            tituloFallidos={t("asignacion.fallidosEn", { n: fallidos.length })}
+            fallidos={fallidos}
+            onReintentar={() => aplicarEn(fallidos.map((f) => f.id))}
+          />
         )}
 
         <DialogFooter>
@@ -158,7 +193,7 @@ export function AsignarAGruposDialog({
               <Button
                 variant={quita ? "destructive" : "default"}
                 disabled={sinCambio.length === elementoIds.length && extra.length === 0}
-                onClick={confirmar}
+                onClick={() => aplicarEn(elegidos)}
               >
                 {t("common.acciones.confirmar")}
               </Button>
