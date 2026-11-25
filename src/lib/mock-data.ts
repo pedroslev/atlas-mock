@@ -38,8 +38,13 @@ export type Proyecto = {
   descripcion?: string;
   objetivo?: string;
   businessHours?: BusinessHours;
+  // Valores por defecto que heredan las campañas del proyecto (ATLAS-1432):
+  // los mismos cinco que la campaña puede redefinir.
   grupoClasificacionId?: string;
+  grupoBookmarksId?: string;
+  grupoPlantillasId?: string;
   feriadosId?: string;
+  listaExclusionId?: string;
   campaniasCount: number;
 };
 
@@ -532,6 +537,9 @@ export type EstadoAuxiliar = {
   nombre: string;
   color: string;
   icono: string;
+  // aux_agent_status.productive: la persona sigue trabajando mientras está en
+  // el estado (capacitación, atención desde otra herramienta).
+  productivo: boolean;
 };
 
 export const proyectos: Proyecto[] = [
@@ -548,7 +556,10 @@ export const proyectos: Proyecto[] = [
       viernes: [{ inicio: "09:00", fin: "13:00" }, { inicio: "14:00", fin: "18:00" }],
     },
     grupoClasificacionId: "cg-cobranzas",
+    grupoBookmarksId: "bg-cobranzas",
+    grupoPlantillasId: "pg-cobranzas",
     feriadosId: "fer-ar",
+    listaExclusionId: "dnc-1",
     campaniasCount: 3,
   },
   {
@@ -564,6 +575,8 @@ export const proyectos: Proyecto[] = [
       sabado: [{ inicio: "09:00", fin: "13:00" }],
     },
     grupoClasificacionId: "cg-atencion",
+    grupoBookmarksId: "bg-general",
+    grupoPlantillasId: "pg-atencion",
     feriadosId: "fer-ar",
     campaniasCount: 2,
   },
@@ -1183,14 +1196,15 @@ export const agentes: Agente[] = [
 // toda UI que asigne auxiliares tiene que ser buscable, nunca una lista plana
 // de checkboxes (feedback de producto 2026-07-16).
 export const estadosAuxiliares: EstadoAuxiliar[] = [
-  { id: "aux-almuerzo", nombre: "Almuerzo", color: "#FFC107", icono: "utensils" },
-  { id: "aux-capacitacion", nombre: "Capacitación", color: "#0074B5", icono: "graduation-cap" },
-  { id: "aux-reunion", nombre: "Reunión", color: "#807CDB", icono: "users" },
-  { id: "aux-descanso", nombre: "Descanso", color: "#28A745", icono: "coffee" },
-  { id: "aux-bano", nombre: "Baño", color: "#17A2B8", icono: "door-open" },
-  { id: "aux-gestion", nombre: "Gestión interna", color: "#6A6A6A", icono: "clipboard-list" },
-  { id: "aux-feedback", nombre: "Feedback con supervisor", color: "#9C27B0", icono: "message-circle" },
-  { id: "aux-tecnico", nombre: "Inconveniente técnico", color: "#D7373F", icono: "wrench" },
+  { id: "aux-almuerzo", nombre: "Almuerzo", color: "#FFC107", icono: "utensils", productivo: false },
+  { id: "aux-capacitacion", nombre: "Capacitación", color: "#0074B5", icono: "graduation-cap", productivo: true },
+  { id: "aux-reunion", nombre: "Reunión", color: "#807CDB", icono: "users", productivo: true },
+  { id: "aux-descanso", nombre: "Descanso", color: "#28A745", icono: "coffee", productivo: false },
+  { id: "aux-bano", nombre: "Baño", color: "#17A2B8", icono: "door-open", productivo: false },
+  { id: "aux-gestion", nombre: "Gestión interna", color: "#6A6A6A", icono: "clipboard-list", productivo: true },
+  { id: "aux-feedback", nombre: "Feedback con supervisor", color: "#9C27B0", icono: "message-circle", productivo: true },
+  { id: "aux-tecnico", nombre: "Inconveniente técnico", color: "#D7373F", icono: "wrench", productivo: false },
+  { id: "aux-redes", nombre: "Redes", color: "#E1306C", icono: "message-circle", productivo: true },
 ];
 
 // Catálogo de módulos para el árbol de permisos simplificado (working_groups.permissions).

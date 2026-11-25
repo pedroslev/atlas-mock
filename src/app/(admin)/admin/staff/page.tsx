@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RowActions } from "@/components/data-table/row-actions";
 import { MitrolTable, type MRT_ColumnDef } from "@/components/data-table/mitrol-table";
@@ -42,7 +42,10 @@ import { useT } from "@/lib/i18n";
 // directorio LDAP de Mitrol en cada sincronización (solo lectura), con su
 // estado en Zeus. Quien deja de estar activo en el directorio desaparece de la
 // lista: el job de sincronización revoca su acceso en el realm `mitrol`.
-// La sincronización corre una vez por noche. Deshabilitar =
+// La sincronización corre una vez por noche y además se puede pedir a mano con
+// el botón "Sincronizar con el directorio" (ver `sincronizar` abajo). No hay
+// alta desde un selector: se habilita desde la fila o el detalle de cada
+// persona No habilitada. Deshabilitar =
 // POST /staff-users/{directoryId}/disable. GET /staff-groups y
 // DELETE /staff-groups/{id} para los grupos: 409 `group_has_members` si el
 // grupo tiene personas asignadas (hay que reasignarlas primero). Listar requiere `zeus.staff.read`; modificar `zeus.staff.write`
@@ -53,6 +56,31 @@ export default function StaffPage() {
   const [efectivosDe, setEfectivosDe] = useState<StaffUser | null>(null);
   // Grupo que no se pudo borrar por tener personas asignadas.
   const [bloqueado, setBloqueado] = useState<PermissionGroup | null>(null);
+  // Sincronización manual: en curso, y su resultado (personas sincronizadas o error).
+  const [sincronizando, setSincronizando] = useState(false);
+  const [resultadoSync, setResultadoSync] = useState<{ ok: true; n: number } | { ok: false } | null>(null);
+
+  // MOCK: espera un momento y responde al azar; 1 de cada 4 veces simula que el
+  // directorio no respondió. Si sale bien, solo cambia "Última sincronización".
+  // REAL: POST /staff-users/sync (`zeus.staff.write`), síncrono: corre la misma
+  // sincronización que la nocturna y responde 200 { lastSuccessAt, userCount };
+  // después se vuelve a pedir GET /staff-users. 502 `directory_sync_failed` si
+  // el directorio no respondió o devolvió una lista anómala (nadie pierde el
+  // acceso); 409 `sync_in_progress` si ya hay una corriendo.
+  function sincronizar() {
+    setSincronizando(true);
+    setTimeout(() => {
+      if (Math.random() < 0.25) {
+        setResultadoSync({ ok: false });
+      } else {
+        const d = new Date();
+        const dos = (n: number) => String(n).padStart(2, "0");
+        const cuando = `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${d.getFullYear()} ${dos(d.getHours())}:${dos(d.getMinutes())}`;
+        setResultadoSync({ ok: true, n: staffActions.syncDirectory(cuando) });
+      }
+      setSincronizando(false);
+    }, 1200);
+  }
 
   const columnasPersonas = useMemo<MRT_ColumnDef<StaffUser>[]>(() => {
     const groupName = (id: string) => groups.find((g) => g.id === id)?.name;
@@ -186,11 +214,9 @@ export default function StaffPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="personas" className="contents">
-            <Button asChild data-testid="staff-habilitar-persona">
-              <Link href="/admin/staff/habilitar">
-                <Plus />
-                {t("staff.habilitarPersona")}
-              </Link>
+            <Button data-testid="staff-sincronizar" disabled={sincronizando} onClick={sincronizar}>
+              <RefreshCw className={sincronizando ? "animate-spin" : undefined} />
+              {t(sincronizando ? "staff.sync.enCurso" : "staff.sync.boton")}
             </Button>
           </TabsContent>
           <TabsContent value="grupos" className="contents">
@@ -231,6 +257,8 @@ export default function StaffPage() {
                               label: t("staff.accion.deshabilitar"),
                               destructive: true,
                               separatorBefore: true,
+                              // Misma confirmación que al apagar el interruptor en el detalle.
+                              confirmTitle: t("staff.accion.deshabilitarTitulo", { nombre: u.name }),
                               confirmDescription: t("staff.accion.deshabilitarDescripcion", {
                                 nombre: u.name,
                               }),
@@ -298,6 +326,25 @@ export default function StaffPage() {
           </DialogHeader>
           <DialogFooter>
             <Button onClick={() => setBloqueado(null)}>{t("common.acciones.cerrar")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resultado de la sincronización manual (bien o mal). */}
+      <Dialog open={resultadoSync !== null} onOpenChange={(open) => !open && setResultadoSync(null)}>
+        <DialogContent data-testid="staff-sync-resultado">
+          <DialogHeader>
+            <DialogTitle>{t(resultadoSync?.ok ? "staff.sync.okTitulo" : "staff.sync.errorTitulo")}</DialogTitle>
+            <DialogDescription>
+              {resultadoSync?.ok
+                ? t("staff.sync.ok", { n: resultadoSync.n })
+                : t("staff.sync.error")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button data-testid="staff-sync-cerrar" onClick={() => setResultadoSync(null)}>
+              {t("common.acciones.cerrar")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

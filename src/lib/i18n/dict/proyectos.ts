@@ -12,7 +12,7 @@ export const proyectos: NamespaceDict = {
     "nuevo.configurar": "Configurar proyecto",
 
     "detalle.descripcion":
-      "Los horarios, clasificaciones y feriados que definas acá se aplican por defecto a todas las campañas del proyecto, salvo que una campaña los personalice.",
+      "Los horarios, grupos, feriados y la lista de exclusión que definas acá se aplican por defecto a todas las campañas del proyecto, salvo que una campaña los personalice.",
     "detalle.infoGeneral": "Información general",
 
     "campos.nombrePlaceholder": "Ej: Cobranzas",
@@ -74,7 +74,7 @@ export const proyectos: NamespaceDict = {
     "nuevo.configurar": "Configure project",
 
     "detalle.descripcion":
-      "The business hours, classifications and holidays you set here apply by default to every campaign in the project, unless a campaign overrides them.",
+      "The business hours, groups, holidays and exclusion list you set here apply by default to every campaign in the project, unless a campaign overrides them.",
     "detalle.infoGeneral": "General information",
 
     "campos.nombrePlaceholder": "e.g. Collections",
@@ -135,7 +135,7 @@ export const proyectos: NamespaceDict = {
     "nuevo.configurar": "Configurar projeto",
 
     "detalle.descripcion":
-      "Os horários, as classificações e os feriados que você definir aqui se aplicam por padrão a todas as campanhas do projeto, a menos que uma campanha os personalize.",
+      "Os horários, os grupos, os feriados e a lista de exclusão que você definir aqui se aplicam por padrão a todas as campanhas do projeto, a menos que uma campanha os personalize.",
     "detalle.infoGeneral": "Informações gerais",
 
     "campos.nombrePlaceholder": "Ex.: Cobranças",
@@ -197,7 +197,7 @@ export const proyectos: NamespaceDict = {
     "nuevo.configurar": "Configura el projecte",
 
     "detalle.descripcion":
-      "Els horaris, les classificacions i els festius que defineixis aquí s'apliquen per defecte a totes les campanyes del projecte, tret que una campanya els personalitzi.",
+      "Els horaris, els grups, els festius i la llista d'exclusió que defineixis aquí s'apliquen per defecte a totes les campanyes del projecte, tret que una campanya els personalitzi.",
     "detalle.infoGeneral": "Informació general",
 
     "campos.nombrePlaceholder": "Ex.: Cobraments",

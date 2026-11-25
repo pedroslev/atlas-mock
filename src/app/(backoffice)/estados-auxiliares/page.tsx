@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { DialogConAviso } from "@/components/layout/aviso-cambios";
 import {
   DialogClose,
@@ -41,6 +43,12 @@ export default function EstadosAuxiliaresPage() {
   // El ícono se guarda como nombre técnico (ej. "graduation-cap") pero se elige
   // desde un selector visual; nunca se tipea el slug (feedback 2026-07-16).
   const [icono, setIcono] = useState("circle");
+  // MOCK: el check solo cambia la fila del listado (estado local).
+  // REAL: olimpo-api guarda aux_agent_status.productive (BOOL, default false) y
+  // lo devuelve en ListAgentAuxStatuses; hermes-worker lo usa para decidir qué
+  // hace cuando el asesor bloquea la PC (ver
+  // documentacion/producto/funcionalidades/estados-auxiliares-productivos/).
+  const [productivo, setProductivo] = useState(false);
 
   function abrir(estado: EstadoAuxiliar | null) {
     setEditing(estado);
@@ -48,6 +56,7 @@ export default function EstadosAuxiliaresPage() {
     // Default = --primary (#0074B5); el input nativo de color exige hex literal.
     setColor(estado?.color ?? "#0074B5");
     setIcono(estado?.icono ?? "circle");
+    setProductivo(estado?.productivo ?? false);
     setDialogOpen(true);
   }
 
@@ -57,7 +66,7 @@ export default function EstadosAuxiliaresPage() {
       setEstados((prev) =>
         prev.map((e) =>
           e.id === editing.id
-            ? { ...e, nombre: nombre.trim(), color, icono }
+            ? { ...e, nombre: nombre.trim(), color, icono, productivo }
             : e
         )
       );
@@ -69,6 +78,7 @@ export default function EstadosAuxiliaresPage() {
           nombre: nombre.trim(),
           color,
           icono: icono || "circle",
+          productivo,
         },
       ]);
     }
@@ -117,6 +127,22 @@ export default function EstadosAuxiliaresPage() {
           );
         },
       },
+      {
+        accessorKey: "productivo",
+        header: t("estados.col.productivo"),
+        enableColumnFilter: false,
+        // Sí resaltado, No apagado: lo que importa ubicar son los productivos.
+        Cell: ({ row }) => (
+          <Badge
+            variant={row.original.productivo ? "default" : "outline"}
+            data-testid={`aux-productivo-${row.original.id}`}
+          >
+            {row.original.productivo
+              ? t("estados.productivo.si")
+              : t("estados.productivo.no")}
+          </Badge>
+        ),
+      },
     ],
     [t]
   );
@@ -163,7 +189,7 @@ export default function EstadosAuxiliaresPage() {
 
       <DialogConAviso open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <span hidden data-valor-vigilado={color} />
+          <span hidden data-valor-vigilado={`${color}|${icono}|${productivo}`} />
           <DialogHeader>
             <DialogTitle>
               {editing
@@ -229,6 +255,25 @@ export default function EstadosAuxiliaresPage() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+            {/* Estado productivo: va último porque no cambia cómo se ve el
+                estado, sino cómo se comporta Hermes ante el bloqueo de la PC. */}
+            <div className="flex items-start gap-2.5">
+              <Checkbox
+                id="aux-productivo"
+                data-testid="aux-productivo"
+                className="mt-0.5"
+                checked={productivo}
+                onCheckedChange={(v) => setProductivo(v === true)}
+              />
+              <div className="flex flex-col gap-0.5">
+                <Label htmlFor="aux-productivo">
+                  {t("estados.dialogo.productivo")}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t("estados.dialogo.productivoAyuda")}
+                </p>
               </div>
             </div>
           </div>

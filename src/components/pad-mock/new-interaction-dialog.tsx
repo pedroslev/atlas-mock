@@ -25,6 +25,7 @@ export function NewInteractionDialog({
   onOpenChange,
   onContactar,
   onLlamarInterno,
+  onChatearInterno,
   campaniaIdInicial,
   cuentaIdInicial,
 }: {
@@ -32,6 +33,7 @@ export function NewInteractionDialog({
   onOpenChange: (open: boolean) => void;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
+  onChatearInterno: (agente: AgenteDirectorio) => void;
   campaniaIdInicial?: string;
   cuentaIdInicial?: string;
 }) {
@@ -74,6 +76,10 @@ export function NewInteractionDialog({
             <LlamadaInternaDirectorio
               onLlamar={(agente) => {
                 onLlamarInterno(agente);
+                onOpenChange(false);
+              }}
+              onChatear={(agente) => {
+                onChatearInterno(agente);
                 onOpenChange(false);
               }}
             />

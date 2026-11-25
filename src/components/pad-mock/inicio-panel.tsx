@@ -50,7 +50,9 @@ export function InicioPanel({
   cuentaIdInicial,
   onContactar,
   onLlamarInterno,
+  onChatearInterno,
   onSimularEntrante,
+  onSimularChatEntrante,
   entrantesSimulables = [],
   onSimularEntranteCliente,
   historial,
@@ -62,7 +64,9 @@ export function InicioPanel({
   cuentaIdInicial?: string;
   onContactar: (campania: CampaniaSaliente, cuenta: CuentaSaliente, numero: string) => void;
   onLlamarInterno: (agente: AgenteDirectorio) => void;
+  onChatearInterno: (agente: AgenteDirectorio) => void;
   onSimularEntrante: () => void;
+  onSimularChatEntrante: () => void;
   /** Botones temporales del mock: cada interacción que el sistema puede
    *  derivar, y si hoy podría llegar (capacidad del asesor). */
   entrantesSimulables?: { entrante: InteraccionEntrante; disponible: boolean }[];
@@ -297,7 +301,9 @@ export function InicioPanel({
                   <LlamadaInternaDirectorio
                     compacto
                     onLlamar={onLlamarInterno}
+                    onChatear={onChatearInterno}
                     onSimularEntrante={onSimularEntrante}
+                    onSimularChatEntrante={onSimularChatEntrante}
                   />
                 </TabsContent>
               </Tabs>

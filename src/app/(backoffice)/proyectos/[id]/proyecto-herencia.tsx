@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import {
   Card,
@@ -12,115 +8,79 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EntityCombobox } from "../../campanias/entity-combobox";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import type { ClasificacionGrupo, Feriado } from "@/lib/mock-data";
+  clasificacionGrupos,
+  marcadorGrupos,
+  plantillaGrupos,
+  feriados,
+  listasExclusion,
+} from "@/lib/mock-data";
 
-// Combobox chico y genérico para elegir una entidad de una lista de mock-data
-// que puede llegar a ser larga (grupos de clasificación, grupos de feriados).
-// Patrón documentado de shadcn: Popover + Command, ver DESIGN.md "Do: usar
-// Combobox (Popover+Command) para selects largos" en vez de un Select plano.
-function EntityCombobox({
-  id,
-  placeholder,
-  emptyLabel,
-  searchLabel,
-  items,
-  value,
-  onChange,
-}: {
-  id: string;
-  placeholder: string;
-  emptyLabel: string;
-  searchLabel: string;
-  items: { id: string; nombre: string }[];
-  value: string | undefined;
-  onChange: (value: string | undefined) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const selected = items.find((item) => item.id === value);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between font-normal"
-        >
-          <span className={cn(!selected && "text-muted-foreground")}>
-            {selected ? selected.nombre : placeholder}
-          </span>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-(--radix-popover-trigger-width) p-0"
-        align="start"
-      >
-        <Command>
-          <CommandInput placeholder={searchLabel} />
-          <CommandList>
-            <CommandEmpty>{emptyLabel}</CommandEmpty>
-            <CommandGroup>
-              {items.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.nombre}
-                  onSelect={() => {
-                    onChange(item.id === value ? undefined : item.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 size-4",
-                      item.id === value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {item.nombre}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// Estado local solo para que el combobox se sienta interactivo en el mock —
-// sin persistencia real (ver PRODUCT.md).
+// Configuración por defecto del proyecto: los cinco valores que sus campañas
+// heredan mientras no los redefinan (ATLAS-1432). Son los mismos cinco campos
+// y en el mismo orden que la tarjeta de herencia de la campaña
+// (campanias/campania-herencia.tsx); si se suma uno allá, se suma acá.
+// Sin persistencia real: el combobox guarda su propia selección (PRODUCT.md).
 export function ProyectoHerencia({
   initialGrupoClasificacionId,
+  initialGrupoBookmarksId,
+  initialGrupoPlantillasId,
   initialFeriadosId,
-  gruposClasificacion,
-  feriados,
+  initialListaExclusionId,
 }: {
   initialGrupoClasificacionId?: string;
+  initialGrupoBookmarksId?: string;
+  initialGrupoPlantillasId?: string;
   initialFeriadosId?: string;
-  gruposClasificacion: ClasificacionGrupo[];
-  feriados: Feriado[];
+  initialListaExclusionId?: string;
 }) {
-  const [grupoClasificacion, setGrupoClasificacion] = useState(
-    initialGrupoClasificacionId
-  );
-  const [grupoFeriados, setGrupoFeriados] = useState(initialFeriadosId);
   const t = useT();
+
+  // Un campo por valor heredable. Los textos de marcas, plantillas y lista de
+  // exclusión son los mismos que usa la campaña para esos campos.
+  const campos = [
+    {
+      id: "grupo-clasificacion",
+      label: t("proyectos.herencia.grupoClasificacion"),
+      items: clasificacionGrupos,
+      inicial: initialGrupoClasificacionId,
+      buscar: t("proyectos.herencia.buscarGrupo"),
+      vacio: t("proyectos.herencia.sinGrupos"),
+    },
+    {
+      id: "grupo-bookmarks",
+      label: t("campanias.grupoMarcas"),
+      items: marcadorGrupos,
+      inicial: initialGrupoBookmarksId,
+      buscar: t("campanias.buscarGrupoMarcas"),
+      vacio: t("campanias.vacioGrupoMarcas"),
+    },
+    {
+      id: "grupo-plantillas",
+      label: t("plantillas.campania.grupo"),
+      items: plantillaGrupos,
+      inicial: initialGrupoPlantillasId,
+      buscar: t("plantillas.campania.buscarGrupo"),
+      vacio: t("plantillas.campania.vacioGrupo"),
+    },
+    {
+      id: "grupo-feriados",
+      label: t("proyectos.herencia.grupoFeriados"),
+      items: feriados,
+      inicial: initialFeriadosId,
+      buscar: t("proyectos.herencia.buscarGrupoFeriados"),
+      vacio: t("proyectos.herencia.sinGruposFeriados"),
+    },
+    {
+      id: "lista-exclusion",
+      label: t("campanias.listaExclusion"),
+      items: listasExclusion,
+      inicial: initialListaExclusionId,
+      buscar: t("campanias.buscarListaExclusion"),
+      vacio: t("campanias.vacioListaExclusion"),
+    },
+  ];
 
   return (
     <Card>
@@ -128,34 +88,19 @@ export function ProyectoHerencia({
         <CardTitle>{t("proyectos.herencia.titulo")}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="grupo-clasificacion">
-            {t("proyectos.herencia.grupoClasificacion")}
-          </Label>
-          <EntityCombobox
-            id="grupo-clasificacion"
-            placeholder={t("proyectos.herencia.sinAsignar")}
-            emptyLabel={t("proyectos.herencia.sinGrupos")}
-            searchLabel={t("proyectos.herencia.buscarGrupo")}
-            items={gruposClasificacion}
-            value={grupoClasificacion}
-            onChange={setGrupoClasificacion}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="grupo-feriados">
-            {t("proyectos.herencia.grupoFeriados")}
-          </Label>
-          <EntityCombobox
-            id="grupo-feriados"
-            placeholder={t("proyectos.herencia.sinAsignar")}
-            emptyLabel={t("proyectos.herencia.sinGruposFeriados")}
-            searchLabel={t("proyectos.herencia.buscarGrupoFeriados")}
-            items={feriados}
-            value={grupoFeriados}
-            onChange={setGrupoFeriados}
-          />
-        </div>
+        {campos.map((campo) => (
+          <div key={campo.id} className="flex flex-col gap-1.5">
+            <Label htmlFor={campo.id}>{campo.label}</Label>
+            <EntityCombobox
+              id={campo.id}
+              items={campo.items}
+              defaultValue={campo.inicial}
+              placeholder={t("proyectos.herencia.sinAsignar")}
+              searchPlaceholder={campo.buscar}
+              emptyLabel={campo.vacio}
+            />
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

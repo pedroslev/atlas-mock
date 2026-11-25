@@ -14,12 +14,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { T } from "@/lib/i18n";
-import {
-  proyectos,
-  getProyecto,
-  feriados,
-  clasificacionGrupos,
-} from "@/lib/mock-data";
+import { proyectos, getProyecto } from "@/lib/mock-data";
 import { ProyectoHerencia } from "./proyecto-herencia";
 import { ProyectoEliminar } from "./proyecto-eliminar";
 import { BusinessHoursEditor } from "../business-hours-editor";
@@ -124,9 +119,10 @@ export default async function EditarProyectoPage({
 
           <ProyectoHerencia
             initialGrupoClasificacionId={proyecto.grupoClasificacionId}
+            initialGrupoBookmarksId={proyecto.grupoBookmarksId}
+            initialGrupoPlantillasId={proyecto.grupoPlantillasId}
             initialFeriadosId={proyecto.feriadosId}
-            gruposClasificacion={clasificacionGrupos}
-            feriados={feriados}
+            initialListaExclusionId={proyecto.listaExclusionId}
           />
         </div>
 

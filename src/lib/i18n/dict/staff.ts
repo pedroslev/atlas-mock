@@ -10,7 +10,12 @@ export const staff: NamespaceDict = {
     "titulo": "Usuarios del staff",
     "descripcion":
       "Personas del directorio de Mitrol. Habilitá a quienes necesiten usar Zeus y asignales permisos.",
-    "habilitarPersona": "Habilitar persona",
+    "sync.boton": "Sincronizar con el directorio",
+    "sync.enCurso": "Sincronizando…",
+    "sync.okTitulo": "Directorio sincronizado",
+    "sync.ok": "Se actualizaron las {n} personas activas del directorio.",
+    "sync.errorTitulo": "No se pudo sincronizar",
+    "sync.error": "El directorio no respondió. Nadie perdió el acceso; probá de nuevo en unos minutos.",
     "tab.personas": "Personas",
     "tab.grupos": "Grupos de permisos",
     "form.grupo": "Grupo de permisos",
@@ -40,22 +45,25 @@ export const staff: NamespaceDict = {
     "accion.habilitar": "Habilitar",
     "accion.efectivos": "Ver permisos efectivos",
     "accion.deshabilitar": "Deshabilitar",
+    "accion.deshabilitarTitulo": "¿Deshabilitar a {nombre}?",
     "accion.deshabilitarDescripcion":
       "{nombre} dejará de poder ingresar a Zeus. Podés volver a habilitarla cuando quieras.",
 
-    "habilitar.titulo": "Habilitar persona",
     "habilitar.descripcion":
-      "Elegí a la persona del directorio de Mitrol y asignale un grupo de permisos. Le llegará un mail para fijar su contraseña.",
+      "Elegí un grupo de permisos y habilitala. Le llegará un mail para fijar su contraseña.",
+    "habilitada": "Habilitada en Zeus",
+    "habilitada.ayudaSi":
+      "Puede ingresar a Zeus. Deshabilitarla le quita el acceso en el momento; podés volver a habilitarla cuando quieras.",
+    "habilitada.ayudaNo":
+      "No puede ingresar a Zeus. Al habilitarla le llega un mail para fijar su contraseña.",
+    "habilitada.ayudaSinGrupo":
+      "No puede ingresar a Zeus. Para habilitarla, elegí primero un grupo de permisos.",
     "editar.descripcion":
       "Cambiale el grupo de permisos.",
-    "form.persona": "Persona del directorio",
-    "form.personaPlaceholder": "Elegir una persona",
-    "form.personaAyuda":
-      "Solo aparecen personas activas en el directorio que todavía no están habilitadas.",
+    "form.persona": "Nombre",
     "form.mail": "Mail",
-    "form.mailAyuda": "Viene del directorio y no se puede cambiar. Debe terminar en @mitrol.net.",
+    "form.directorioAyuda": "El nombre y el mail vienen del directorio y no se cambian desde Zeus.",
     "persona.datos": "Datos de la persona",
-    "form.sinCandidatas": "No hay personas del directorio para habilitar.",
     "miembros.buscar": "Buscar...",
 
     "enviado.titulo": "Mail de alta enviado",

@@ -27,6 +27,18 @@ export const grupos: NamespaceDict = {
     "aux.vacio": "No se encontró ningún estado auxiliar.",
     "aux.deshabilitarAria": "Deshabilitar {nombre}",
 
+    // Bloqueo de la PC en un auxiliar productivo
+    // (working_groups.parameters.productive_aux_on_lock).
+    "bloqueo.titulo": "Bloqueo de la computadora en un estado productivo",
+    "bloqueo.desc": "Qué hace Hermes cuando un asesor del grupo bloquea la computadora estando en un estado auxiliar productivo. En los demás estados auxiliares, bloquear la computadora no cambia nada.",
+    "bloqueo.campo": "Al bloquear la computadora",
+    "bloqueo.keep": "Sigue en el estado",
+    "bloqueo.keepAyuda": "El asesor sigue en el estado y el tiempo sigue corriendo.",
+    "bloqueo.logout": "Se cierra la sesión",
+    "bloqueo.logoutAyuda": "Hermes cierra la sesión del asesor. Al volver tiene que ingresar de nuevo.",
+    "bloqueo.notAvailable": "Pasa a No disponible",
+    "bloqueo.notAvailableAyuda": "El asesor pasa a No disponible y el tiempo del estado productivo deja de correr.",
+
     "permisos.titulo": "Permisos",
     "permisos.descripcion":
       "Definí qué puede hacer este grupo en cada sección: consultar, editar o eliminar. Aplica a todos sus usuarios.",
@@ -112,6 +124,21 @@ export const grupos: NamespaceDict = {
     "directorio.mismosProyectos": "Agentes de los mismos proyectos",
     "directorio.mismosProyectosAyuda": "Asignados a campañas de los mismos proyectos.",
     "directorio.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden hacer llamadas internas.",
+    // Chats internos: misma tarjeta y mismo criterio que las llamadas
+    // internas (documentacion/producto/funcionalidades/chats-internos/). Las
+    // tres reglas reutilizan los textos de "directorio.*".
+    "chatInterno.titulo": "Chats internos",
+    "chatInterno.desc":
+      "Chats entre agentes desde el PAD, sin cliente: con quién pueden chatear los usuarios de este grupo y si se guardan.",
+    "chatInterno.permitir": "Permitir chats internos",
+    "chatInterno.deshabilitadas":
+      "Los usuarios de este grupo no pueden iniciar chats internos: no ven el botón Chatear en el PAD.",
+    "chatInterno.aQuien": "¿Con quién pueden chatear?",
+    "chatInterno.noReciproco":
+      "Las opciones se suman: se ven los agentes conectados que cumplan al menos una. Definen a quién pueden escribirle los usuarios de este grupo, no quién les puede escribir a ellos: eso depende del grupo del que inicia el chat.",
+    "chatInterno.grabar": "Guardar los chats internos",
+    "chatInterno.grabarAudio": "Se guarda la conversación al terminar el chat: el texto, los archivos y las notas de voz.",
+    "chatInterno.ninguna": "Sin ninguna opción, los usuarios de este grupo no pueden iniciar chats internos.",
     "shortcuts.agregar": "Agregar acceso rápido",
     "shortcuts.eliminar": "Eliminar acceso rápido",
     "shortcuts.sin": "Todavía no hay accesos rápidos configurados para este grupo.",
@@ -145,6 +172,18 @@ export const grupos: NamespaceDict = {
     "aux.buscar": "Search auxiliary state...",
     "aux.vacio": "No auxiliary state found.",
     "aux.deshabilitarAria": "Disable {nombre}",
+
+    // Bloqueo de la PC en un auxiliar productivo
+    // (working_groups.parameters.productive_aux_on_lock).
+    "bloqueo.titulo": "Computer lock in a productive state",
+    "bloqueo.desc": "What Hermes does when an agent of the group locks the computer while in a productive auxiliary state. In the other auxiliary states, locking the computer changes nothing.",
+    "bloqueo.campo": "When the computer is locked",
+    "bloqueo.keep": "Stays in the state",
+    "bloqueo.keepAyuda": "The agent stays in the state and the time keeps running.",
+    "bloqueo.logout": "The session is closed",
+    "bloqueo.logoutAyuda": "Hermes closes the agent session. They have to sign in again when they come back.",
+    "bloqueo.notAvailable": "Switches to Not available",
+    "bloqueo.notAvailableAyuda": "The agent switches to Not available and the productive state time stops running.",
 
     "permisos.titulo": "Permissions",
     "permisos.descripcion":
@@ -201,6 +240,18 @@ export const grupos: NamespaceDict = {
     "aux.vacio": "Nenhum estado auxiliar encontrado.",
     "aux.deshabilitarAria": "Desabilitar {nombre}",
 
+    // Bloqueo de la PC en un auxiliar productivo
+    // (working_groups.parameters.productive_aux_on_lock).
+    "bloqueo.titulo": "Bloqueio do computador em um estado produtivo",
+    "bloqueo.desc": "O que o Hermes faz quando um atendente do grupo bloqueia o computador estando em um estado auxiliar produtivo. Nos demais estados auxiliares, bloquear o computador não muda nada.",
+    "bloqueo.campo": "Ao bloquear o computador",
+    "bloqueo.keep": "Continua no estado",
+    "bloqueo.keepAyuda": "O atendente continua no estado e o tempo continua correndo.",
+    "bloqueo.logout": "A sessão é encerrada",
+    "bloqueo.logoutAyuda": "O Hermes encerra a sessão do atendente. Ao voltar, ele precisa entrar de novo.",
+    "bloqueo.notAvailable": "Passa para Não disponível",
+    "bloqueo.notAvailableAyuda": "O atendente passa para Não disponível e o tempo do estado produtivo para de correr.",
+
     "permisos.titulo": "Permissões",
     "permisos.descripcion":
       "Defina o que este grupo pode fazer em cada seção: consultar, editar ou excluir. Vale para todos os seus usuários.",
@@ -255,6 +306,18 @@ export const grupos: NamespaceDict = {
     "aux.buscar": "Cerca un estat auxiliar...",
     "aux.vacio": "No s'ha trobat cap estat auxiliar.",
     "aux.deshabilitarAria": "Deshabilita {nombre}",
+
+    // Bloqueo de la PC en un auxiliar productivo
+    // (working_groups.parameters.productive_aux_on_lock).
+    "bloqueo.titulo": "Bloqueig de l'ordinador en un estat productiu",
+    "bloqueo.desc": "Què fa Hermes quan un agent del grup bloqueja l'ordinador mentre és en un estat auxiliar productiu. En la resta d'estats auxiliars, bloquejar l'ordinador no canvia res.",
+    "bloqueo.campo": "En bloquejar l'ordinador",
+    "bloqueo.keep": "Continua en l'estat",
+    "bloqueo.keepAyuda": "L'agent continua en l'estat i el temps continua corrent.",
+    "bloqueo.logout": "Es tanca la sessió",
+    "bloqueo.logoutAyuda": "Hermes tanca la sessió de l'agent. En tornar ha d'entrar de nou.",
+    "bloqueo.notAvailable": "Passa a No disponible",
+    "bloqueo.notAvailableAyuda": "L'agent passa a No disponible i el temps de l'estat productiu deixa de córrer.",
 
     "permisos.titulo": "Permisos",
     "permisos.descripcion":
