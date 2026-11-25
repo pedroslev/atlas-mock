@@ -22,6 +22,7 @@ import { login } from "@/lib/i18n/dict/login";
 import { inicio } from "@/lib/i18n/dict/inicio";
 import { tour } from "@/lib/i18n/dict/tour";
 import { clientes } from "@/lib/i18n/dict/clientes";
+import { filtro } from "@/lib/i18n/dict/filtro";
 import { clavesApi } from "@/lib/i18n/dict/claves-api";
 import { documentacion } from "@/lib/i18n/dict/documentacion";
 
@@ -49,6 +50,7 @@ const NAMESPACES: Record<string, NamespaceDict> = {
   inicio,
   tour,
   clientes,
+  filtro,
   clavesApi,
   documentacion,
 };
