@@ -503,13 +503,13 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "Con campañas — El botón está bloqueado. La tarjeta dice «No se puede eliminar mientras tenga campañas. Tiene <n>: eliminalas primero.» y el tooltip «Primero eliminá sus <n> campaña(s)».",
-              "Sin campañas — El botón se habilita («Este proyecto no tiene campañas, así que se puede eliminar. Es una acción definitiva.»). Al tocarlo se abre «¿Eliminar el proyecto «<nombre>»?» con el aviso «Esto no se puede deshacer.» y los botones «Cancelar» y «Eliminar definitivamente».",
+              "Sin campañas — El botón se habilita («Este proyecto no tiene campañas, así que se puede eliminar. Es una acción definitiva.»). Al tocarlo se abre «¿Eliminar el proyecto «<nombre>»?» con el aviso «Solo se puede eliminar un proyecto sin campañas. Esta acción no se puede deshacer.» y los botones «Cancelar» y «Eliminar definitivamente».",
             ],
           },
           {
             tipo: "nota",
             texto:
-              "Eliminar un proyecto borra también su configuración (horarios de atención, grupos heredados y todo lo que las campañas tomaban de él) y se pierde toda la información histórica de las campañas que el proyecto tuvo alguna vez, incluidas las que ya fueron eliminadas: llamadas, gestiones y reportes dejan de estar disponibles. Por eso la pantalla exige vaciar el proyecto antes.",
+              "Eliminar un proyecto borra también su configuración (horarios de atención, grupos heredados y todo lo que las campañas tomaban de él). Solo se puede hacer con el proyecto sin campañas, y no se puede deshacer.",
           },
           {
             tipo: "p",
@@ -529,7 +529,7 @@ export const contenido: ContenidoPagina = {
               "Herencia — Grupo de clasificaciones, grupo de marcas, grupo de plantillas, grupo de feriados, lista de exclusión y horarios se heredan del proyecto mientras la campaña no los defina.",
               "Sin copia — La campaña referencia los grupos y listas; si editás un grupo en su sección, el cambio llega a todas las campañas que lo usan.",
               "Eliminar una campaña — Se confirma antes de quitarla. Mientras un proyecto tenga campañas, no se puede eliminar.",
-              "Eliminar un proyecto — Definitivo y con pérdida del histórico de todas sus campañas (ver «Eliminar un proyecto»).",
+              "Eliminar un proyecto — Definitivo (ver «Eliminar un proyecto»).",
               "Estado — Las campañas no tienen estado activo o inactivo: no se desactivan, se eliminan o se dejan sin usuarios.",
             ],
           },
@@ -1059,13 +1059,13 @@ export const contenido: ContenidoPagina = {
             tipo: "lista",
             items: [
               "With campaigns — The button is blocked. The card reads «It can't be deleted while it has campaigns. It has <n>: delete them first.» and the tooltip «First delete its <n> campaign(s)».",
-              "Without campaigns — The button is enabled («This project has no campaigns, so it can be deleted. This is a final action.»). Clicking it opens «Delete the project “<name>”?» with the warning «This can't be undone.» and the buttons «Cancel» and «Delete permanently».",
+              "Without campaigns — The button is enabled («This project has no campaigns, so it can be deleted. This is a final action.»). Clicking it opens «Delete the project “<name>”?» with the warning «Only a project without campaigns can be deleted. This action can't be undone.» and the buttons «Cancel» and «Delete permanently».",
             ],
           },
           {
             tipo: "nota",
             texto:
-              "Deleting a project also deletes its configuration (business hours, inherited groups and everything campaigns took from it) and all historical data from every campaign the project ever had is lost, including campaigns already deleted: calls, interactions and reports stop being available. That is why the screen requires emptying the project first.",
+              "Deleting a project also deletes its configuration (business hours, inherited groups and everything campaigns took from it). It can only be done once the project has no campaigns, and it can't be undone.",
           },
           {
             tipo: "p",
@@ -1085,7 +1085,7 @@ export const contenido: ContenidoPagina = {
               "Inheritance — Classification group, mark group, template group, holiday group, exclusion list and business hours are inherited from the project while the campaign does not define them.",
               "No copy — The campaign references groups and lists; if you edit a group in its section, the change reaches every campaign that uses it.",
               "Deleting a campaign — Confirmed before removal. While a project has campaigns, it cannot be deleted.",
-              "Deleting a project — Final, and the history of all its campaigns is lost (see «Delete a project»).",
+              "Deleting a project — Final (see «Delete a project»).",
               "Status — Campaigns have no active or inactive status: they are not deactivated, they are deleted or left without users.",
             ],
           },

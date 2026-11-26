@@ -210,10 +210,12 @@ export const phoneNumbers: PhoneNumber[] = [
 
 // Tabla `carrier_rates` — cuánto cobra cada carrier por minuto, por prefijo de
 // destino. Es la misma en todas las regiones del carrier (tráfico IP: el precio
-// no depende del cluster desde el que sale). Se usa para elegir el carrier más
-// barato cuando la llamada sale con CLI oculto o aleatorio: entre los carriers
-// que permiten ese modo, gana el prefijo más específico que matchee el destino
-// (longest-prefix-match) y, entre esos, el más barato.
+// no depende del cluster desde el que sale). Se carga para cualquier carrier
+// activo. Con CLI oculto o aleatorio se usa para elegir el carrier más barato:
+// entre los carriers que permiten ese modo, gana el prefijo más específico que
+// matchee el destino (longest-prefix-match) y, entre esos, el más barato. Con un
+// número propio, la llamada sale por su carrier solo si tiene tarifa para el
+// destino (ADR-TELEFONIA-002).
 export type CarrierRate = {
   id: string;
   carrierId: string;
