@@ -14,6 +14,7 @@ import {
   Settings,
   KeyRound,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import type { PermisoClaveApi } from "@/lib/mock-data";
 
@@ -68,9 +69,14 @@ export const documentacionNav: NavItem = {
 };
 
 export type ConfigItem = NavItem & {
-  /** Permiso que hace falta para ver el ítem (y la pantalla). */
-  permiso: PermisoClaveApi;
+  /** Permiso que hace falta para ver el ítem (y la pantalla). Sin permiso: lo ven todos. */
+  permiso?: PermisoClaveApi;
 };
+
+/** El ítem de Configuración se ve si no pide permiso o si el usuario lo tiene. */
+export function configItemVisible(item: ConfigItem, puede: (p: PermisoClaveApi) => boolean) {
+  return !item.permiso || puede(item.permiso);
+}
 
 export const configuracionItems: ConfigItem[] = [
   {
@@ -78,5 +84,10 @@ export const configuracionItems: ConfigItem[] = [
     labelKey: "common.nav.clavesApi",
     icon: KeyRound,
     permiso: "ver",
+  },
+  {
+    href: "/configuracion/conectar-ia",
+    labelKey: "common.nav.conectarIa",
+    icon: Sparkles,
   },
 ];

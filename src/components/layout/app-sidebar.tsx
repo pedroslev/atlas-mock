@@ -16,7 +16,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ActionTooltip } from "@/components/layout/action-tooltip";
-import { configuracionItems, configuracionNav, documentacionNav, navItems } from "@/lib/nav";
+import { configItemVisible, configuracionItems, configuracionNav, documentacionNav, navItems } from "@/lib/nav";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { puedeClaves } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
 
@@ -91,21 +97,37 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {configuracionItems.some((item) => puedeClaves(item.permiso)) && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith(configuracionNav.href)}
-                tooltip={t(configuracionNav.labelKey)}
-                data-testid="nav-configuracion"
-              >
-                <Link href={configuracionNav.href}>
+          {/* Configuración abre un desplegable con sus pantallas, cada una según su permiso. */}
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith(configuracionNav.href)}
+                  tooltip={t(configuracionNav.labelKey)}
+                  data-testid="nav-configuracion"
+                >
                   <configuracionNav.icon />
                   <span>{t(configuracionNav.labelKey)}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end">
+                {configuracionItems
+                  .filter((item) => configItemVisible(item, puedeClaves))
+                  .map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link
+                        href={item.href}
+                        className="whitespace-nowrap"
+                        data-testid={`nav-${item.href.split("/").pop()}`}
+                      >
+                        <item.icon />
+                        {t(item.labelKey)}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BotonCopiar } from "@/app/(backoffice)/configuracion/claves-api/componentes";
 import { useT } from "@/lib/i18n";
@@ -43,23 +36,12 @@ const CLIENTES: Cliente[] = [
   { id: "otro", nombre: "Otro", pasosKey: "common.conectarIa.pasos.otro" },
 ];
 
-// Diálogo "Conectar con IA" del menú del avatar: muestra la URL MCP del tenant y
-// cómo agregarla en cada cliente. El login lo hace el cliente de IA contra Atlas.
-export function ConectarIa({
-  abierto,
-  onAbiertoChange,
-}: {
-  abierto: boolean;
-  onAbiertoChange: (abierto: boolean) => void;
-}) {
+// Contenido de Configuración → Conectar con IA: la URL MCP de la región y cómo
+// agregarla en cada cliente. El login lo hace el cliente de IA contra Atlas.
+export function ConectarIa() {
   const t = useT();
   return (
-    <Dialog open={abierto} onOpenChange={onAbiertoChange}>
-      <DialogContent className="sm:max-w-lg" data-testid="conectar-ia-dialogo">
-        <DialogHeader>
-          <DialogTitle>{t("common.conectarIa.titulo")}</DialogTitle>
-          <DialogDescription>{t("common.conectarIa.descripcion")}</DialogDescription>
-        </DialogHeader>
+    <div className="flex max-w-2xl flex-col gap-6" data-testid="conectar-ia">
 
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">{t("common.conectarIa.url")}</span>
@@ -106,7 +88,6 @@ export function ConectarIa({
         </Tabs>
 
         <p className="text-xs text-muted-foreground">{t("common.conectarIa.permisos")}</p>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }
