@@ -1,6 +1,5 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BotonCopiar } from "@/app/(backoffice)/configuracion/claves-api/componentes";
 import { useT } from "@/lib/i18n";
 
-// URL MCP del tenant del usuario logueado (ADR-FUNDAMENTOS-016): {region_url}/mcp/olimpo/{realm}.
-const URL_MCP = "https://ar.atlas.mitrol.net/mcp/olimpo/bancosur";
+// URL MCP de la región, la misma para todos los tenants (ADR-FUNDAMENTOS-016): {region_url}/mcp/olimpo.
+// El tenant se resuelve en el login, por el email, como en ui-router.
+const URL_MCP = "https://atlas.mitrol.dev/mcp/olimpo";
 
 // Un cliente de IA soportado: cómo se agrega el MCP en él. `comando` es lo que se
 // copia y pega; los clientes sin terminal muestran solo los pasos.
@@ -27,11 +27,18 @@ const CLIENTES: Cliente[] = [
     pasosKey: "common.conectarIa.pasos.claudeCode",
   },
   { id: "claude", nombre: "Claude", pasosKey: "common.conectarIa.pasos.claude" },
+  { id: "chatgpt", nombre: "ChatGPT", pasosKey: "common.conectarIa.pasos.chatgpt" },
   {
     id: "codex",
     nombre: "Codex",
     comando: `codex mcp add atlas-olimpo --url ${URL_MCP}`,
     pasosKey: "common.conectarIa.pasos.codex",
+  },
+  {
+    id: "gemini",
+    nombre: "Gemini CLI",
+    comando: `gemini mcp add --transport http atlas-olimpo ${URL_MCP}`,
+    pasosKey: "common.conectarIa.pasos.gemini",
   },
   { id: "otro", nombre: "Otro", pasosKey: "common.conectarIa.pasos.otro" },
 ];
@@ -56,8 +63,10 @@ export function ConectarIa({
 
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">{t("common.conectarIa.url")}</span>
-          <div className="flex gap-2">
-            <Input readOnly value={URL_MCP} data-testid="conectar-ia-url" />
+          <div className="flex items-center gap-2">
+            <code className="flex-1 truncate rounded-md bg-muted px-3 py-2 font-mono text-sm" data-testid="conectar-ia-url">
+              {URL_MCP}
+            </code>
             <BotonCopiar
               valor={URL_MCP}
               etiqueta={t("common.conectarIa.copiarUrl")}
@@ -78,13 +87,13 @@ export function ConectarIa({
             <TabsContent key={c.id} value={c.id} className="flex flex-col gap-2 pt-2">
               <p className="text-sm text-muted-foreground">{t(c.pasosKey)}</p>
               {c.comando && (
-                <div className="flex gap-2">
-                  <Input
-                    readOnly
-                    value={c.comando}
-                    className="font-mono text-xs"
+                <div className="flex items-start gap-2">
+                  <code
+                    className="flex-1 break-all rounded-md bg-muted px-3 py-2 font-mono text-xs"
                     data-testid={`conectar-ia-comando-${c.id}`}
-                  />
+                  >
+                    {c.comando}
+                  </code>
                   <BotonCopiar
                     valor={c.comando}
                     etiqueta={t("common.conectarIa.copiarComando")}
