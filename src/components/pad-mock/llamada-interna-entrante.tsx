@@ -47,13 +47,14 @@ export function LlamadaInternaEntrante({
           <span className="truncate text-sm font-semibold">{agente.nombre}</span>
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1 gap-1.5" onClick={onRechazar}>
+      {/* Apilados a lo ancho: los dos con su atajo no entran lado a lado en los 320 px del aviso. */}
+      <div className="flex flex-col gap-2">
+        <Button type="button" variant="outline" className="gap-1.5" onClick={onRechazar}>
           <IconoRechazar className="size-4" />
           {t("padMock.llamadaInterna.rechazar")}
           <Kbd className="ml-1">{etiquetaRechazar(isMac)}</Kbd>
         </Button>
-        <Button type="button" className="flex-1 gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAtender}>
+        <Button type="button" className="gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAtender}>
           <Icono className="size-4" />
           {t(chat ? "padMock.chatInterno.aceptar" : "padMock.llamadaInterna.atender")}
           <Kbd className="ml-1 bg-white/20 text-white">{etiquetaAtender(isMac)}</Kbd>
