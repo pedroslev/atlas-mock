@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { configuracionItems, configuracionNav } from "@/lib/nav";
-import { puedeClaves } from "@/lib/mock-claves-api";
+import { configItemVisible, configuracionItems, configuracionNav } from "@/lib/nav";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +17,7 @@ export default function ConfiguracionLayout({
 }) {
   const t = useT();
   const pathname = usePathname();
-  const items = configuracionItems.filter((item) => puedeClaves(item.permiso));
+  const items = configuracionItems.filter(configItemVisible);
 
   return (
     <div className="flex flex-col">

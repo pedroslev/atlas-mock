@@ -56,13 +56,17 @@ export function GrupoPermisos({
   accesoHermes,
   onAccesoHermesChange,
   initialPermisosClavesApi,
+  initialAccesoIa,
 }: {
   initialPermisos: Permiso[];
   accesoHermes: boolean;
   onAccesoHermesChange: (v: boolean) => void;
   initialPermisosClavesApi: PermisoClaveApi[];
+  initialAccesoIa: boolean;
 }) {
   const [permisos, setPermisos] = useState<Permiso[]>(initialPermisos);
+  // Integración con IA: un check, ia.conectar (Conectar con IA por MCP).
+  const [accesoIa, setAccesoIa] = useState(initialAccesoIa);
   const [permisosClavesApi, setPermisosClavesApi] = useState<PermisoClaveApi[]>(
     initialPermisosClavesApi
   );
@@ -170,6 +174,17 @@ export function GrupoPermisos({
         <PermisosClavesApi
           permisos={permisosClavesApi}
           onChange={setPermisosClavesApi}
+        />
+
+        <PermisoUnico
+          titulo={t("grupos.permisos.seccionIa")}
+          descripcion={t("grupos.permisos.iaDescripcion")}
+          encabezado={t("grupos.permisos.clavesApiEncabezado")}
+          columna={t("grupos.permisos.hermesAcceso")}
+          fila={t("common.nav.conectarIa")}
+          aria={t("grupos.permisos.iaAria")}
+          checked={accesoIa}
+          onChange={setAccesoIa}
         />
       </CardContent>
     </Card>

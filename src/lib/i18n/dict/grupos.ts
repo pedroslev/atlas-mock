@@ -53,6 +53,9 @@ export const grupos: NamespaceDict = {
       "Habilita el acceso de este grupo al PAD del agente.",
     "permisos.hermesAcceso": "Acceso",
     "permisos.hermesAria": "Acceso al PAD (Hermes)",
+    "permisos.seccionIa": "Integración con IA",
+    "permisos.iaDescripcion": "Permite conectar un asistente de IA a Olimpo. La IA opera con los mismos permisos de la persona.",
+    "permisos.iaAria": "Conectar con IA",
     "permisos.seccionClavesApi": "Claves de acceso API",
     "permisos.clavesApiDescripcion":
       "Define qué puede hacer este grupo con las claves con las que aplicaciones propias del cliente se conectan a Atlas. Sin «Ver» no hay ningún otro, y el grupo no ve la opción en el menú.",
@@ -199,6 +202,9 @@ export const grupos: NamespaceDict = {
       "Grants this group access to the agent's PAD.",
     "permisos.hermesAcceso": "Access",
     "permisos.hermesAria": "Access to the PAD (Hermes)",
+    "permisos.seccionIa": "AI integration",
+    "permisos.iaDescripcion": "Allows connecting an AI assistant to Olimpo. The AI operates with the person's own permissions.",
+    "permisos.iaAria": "Connect with AI",
     "permisos.seccionClavesApi": "API access keys",
     "permisos.clavesApiDescripcion":
       "Defines what this group can do with the keys that the customer's own applications use to connect to Atlas. Without “View” none of the others apply, and the group doesn't see the option in the menu.",
@@ -266,6 +272,9 @@ export const grupos: NamespaceDict = {
       "Habilita o acesso deste grupo ao PAD do agente.",
     "permisos.hermesAcceso": "Acesso",
     "permisos.hermesAria": "Acesso ao PAD (Hermes)",
+    "permisos.seccionIa": "Integração com IA",
+    "permisos.iaDescripcion": "Permite conectar um assistente de IA ao Olimpo. A IA opera com as mesmas permissões da pessoa.",
+    "permisos.iaAria": "Conectar com IA",
     "permisos.seccionClavesApi": "Chaves de acesso API",
     "permisos.clavesApiDescripcion":
       "Define o que este grupo pode fazer com as chaves com que aplicações próprias do cliente se conectam ao Atlas. Sem «Ver» não há nenhuma outra, e o grupo não vê a opção no menu.",
@@ -333,6 +342,9 @@ export const grupos: NamespaceDict = {
       "Habilita l'accés d'aquest grup al PAD de l'agent.",
     "permisos.hermesAcceso": "Accés",
     "permisos.hermesAria": "Accés al PAD (Hermes)",
+    "permisos.seccionIa": "Integració amb IA",
+    "permisos.iaDescripcion": "Permet connectar un assistent d'IA a l'Olimpo. La IA opera amb els mateixos permisos de la persona.",
+    "permisos.iaAria": "Connectar amb IA",
     "permisos.seccionClavesApi": "Claus d'accés API",
     "permisos.clavesApiDescripcion":
       "Defineix què pot fer aquest grup amb les claus amb què les aplicacions pròpies del client es connecten a Atlas. Sense «Veure» no n'hi ha cap altra, i el grup no veu l'opció al menú.",
