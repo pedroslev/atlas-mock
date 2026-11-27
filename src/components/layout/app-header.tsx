@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { LanguageMenu } from "@/components/layout/language-menu";
 import { useT } from "@/lib/i18n";
+import { ConectarIa } from "@/components/layout/conectar-ia";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +52,8 @@ const apps = [
 
 export function AppHeader() {
   const t = useT();
+  // Diálogo "Conectar con IA" que abre el menú del avatar.
+  const [conectarIaAbierto, setConectarIaAbierto] = useState(false);
 
   return (
     <header className="flex h-14 w-full shrink-0 items-center gap-2 bg-header px-3 text-header-foreground sm:gap-3 sm:px-4">
@@ -195,11 +199,19 @@ export function AppHeader() {
             <DropdownMenuItem asChild>
               <Link href="/perfil">{t("common.header.miPerfil")}</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setConectarIaAbierto(true)}
+              className="whitespace-nowrap"
+              data-testid="menu-usuario-conectar-ia"
+            >
+              {t("common.header.conectarIa")}
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/login">{t("common.header.cerrarSesion")}</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <ConectarIa abierto={conectarIaAbierto} onAbiertoChange={setConectarIaAbierto} />
       </div>
     </header>
   );
