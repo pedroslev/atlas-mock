@@ -13,9 +13,9 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Sparkles } from "lucide-react";
 import { navItems } from "@/lib/nav";
-import { puedeClaves } from "@/lib/mock-claves-api";
+import { puedeClaves, puedeConectarIa } from "@/lib/mock-claves-api";
 import { campanias, proyectos, cuentas, getProyecto } from "@/lib/mock-data";
 import { useT } from "@/lib/i18n";
 
@@ -109,6 +109,18 @@ export function CommandMenu({
                 >
                   <KeyRound />
                   {t("common.nav.clavesApi")}
+                  <CommandShortcut>{t("common.nav.configuracion")}</CommandShortcut>
+                </CommandItem>
+              )}
+              {/* Conectar con IA: mismo permiso que la pantalla (ia.conectar). */}
+              {puedeConectarIa() && (
+                <CommandItem
+                  onSelect={() => go("/configuracion/conectar-ia")}
+                  keywords={["ia", "ai", "mcp", "claude", "chatgpt", "codex", "gemini", "asistente", "integraciones", "configuración"]}
+                  data-testid="buscador-conectar-ia"
+                >
+                  <Sparkles />
+                  {t("common.nav.conectarIa")}
                   <CommandShortcut>{t("common.nav.configuracion")}</CommandShortcut>
                 </CommandItem>
               )}
