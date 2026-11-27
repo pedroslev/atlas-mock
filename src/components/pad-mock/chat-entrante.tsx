@@ -51,13 +51,14 @@ export function ChatEntranteAviso({
       {primerMensaje && (
         <p className="line-clamp-2 rounded-lg bg-muted px-3 py-2 text-xs text-foreground">{primerMensaje.texto}</p>
       )}
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1 gap-1.5" onClick={onRechazar}>
+      {/* Apilados a lo ancho: los dos con su atajo no entran lado a lado en los 320 px del aviso. */}
+      <div className="flex flex-col gap-2">
+        <Button type="button" variant="outline" className="gap-1.5" onClick={onRechazar}>
           <X className="size-4" />
           {t("padMock.chatEntrante.rechazar")}
           <Kbd className="ml-1">{etiquetaRechazar(isMac)}</Kbd>
         </Button>
-        <Button type="button" className="flex-1 gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAceptar}>
+        <Button type="button" className="gap-1.5 bg-success text-white hover:bg-success/90" onClick={onAceptar}>
           <MessageCircle className="size-4" />
           {t("padMock.chatEntrante.aceptar")}
           <Kbd className="ml-1 bg-white/20 text-white">{etiquetaAtender(isMac)}</Kbd>
