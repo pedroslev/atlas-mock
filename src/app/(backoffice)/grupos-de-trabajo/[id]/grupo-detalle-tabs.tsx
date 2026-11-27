@@ -99,6 +99,7 @@ export function GrupoDetalleTabs({
           accesoHermes={accesoHermes}
           onAccesoHermesChange={setAccesoHermes}
           initialPermisosClavesApi={grupo.permisosClavesApi}
+          initialAccesoIa={grupo.accesoIa}
         />
       </TabsContent>
 

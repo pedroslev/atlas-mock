@@ -16,7 +16,7 @@ import {
   BookOpen,
   Sparkles,
 } from "lucide-react";
-import type { PermisoClaveApi } from "@/lib/mock-data";
+import { puedeClaves, puedeConectarIa } from "@/lib/mock-claves-api";
 
 export type NavItem = {
   href: string;
@@ -69,13 +69,13 @@ export const documentacionNav: NavItem = {
 };
 
 export type ConfigItem = NavItem & {
-  /** Permiso que hace falta para ver el ítem (y la pantalla). Sin permiso: lo ven todos. */
-  permiso?: PermisoClaveApi;
+  /** Si el usuario tiene el permiso del ítem (y de la pantalla). */
+  visible: () => boolean;
 };
 
-/** El ítem de Configuración se ve si no pide permiso o si el usuario lo tiene. */
-export function configItemVisible(item: ConfigItem, puede: (p: PermisoClaveApi) => boolean) {
-  return !item.permiso || puede(item.permiso);
+/** El ítem de Configuración se ve si el usuario tiene su permiso. */
+export function configItemVisible(item: ConfigItem) {
+  return item.visible();
 }
 
 export const configuracionItems: ConfigItem[] = [
@@ -83,11 +83,12 @@ export const configuracionItems: ConfigItem[] = [
     href: "/configuracion/claves-api",
     labelKey: "common.nav.clavesApi",
     icon: KeyRound,
-    permiso: "ver",
+    visible: () => puedeClaves("ver"),
   },
   {
     href: "/configuracion/conectar-ia",
     labelKey: "common.nav.conectarIa",
     icon: Sparkles,
+    visible: puedeConectarIa,
   },
 ];

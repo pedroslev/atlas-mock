@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { configuracionItems } from "@/lib/nav";
+import { configItemVisible, configuracionItems } from "@/lib/nav";
 
-// /configuracion no tiene contenido propio: abre el primer ítem del submenú.
+// /configuracion no tiene contenido propio: abre el primer ítem que el usuario puede ver.
 export default function ConfiguracionPage() {
-  redirect(configuracionItems[0].href);
+  redirect((configuracionItems.find(configItemVisible) ?? configuracionItems[0]).href);
 }

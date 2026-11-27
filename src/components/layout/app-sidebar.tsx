@@ -23,7 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { puedeClaves } from "@/lib/mock-claves-api";
 import { useT } from "@/lib/i18n";
 
 export function AppSidebar() {
@@ -112,7 +111,7 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="right" align="end">
                 {configuracionItems
-                  .filter((item) => configItemVisible(item, puedeClaves))
+                  .filter(configItemVisible)
                   .map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
                       <Link

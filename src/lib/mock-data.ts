@@ -516,6 +516,7 @@ export type GrupoTrabajo = {
   permisos: Permiso[]; // working_groups.permissions — Olimpo
   accesoHermes: boolean; // habilita al grupo a entrar al PAD (Hermes)
   permisosClavesApi: PermisoClaveApi[]; // working_groups.permissions — claves de acceso API
+  accesoIa: boolean; // working_groups.permissions["ia.conectar"] — Conectar con IA (MCP)
   shortcutButtons: ShortcutButtonEntry[]; // working_groups.shortcut_buttons
   historyLookbackDays: number; // working_groups.parameters.agent_operation_settings.history_lookback_days — default 30 (ver parametrizacion-propuesta.md §5)
   // Grabación por grupo: se cruza con la de la campaña y gana lo más
@@ -1238,6 +1239,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     accesoHermes: true,
     permisosClavesApi: ["ver", "crear", "editar", "revocar"],
+    accesoIa: true,
     shortcutButtons: [
       {
         id: "sb-cobranzas-1",
@@ -1274,6 +1276,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     accesoHermes: true,
     permisosClavesApi: ["ver"],
+    accesoIa: false,
     shortcutButtons: [
       {
         id: "sb-atencion-1",
@@ -1310,6 +1313,7 @@ export const gruposTrabajo: GrupoTrabajo[] = [
     ],
     accesoHermes: true,
     permisosClavesApi: [],
+    accesoIa: false,
     shortcutButtons: [
       {
         id: "sb-ventas-1",

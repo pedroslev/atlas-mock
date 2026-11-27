@@ -223,6 +223,15 @@ export function puedeClaves(permiso: PermisoClaveApi) {
   return permisosClavesUsuario.has(permiso);
 }
 
+// Conectar con IA (ia.conectar): lo tiene si alguno de sus grupos lo tiene.
+const accesoIaUsuario = gruposTrabajo.some(
+  (g) => g.usuarioIds.includes(usuarioActual.id) && g.accesoIa
+);
+
+export function puedeConectarIa() {
+  return accesoIaUsuario;
+}
+
 export function nombreUsuario(id: string) {
   return agentes.find((a) => a.id === id)?.nombre ?? id;
 }
